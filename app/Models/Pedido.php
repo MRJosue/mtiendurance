@@ -56,7 +56,16 @@ class Pedido extends Model
     }
 
 
+    public function pedidoOpciones()
+    {
+        return $this->hasMany(PedidoOpcion::class, 'pedido_id');
+    }
 
+
+    public function pedidoTallas()
+    {
+        return $this->hasMany(PedidoTalla::class, 'pedido_id');
+    }
 
     // /**
     //  * Relación con la tabla de proveedores.

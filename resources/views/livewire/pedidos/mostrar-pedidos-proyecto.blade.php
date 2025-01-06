@@ -13,6 +13,8 @@
                         <th class="py-3 px-6 text-left">Producto</th>
                         <th class="py-3 px-6 text-left">Categoría</th>
                         <th class="py-3 px-6 text-left">Características</th>
+                        <th class="py-3 px-6 text-left">Opcion</th>
+                        <th class="py-3 px-6 text-left">Tallas</th>
                         <th class="py-3 px-6 text-left">Fecha de Creación</th>
                         <th class="py-3 px-6 text-left">Total</th>
                         <th class="py-3 px-6 text-left">Estatus</th>
@@ -36,6 +38,31 @@
                                     N/A
                                 @endif
                             </td>
+
+                            <td class="py-3 px-6 text-left">
+                                @if ($pedido->pedidoOpciones->isNotEmpty())
+                                <ul class="list-disc pl-4">
+                                    @foreach ($pedido->pedidoOpciones as $opcion)
+                                        <li>{{ $opcion->opcion->nombre ?? 'N/A' }}</li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                N/A
+                            @endif
+                            </td>
+
+                            <td class="py-3 px-6 text-left">
+                                @if ($pedido->pedidoTallas->isNotEmpty())
+                                    <ul class="list-disc pl-4">
+                                        @foreach ($pedido->pedidoTallas as $talla)
+                                            <li>{{ $talla->talla->nombre ?? 'N/A' }}: {{ $talla->cantidad ?? '0' }}</li>
+                                        @endforeach
+                                    </ul>
+                                @else
+                                    N/A
+                                @endif
+                            </td>
+
                             <td class="py-3 px-6 text-left">{{ $pedido->fecha_creacion }}</td>
                             <td class="py-3 px-6 text-left">{{ $pedido->total }}</td>
                             <td class="py-3 px-6 text-left">{{ $pedido->estatus }}</td>

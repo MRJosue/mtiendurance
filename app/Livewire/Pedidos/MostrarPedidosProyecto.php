@@ -30,7 +30,7 @@ class MostrarPedidosProyecto extends Component
         //     ->where('proyecto_id', $this->proyectoId)
         //     ->get();
 
-        $this->pedidos  = Pedido::with(['cliente', 'producto.categoria', 'pedidoCaracteristicas.caracteristica'])
+        $this->pedidos  = Pedido::with(['cliente', 'producto.categoria', 'pedidoCaracteristicas.caracteristica','pedidoOpciones.opcion', 'pedidoTallas.talla'])
             ->where('proyecto_id', $this->proyectoId)
             ->get();
 

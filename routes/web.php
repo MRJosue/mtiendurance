@@ -26,9 +26,9 @@ use App\Http\Controllers\ProyectosController;
 |
 */
 
-
-Route::get('/login', function () {
-    return view('login');
+//resources\views\auth\login.blade.php
+Route::get('/', function () {
+    return view('auth.login');
 });
 
 Route::get('/dashboard', function () {
