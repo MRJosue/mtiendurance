@@ -15,6 +15,8 @@ class OpcionFactory extends Factory
      *
      * @return array<string, mixed>
      */
+
+     // test
     protected $model = Opcion::class;
 
     public function definition(): array
