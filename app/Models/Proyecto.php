@@ -49,6 +49,8 @@ class Proyecto extends Model
     public function pedidos()
     {
         return $this->hasMany(Pedido::class, 'proyecto_id');
+
+
     }
 
     public function archivos()
