@@ -129,29 +129,19 @@ Table archivos_proyecto {
 }
 
 
-
-Table salas_chat {
+Table chats {
   id INT [pk, unique, not null]
   proyecto_id INT [not null, ref: > proyectos.id]
-  nombre VARCHAR
   fecha_creacion TIMESTAMP [default: `now()`]
-}
-
-Table participantes_chat {
-  id INT [pk, unique, not null]
-  sala_chat_id INT [not null, ref: > salas_chat.id]
-  usuario_id INT [not null, ref: > usuarios.id]
-  fecha_ingreso TIMESTAMP [default: `now()`]
 }
 
 Table mensajes_chat {
   id INT [pk, unique, not null]
-  sala_chat_id INT [not null, ref: > salas_chat.id]
+  chat_id INT [not null, ref: > chats.id]
   usuario_id INT [not null, ref: > usuarios.id]
   mensaje TEXT [not null]
   fecha_envio TIMESTAMP [default: `now()`]
 }
-
 
 Ref: "pedido"."id" < "tareas"."descripcion"
 
