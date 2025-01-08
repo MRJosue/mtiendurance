@@ -45,6 +45,10 @@ class DatabaseSeeder extends Seeder
             PedidoOpcionesTableSeeder::class,
             PedidoCaracteristicasTableSeeder::class,
 
+            PedidoCaracteristicasTableSeeder::class,
+            ChatSeeder::class,
+
+
 
 
         ]);
