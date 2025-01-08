@@ -20,8 +20,8 @@ class PedidoOpcion extends Model
         'valor',
     ];
 
-    public $incrementing = true; // La clave primaria no es auto-incremental
-    protected $keyType = 'int'; // Clave primaria es de tipo string (UUID)
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     public function pedido()
     {

@@ -49,5 +49,16 @@ class Proyecto extends Model
     public function pedidos()
     {
         return $this->hasMany(Pedido::class, 'proyecto_id');
+
+    }
+
+    public function archivos()
+    {
+        return $this->hasMany(ArchivoProyecto::class, 'proyecto_id');
+    }
+
+    public function chat()
+    {
+        return $this->hasOne(Chat::class, 'proyecto_id');
     }
 }
