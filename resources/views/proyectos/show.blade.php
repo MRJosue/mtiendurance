@@ -97,6 +97,11 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h1>Chat</h1>
+
+                    <div wire:poll.2s class="chat-container">
+                        <!-- Chat content -->
+                        <livewire:chat-component :proyecto-id="$proyecto->id" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -108,7 +113,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <h1>Archivos</h1>
+                    <livewire:proyectos.project-files :proyecto-id="$proyecto->id" />
                 </div>
             </div>
         </div>

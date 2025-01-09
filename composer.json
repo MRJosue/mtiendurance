@@ -12,6 +12,7 @@
         "laravel/tinker": "^2.8",
         "livewire-ui/modal": "^2.0",
         "livewire/livewire": "^3.5",
+        "predis/predis": "^2.3",
         "rappasoft/laravel-livewire-tables": "^3.5",
         "spatie/laravel-permission": "^6.10"
     },

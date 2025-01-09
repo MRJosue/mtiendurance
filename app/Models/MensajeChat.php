@@ -11,12 +11,19 @@ class MensajeChat extends Model
 
     protected $table = 'mensajes_chat';
 
+    protected $casts = [
+        'fecha_envio' => 'datetime',
+    ];
+
+
     protected $fillable = [
         'chat_id',
         'usuario_id',
         'mensaje',
         'fecha_envio',
     ];
+
+
 
     public function chat()
     {
