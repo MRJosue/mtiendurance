@@ -5,6 +5,7 @@ namespace App\Livewire\Proyectos;
 
 
 use App\Models\ArchivoProyecto;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
@@ -24,13 +25,14 @@ class ProjectFiles extends Component
     public function uploadFile()
     {
         $this->validate([
-            'archivo' => 'required|file|max:100240', // Máximo 10MB
+            'archivo' => 'required|file', // Máximo 10MB
         ]);
     
         $path = $this->archivo->store('proyectos/' . $this->proyectoId, 'public');
     
         ArchivoProyecto::create([
             'proyecto_id' => $this->proyectoId,
+            'usuario_id' => Auth::id(),
             'nombre_archivo' => $this->archivo->getClientOriginalName(),
             'ruta_archivo' => $path,
             'tipo_archivo' => $this->archivo->getMimeType(), // Agrega el tipo de archivo
@@ -52,6 +54,15 @@ class ProjectFiles extends Component
 
         session()->flash('message', 'Archivo eliminado exitosamente.');
     }
+
+    public function descargarArchivo($rutaArchivo)
+{
+    if (Storage::disk('public')->exists($rutaArchivo)) {
+        return Storage::disk('public')->download($rutaArchivo);
+    }
+
+    return abort(404, 'Archivo no encontrado.');
+}
 
     public function render()
     {

@@ -3,7 +3,7 @@
     <div id="messages" class="chat-messages flex-grow overflow-y-scroll bg-gray-100 p-4">
         @foreach ($mensajes as $mensaje)
             <div class="chat-message my-2 p-2 rounded-lg 
-                {{ $mensaje->usuario_id === auth()->id() ? 'bg-blue-200 text-right ml-auto' : 'bg-gray-200 text-left mr-auto' }}">
+                {{ $mensaje->usuario_id === auth()->id() ? 'bg-blue-200 text-right ml-auto rounded-full' : 'bg-gray-200 text-left mr-auto rounded-full' }}">
                 <strong>{{ $mensaje->usuario->name }}</strong>: {{ $mensaje->mensaje }}
                 <span class="text-xs text-gray-500 block">
                     {{ $mensaje->fecha_envio->format('d/m/Y H:i') }}
