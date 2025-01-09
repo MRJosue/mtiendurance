@@ -1,4 +1,4 @@
-<div wire:poll.keep-alive wire:ignore class="chat-container flex flex-col h-full">
+<div wire:poll.keep-alive wire:ignore class="chat-container flex flex-col h-full" style=" height: 500px;">
     <!-- Lista de mensajes -->
     <div id="messages" class="chat-messages flex-grow overflow-y-scroll bg-gray-100 p-4">
         @foreach ($mensajes as $mensaje)

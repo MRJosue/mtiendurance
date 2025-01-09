@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
         //$this->call(UserSeeder::class);
 
         $this->call([
+
+            RolePermissionSeeder::class,
             UserSeeder::class,
             ClientesTableSeeder::class,
             ProveedoresTableSeeder::class,
@@ -36,7 +38,7 @@ class DatabaseSeeder extends Seeder
 
             ProyectosTableSeeder::class,
             TallasTableSeeder::class,
-            TareasTableSeeder::class,
+          
             PermissionSeeder::class,
 
            // ProyectoDefinidoSeeder::class,
@@ -47,6 +49,8 @@ class DatabaseSeeder extends Seeder
 
             PedidoCaracteristicasTableSeeder::class,
             ChatSeeder::class,
+
+            TareasTableSeeder::class,
 
 
 

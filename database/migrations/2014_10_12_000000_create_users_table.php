@@ -18,8 +18,16 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
+            $table->enum('tipo_usuario', ['ADMINISTRACION', 'STAFF', 'CLIENTES', 'PROVEEDORES'])->default('CLIENTES');
+            $table->unsignedBigInteger('rol_id')->default(1);
             $table->timestamps();
+
+
+            $table->foreign('rol_id')->references('id')->on('roles')->onDelete('cascade');
+            
         });
+
+        
     }
 
     /**

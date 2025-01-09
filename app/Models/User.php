@@ -72,4 +72,10 @@ class User extends Authenticatable
         ];
     }
 
+
+    public function esTipoUsuario(string $tipo): bool
+    {
+        return $this->tipo_usuario === $tipo;
+    }
+
 }
