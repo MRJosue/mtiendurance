@@ -15,6 +15,8 @@ use App\Http\Controllers\caracteristicacontroller;
 use App\Http\Controllers\opcionescontroller;
 use App\Http\Controllers\ProyectosController;
 
+use App\Events\TestEvent;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -61,5 +63,14 @@ Route::get('/usuarios/permisos',[permisoscontroller::class, 'index'])->middlewar
 
 // Prueba data tables
 
+// Prueba de funcionalidad de los web sokets
+
+
+Route::post('/emit-event', function (Illuminate\Http\Request $request) {
+    $message = $request->input('message', 'Mensaje predeterminado');
+ 
+    broadcast(new TestEvent($message));
+    return response()->json(['status' => 'Evento emitido']);
+});
 
 require __DIR__.'/auth.php';

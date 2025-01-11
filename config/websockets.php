@@ -21,6 +21,8 @@ return [
      * Optionally you can disable client events so clients cannot send
      * messages to each other via the webSockets.
      */
+
+     
     'apps' => [
         [
             'id' => env('PUSHER_APP_ID'),

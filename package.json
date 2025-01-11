@@ -1,6 +1,6 @@
 {
     "private": true,
-    "type": "module",
+    "type": "commonjs",
     "scripts": {
         "dev": "vite",
         "build": "vite build"
@@ -16,9 +16,12 @@
         "vite": "^5.0.0"
     },
     "dependencies": {
+        "express": "^4.21.2",
         "laravel-echo": "^1.17.1",
         "pusher-js": "^8.4.0-rc2",
+        "redis": "^4.7.0",
         "socket.io": "^4.8.1",
-        "socket.io-client": "^4.8.1"
+        "socket.io-client": "^4.8.1",
+        "socket.io-redis": "^6.1.1"
     }
 }
