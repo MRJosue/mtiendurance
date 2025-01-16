@@ -9,7 +9,7 @@ use Livewire\Component;
 use App\Models\Chat;
 use App\Models\MensajeChat;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Log;
 
 use App\Events\NewChatMessage;
 
@@ -53,21 +53,24 @@ class ChatComponent extends Component
     
         // Emitir el evento con la instancia del mensaje
         broadcast(new NewChatMessage($mensaje))->toOthers();
-    
+      
         // Limpiar el campo de entrada después de enviar
         $this->mensaje = '';
+        $this->render();
     }
 
 
     public function actualizarMensajes()
         {
             // Refrescar los mensajes cargados
+            dump('actualizarMensajes');
             $this->render();
         }
 
     public function render()
     {
         // Obtener los mensajes del chat en tiempo real
+      
         $mensajes = MensajeChat::where('chat_id', $this->chatId)
             ->with('usuario') // Cargar información del usuario
             ->orderBy('fecha_envio', 'asc')

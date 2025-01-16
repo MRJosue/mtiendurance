@@ -29,13 +29,24 @@
     </div>
 
     <!-- Script para escuchar eventos de Laravel Echo -->
+ 
+    @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            console.log('listener');
-            Echo.private('chat.{{ $chatId }}')
-                .listen('NewChatMessage', (e) => {
-                    Livewire.emit('mensajeRecibido');
-                });
+    document.addEventListener('DOMContentLoaded', function () {
+
+        Echo.private('chat.{{ $chatId }}')
+        .error((error) => {
+            console.error('Error al suscribirse al canal:', error);
         });
+
+        Echo.private('chat.{{ $chatId }}')
+        .listen('NewChatMessage', (event) => {
+            console.log('Evento recibido:', event);
+        });
+    });
+
+
     </script>
+    @endpush
+   
 </div>

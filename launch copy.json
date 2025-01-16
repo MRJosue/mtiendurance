@@ -1,0 +1,36 @@
+{
+  // Use IntelliSense para saber los atributos posibles.
+  // Mantenga el puntero para ver las descripciones de los existentes atributos.
+  // Para más información, visite: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+
+      {
+        "name": "Laravel: Run Artisan Serve",
+        "type": "php",
+        "request": "launch",
+        "program": "${workspaceFolder}/artisan",
+        "args": ["serve"],
+        "cwd": "${workspaceFolder}",
+        "port": 8000,
+        "runtimeExecutable": "php",
+        "stopOnEntry": false,
+        "pathMappings": {
+          "/var/www/html": "${workspaceFolder}"
+        },
+        "xdebugSettings": {
+          "max_children": 128,
+          "max_data": 1024,
+          "max_depth": 3
+        }
+      },
+      {
+        "name": "Laravel: Run NPM Dev",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "npm run dev",
+        "cwd": "${workspaceFolder}"
+      }
+    ]
+
+}

@@ -34,4 +34,5 @@ class MensajeChat extends Model
     {
         return $this->belongsTo(User::class, 'usuario_id');
     }
+    
 }

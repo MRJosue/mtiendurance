@@ -9,6 +9,7 @@ use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class NewChatMessage implements ShouldBroadcast
 {
@@ -16,24 +17,29 @@ class NewChatMessage implements ShouldBroadcast
 
     public $mensaje;
 
-    /**
-     * Create a new event instance.
-     *
-     * @param MensajeChat $mensaje
-     * @return void
-     */
     public function __construct(MensajeChat $mensaje)
     {
+        dump('mensaje emitido');
         $this->mensaje = $mensaje;
+        
     }
 
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return Channel|array
-     */
     public function broadcastOn()
     {
+
+        
         return new PrivateChannel('chat.' . $this->mensaje->chat_id);
+    }
+
+    public function broadcastWith()
+    {
+
+        
+        return [
+            'id' => $this->mensaje->id,
+            'mensaje' => $this->mensaje->mensaje,
+            'usuario' => $this->mensaje->usuario->name,
+            'fecha_envio' => $this->mensaje->fecha_envio->toDateTimeString(),
+        ];
     }
 }

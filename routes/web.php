@@ -15,7 +15,10 @@ use App\Http\Controllers\caracteristicacontroller;
 use App\Http\Controllers\opcionescontroller;
 use App\Http\Controllers\ProyectosController;
 
+use App\Http\Controllers\DashboardController;
+
 use App\Events\TestEvent;
+use App\Events\MessageSent;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,9 +36,17 @@ Route::get('/', function () {
     return view('auth.login');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Route::get('/dashboard', function () {
+//     return view('dashboard');
+// })->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/MessageSent', function () {
+    event(new \App\Events\MessageSent("¡Hola desde el servidor!"));
+    return "Evento emitido.";
+});
+
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -66,11 +77,6 @@ Route::get('/usuarios/permisos',[permisoscontroller::class, 'index'])->middlewar
 // Prueba de funcionalidad de los web sokets
 
 
-Route::post('/emit-event', function (Illuminate\Http\Request $request) {
-    $message = $request->input('message', 'Mensaje predeterminado');
- 
-    broadcast(new TestEvent($message));
-    return response()->json(['status' => 'Evento emitido']);
-});
+
 
 require __DIR__.'/auth.php';
