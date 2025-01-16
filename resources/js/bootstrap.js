@@ -18,5 +18,7 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 //window.Pusher.logToConsole = true;
 
+
+
 console.log('Hola soy Bootrap js');
 

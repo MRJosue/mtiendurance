@@ -2,29 +2,25 @@
 
 namespace App\Livewire;
 
+
 use Livewire\Component;
-
-
-
-use App\Models\Chat;
 use App\Models\MensajeChat;
+use App\Models\Chat;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-
 use App\Events\NewChatMessage;
 
 class ChatComponent extends Component
 {
     public $proyectoId;
     public $chatId;
+    public $mensajes = [];
     public $mensaje;
 
     protected $rules = [
         'mensaje' => 'required|string|max:500',
     ];
 
-    protected $listeners = ['mensajeRecibido' => 'actualizarMensajes'];
-
+    protected $listeners = ['actualizarMensajes'];
 
     public function mount($proyectoId)
     {
@@ -38,47 +34,49 @@ class ChatComponent extends Component
         }
 
         $this->chatId = $chat->id;
+
+        // Cargar los mensajes iniciales
+        $this->loadMensajes();
     }
 
     public function enviarMensaje()
     {
         $this->validate();
-    
-        // Crear un nuevo mensaje en el chat y asignarlo a $mensaje
+
+        // Crear un nuevo mensaje en el chat
         $mensaje = MensajeChat::create([
-            'chat_id' => $this->chatId,   // ID del chat asociado
-            'usuario_id' => Auth::id(),  // Usuario actual
-            'mensaje' => $this->mensaje, // Contenido del mensaje
+            'chat_id' => $this->chatId,
+            'usuario_id' => Auth::id(),
+            'mensaje' => $this->mensaje,
         ]);
-    
-        // Emitir el evento con la instancia del mensaje
-        broadcast(new NewChatMessage($mensaje))->toOthers();
-      
+
+        // Emitir el evento de nuevo mensaje
+        event(new NewChatMessage($mensaje));
+
         // Limpiar el campo de entrada después de enviar
         $this->mensaje = '';
-        $this->render();
+
+        // Opcional: Recargar mensajes si deseas una actualización inmediata localmente
+        $this->loadMensajes();
     }
 
+    public function loadMensajes()
+    {
+        $this->mensajes = MensajeChat::where('chat_id', $this->chatId)
+            ->with('usuario') // Cargar información del usuario
+            ->orderBy('fecha_envio', 'asc')
+            ->get()
+            ->toArray(); // Convertir a array para evitar problemas con Livewire
+    }
 
     public function actualizarMensajes()
-        {
-            // Refrescar los mensajes cargados
-            dump('actualizarMensajes');
-            $this->render();
-        }
+    {
+        // Cargar mensajes nuevamente al recibir el evento
+        $this->loadMensajes();
+    }
 
     public function render()
     {
-        // Obtener los mensajes del chat en tiempo real
-      
-        $mensajes = MensajeChat::where('chat_id', $this->chatId)
-            ->with('usuario') // Cargar información del usuario
-            ->orderBy('fecha_envio', 'asc')
-            ->get();
-
-        return view('livewire.chat-component', [
-            'mensajes' => $mensajes,
-        ]);
+        return view('livewire.chat-component');
     }
 }
-

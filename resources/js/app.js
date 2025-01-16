@@ -10,7 +10,10 @@ console.log('Hola soy app js');
 
 // window.Alpine = Alpine;
 
-// Alpine.start();
+//Alpine.start();
+
+
+
 
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
@@ -28,3 +31,4 @@ window.Echo = new Echo({
 window.Echo.channel("chat").listen("MessageSent", (e) => {
     console.log("Message received: ", e.message);
 });
+

@@ -20,7 +20,7 @@
     
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-
+        <livewire:styles />
     </head>
     <body class="font-sans antialiased">
 
@@ -43,13 +43,9 @@
         </div>
 
 
+       
+        <livewire:scripts />
         @stack('scripts')
-        @livewireScripts
-
-   
-
-        {{-- <script src="{{ mix('/js/app.js') }}"></script> --}}
-
 
     </body>
 </html>

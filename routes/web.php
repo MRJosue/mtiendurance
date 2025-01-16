@@ -19,6 +19,8 @@ use App\Http\Controllers\DashboardController;
 
 use App\Events\TestEvent;
 use App\Events\MessageSent;
+use App\Events\NewChatMessage;
+use App\Models\MensajeChat;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,6 +48,19 @@ Route::get('/MessageSent', function () {
     return "Evento emitido.";
 });
 
+
+Route::get('/ChatMessageTest', function () {
+    // Crea un mensaje de ejemplo (puedes ajustar los datos según tu modelo)
+    $mensaje = MensajeChat::create([
+        'chat_id' => 50, // ID del chat asociado
+        'usuario_id' => 1, // ID de un usuario existente
+        'mensaje' => 'Este es un mensaje de prueba desde Tinker.',
+    ]);
+
+    // Emite el evento
+    event(new NewChatMessage($mensaje));
+    return "Evento Chat emitido.";
+});
 
 
 Route::middleware('auth')->group(function () {
