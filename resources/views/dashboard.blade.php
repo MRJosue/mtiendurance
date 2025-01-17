@@ -18,22 +18,13 @@
     </div>
 
     @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // document.addEventListener('DOMContentLoaded', () => {
-        // // Escuchar un canal público
-        // console.log('Evento',window.Echo);
-        // window.Echo.channel('test-channel')
-        //     .listen('.test-event', (e) => {
-        //         console.log('/////E:',e);
-        //         console.log('Evento recibido:', e.message);
-        //     })
-        //     .on('subscribed', () => {
-        //         console.log('Conectado correctamente a test-channel');
-        //     })
-        //     .error((error) => {
-        //         console.error('Error en la conexión al canal:', error);
-        //     });
-        // });
+        document.addEventListener('DOMContentLoaded', () => {
+
+
+        });
+
     </script>
     @endpush
 </x-app-layout>

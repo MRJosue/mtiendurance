@@ -75,7 +75,7 @@ class CategoriaCrud extends Component
             session()->flash('message', '¡Categoría actualizada exitosamente!');
         } else {
             Categoria::create([
-                'id' => (string) Str::uuid(),
+                
                 'nombre' => $this->nombre,
             ]);
             session()->flash('message', '¡Categoría creada exitosamente!');

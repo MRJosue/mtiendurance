@@ -12,8 +12,7 @@
             Nueva Opción
         </button>
         <div class="flex space-x-2">
-            <input type="text" wire:model="query" placeholder="Buscar por valor..." class="border border-gray-300 rounded px-4 py-2">
-
+            <input type="text" wire:model="query" placeholder="Buscar por valor o nombre..." class="border border-gray-300 rounded px-4 py-2">
             <button wire:click="buscar" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded">Buscar</button>
         </div>
     </div>
@@ -22,6 +21,7 @@
         <thead>
             <tr class="bg-gray-100">
                 <th class="border border-gray-300 p-2 text-left">Valor</th>
+                <th class="border border-gray-300 p-2 text-left">Nombre</th> <!-- Nueva columna -->
                 <th class="border border-gray-300 p-2 text-left">Característica</th>
                 <th class="border border-gray-300 p-2 text-center">Acciones</th>
             </tr>
@@ -30,6 +30,7 @@
             @foreach($opciones as $opc)
                 <tr>
                     <td class="border border-gray-300 p-2">{{ $opc->valor }}</td>
+                    <td class="border border-gray-300 p-2">{{ $opc->nombre }}</td> <!-- Mostrar nuevo campo -->
                     <td class="border border-gray-300 p-2">{{ $opc->caracteristica->nombre ?? 'N/A' }}</td>
                     <td class="border border-gray-300 p-2 flex space-x-2 justify-center">
                         <button wire:click="editar('{{ $opc->id }}')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">Editar</button>
@@ -56,6 +57,12 @@
                         <label class="block text-gray-700 mb-1">Valor</label>
                         <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="valor">
                         @error('valor') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">Nombre</label>
+                        <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="nombre">
+                        @error('nombre') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="mb-4">

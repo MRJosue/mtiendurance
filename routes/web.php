@@ -41,6 +41,8 @@ Route::get('/', function () {
 // Route::get('/dashboard', function () {
 //     return view('dashboard');
 // })->middleware(['auth', 'verified'])->name('dashboard');
+
+
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/MessageSent', function () {
@@ -50,7 +52,7 @@ Route::get('/MessageSent', function () {
 
 
 Route::get('/ChatMessageTest', function () {
-    // Crea un mensaje de ejemplo (puedes ajustar los datos según tu modelo)
+    // Crea un mensaje de ejemplo
     $mensaje = MensajeChat::create([
         'chat_id' => 50, // ID del chat asociado
         'usuario_id' => 1, // ID de un usuario existente

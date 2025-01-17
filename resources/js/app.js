@@ -32,3 +32,5 @@ window.Echo.channel("chat").listen("MessageSent", (e) => {
     console.log("Message received: ", e.message);
 });
 
+import Swal from 'sweetalert2';
+window.Swal = Swal;

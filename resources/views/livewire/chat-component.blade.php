@@ -30,46 +30,46 @@
 
     @push('scripts')
     <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const scrollToBottom = () => {
-        const messagesContainer = document.getElementById('messages');
-        if (messagesContainer) {
-            const totalScroll = messagesContainer.scrollHeight - messagesContainer.scrollTop;
-            const interval = 50; // Tiempo entre cada paso (ms)
-            const steps = 60; // Dividimos el movimiento en 60 pasos para suavizar
-            const stepSize = totalScroll / steps;
-            let currentStep = 0;
+        document.addEventListener('DOMContentLoaded', function () {
+            const scrollToBottom = () => {
+                const messagesContainer = document.getElementById('messages');
+                if (messagesContainer) {
+                    const totalScroll = messagesContainer.scrollHeight - messagesContainer.scrollTop;
+                    const interval = 50; // Tiempo entre cada paso (ms)
+                    const steps = 60; // Dividimos el movimiento en 60 pasos para suavizar
+                    const stepSize = totalScroll / steps;
+                    let currentStep = 0;
 
-            const smoothScroll = setInterval(() => {
-                if (currentStep < steps) {
-                    messagesContainer.scrollTop += stepSize;
-                    currentStep++;
-                } else {
-                    clearInterval(smoothScroll); // Detenemos el intervalo una vez completado
+                    const smoothScroll = setInterval(() => {
+                        if (currentStep < steps) {
+                            messagesContainer.scrollTop += stepSize;
+                            currentStep++;
+                        } else {
+                            clearInterval(smoothScroll); // Detenemos el intervalo una vez completado
+                        }
+                    }, interval);
                 }
-            }, interval);
-        }
-    };
+            };
 
-    window.Echo.channel('public-chat')
-        .listen('NewChatMessage', (e) => {
-            
-            Livewire.dispatch('actualizarMensajes');
-            setTimeout(() => {
-                scrollToBottom(); // Ejecutar el desplazamiento después de 3 segundos
-            }, 1000);
+            window.Echo.channel('public-chat')
+                .listen('NewChatMessage', (e) => {
+                    
+                    Livewire.dispatch('actualizarMensajes');
+                    setTimeout(() => {
+                        scrollToBottom(); // Ejecutar el desplazamiento después de 3 segundos
+                    }, 1000);
+                });
+
+            // Listener de Livewire para actualizar la vista
+            Livewire.on('actualizarMensajes', () => {
+                console.log('Actualiza b ');
+                setTimeout(() => {
+                    scrollToBottom(); // Ejecutar el desplazamiento después de 3 segundos
+                }, 1000);
+            });
+
+            scrollToBottom(); 
         });
-
-    // Listener de Livewire para actualizar la vista
-    Livewire.on('actualizarMensajes', () => {
-        console.log('Actualiza b ');
-        setTimeout(() => {
-            scrollToBottom(); // Ejecutar el desplazamiento después de 3 segundos
-        }, 1000);
-    });
-
-    scrollToBottom(); 
-});
     </script>
     @endpush
 </div>

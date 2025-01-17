@@ -60,6 +60,27 @@
                                     </div>
                                     <div>
                                         <p class="text-lg">
+                                            <span class="font-semibold">Produccion:</span>
+                                            @if ($proyecto->fecha_entrega)
+                                                {{ $proyecto->fecha_entrega }}
+                                            @else
+                                                <span class="text-gray-500">No definida</span>
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p class="text-lg">
+                                            <span class="font-semibold">Fecha de Embarque:</span>
+                                            @if ($proyecto->fecha_entrega)
+                                                {{ $proyecto->fecha_entrega }}
+                                            @else
+                                                <span class="text-gray-500">No definida</span>
+                                            @endif
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-lg">
                                             <span class="font-semibold">Fecha de Entrega:</span>
                                             @if ($proyecto->fecha_entrega)
                                                 {{ $proyecto->fecha_entrega }}
@@ -68,6 +89,9 @@
                                             @endif
                                         </p>
                                     </div>
+
+
+                                    Boton vista Previa de ultima version del proyecto 
                                 </div>
                             </div>
 
@@ -96,8 +120,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <h1>Chat</h1>
-
+                    <h2 class="text-2xl font-bold mb-4">Chat del proyecto</h2>
                     <div wire:poll.2s class="chat-container">
                         <!-- Chat content -->
                         <livewire:chat-component :proyecto-id="$proyecto->id" />
