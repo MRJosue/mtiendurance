@@ -20,6 +20,8 @@ return new class extends Migration
                 'PENDIENTE', 'APROBADO', 'PROGRAMADO', 'IMPRESIÓN', 'PRODUCCIÓN', 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO'
             ])->default('PENDIENTE');
             $table->timestamp('fecha_creacion')->useCurrent();
+            $table->date('fecha_produccion')->nullable();
+            $table->date('fecha_embarque')->nullable();
             $table->date('fecha_entrega')->nullable();
             $table->foreign('usuario_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();

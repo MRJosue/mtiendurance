@@ -21,6 +21,8 @@ class Proyecto extends Model
         'descripcion',
         'estado',
         'fecha_creacion',
+        'fecha_produccion',
+        'fecha_embarque',
         'fecha_entrega',
     ];
 
@@ -60,5 +62,15 @@ class Proyecto extends Model
     public function chat()
     {
         return $this->hasOne(Chat::class, 'proyecto_id');
+    }
+
+    public function proyectoOrigen()
+    {
+        return $this->hasOne(Proyecto_Referencia::class, 'proyecto_id');
+    }
+
+    public function proyectosClonados()
+    {
+        return $this->hasMany(Proyecto_Referencia::class, 'proyecto_origen_id');
     }
 }
