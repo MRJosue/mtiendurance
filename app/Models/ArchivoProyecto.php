@@ -12,16 +12,32 @@ class ArchivoProyecto extends Model
     protected $table = 'archivos_proyecto';
     protected $fillable = [
         'proyecto_id',
+        'pre_proyecto_id',
         'nombre_archivo',
         'ruta_archivo',
         'tipo_archivo',
-        'fecha_subida',
         'usuario_id',
+        'descripcion',
+
     ];
+
+    // 'proyecto_id',
+    // 'nombre_archivo',
+    // 'ruta_archivo',
+    // 'tipo_archivo',
+    // 'fecha_subida',
+    // 'usuario_id',
+    // 'pre_proyecto_id',
+    // 'descripcion',
 
     public function proyecto()
     {
         return $this->belongsTo(Proyecto::class, 'proyecto_id');
+    }
+
+    public function preproyecto()
+    {
+        return $this->belongsTo(preproyecto::class, 'pre_proyecto_id');
     }
 
     public function usuario()

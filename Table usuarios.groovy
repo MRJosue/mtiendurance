@@ -1,4 +1,4 @@
-Table usuarios {
+Table users {
   id INT [pk, unique, not null]
   nombre VARCHAR
   correo VARCHAR [unique, not null]
@@ -24,16 +24,43 @@ Table rol_permisos {
   permiso_id INT [not null, ref: > permisos.id]
 }
 
+Table direcciones_fiscales {
+  id INT [pk, unique, not null]
+  user_id INT [not null, ref: > users.id]
+  rfc VARCHAR [not null]
+  calle VARCHAR [not null]
+  ciudad VARCHAR [not null]
+  estado VARCHAR [not null]
+  codigo_postal VARCHAR [not null]
+  flag_default tiny
+  fecha_creacion TIMESTAMP [default: `now()`]
+  fecha_actualizacion TIMESTAMP
+}
+
+Table direcciones_entrega {
+  id INT [pk, unique, not null]
+  user_id INT [not null, ref: > users.id]
+  nombre_contacto VARCHAR [not null]
+  calle VARCHAR [not null]
+  ciudad VARCHAR [not null]
+  estado VARCHAR [not null]
+  codigo_postal VARCHAR [not null]
+  telefono VARCHAR
+  flag_default tiny
+  fecha_creacion TIMESTAMP [default: `now()`]
+  fecha_actualizacion TIMESTAMP
+}
+
 Table clientes {
   id INT [pk, unique, not null]
-  usuario_id INT [not null, ref: > usuarios.id]
+  usuario_id INT [not null, ref: > users.id]
   nombre_empresa VARCHAR
   contacto_principal VARCHAR
 }
 
 Table proveedores {
   id INT [pk, unique, not null]
-  usuario_id INT [not null, ref: > usuarios.id]
+  usuario_id INT [not null, ref: > users.id]
   nombre_empresa VARCHAR
   contacto_principal VARCHAR
 }
@@ -41,17 +68,24 @@ Table proveedores {
 Table proyectos {
   id INT [pk, unique, not null]
   cliente_id INT [not null, ref: > clientes.id]
+  direccion_fiscal_id INT [not null, ref: > direcciones_fiscales.id]
+  direccion_entrega_id INT [not null, ref: > direcciones_entrega.id]
   nombre VARCHAR
   descripcion TEXT
+  referencia INT
+  tipo ENUM('PROYECTO', 'MUESTRA') [default: 'PROYECTO']
+  numero_muestras INT [default: 0]
   estado ENUM('PENDIENTE', 'APROBADO', 'PROGRAMADO', 'IMPRESIÓN', 'PRODUCCIÓN', 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO')
   fecha_creacion TIMESTAMP [default: `now()`]
+  fecha_Produccion DATE
+  fecha_embarque DATE
   fecha_entrega DATE
 }
 
 Table tareas {
   id INT [pk, unique, not null]
   proyecto_id INT [not null, ref: > proyectos.id]
-  staff_id INT [not null, ref: > usuarios.id]
+  staff_id INT [not null, ref: > users.id]
   descripcion TEXT
   estado ENUM('PENDIENTE', 'EN PROCESO', 'COMPLETADA')
 }
@@ -71,18 +105,18 @@ Table caracteristicas {
   id INT [pk, unique, not null]
   producto_id INT [not null, ref: > productos.id]
   nombre VARCHAR
-  pasos int
-  minutoPaso int
-  valoru int
+  pasos INT
+  minutoPaso INT
+  valoru INT
 }
 
 Table opciones {
   id INT [pk, unique, not null]
   caracteristica_id INT [not null, ref: > caracteristicas.id]
   nombre VARCHAR
-  pasos int
-  minutoPaso int
-  valoru int
+  pasos INT
+  minutoPaso INT
+  valoru INT
 }
 
 Table tallas {
@@ -93,12 +127,12 @@ Table tallas {
 
 Table pedido {
   id INT [pk, unique, not null]
-  proyecto_id INT [not null, unique, ref: > proyectos.id]
+  proyecto_id INT [not null, unique, ref: > proyectos.id] 
   producto_id INT [not null, ref: > productos.id]
   fecha_creacion TIMESTAMP [default: `now()`]
-  totalpasos   int
-  totalminutoPaso int
-  totalvalor   int
+  totalpasos INT
+  totalminutoPaso INT
+  totalvalor INT
 }
 
 Table pedido_caracteristicas {
@@ -117,7 +151,6 @@ Table pedido_tallas {
   cantidad INT
 }
 
-
 Table archivos_proyecto {
   id INT [pk, unique, not null]
   proyecto_id INT [not null, ref: > proyectos.id]
@@ -125,9 +158,8 @@ Table archivos_proyecto {
   ruta_archivo VARCHAR [not null]
   tipo_archivo VARCHAR [not null]
   fecha_subida TIMESTAMP [default: `now()`]
-  usuario_id INT [not null, ref: > usuarios.id]
+  usuario_id INT [not null, ref: > users.id]
 }
-
 
 Table chats {
   id INT [pk, unique, not null]
@@ -138,12 +170,43 @@ Table chats {
 Table mensajes_chat {
   id INT [pk, unique, not null]
   chat_id INT [not null, ref: > chats.id]
-  usuario_id INT [not null, ref: > usuarios.id]
+  usuario_id INT [not null, ref: > users.id]
   mensaje TEXT [not null]
   fecha_envio TIMESTAMP [default: `now()`]
 }
 
-Ref: "pedido"."id" < "tareas"."descripcion"
+Table pre_proyectos {
+  id INT [pk, unique, not null]
+  usuario_id INT [not null, ref: > clientes.id]
+  direccion_fiscal_id INT [not null, ref: > direcciones_fiscales.id]
+  direccion_entrega_id INT [not null, ref: > direcciones_entrega.id]
+  nombre VARCHAR
+  descripcion TEXT
+  tipo ENUM('PROYECTO', 'MUESTRA') [default: 'PROYECTO']
+  numero_muestras INT [default: 0]
+  estado ENUM('PENDIENTE', 'RECHAZADO') [default: 'PENDIENTE']
+  fecha_creacion TIMESTAMP [default: `now()`]
+  fecha_Produccion DATE
+  fecha_embarque DATE
+  fecha_entrega DATE
+  created_at TIMESTAMP
+  updated_at TIMESTAMP
+}
 
+Table proyecto_estados {
+  id INT [pk, not null]
+  proyecto_id INT [not null, ref: > proyectos.id]
+  estado VARCHAR [not null]
+  fecha_inicio TIMESTAMP
+  fecha_fin TIMESTAMP
+  created_at TIMESTAMP [default: `now()`]
+  updated_at TIMESTAMP
+}
 
-Ref: "pedido"."producto_id" < "proyectos"."descripcion"
+Table proyecto_referencias {
+  id INT [pk, not null]
+  proyecto_id INT [not null, ref: > proyectos.id]
+  proyecto_origen_id INT [not null, ref: > proyectos.id]
+  created_at TIMESTAMP [default: `now()`]
+  updated_at TIMESTAMP
+}

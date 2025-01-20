@@ -17,8 +17,12 @@ class Proyecto extends Model
 
     protected $fillable = [
         'usuario_id',
+        'direccion_fiscal',
+        'direccion_entrega',
         'nombre',
         'descripcion',
+        'tipo',
+        'numero_muestras',
         'estado',
         'fecha_creacion',
         'fecha_produccion',
@@ -73,4 +77,6 @@ class Proyecto extends Model
     {
         return $this->hasMany(Proyecto_Referencia::class, 'proyecto_origen_id');
     }
+
+
 }

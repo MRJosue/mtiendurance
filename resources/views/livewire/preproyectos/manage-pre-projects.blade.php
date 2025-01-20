@@ -32,7 +32,6 @@
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">ID</th>
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Nombre del Proyecto</th>
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Usuario</th>
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Pedidos</th>
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Estado</th>
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
                 </tr>
@@ -50,27 +49,9 @@
                         <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->id }}</td>
                         <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->nombre }}</td>
                         <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->user->name ?? 'Sin usuario' }}</td>
+                        <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->estado }}</td>
                         <td class="border-b px-4 py-2 text-gray-700 text-sm">
-                            @if($project->pedidos->isNotEmpty())
-                                <ul class="list-disc list-inside">
-                                    @foreach($project->pedidos as $pedido)
-                                        <li class="text-gray-600">
-                                            <span class="font-semibold">Categoría:</span> {{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }},
-                                            <span class="font-semibold">Producto:</span> {{ $pedido->producto->nombre ?? 'Sin producto' }},
-                                            <span class="font-semibold">Total:</span> ${{ number_format($pedido->total, 2) }},
-                                            <span class="font-semibold">Estatus:</span> {{ $pedido->estatus }}
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                <span class="text-gray-500">Sin pedidos</span>
-                            @endif
-                        </td>
-                        <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->estado ?? 'Sin estado' }}</td>
-                        <td class="border-b px-4 py-2 text-gray-700 text-sm">
-                            <a href="{{ route('proyecto.show', $project->id) }}" class="text-blue-500 hover:underline">
-                                Ver detalles
-                            </a>
+                            <a href="#" class="text-blue-500 hover:underline">Ver detalles</a>
                         </td>
                     </tr>
                 @endforeach

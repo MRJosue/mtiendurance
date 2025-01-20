@@ -14,8 +14,12 @@ return new class extends Migration
         Schema::create('pre_proyectos', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('usuario_id');
+            $table->string('direccion_fiscal')->nullable();
+            $table->string('direccion_entrega')->nullable();
             $table->string('nombre')->nullable();
             $table->text('descripcion')->nullable();
+            $table->enum('tipo', ['PROYECTO', 'MUESTRA'])->default('PROYECTO');
+            $table->integer('numero_muestras')->default(0);
             $table->enum('estado', ['PENDIENTE', 'RECHAZADO'])->default('PENDIENTE');
             $table->timestamp('fecha_creacion')->useCurrent();
             $table->date('fecha_produccion')->nullable();

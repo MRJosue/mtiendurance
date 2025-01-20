@@ -14,7 +14,7 @@ use App\Http\Controllers\productocontroller;
 use App\Http\Controllers\caracteristicacontroller;
 use App\Http\Controllers\opcionescontroller;
 use App\Http\Controllers\ProyectosController;
-use App\Http\Controllers\PreprooyectosController;
+use App\Http\Controllers\PreproyectosController;
 use App\Http\Controllers\DashboardController;
 
 use App\Events\TestEvent;
@@ -76,8 +76,12 @@ Route::get('/proyectos',[ProyectosController::class, 'index'])->middleware(['aut
 Route::get('/proyectos/{proyecto}', [ProyectosController::class, 'show'])->name('proyecto.show');
 
 //preproyectos
-Route::get('/preproyectos',[PreprooyectosController::class, 'index'])->middleware(['auth','verified'])->name('preproyectos.index');
-Route::get('/preproyectos/{preprooyecto}', [PreprooyectosController::class, 'show'])->name('preproyectos.show');
+Route::get('/preproyectos',[PreproyectosController::class, 'index'])->middleware(['auth','verified'])->name('preproyectos.index');
+
+Route::get('/preproyectos/show/{preprooyecto}', [PreproyectosController::class, 'show'])->name('preproyectos.show');
+
+Route::get('/preproyectos/create',[PreproyectosController::class, 'create'])->middleware(['auth','verified'])->name('preproyectos.create');
+
 
 //Administracion de usuarios
 Route::get('/usuarios',[UserController::class, 'index'])->middleware(['auth','verified'])->name('usuarios.index');

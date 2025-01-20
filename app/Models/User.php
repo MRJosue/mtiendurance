@@ -78,4 +78,9 @@ class User extends Authenticatable
         return $this->tipo_usuario === $tipo;
     }
 
+    public function cliente()
+    {
+        return $this->hasOne(Cliente::class, 'usuario_id'); // Ajusta el campo si es necesario
+    }
+
 }

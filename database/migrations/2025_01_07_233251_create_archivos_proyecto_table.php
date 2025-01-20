@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('archivos_proyecto', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('proyecto_id');
+            $table->unsignedBigInteger('proyecto_id')->nullable();
             $table->string('nombre_archivo');
             $table->string('ruta_archivo');
             $table->string('tipo_archivo');

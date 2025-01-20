@@ -16,7 +16,7 @@ return new class extends Migration
 
 
             $table->id();
-            $table->unsignedBigInteger('proyecto_id');
+            $table->unsignedBigInteger('proyecto_id')->nullable();
             $table->unsignedBigInteger('producto_id');
             $table->foreignId('cliente_id')->constrained('clientes')->onDelete('cascade');
             $table->foreign('proyecto_id')->references('id')->on('proyectos')->onDelete('cascade');

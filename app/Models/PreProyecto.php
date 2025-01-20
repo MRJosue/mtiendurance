@@ -7,10 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class PreProyecto extends Model
 {
+
+
     protected $fillable = [
         'usuario_id', 
+        'direccion_fiscal',
+        'direccion_entrega',
         'nombre', 
         'descripcion', 
+        'tipo',
+        'numero_muestras',
         'estado', 
         'fecha_creacion', 
         'fecha_produccion',
@@ -18,6 +24,7 @@ class PreProyecto extends Model
         'fecha_entrega',
     ];
 
+    
     public function transferirAProyecto()
     {
         // Crear el nuevo proyecto
@@ -49,4 +56,12 @@ class PreProyecto extends Model
 
         return $proyecto;
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'usuario_id');
+    }
+
+
+
 }
