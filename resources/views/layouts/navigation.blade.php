@@ -17,9 +17,18 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
 
-                    <x-nav-link :href="route('proyectos.index')" :active="request()->routeIs('proyectos.index')">
-                        {{ __('Proyectos') }}
+                    <x-nav-link :href="route('preproyectos.index')" :active="request()->routeIs('preproyectos.index')">
+                        {{ __('Pre proyectos') }}
                     </x-nav-link>
+
+
+
+                    <x-nav-link :href="route('proyectos.index')" :active="request()->routeIs('proyectos.index')">
+                        {{ __('proyectos') }}
+                    </x-nav-link>
+
+
+  
 
 
                     {{-- catalogos --}}
@@ -148,9 +157,16 @@
             {{ __('Dashboard') }}
         </x-responsive-nav-link>
 
+
+        <x-responsive-nav-link  :href="route('preproyectos.index')" :active="request()->routeIs('preproyectos.index')">
+            {{ __('Pre proyectos') }}
+        </x-responsive-nav-link >
+
         <x-responsive-nav-link :href="route('proyectos.index')" :active="request()->routeIs('proyectos.index')">
             {{ __('Proyectos') }}
         </x-responsive-nav-link>
+
+
     </div>
 
     <!-- Responsive Catálogos -->

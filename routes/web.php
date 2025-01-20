@@ -14,7 +14,7 @@ use App\Http\Controllers\productocontroller;
 use App\Http\Controllers\caracteristicacontroller;
 use App\Http\Controllers\opcionescontroller;
 use App\Http\Controllers\ProyectosController;
-
+use App\Http\Controllers\PreprooyectosController;
 use App\Http\Controllers\DashboardController;
 
 use App\Events\TestEvent;
@@ -74,6 +74,10 @@ Route::middleware('auth')->group(function () {
 // proyectos
 Route::get('/proyectos',[ProyectosController::class, 'index'])->middleware(['auth','verified'])->name('proyectos.index');
 Route::get('/proyectos/{proyecto}', [ProyectosController::class, 'show'])->name('proyecto.show');
+
+//preproyectos
+Route::get('/preproyectos',[PreprooyectosController::class, 'index'])->middleware(['auth','verified'])->name('preproyectos.index');
+Route::get('/preproyectos/{preprooyecto}', [PreprooyectosController::class, 'show'])->name('preproyectos.show');
 
 //Administracion de usuarios
 Route::get('/usuarios',[UserController::class, 'index'])->middleware(['auth','verified'])->name('usuarios.index');
