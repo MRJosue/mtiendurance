@@ -68,8 +68,8 @@ Table proveedores {
 Table proyectos {
   id INT [pk, unique, not null]
   cliente_id INT [not null, ref: > clientes.id]
-  direccion_fiscal_id INT [not null, ref: > direcciones_fiscales.id]
-  direccion_entrega_id INT [not null, ref: > direcciones_entrega.id]
+  direccion_fiscal VARCHAR
+  direccion_entrega VARCHAR
   nombre VARCHAR
   descripcion TEXT
   referencia INT
@@ -175,11 +175,12 @@ Table mensajes_chat {
   fecha_envio TIMESTAMP [default: `now()`]
 }
 
+
 Table pre_proyectos {
   id INT [pk, unique, not null]
   usuario_id INT [not null, ref: > clientes.id]
-  direccion_fiscal_id INT [not null, ref: > direcciones_fiscales.id]
-  direccion_entrega_id INT [not null, ref: > direcciones_entrega.id]
+  direccion_fiscal VARCHAR
+  direccion_entrega VARCHAR
   nombre VARCHAR
   descripcion TEXT
   tipo ENUM('PROYECTO', 'MUESTRA') [default: 'PROYECTO']
@@ -192,6 +193,7 @@ Table pre_proyectos {
   created_at TIMESTAMP
   updated_at TIMESTAMP
 }
+
 
 Table proyecto_estados {
   id INT [pk, not null]

@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
 
             RolePermissionSeeder::class,
             UserSeeder::class,
+            DireccionesSeeder::class,
             ClientesTableSeeder::class,
             ProveedoresTableSeeder::class,
             CategoriasTableSeeder::class,
