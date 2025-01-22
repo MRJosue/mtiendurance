@@ -10,13 +10,13 @@ class DireccionFiscal extends Model
     use HasFactory;
 
     protected $table = 'direcciones_fiscales';
-
     protected $fillable = [
-        'user_id',
+        'usuario_id',
         'rfc',
         'calle',
-        'ciudad',
-        'estado',
+        'ciudad_id',
+        'estado_id',
+        'pais_id',
         'codigo_postal',
         'flag_default',
     ];
@@ -24,5 +24,20 @@ class DireccionFiscal extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function ciudad()
+    {
+        return $this->belongsTo(Ciudad::class);
+    }
+
+    public function estado()
+    {
+        return $this->belongsTo(Estado::class);
+    }
+
+    public function pais()
+    {
+        return $this->belongsTo(Pais::class);
     }
 }

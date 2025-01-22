@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('pedido', function (Blueprint $table) {
-            $table->unsignedBigInteger('pre_proyecto_id')->nullable()->after('proyecto_id');
-            $table->foreign('pre_proyecto_id')->references('id')->on('pre_proyectos')->onDelete('cascade');
+            // $table->unsignedBigInteger('pre_proyecto_id')->nullable()->after('proyecto_id');
+            // $table->foreign('pre_proyecto_id')->references('id')->on('pre_proyectos')->onDelete('cascade');
         });
     }
 
@@ -23,8 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('pedido', function (Blueprint $table) {
-            $table->dropForeign(['pre_proyecto_id']);
-            $table->dropColumn('pre_proyecto_id');
+            // $table->dropForeign(['pre_proyecto_id']);
+            // $table->dropColumn('pre_proyecto_id');
         });
     }
 };

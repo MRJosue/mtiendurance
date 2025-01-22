@@ -21,7 +21,7 @@ return new class extends Migration
             $table->enum('tipo', ['PROYECTO', 'MUESTRA'])->default('PROYECTO');
             $table->integer('numero_muestras')->default(0);
             $table->enum('estado', [
-                'PENDIENTE', 'APROBADO', 'PROGRAMADO', 'IMPRESIÓN', 'PRODUCCIÓN', 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO'
+                'PENDIENTE', 'APROBADO', 'PROGRAMADO', 'IMPRESIÓN', 'PRODUCCIÓN', 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO','RECHAZADO'
             ])->default('PENDIENTE');
             $table->timestamp('fecha_creacion')->useCurrent();
             $table->date('fecha_produccion')->nullable();

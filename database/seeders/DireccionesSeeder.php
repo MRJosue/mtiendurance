@@ -27,22 +27,24 @@ class DireccionesSeeder extends Seeder
             // Crear direcciones fiscales
             DB::table('direcciones_fiscales')->insert([
                 [
-                    'user_id' => $user->id,
+                    'usuario_id' => $user->id,
                     'rfc' => 'RFC123456789',
                     'calle' => 'Calle Principal 123',
-                    'ciudad' => 'Ciudad de Ejemplo',
-                    'estado' => 'Estado de Ejemplo',
+                    'ciudad_id' => 1, // Relacionar con Ciudad de Ejemplo
+                    'estado_id' => 1, // Relacionar con Estado de Ejemplo
+                    'pais_id' => 1, // Relacionar con México
                     'codigo_postal' => '12345',
                     'flag_default' => true,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
                 [
-                    'user_id' => $user->id,
+                    'usuario_id' => $user->id,
                     'rfc' => 'RFC987654321',
                     'calle' => 'Avenida Secundaria 456',
-                    'ciudad' => 'Ciudad Alternativa',
-                    'estado' => 'Estado Alternativo',
+                    'ciudad_id' => 2, // Relacionar con Ciudad Alternativa
+                    'estado_id' => 2, // Relacionar con Estado Alternativo
+                    'pais_id' => 1, // Relacionar con México
                     'codigo_postal' => '67890',
                     'flag_default' => false,
                     'created_at' => now(),
@@ -53,11 +55,12 @@ class DireccionesSeeder extends Seeder
             // Crear direcciones de entrega
             DB::table('direcciones_entrega')->insert([
                 [
-                    'user_id' => $user->id,
+                    'usuario_id' => $user->id,
                     'nombre_contacto' => 'Contacto Principal',
                     'calle' => 'Calle Entrega 123',
-                    'ciudad' => 'Ciudad de Entrega',
-                    'estado' => 'Estado de Entrega',
+                    'ciudad_id' => 3, // Relacionar con Ciudad de Entrega
+                    'estado_id' => 3, // Relacionar con Estado de Entrega
+                    'pais_id' => 1, // Relacionar con México
                     'codigo_postal' => '54321',
                     'telefono' => '1234567890',
                     'flag_default' => true,
@@ -65,11 +68,12 @@ class DireccionesSeeder extends Seeder
                     'updated_at' => now(),
                 ],
                 [
-                    'user_id' => $user->id,
+                    'usuario_id' => $user->id,
                     'nombre_contacto' => 'Contacto Alternativo',
                     'calle' => 'Avenida Entrega 456',
-                    'ciudad' => 'Ciudad Alternativa',
-                    'estado' => 'Estado Alternativo',
+                    'ciudad_id' => 4, // Relacionar con Ciudad Alternativa
+                    'estado_id' => 4, // Relacionar con Estado Alternativo
+                    'pais_id' => 1, // Relacionar con México
                     'codigo_postal' => '98765',
                     'telefono' => '0987654321',
                     'flag_default' => false,

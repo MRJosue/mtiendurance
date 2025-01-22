@@ -10,7 +10,6 @@ class Talla extends Model
 {
     use HasFactory;
 
-    use HasFactory;
 
 
 

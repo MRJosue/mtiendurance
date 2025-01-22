@@ -13,14 +13,17 @@ return new class extends Migration
     {
         Schema::create('direcciones_fiscales', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->unsignedBigInteger('usuario_id');
             $table->string('rfc');
             $table->string('calle');
-            $table->string('ciudad');
-            $table->string('estado');
+            $table->foreignId('ciudad_id')->constrained('ciudades')->onDelete('cascade');
+            $table->foreignId('estado_id')->constrained('estados')->onDelete('cascade');
+            $table->foreignId('pais_id')->constrained('paises')->onDelete('cascade');
             $table->string('codigo_postal');
             $table->boolean('flag_default')->default(false);
             $table->timestamps();
+
+            $table->foreign('usuario_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
@@ -29,6 +32,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+
         Schema::dropIfExists('direcciones_fiscales');
     }
 };

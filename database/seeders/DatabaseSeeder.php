@@ -27,7 +27,10 @@ class DatabaseSeeder extends Seeder
 
             RolePermissionSeeder::class,
             UserSeeder::class,
+            PaisesEstadosCiudadesSeeder::class,
             DireccionesSeeder::class,
+            TipoEnvioSeeder::class,
+            CiudadesTipoEnvioSeeder::class,
             ClientesTableSeeder::class,
             ProveedoresTableSeeder::class,
             CategoriasTableSeeder::class,

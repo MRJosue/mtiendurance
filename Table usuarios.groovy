@@ -24,13 +24,54 @@ Table rol_permisos {
   permiso_id INT [not null, ref: > permisos.id]
 }
 
+Table paises {
+  id INT [pk, unique, not null]
+  nombre VARCHAR [not null]
+  fecha_creacion TIMESTAMP [default: `now()`]
+  fecha_actualizacion TIMESTAMP
+}
+
+Table estados {
+  id INT [pk, unique, not null]
+  pais_id INT [not null, ref: > paises.id]
+  nombre VARCHAR [not null]
+  fecha_creacion TIMESTAMP [default: `now()`]
+  fecha_actualizacion TIMESTAMP
+}
+
+Table ciudades {
+  id INT [pk, unique, not null]
+  estado_id INT [not null, ref: > estados.id]
+  nombre VARCHAR [not null]
+  fecha_creacion TIMESTAMP [default: `now()`]
+  fecha_actualizacion TIMESTAMP
+}
+
+Table tipo_envio {
+  id INT [pk, unique, not null]
+  nombre VARCHAR [not null]
+  descripcion TEXT
+  dias_envio INT [not null]
+  fecha_creacion TIMESTAMP [default: `now()`]
+  fecha_actualizacion TIMESTAMP
+}
+
+Table ciudades_tipo_envio {
+  id INT [pk, unique, not null]
+  ciudad_id INT [not null, ref: > ciudades.id]
+  tipo_envio_id INT [not null, ref: > tipo_envio.id]
+  fecha_creacion TIMESTAMP [default: `now()`]
+  fecha_actualizacion TIMESTAMP
+}
+
 Table direcciones_fiscales {
   id INT [pk, unique, not null]
   user_id INT [not null, ref: > users.id]
   rfc VARCHAR [not null]
   calle VARCHAR [not null]
-  ciudad VARCHAR [not null]
-  estado VARCHAR [not null]
+  pais_id INT [not null, ref: > paises.id]
+  ciudad_id INT [not null, ref: > ciudades.id]
+  estado_id INT [not null, ref: > estados.id]
   codigo_postal VARCHAR [not null]
   flag_default tiny
   fecha_creacion TIMESTAMP [default: `now()`]
@@ -42,8 +83,9 @@ Table direcciones_entrega {
   user_id INT [not null, ref: > users.id]
   nombre_contacto VARCHAR [not null]
   calle VARCHAR [not null]
-  ciudad VARCHAR [not null]
-  estado VARCHAR [not null]
+  pais_id INT [not null, ref: > paises.id]
+  ciudad_id INT [not null, ref: > ciudades.id]
+  estado_id INT [not null, ref: > estados.id]
   codigo_postal VARCHAR [not null]
   telefono VARCHAR
   flag_default tiny
@@ -75,7 +117,7 @@ Table proyectos {
   referencia INT
   tipo ENUM('PROYECTO', 'MUESTRA') [default: 'PROYECTO']
   numero_muestras INT [default: 0]
-  estado ENUM('PENDIENTE', 'APROBADO', 'PROGRAMADO', 'IMPRESIÓN', 'PRODUCCIÓN', 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO')
+  estado ENUM('PENDIENTE', 'APROBADO', 'PROGRAMADO', 'IMPRESIÓN', 'PRODUCCIÓN', 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO','RECHAZADO')
   fecha_creacion TIMESTAMP [default: `now()`]
   fecha_Produccion DATE
   fecha_embarque DATE
@@ -176,23 +218,23 @@ Table mensajes_chat {
 }
 
 
-Table pre_proyectos {
-  id INT [pk, unique, not null]
-  usuario_id INT [not null, ref: > clientes.id]
-  direccion_fiscal VARCHAR
-  direccion_entrega VARCHAR
-  nombre VARCHAR
-  descripcion TEXT
-  tipo ENUM('PROYECTO', 'MUESTRA') [default: 'PROYECTO']
-  numero_muestras INT [default: 0]
-  estado ENUM('PENDIENTE', 'RECHAZADO') [default: 'PENDIENTE']
-  fecha_creacion TIMESTAMP [default: `now()`]
-  fecha_Produccion DATE
-  fecha_embarque DATE
-  fecha_entrega DATE
-  created_at TIMESTAMP
-  updated_at TIMESTAMP
-}
+// Table pre_proyectos {
+//   id INT [pk, unique, not null]
+//   usuario_id INT [not null, ref: > clientes.id]
+//   direccion_fiscal VARCHAR
+//   direccion_entrega VARCHAR
+//   nombre VARCHAR
+//   descripcion TEXT
+//   tipo ENUM('PROYECTO', 'MUESTRA') [default: 'PROYECTO']
+//   numero_muestras INT [default: 0]
+//   estado ENUM('PENDIENTE', 'RECHAZADO') [default: 'PENDIENTE']
+//   fecha_creacion TIMESTAMP [default: `now()`]
+//   fecha_Produccion DATE
+//   fecha_embarque DATE
+//   fecha_entrega DATE
+//   created_at TIMESTAMP
+//   updated_at TIMESTAMP
+// }
 
 
 Table proyecto_estados {

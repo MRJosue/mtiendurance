@@ -12,9 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('pedido', function (Blueprint $table) {
-
-
-
             $table->id();
             $table->unsignedBigInteger('proyecto_id')->nullable();
             $table->unsignedBigInteger('producto_id');

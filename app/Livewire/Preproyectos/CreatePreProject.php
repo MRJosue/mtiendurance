@@ -4,13 +4,11 @@ namespace App\Livewire\Preproyectos;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use App\Models\PreProyecto;
+use App\Models\Proyecto;
 use App\Models\ArchivoProyecto;
 use App\Models\Pedido;
 use App\Models\Producto;
 use Illuminate\Support\Facades\Auth;
-
-use App\Models\User;
 
 class CreatePreProject extends Component
 {
@@ -18,7 +16,6 @@ class CreatePreProject extends Component
 
     public $nombre;
     public $descripcion;
-    public $estado = 'PENDIENTE';
     public $fecha_produccion;
     public $fecha_embarque;
     public $fecha_entrega;
@@ -26,9 +23,6 @@ class CreatePreProject extends Component
     public $fileDescriptions = [];
     public $producto_id;
     public $total;
-    public $estatus;
-
-    Public $auxiliar_preProyecto_id;
 
     public function create()
     {
@@ -42,53 +36,50 @@ class CreatePreProject extends Component
             'fileDescriptions.*' => 'nullable|string|max:255',
             'producto_id' => 'required|exists:productos,id',
             'total' => 'required|numeric|min:0',
-            'estatus' => 'required|string|max:255',
         ]);
 
-        $cliente = Auth::user()->cliente;
+        $user = Auth::user();
+        $cliente = $user->cliente;
 
         if (!$cliente) {
             session()->flash('error', 'El usuario no tiene un cliente asociado.');
             return;
         }
 
-        // Crear Preproyecto
-        $preProyecto = PreProyecto::create([
-            'usuario_id' => Auth::id(),
+        // Crear Proyecto
+        $proyecto = Proyecto::create([
+            'usuario_id' => $user->id,
             'nombre' => $this->nombre,
             'descripcion' => $this->descripcion,
-            'estado' => $this->estado,
+            'estado' => 'PENDIENTE',
             'fecha_produccion' => $this->fecha_produccion,
             'fecha_embarque' => $this->fecha_embarque,
             'fecha_entrega' => $this->fecha_entrega,
         ]);
 
-
-        $auxiliar_preProyecto_id = $preProyecto->id;
-
         // Crear Archivos
         foreach ($this->files as $index => $file) {
-            $rutaArchivo = $file->store('preproyectos/archivos', 'public');
+            $rutaArchivo = $file->store('proyectos/archivos', 'public');
             ArchivoProyecto::create([
-                'pre_proyecto_id' => $auxiliar_preProyecto_id,
+                'proyecto_id' => $proyecto->id,
                 'nombre_archivo' => $file->getClientOriginalName(),
                 'ruta_archivo' => $rutaArchivo,
                 'tipo_archivo' => $file->getMimeType(),
-                'usuario_id' => Auth::id(),
+                'usuario_id' => $user->id,
                 'descripcion' => $this->fileDescriptions[$index] ?? null,
             ]);
         }
 
         // Crear Pedido
         Pedido::create([
-            'pre_proyecto_id' => $auxiliar_preProyecto_id,
+            'proyecto_id' => $proyecto->id,
             'producto_id' => $this->producto_id,
             'cliente_id' => $cliente->id,
             'total' => $this->total,
-            'estatus' => $this->estatus,
+            'estatus' => 'pendiente',
         ]);
 
-        session()->flash('message', 'Preproyecto creado exitosamente.');
+        session()->flash('message', 'Proyecto creado exitosamente.');
         return redirect()->route('preproyectos.index');
     }
 

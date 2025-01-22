@@ -13,6 +13,11 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\productocontroller;
 use App\Http\Controllers\caracteristicacontroller;
 use App\Http\Controllers\opcionescontroller;
+use App\Http\Controllers\ciudadescontroller;
+use App\Http\Controllers\tipoenviocontroller;
+use App\Http\Controllers\estadoscontroller;
+use App\Http\Controllers\paisescontroller;
+
 use App\Http\Controllers\ProyectosController;
 use App\Http\Controllers\PreproyectosController;
 use App\Http\Controllers\DashboardController;
@@ -85,6 +90,8 @@ Route::get('/preproyectos/create',[PreproyectosController::class, 'create'])->mi
 
 //Administracion de usuarios
 Route::get('/usuarios',[UserController::class, 'index'])->middleware(['auth','verified'])->name('usuarios.index');
+Route::get('/usuarios/detalles/{user}',[UserController::class, 'show'])->middleware(['auth','verified'])->name('usuarios.show');
+
 Route::get('/usuarios/modal',[UserController::class, 'actions'])->middleware(['auth','verified'])->name('usuarios.actions');
 // permisos
 Route::get('/usuarios/permisos',[permisoscontroller::class, 'index'])->middleware(['auth','verified'])->name('permisos.index');
@@ -96,6 +103,14 @@ Route::get('/usuarios/permisos',[permisoscontroller::class, 'index'])->middlewar
     Route::get('catalogos/producto',   [productocontroller::class, 'index'])->name('catalogos.producto.index');
     Route::get('catalogos/caracteristicas', [caracteristicacontroller::class, 'index'])->name('catalogos.caracteristica.index');
     Route::get('catalogos/opciones', [opcionescontroller::class, 'index'])->name('catalogos.opciones.index');
+    //Paises 
+    Route::get('catalogos/paises', [paisescontroller::class, 'index'])->name('catalogos.paises.index');
+    //Estados
+    Route::get('catalogos/estados', [estadoscontroller::class, 'index'])->name('catalogos.estados.index');
+    //Ciudades
+    Route::get('catalogos/ciudades', [ciudadescontroller::class, 'index'])->name('catalogos.ciudades.index');
+    //Tipo de envvio
+    Route::get('catalogos/tipoenvio', [tipoenviocontroller::class, 'index'])->name('catalogos.tipoenvio.index');
 
 // Prueba data tables
 

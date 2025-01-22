@@ -26,20 +26,7 @@
             @error('descripcion') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
 
-        <div class="grid grid-cols-3 gap-4 mb-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Fecha Producción</label>
-                <input type="date" wire:model="fecha_produccion" class="w-full mt-1 border rounded-lg p-2">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Fecha Embarque</label>
-                <input type="date" wire:model="fecha_embarque" class="w-full mt-1 border rounded-lg p-2">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Fecha Entrega</label>
-                <input type="date" wire:model="fecha_entrega" class="w-full mt-1 border rounded-lg p-2">
-            </div>
-        </div>
+
 
         <!-- Archivos -->
         <div class="mb-4">
@@ -68,16 +55,31 @@
             @error('producto_id') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Total</label>
                 <input type="number" wire:model="total" step="0.01" class="w-full mt-1 border rounded-lg p-2">
                 @error('total') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
             </div>
-            <div>
+            {{-- <div>
                 <label class="block text-sm font-medium text-gray-700">Estatus</label>
                 <input type="text" wire:model="estatus" class="w-full mt-1 border rounded-lg p-2">
                 @error('estatus') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+            </div> --}}
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Fecha Producción</label>
+                <input type="date" wire:model="fecha_produccion" class="w-full mt-1 border rounded-lg p-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Fecha Embarque</label>
+                <input type="date" wire:model="fecha_embarque" class="w-full mt-1 border rounded-lg p-2">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Fecha Entrega</label>
+                <input type="date" wire:model="fecha_entrega" class="w-full mt-1 border rounded-lg p-2">
             </div>
         </div>
 

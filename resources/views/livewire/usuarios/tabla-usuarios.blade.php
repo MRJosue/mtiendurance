@@ -1,84 +1,38 @@
-<div class="p-3">
-    <div class="mb-4 grid grid-cols-3 gap-4">
-        <div>
-            <label for="search-id" class="block text-sm font-medium text-gray-700">Buscar por ID</label>
-            <input id="search-id" type="text" wire:model="search.id" placeholder="ID"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-        </div>
-        <div>
-            <label for="search-name" class="block text-sm font-medium text-gray-700">Buscar por Nombre</label>
-            <input id="search-name" type="text" wire:model="search.name" placeholder="Nombre"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-        </div>
-        <div>
-            <label for="search-email" class="block text-sm font-medium text-gray-700">Buscar por Email</label>
-            <input id="search-email" type="text" wire:model="search.email" placeholder="Email"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-        </div>
-    </div>
+<div class="max-w-4xl mx-auto p-4">
+    <h2 class="text-2xl font-bold mb-4 text-center md:text-left">Usuarios</h2>
 
-    <div class="mb-4">
-        <button wire:click="searchUsers" class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-md shadow hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            Buscar
-        </button>
-    </div>
+    @if (session()->has('message'))
+        <div class="bg-green-100 text-green-800 p-3 rounded mb-3">
+            {{ session('message') }}
+        </div>
+    @endif
 
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+        <table class="min-w-full border-collapse border border-gray-300">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Nombre</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Correo Electrónico</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Tipo de Usuario</th>
+                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Acciones</th>
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @foreach($users as $index => $user)
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ $user->id }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ $user->name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ $user->email }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">@livewire('modal-component', ['id' => $user->id, 'component' =>'assign-roles','titulo' => 'Editar Permisos','methodname'=>'userId'], key('modal-'.$user->id))</td>
-
+            <tbody>
+                @foreach($usuarios as $usuario)
+                    <tr class="hover:bg-gray-50">
+                        <td class="border border-gray-300 px-4 py-2">{{ $usuario->name }}</td>
+                        <td class="border border-gray-300 px-4 py-2">{{ $usuario->email }}</td>
+                        <td class="border border-gray-300 px-4 py-2">{{ $usuario->tipo_usuario }}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">
+                            <a href="{{ route('usuarios.show', $usuario->id) }}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded inline-block">Detalles</a>
+                        </td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
     </div>
 
-    <div class="mt-4" wire:noscroll>
-        {{ $users->links() }}
+    <div class="mt-4">
+        {{ $usuarios->links() }}
     </div>
-
-
 </div>
-
-
-@push('scripts')
-    {{-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> --}}
-
-        <!-- Cargar jQuery -->
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-        <script>
-        $(document).ready(function () {
-            console.log('jQuery activo');
-            scrollTopValue = 0;
-            $(window).on('scroll', function () {
-                scrollTopValue = $(this).scrollTop();
-
-            });
-
-            // Apuntar a los enlaces de paginación de Livewire
-            $(document).on('click', 'a[wire\\:click], button[wire\\:click]', function (e) {
-
-                // Realiza scroll suave hacia arriba
-                $('html, body').animate({
-                    scrollTop: scrollTopValue
-                }, 300); // 600ms para el efecto
-            });
-        });
-        </script>
-
-@endpush

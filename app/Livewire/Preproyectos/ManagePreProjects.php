@@ -2,20 +2,18 @@
 
 namespace App\Livewire\Preproyectos;
 
-
 use Livewire\Component;
-use Livewire\WithPagination; // Para la paginación
-use App\Models\PreProyecto;
+use Livewire\WithPagination;
+use App\Models\Proyecto;
 
 class ManagePreProjects extends Component
 {
     use WithPagination;
 
-    public $perPage = 10; // Cantidad de registros por página
+    public $perPage = 10;
     public $selectedProjects = [];
     public $selectAll = false;
 
-    // Actualizar la página cuando se modifique el número de registros por página
     public function updating($field)
     {
         if ($field === 'perPage') {
@@ -23,36 +21,39 @@ class ManagePreProjects extends Component
         }
     }
 
-    // Manejar la selección de todos los proyectos
     public function updatedSelectAll($value)
     {
         if ($value) {
-            $this->selectedProjects = PreProyecto::pluck('id')->toArray();
+            $this->selectedProjects = Proyecto::where('estado', 'PENDIENTE')
+                                              ->where('usuario_id', auth()->id())
+                                              ->pluck('id')
+                                              ->toArray();
         } else {
             $this->selectedProjects = [];
         }
     }
 
-    // Eliminar proyectos seleccionados
     public function deleteSelected()
     {
-        PreProyecto::whereIn('id', $this->selectedProjects)->delete();
+        Proyecto::whereIn('id', $this->selectedProjects)->delete();
         $this->selectedProjects = [];
         $this->selectAll = false;
-        session()->flash('message', 'Preproyectos eliminados exitosamente.');
+        session()->flash('message', 'Proyectos eliminados exitosamente.');
     }
 
-    // Exportar proyectos seleccionados
     public function exportSelected()
     {
-        // Lógica de exportación
+        // Lógica de exportación (puedes implementar la exportación específica aquí)
         session()->flash('message', 'Exportación completada.');
     }
 
     public function render()
     {
         return view('livewire.preproyectos.manage-pre-projects', [
-            'projects' => PreProyecto::with('user')->paginate($this->perPage)
+            'projects' => Proyecto::with(['user'])
+                                  ->where('estado', 'PENDIENTE')
+                                  ->where('usuario_id', auth()->id())
+                                  ->paginate($this->perPage)
         ]);
     }
 }

@@ -69,6 +69,21 @@
                                 </x-dropdown-link>
 
 
+                                <x-dropdown-link :href="route('catalogos.paises.index')">
+                                    {{ __('Paises') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('catalogos.estados.index')">
+                                    {{ __('Estados') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('catalogos.ciudades.index')">
+                                    {{ __('Ciudades') }}
+                                </x-dropdown-link>
+
+                                <x-dropdown-link :href="route('catalogos.tipoenvio.index')">
+                                    {{ __('Tipos de envio') }}
+                                </x-dropdown-link>
+
+
 
                             </x-slot>
                         </x-dropdown>

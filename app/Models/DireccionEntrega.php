@@ -15,8 +15,9 @@ class DireccionEntrega extends Model
         'user_id',
         'nombre_contacto',
         'calle',
-        'ciudad',
-        'estado',
+        'ciudad_id',
+        'estado_id',
+        'pais_id',
         'codigo_postal',
         'telefono',
         'flag_default',
@@ -25,5 +26,20 @@ class DireccionEntrega extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function ciudad()
+    {
+        return $this->belongsTo(Ciudad::class);
+    }
+
+    public function estado()
+    {
+        return $this->belongsTo(Estado::class);
+    }
+
+    public function pais()
+    {
+        return $this->belongsTo(Pais::class);
     }
 }
