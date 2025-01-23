@@ -64,4 +64,9 @@ class PreProyecto extends Model
 
 
 
+    public function setDireccionConcentrada($direccionFiscal, $direccionEntrega)
+    {
+        $this->direccion_concentrada = "{$direccionFiscal->nombre_contacto}, {$direccionFiscal->calle} | " .
+                                       "{$direccionEntrega->nombre_contacto}, {$direccionEntrega->calle}";
+    }
 }

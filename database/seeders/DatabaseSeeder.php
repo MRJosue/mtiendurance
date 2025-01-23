@@ -33,11 +33,11 @@ class DatabaseSeeder extends Seeder
             CiudadesTipoEnvioSeeder::class,
             ClientesTableSeeder::class,
             ProveedoresTableSeeder::class,
+            
             CategoriasTableSeeder::class,
             ProductosTableSeeder::class,
             CaracteristicasTableSeeder::class,
             OpcionesTableSeeder::class,
-
 
 
             ProyectosTableSeeder::class,

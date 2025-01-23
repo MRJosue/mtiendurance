@@ -2,9 +2,10 @@
 
 namespace App\Livewire\Preproyectos;
 
+
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Proyecto;
+use App\Models\PreProyecto;
 
 class ManagePreProjects extends Component
 {
@@ -24,7 +25,7 @@ class ManagePreProjects extends Component
     public function updatedSelectAll($value)
     {
         if ($value) {
-            $this->selectedProjects = Proyecto::where('estado', 'PENDIENTE')
+            $this->selectedProjects = PreProyecto::where('estado', 'PENDIENTE')
                                               ->where('usuario_id', auth()->id())
                                               ->pluck('id')
                                               ->toArray();
@@ -35,10 +36,10 @@ class ManagePreProjects extends Component
 
     public function deleteSelected()
     {
-        Proyecto::whereIn('id', $this->selectedProjects)->delete();
+        PreProyecto::whereIn('id', $this->selectedProjects)->delete();
         $this->selectedProjects = [];
         $this->selectAll = false;
-        session()->flash('message', 'Proyectos eliminados exitosamente.');
+        session()->flash('message', 'Preproyectos eliminados exitosamente.');
     }
 
     public function exportSelected()
@@ -50,7 +51,7 @@ class ManagePreProjects extends Component
     public function render()
     {
         return view('livewire.preproyectos.manage-pre-projects', [
-            'projects' => Proyecto::with(['user'])
+            'projects' => PreProyecto::with(['user'])
                                   ->where('estado', 'PENDIENTE')
                                   ->where('usuario_id', auth()->id())
                                   ->paginate($this->perPage)

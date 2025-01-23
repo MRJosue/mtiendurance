@@ -12,7 +12,7 @@ class DireccionEntrega extends Model
     protected $table = 'direcciones_entrega';
 
     protected $fillable = [
-        'user_id',
+        'usuario_id',
         'nombre_contacto',
         'calle',
         'ciudad_id',
