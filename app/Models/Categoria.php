@@ -15,6 +15,11 @@ class Categoria extends Model
     public $incrementing = true;
     protected $keyType = 'string';
 
-    protected $fillable = ['id', 'nombre'];
+    protected $fillable = [ 'nombre'];
+
+    public function productos()
+    {
+        return $this->belongsToMany(Producto::class, 'categoria_producto');
+    }
 
 }

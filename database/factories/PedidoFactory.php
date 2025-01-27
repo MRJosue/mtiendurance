@@ -22,25 +22,16 @@ class PedidoFactory extends Factory
 
     public function definition(): array
     {
-        // return [
-        //     'id' => Str::uuid(), // Genera un UUID para el pedido
-        //     'proyecto_id' => Proyecto::factory()->create()->id, // Crea un Proyecto válido
-        //     'producto_id' => Producto::factory()->create()->id, // Crea un Producto válido
-        //     'cliente_id' => Cliente::factory()->create()->id,   // Crea un Cliente válido
-        //     'fecha_creacion' => now(),
-        //     'total' => $this->faker->randomFloat(2, 100, 10000), // Genera un total aleatorio
-        //     'estatus' => $this->faker->randomElement(['pendiente', 'procesado', 'cancelado']),
-        //     'created_at' => now(),
-        //     'updated_at' => now(),
-        // ];
+        $proyecto = Proyecto::factory()->create();
+        $producto = Producto::factory()->create();
+        $cliente = Cliente::factory()->create();
+        
 
+        
         return [
-
-
-            'proyecto_id' => Proyecto::factory()->create()->id,
-            'producto_id' => Producto::factory()->create()->id,
-            'cliente_id' => Cliente::factory()->create()->id,
-
+            'proyecto_id' => $proyecto->id,
+            'producto_id' => $producto->id,
+            'cliente_id' => $cliente->id,
             'fecha_creacion' => now(),
             'total' => $this->faker->randomFloat(2, 100, 10000),
             'estatus' => $this->faker->randomElement(['pendiente', 'procesado', 'cancelado']),

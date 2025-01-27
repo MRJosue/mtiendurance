@@ -15,13 +15,12 @@ class Opcion extends Model
     public $incrementing = true;
     protected $keyType = 'string';
 
-    protected $fillable = ['id', 'nombre','valor', 'caracteristica_id'];
 
+    protected $fillable = ['nombre', 'pasos', 'minutoPaso', 'valoru'];
 
-
-    public function caracteristica()
+    public function caracteristicas()
     {
-        return $this->belongsTo(\App\Models\Caracteristica::class, 'caracteristica_id');
+        return $this->belongsToMany(Caracteristica::class, 'caracteristica_opcion')->withPivot('restriccion');
     }
 
 }

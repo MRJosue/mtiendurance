@@ -15,17 +15,16 @@ class Caracteristica extends Model
     public $incrementing = true;
     protected $keyType = 'string';
 
-    protected $fillable = ['id', 'nombre', 'producto_id'];
+ 
+    protected $fillable = ['nombre', 'pasos', 'minutoPaso', 'valoru'];
 
-
+    public function productos()
+    {
+        return $this->belongsToMany(Producto::class, 'producto_caracteristica');
+    }
 
     public function opciones()
     {
-        return $this->hasMany(Opcion::class, 'caracteristica_id');
-    }
-
-    public function producto()
-    {
-        return $this->belongsTo(\App\Models\Producto::class, 'producto_id');
+        return $this->belongsToMany(Opcion::class, 'caracteristica_opcion')->withPivot('restriccion');
     }
 }

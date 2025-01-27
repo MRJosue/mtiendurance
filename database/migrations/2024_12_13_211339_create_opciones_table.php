@@ -9,11 +9,17 @@ return new class extends Migration {
     public function up()
     {
         Schema::create('opciones', function (Blueprint $table) {
-            $table->id ();
-            $table->unsignedBigInteger('caracteristica_id');
+            // $table->id ();
+            // $table->unsignedBigInteger('caracteristica_id');
+            // $table->string('nombre');
+            // $table->string('valor');
+            // $table->foreign('caracteristica_id')->references('id')->on('caracteristicas')->onDelete('cascade');
+            // $table->timestamps();
+            $table->id();
             $table->string('nombre');
-            $table->string('valor');
-            $table->foreign('caracteristica_id')->references('id')->on('caracteristicas')->onDelete('cascade');
+            $table->integer('pasos');
+            $table->integer('minutoPaso');
+            $table->float('valoru');
             $table->timestamps();
         });
     }

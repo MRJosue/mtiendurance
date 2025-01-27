@@ -25,7 +25,7 @@ class ProductoFactory extends Factory
             //'id' => $this->faker->uuid, // Genera un UUID para la clave primaria
             'nombre' => $this->faker->word, // Genera un nombre aleatorio
             //'categoria_id' => Categoria::factory(), // Crea una categoría y asigna su ID
-            'categoria_id' => Categoria::inRandomOrder()->take(2)->pluck('id')->random(),
+            //'categoria_id' => Categoria::inRandomOrder()->take(2)->pluck('id')->random(),
             'created_at' => now(),
             'updated_at' => now(),
         ];

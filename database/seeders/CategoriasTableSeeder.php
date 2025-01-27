@@ -16,5 +16,13 @@ class CategoriasTableSeeder extends Seeder
         //Categoria::factory(2)->create();
         Categoria::create(['nombre' => 'Listones']);
         Categoria::create(['nombre' => 'Playeras']);
+        Categoria::create(['nombre' => 'Medalla']);
+        Categoria::create(['nombre' => 'Pulsera']);
+        Categoria::create(['nombre' => 'Portagafetes']);
+        Categoria::create(['nombre' => 'Playeras']);
+        Categoria::create(['nombre' => 'Medallas']);
+        Categoria::create(['nombre' => 'Morrales']);
+        Categoria::create(['nombre' => 'Bandanas']);
+        Categoria::create(['nombre' => 'Llaveros']);
     }
 }

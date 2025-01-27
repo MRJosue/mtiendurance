@@ -23,9 +23,12 @@ class OpcionFactory extends Factory
     {
         return [
 
-            'caracteristica_id' => Caracteristica::factory(), // Genera una característica y asigna su ID
+            // 'caracteristica_id' => Caracteristica::factory(), // Genera una característica y asigna su ID
             'nombre' => $this->faker->word, // Genera un valor aleatorio
-            'valor' => $this->faker->word, // Genera un valor aleatorio
+            // 'valor' => $this->faker->word, // Genera un valor aleatorio
+            'valoru' => 1, // Puedes cambiar esto si necesitas un valor específico
+            'pasos' => 1,
+            'minutoPaso' => 1,
             'created_at' => now(),
             'updated_at' => now(),
         ];

@@ -21,8 +21,11 @@ class CaracteristicaFactory extends Factory
     {
         return [
 
-            'producto_id' => Producto::factory(), // Crea un producto y asigna su ID
+            // 'producto_id' => Producto::factory(), // Crea un producto y asigna su ID
             'nombre' => $this->faker->word, // Genera un nombre aleatorio para la característica
+            'pasos' => 1,
+            'minutoPaso' => 1,
+            'valoru' => 1,
             'created_at' => now(),
             'updated_at' => now(),
         ];

@@ -17,13 +17,18 @@ class Producto extends Model
 
     protected $fillable = [
 
-        'nombre',
-        'categoria_id'
+        'nombre'
     ];
 
 
-    public function categoria()
+    public function categorias()
     {
-        return $this->belongsTo(\App\Models\Categoria::class, 'categoria_id');
+        return $this->belongsToMany(Categoria::class, 'categoria_producto');
     }
+
+    public function caracteristicas()
+    {
+        return $this->belongsToMany(Caracteristica::class, 'producto_caracteristica');
+    }
+
 }
