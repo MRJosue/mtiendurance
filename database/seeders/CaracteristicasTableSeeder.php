@@ -22,21 +22,15 @@ class CaracteristicasTableSeeder extends Seeder
     public function run(): void
     {
         $caracteristicas = [
-            'Material Y',
-            'Material X',
-            'Medida C',
-            'Medida D',
-            'Impresión A',
-            'Impresión B',
+            'Material',
+            'Medida',
+            'Impresión',
             'Herraje',
         ];
 
             foreach ($caracteristicas as $nombreCaracteristica) {
                 Caracteristica::create([
-                    'nombre' => $nombreCaracteristica,
-                    'pasos' => 1,
-                    'minutoPaso' => 1,
-                    'valoru' => 1,
+                    'nombre' => $nombreCaracteristica
                 ]);
             }
         

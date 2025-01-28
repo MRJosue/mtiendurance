@@ -4,53 +4,40 @@ namespace App\Livewire\Catalogos;
 
 use Livewire\Component;
 use App\Models\Caracteristica;
-use App\Models\Producto;
 use Livewire\WithPagination;
-
 
 class CaracteristicaCrud extends Component
 {
     use WithPagination;
 
     public $nombre;
-    public $producto_id;
     public $caracteristica_id;
     public $modal = false;
-    public $search = ''; // La búsqueda efectiva
-    public $query = '';  // Lo que el usuario está escribiendo en el input
+    public $search = '';
+    public $query = '';
     protected $paginationTheme = 'tailwind';
 
     protected $rules = [
         'nombre' => 'required|string|max:255',
-        'producto_id' => 'required|exists:productos,id',
     ];
 
     public function buscar()
     {
-        // Cuando se presione el botón Buscar, se aplicará el filtro
         $this->search = $this->query;
         $this->resetPage();
     }
 
-
-
     public function render()
     {
+        $query = Caracteristica::query();
 
-
-        $query = Caracteristica::with('producto');
-
-        // Aplicar el filtro de búsqueda si se ha proporcionado un término
         if (!empty($this->search)) {
             $query->where('nombre', 'like', '%' . $this->search . '%');
         }
 
         return view('livewire.catalogos.caracteristica-crud', [
             'caracteristicas' => $query->orderBy('created_at', 'desc')->paginate(5),
-            'productos' => Producto::orderBy('nombre')->get(),
         ]);
-
-
     }
 
     public function crear()
@@ -72,7 +59,6 @@ class CaracteristicaCrud extends Component
     public function limpiar()
     {
         $this->nombre = '';
-        $this->producto_id = '';
         $this->caracteristica_id = null;
     }
 
@@ -81,17 +67,13 @@ class CaracteristicaCrud extends Component
         $this->validate();
 
         if ($this->caracteristica_id) {
+            // Actualizar la característica existente
             $caracteristica = Caracteristica::findOrFail($this->caracteristica_id);
-            $caracteristica->update([
-                'nombre' => $this->nombre,
-                'producto_id' => $this->producto_id,
-            ]);
+            $caracteristica->update(['nombre' => $this->nombre]);
             session()->flash('message', '¡Característica actualizada exitosamente!');
         } else {
-            Caracteristica::create([
-                'nombre' => $this->nombre,
-                'producto_id' => $this->producto_id,
-            ]);
+            // Crear una nueva característica
+            Caracteristica::create(['nombre' => $this->nombre]);
             session()->flash('message', '¡Característica creada exitosamente!');
         }
 
@@ -104,15 +86,17 @@ class CaracteristicaCrud extends Component
         $caracteristica = Caracteristica::findOrFail($id);
         $this->caracteristica_id = $caracteristica->id;
         $this->nombre = $caracteristica->nombre;
-        $this->producto_id = $caracteristica->producto_id;
+
         $this->abrirModal();
     }
 
     public function borrar($id)
     {
-        Caracteristica::find($id)->delete();
-        session()->flash('message', 'Característica eliminada exitosamente.');
+        $caracteristica = Caracteristica::find($id);
+
+        if ($caracteristica) {
+            $caracteristica->delete();
+            session()->flash('message', 'Característica eliminada exitosamente.');
+        }
     }
 }
-
-//      return view('livewire.catalogos.caracteristica-crud');

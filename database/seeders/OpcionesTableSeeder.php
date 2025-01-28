@@ -28,9 +28,8 @@ class OpcionesTableSeeder extends Seeder
             'Bandola Caimán',
         ];
 
-        $caracteristicas = Caracteristica::all();
 
-        foreach ($caracteristicas as $caracteristica) {
+        
             foreach ($opciones as $nombreOpcion) {
                 Opcion::create([
                     'nombre' => $nombreOpcion,
@@ -39,6 +38,6 @@ class OpcionesTableSeeder extends Seeder
                     'minutoPaso' => 1
                 ]);
             }
-        }
+        
     }
 }

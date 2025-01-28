@@ -12,29 +12,49 @@
             Nueva Opción
         </button>
         <div class="flex space-x-2">
-            <input type="text" wire:model="query" placeholder="Buscar por valor o nombre..." class="border border-gray-300 rounded px-4 py-2">
-            <button wire:click="buscar" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded">Buscar</button>
+            <input type="text" wire:model="query" placeholder="Buscar por nombre..." class="border border-gray-300 rounded px-4 py-2">
+            <button wire:click="buscar" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded">
+                Buscar
+            </button>
         </div>
     </div>
 
     <table class="w-full border-collapse border border-gray-300">
         <thead>
             <tr class="bg-gray-100">
-                <th class="border border-gray-300 p-2 text-left">Valor</th>
-                <th class="border border-gray-300 p-2 text-left">Nombre</th> <!-- Nueva columna -->
-                <th class="border border-gray-300 p-2 text-left">Característica</th>
+                <th class="border border-gray-300 p-2 text-left">Nombre</th>
+                <th class="border border-gray-300 p-2 text-left">Pasos</th>
+                <th class="border border-gray-300 p-2 text-left">Minuto/Paso</th>
+                <th class="border border-gray-300 p-2 text-left">Valor Unitario</th>
+                <th class="border border-gray-300 p-2 text-left">Características</th>
                 <th class="border border-gray-300 p-2 text-center">Acciones</th>
             </tr>
         </thead>
         <tbody>
             @foreach($opciones as $opc)
                 <tr>
-                    <td class="border border-gray-300 p-2">{{ $opc->valor }}</td>
-                    <td class="border border-gray-300 p-2">{{ $opc->nombre }}</td> <!-- Mostrar nuevo campo -->
-                    <td class="border border-gray-300 p-2">{{ $opc->caracteristica->nombre ?? 'N/A' }}</td>
+                    <td class="border border-gray-300 p-2">{{ $opc->nombre }}</td>
+                    <td class="border border-gray-300 p-2">{{ $opc->pasos }}</td>
+                    <td class="border border-gray-300 p-2">{{ $opc->minutoPaso }}</td>
+                    <td class="border border-gray-300 p-2">${{ number_format($opc->valoru, 2) }}</td>
+                    <td class="border border-gray-300 p-2">
+                        @if ($opc->caracteristicas->isNotEmpty())
+                            <ul>
+                                @foreach ($opc->caracteristicas as $car)
+                                    <li>{{ $car->nombre }}</li>
+                                @endforeach
+                            </ul>
+                        @else
+                            N/A
+                        @endif
+                    </td>
                     <td class="border border-gray-300 p-2 flex space-x-2 justify-center">
-                        <button wire:click="editar('{{ $opc->id }}')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">Editar</button>
-                        <button wire:click="borrar('{{ $opc->id }}')" class="bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1 rounded" onclick="return confirm('¿Estás seguro de eliminar esta opción?')">Eliminar</button>
+                        <button wire:click="editar('{{ $opc->id }}')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
+                            Editar
+                        </button>
+                        <button wire:click="borrar('{{ $opc->id }}')" class="bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1 rounded" onclick="return confirm('¿Estás seguro de eliminar esta opción?')">
+                            Eliminar
+                        </button>
                     </td>
                 </tr>
             @endforeach
@@ -54,21 +74,32 @@
                 </div>
                 <div class="p-4">
                     <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Valor</label>
-                        <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="valor">
-                        @error('valor') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="mb-4">
                         <label class="block text-gray-700 mb-1">Nombre</label>
                         <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="nombre">
                         @error('nombre') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Característica</label>
-                        <select class="w-full border border-gray-300 rounded p-2" wire:model="caracteristica_id">
-                            <option value="">Seleccione una característica</option>
+                        <label class="block text-gray-700 mb-1">Pasos</label>
+                        <input type="number" class="w-full border border-gray-300 rounded p-2" wire:model="pasos">
+                        @error('pasos') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">Minuto/Paso</label>
+                        <input type="number" class="w-full border border-gray-300 rounded p-2" wire:model="minutoPaso">
+                        @error('minutoPaso') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">Valor Unitario</label>
+                        <input type="number" step="0.01" class="w-full border border-gray-300 rounded p-2" wire:model="valoru">
+                        @error('valoru') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">Características</label>
+                        <select class="w-full border border-gray-300 rounded p-2" wire:model="caracteristica_id" multiple>
                             @foreach($caracteristicas as $car)
                                 <option value="{{ $car->id }}">{{ $car->nombre }}</option>
                             @endforeach
@@ -77,8 +108,12 @@
                     </div>
                 </div>
                 <div class="flex items-center justify-end border-t border-gray-200 p-4 space-x-2">
-                    <button wire:click="cerrarModal" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">Cancelar</button>
-                    <button wire:click="guardar" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">Guardar</button>
+                    <button wire:click="cerrarModal" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">
+                        Cancelar
+                    </button>
+                    <button wire:click="guardar" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">
+                        Guardar
+                    </button>
                 </div>
             </div>
         </div>

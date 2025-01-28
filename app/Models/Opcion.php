@@ -20,7 +20,6 @@ class Opcion extends Model
 
     public function caracteristicas()
     {
-        return $this->belongsToMany(Caracteristica::class, 'caracteristica_opcion')->withPivot('restriccion');
+        return $this->belongsToMany(Caracteristica::class, 'caracteristica_opcion');
     }
-
 }

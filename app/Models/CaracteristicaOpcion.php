@@ -11,5 +11,5 @@ class CaracteristicaOpcion extends Model
 
     protected $table = 'caracteristica_opcion';
 
-    protected $fillable = ['caracteristica_id', 'opcion_id', 'restriccion'];
+    protected $fillable = ['caracteristica_id', 'opcion_id'];
 }

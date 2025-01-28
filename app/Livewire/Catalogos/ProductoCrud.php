@@ -38,7 +38,7 @@ class ProductoCrud extends Component
     public function render()
     {
         // Construir la consulta filtrada
-        $query = Producto::with('categoria');
+        $query = Producto::with('categorias');
 
         // Si hay un término de búsqueda, agregar condición a la consulta
         if (!empty($this->search)) {
@@ -87,22 +87,30 @@ class ProductoCrud extends Component
     public function guardar()
     {
         $this->validate();
-
+    
         if ($this->producto_id) {
+            // Actualizar el producto existente
             $producto = Producto::findOrFail($this->producto_id);
             $producto->update([
                 'nombre' => $this->nombre,
-                'categoria_id' => $this->categoria_id,
             ]);
+    
+            // Actualizar la relación en la tabla pivote
+            $producto->categorias()->sync([$this->categoria_id]);
+    
             session()->flash('message', '¡Producto actualizado exitosamente!');
         } else {
-            Producto::create([
+            // Crear un nuevo producto
+            $producto = Producto::create([
                 'nombre' => $this->nombre,
-                'categoria_id' => $this->categoria_id,
             ]);
+    
+            // Crear la relación en la tabla pivote
+            $producto->categorias()->attach($this->categoria_id);
+    
             session()->flash('message', '¡Producto creado exitosamente!');
         }
-
+    
         $this->cerrarModal();
         $this->limpiar();
     }

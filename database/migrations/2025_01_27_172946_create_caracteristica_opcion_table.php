@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('caracteristica_opcion', function (Blueprint $table) {
             $table->id();
-            $table->boolean('restriccion');
             $table->foreignId('caracteristica_id')->constrained('caracteristicas')->cascadeOnDelete();
             $table->foreignId('opcion_id')->constrained('opciones')->cascadeOnDelete();
             $table->timestamps();

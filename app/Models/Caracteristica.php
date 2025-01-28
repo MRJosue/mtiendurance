@@ -16,7 +16,7 @@ class Caracteristica extends Model
     protected $keyType = 'string';
 
  
-    protected $fillable = ['nombre', 'pasos', 'minutoPaso', 'valoru'];
+    protected $fillable = ['nombre'];
 
     public function productos()
     {
@@ -25,6 +25,6 @@ class Caracteristica extends Model
 
     public function opciones()
     {
-        return $this->belongsToMany(Opcion::class, 'caracteristica_opcion')->withPivot('restriccion');
+        return $this->belongsToMany(Opcion::class, 'caracteristica_opcion');
     }
 }
