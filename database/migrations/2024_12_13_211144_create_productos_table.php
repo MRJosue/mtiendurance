@@ -16,6 +16,7 @@ return new class extends Migration {
             // $table->foreign('categoria_id')->references('id')->on('categorias')->onDelete('cascade');
             $table->id();
             $table->string('nombre');
+            $table->tinyInteger('flag_armado')->default(1)->comment('Flag para validar si va armado');
             $table->timestamps();
         });
     }

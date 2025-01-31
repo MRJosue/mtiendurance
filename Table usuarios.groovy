@@ -140,25 +140,44 @@ Table categorias {
 Table productos {
   id INT [pk, unique, not null]
   nombre VARCHAR
+ 
+}
+
+Table categoria_producto {
+  id INT [pk, unique, not null]
   categoria_id INT [not null, ref: > categorias.id]
+  producto_id INT [not null, ref: > productos.id]
 }
 
 Table caracteristicas {
   id INT [pk, unique, not null]
-  producto_id INT [not null, ref: > productos.id]
+ 
   nombre VARCHAR
   pasos INT
   minutoPaso INT
   valoru INT
 }
 
+Table producto_caracteristica {
+  id INT [pk, unique, not null]
+  producto_id INT [not null, ref: > productos.id]
+  caracteristica_id INT [not null, ref: > caracteristicas.id]
+}
+
 Table opciones {
   id INT [pk, unique, not null]
-  caracteristica_id INT [not null, ref: > caracteristicas.id]
+ 
   nombre VARCHAR
   pasos INT
   minutoPaso INT
   valoru INT
+}
+
+Table caracteristica_opcion {
+  id INT [pk, unique, not null]
+  restriccion tinyint
+  caracteristica_id INT [not null, ref: > caracteristicas.id]
+  opcion_id INT [not null, ref: > opciones.id]
 }
 
 Table tallas {
@@ -196,6 +215,7 @@ Table pedido_tallas {
 Table archivos_proyecto {
   id INT [pk, unique, not null]
   proyecto_id INT [not null, ref: > proyectos.id]
+  pre_proyecto_id INT [null, ref: > pre_proyectos.id]
   nombre_archivo VARCHAR [not null]
   ruta_archivo VARCHAR [not null]
   tipo_archivo VARCHAR [not null]
@@ -218,23 +238,27 @@ Table mensajes_chat {
 }
 
 
-// Table pre_proyectos {
-//   id INT [pk, unique, not null]
-//   usuario_id INT [not null, ref: > clientes.id]
-//   direccion_fiscal VARCHAR
-//   direccion_entrega VARCHAR
-//   nombre VARCHAR
-//   descripcion TEXT
-//   tipo ENUM('PROYECTO', 'MUESTRA') [default: 'PROYECTO']
-//   numero_muestras INT [default: 0]
-//   estado ENUM('PENDIENTE', 'RECHAZADO') [default: 'PENDIENTE']
-//   fecha_creacion TIMESTAMP [default: `now()`]
-//   fecha_Produccion DATE
-//   fecha_embarque DATE
-//   fecha_entrega DATE
-//   created_at TIMESTAMP
-//   updated_at TIMESTAMP
-// }
+Table pre_proyectos {
+  id INT [pk, unique, not null]
+  usuario_id INT [not null, ref: > clientes.id]
+  direccion_fiscal VARCHAR
+  direccion_entrega VARCHAR
+  nombre VARCHAR
+  descripcion TEXT
+  tipo ENUM('PROYECTO', 'MUESTRA') [default: 'PROYECTO']
+  numero_muestras INT [default: 0]
+  estado ENUM('PENDIENTE', 'RECHAZADO') [default: 'PENDIENTE']
+  fecha_creacion TIMESTAMP [default: `now()`]
+  fecha_Produccion DATE
+  fecha_embarque DATE
+  fecha_entrega DATE
+  categoria_sel json
+  producto_sel json
+  caracteristicas_sel json
+  opciones_sel json
+  created_at TIMESTAMP
+  updated_at TIMESTAMP
+}
 
 
 Table proyecto_estados {

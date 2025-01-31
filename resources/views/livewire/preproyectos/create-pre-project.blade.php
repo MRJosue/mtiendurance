@@ -1,19 +1,18 @@
 <div class="container mx-auto p-6">
     <h2 class="text-2xl font-semibold mb-4">Crear Nuevo Preproyecto</h2>
 
-    <!-- Mensajes de error o éxito -->
-    @if (session('message'))
+    @if (session()->has('message'))
         <div class="bg-green-100 text-green-800 p-4 rounded-lg mb-4">
             {{ session('message') }}
         </div>
-    @elseif (session('error'))
+    @elseif (session()->has('error'))
         <div class="bg-red-100 text-red-800 p-4 rounded-lg mb-4">
             {{ session('error') }}
         </div>
     @endif
 
     <form wire:submit.prevent="create">
-        <!-- Información del Preproyecto -->
+        <!-- Nombre y Descripción -->
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Nombre</label>
             <input type="text" wire:model="nombre" class="w-full mt-1 border rounded-lg p-2">
@@ -43,105 +42,77 @@
             <label class="block text-sm font-medium text-gray-700">Producto</label>
             <select wire:change="onProductoChange" wire:model="producto_id" class="w-full mt-1 border rounded-lg p-2">
                 <option value="">Seleccionar Producto</option>
-                @if (!empty($productos))
-                    @foreach ($productos as $producto)
-                        <option value="{{ $producto->id }}">{{ $producto->nombre }}</option>
-                    @endforeach
-                @endif
+                @foreach ($productos as $producto)
+                    <option value="{{ $producto->id }}">{{ $producto->nombre }}</option>
+                @endforeach
             </select>
             @error('producto_id') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
+        
 
-        <!-- Características -->
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Características</label>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <select wire:model="caracteristica_id" class="w-full mt-1 border rounded-lg p-2">
-                        <option value="">Seleccionar Característica</option>
-                        @foreach ($caracteristicasDisponibles as $caracteristica)
-                            <option value="{{ $caracteristica->id }}">{{ $caracteristica->nombre }}</option>
+        <!-- Características y Opciones -->
+        {{-- <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Características y Opciones</label>
+            @foreach ($caracteristicas_sel as $index => $caracteristica)
+                <div class="mt-2 p-4 border rounded-lg bg-gray-50">
+                    <p class="font-semibold">{{ $caracteristica['nombre'] }}</p>
+
+                    <!-- Selección de Opciones -->
+                    <select wire:change="addOpcion({{ $index }}, $event.target.value)" class="w-full mt-1 border rounded-lg p-2">
+                        <option value="">Seleccionar Opción</option>
+                        @foreach (\App\Models\Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
+                            $query->where('caracteristica_id', $caracteristica['id']);
+                        })->get() as $opcion)
+                            <option value="{{ $opcion->id }}">{{ $opcion->nombre }} ({{ $opcion->valoru }})</option>
                         @endforeach
                     </select>
-                </div>
-                <div>
-                    <button type="button" wire:click="addCaracteristica" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                        Agregar
-                    </button>
-                </div>
-            </div>
 
-            <ul class="mt-4">
-                @foreach ($caracteristicas_sel as $index => $caracteristica)
-                    <li class="flex justify-between items-center mb-2">
-                        <span>{{ $caracteristica['nombre'] }}</span>
-                        <button type="button" wire:click="removeCaracteristica({{ $index }})" class="text-red-500 hover:underline">Eliminar</button>
-                    </li>
-                @endforeach
-            </ul>
-        </div>
-
-        <!-- Opciones -->
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Opciones</label>
-            @foreach ($caracteristicas_sel as $caracteristicaIndex => $caracteristica)
-                <div class="mt-2">
-                    <p class="font-semibold">{{ $caracteristica['nombre'] }}</p>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <select wire:model="opcion_id" class="w-full mt-1 border rounded-lg p-2">
-                                <option value="">Seleccionar Opción</option>
-                                @foreach (\App\Models\Opcion::where('caracteristica_id', $caracteristica['id'])->get() as $opcion)
-                                    <option value="{{ $opcion->id }}">{{ $opcion->nombre }} ({{ $opcion->valor }})</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <button type="button" wire:click="addOpcion({{ $caracteristicaIndex }})" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                                Agregar
-                            </button>
-                        </div>
-                    </div>
-
+                    <!-- Lista de Opciones Seleccionadas -->
                     <ul class="mt-2">
-                        @foreach ($opciones_sel[$caracteristica['id']] ?? [] as $opcionIndex => $opcion)
+                        @foreach ($caracteristica['opciones'] as $opcionIndex => $opcion)
                             <li class="flex justify-between items-center mb-2">
-                                <span>{{ $opcion['nombre'] }} ({{ $opcion['valor'] }})</span>
-                                <button type="button" wire:click="removeOpcion({{ $caracteristica['id'] }}, {{ $opcionIndex }})" class="text-red-500 hover:underline">Eliminar</button>
+                                <span>{{ $opcion['nombre'] }} ({{ $opcion['valoru'] }})</span>
+                                <button type="button" wire:click="removeOpcion({{ $index }}, {{ $opcionIndex }})" class="text-red-500 hover:underline">Eliminar</button>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endforeach
+        </div> --}}
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Características y Opciones</label>
+            @foreach ($caracteristicas_sel as $index => $caracteristica)
+                <div class="mt-2 p-4 border rounded-lg bg-gray-50">
+                    <p class="font-semibold">{{ $caracteristica['nombre'] }}</p>
+
+                    <!-- Selección de Opciones -->
+                    <select wire:change="addOpcion({{ $index }}, $event.target.value)" class="w-full mt-1 border rounded-lg p-2">
+                        <option value="">Seleccionar Opción</option>
+                        @foreach (\App\Models\Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
+                            $query->where('caracteristica_id', $caracteristica['id']);
+                        })->get() as $opcion)
+                            <option value="{{ $opcion->id }}">{{ $opcion->nombre }} ({{ $opcion->valoru }})</option>
+                        @endforeach
+                    </select>
+
+                    <!-- Lista de Opciones Seleccionadas -->
+                    <ul class="mt-2">
+                        @foreach ($caracteristica['opciones'] as $opcionIndex => $opcion)
+                            <li class="flex justify-between items-center mb-2">
+                                <span>{{ $opcion['nombre'] }} ({{ $opcion['valoru'] }})</span>
+                                <button type="button" wire:click="removeOpcion({{ $index }}, {{ $opcionIndex }})" class="text-red-500 hover:underline">Eliminar</button>
                             </li>
                         @endforeach
                     </ul>
                 </div>
             @endforeach
         </div>
-        
 
         
-
-         <!-- Archivos -->
-         <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Archivos</label>
-            <input type="file" wire:model="files" multiple class="w-full mt-1 border rounded-lg p-2">
-            @error('files.*') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-        </div>
-
-
-
-        <!-- Descripciones de Archivos -->
-        @foreach ($files as $index => $file)
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Descripción para: {{ $file->getClientOriginalName() }}</label>
-                <input type="text" wire:model="fileDescriptions.{{ $index }}" class="w-full mt-1 border rounded-lg p-2">
-            </div>
-        @endforeach
-
-
-
-
-
+        <!-- Selección de Direcciones -->
         <div class="grid grid-cols-2 gap-4 mb-4">
-            <!-- Selección de Dirección Fiscal -->
-            <div class="mb-4 ">
+            <div>
                 <label class="block text-sm font-medium text-gray-700">Dirección Fiscal</label>
                 <select wire:model="direccion_fiscal_id" class="w-full mt-1 border rounded-lg p-2">
                     <option value="">Seleccionar Dirección Fiscal</option>
@@ -152,8 +123,7 @@
                 @error('direccion_fiscal_id') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
             </div>
 
-            <!-- Selección de Dirección de Entrega -->
-            <div class="mb-4">
+            <div>
                 <label class="block text-sm font-medium text-gray-700">Dirección de Entrega</label>
                 <select wire:model="direccion_entrega_id" class="w-full mt-1 border rounded-lg p-2">
                     <option value="">Seleccionar Dirección de Entrega</option>
@@ -165,7 +135,7 @@
             </div>
         </div>
 
-
+        <!-- Fechas -->
         <div class="grid grid-cols-3 gap-4 mb-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Fecha Producción</label>
@@ -181,7 +151,7 @@
             </div>
         </div>
 
-
+        <!-- Botón de Enviar -->
         <button type="submit" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
             Crear Preproyecto
         </button>

@@ -4,6 +4,7 @@ namespace App\Livewire\Catalogos;
 
 use Livewire\Component;
 use App\Models\Caracteristica;
+use App\Models\Producto;
 use Livewire\WithPagination;
 
 class CaracteristicaCrud extends Component
@@ -11,14 +12,20 @@ class CaracteristicaCrud extends Component
     use WithPagination;
 
     public $nombre;
+    public $flag_seleccion_multiple = 0; // Por defecto, inactivo
+    public $producto_id = [];
     public $caracteristica_id;
     public $modal = false;
     public $search = '';
     public $query = '';
+
     protected $paginationTheme = 'tailwind';
 
     protected $rules = [
         'nombre' => 'required|string|max:255',
+        'flag_seleccion_multiple' => 'boolean',
+        'producto_id' => 'required|array|min:1',
+        'producto_id.*' => 'exists:productos,id',
     ];
 
     public function buscar()
@@ -29,7 +36,7 @@ class CaracteristicaCrud extends Component
 
     public function render()
     {
-        $query = Caracteristica::query();
+        $query = Caracteristica::with('productos');
 
         if (!empty($this->search)) {
             $query->where('nombre', 'like', '%' . $this->search . '%');
@@ -37,6 +44,7 @@ class CaracteristicaCrud extends Component
 
         return view('livewire.catalogos.caracteristica-crud', [
             'caracteristicas' => $query->orderBy('created_at', 'desc')->paginate(5),
+            'productos' => Producto::orderBy('nombre')->get(),
         ]);
     }
 
@@ -59,26 +67,39 @@ class CaracteristicaCrud extends Component
     public function limpiar()
     {
         $this->nombre = '';
+        $this->flag_seleccion_multiple = 0;
+        $this->producto_id = [];
         $this->caracteristica_id = null;
     }
 
     public function guardar()
     {
         $this->validate();
-
+    
         if ($this->caracteristica_id) {
-            // Actualizar la característica existente
             $caracteristica = Caracteristica::findOrFail($this->caracteristica_id);
-            $caracteristica->update(['nombre' => $this->nombre]);
+            $caracteristica->update([
+                'nombre' => $this->nombre,
+                'flag_seleccion_multiple' => (int) $this->flag_seleccion_multiple,
+            ]);
+    
+            $caracteristica->productos()->sync($this->producto_id);
+    
             session()->flash('message', '¡Característica actualizada exitosamente!');
         } else {
-            // Crear una nueva característica
-            Caracteristica::create(['nombre' => $this->nombre]);
+            $caracteristica = Caracteristica::create([
+                'nombre' => $this->nombre,
+                'flag_seleccion_multiple' => (int) $this->flag_seleccion_multiple,
+            ]);
+    
+            $caracteristica->productos()->attach($this->producto_id);
+    
             session()->flash('message', '¡Característica creada exitosamente!');
         }
-
+    
         $this->cerrarModal();
         $this->limpiar();
+        $this->render(); // 🔹 Fuerza la recarga del componente para ver los cambios inmediatamente
     }
 
     public function editar($id)
@@ -86,6 +107,8 @@ class CaracteristicaCrud extends Component
         $caracteristica = Caracteristica::findOrFail($id);
         $this->caracteristica_id = $caracteristica->id;
         $this->nombre = $caracteristica->nombre;
+        $this->flag_seleccion_multiple = (bool) $caracteristica->flag_seleccion_multiple; // Asegurar conversión a booleano
+        $this->producto_id = $caracteristica->productos->pluck('id')->toArray();
 
         $this->abrirModal();
     }
@@ -95,7 +118,9 @@ class CaracteristicaCrud extends Component
         $caracteristica = Caracteristica::find($id);
 
         if ($caracteristica) {
+            $caracteristica->productos()->detach();
             $caracteristica->delete();
+
             session()->flash('message', 'Característica eliminada exitosamente.');
         }
     }

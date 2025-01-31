@@ -28,27 +28,21 @@ class CreatePreProject extends Component
 
     public $categoria_id;
     public $producto_id;
-    public $productos;
-    public $caracteristicas = [];
-    public $caracteristica_id;
-    public $opciones = [];
-    public $opcion_id;
-
-    public $direccion_fiscal_id;
-    public $direccion_entrega_id;
-
-    public $categoria_sel;
-    public $producto_sel;
+    public $productos = [];
     public $caracteristicas_sel = [];
     public $opciones_sel = [];
+
+    public $caracteristica_id;
+    public $direccion_fiscal_id;
+    public $direccion_entrega_id;
 
     public function onCategoriaChange()
     {
         $this->producto_id = null;
-        $this->productos = $this->categoria_id
-            ? Producto::where('categoria_id', $this->categoria_id)->get()
-            : [];
-        $this->caracteristicas = [];
+        $this->productos = Producto::whereHas('categorias', function ($query) {
+            $query->where('categoria_id', $this->categoria_id);
+        })->get();
+
         $this->caracteristicas_sel = [];
         $this->opciones_sel = [];
     }
@@ -56,45 +50,56 @@ class CreatePreProject extends Component
     public function onProductoChange()
     {
         $this->caracteristica_id = null;
-        $this->caracteristicas = $this->producto_id
-            ? Caracteristica::where('producto_id', $this->producto_id)->get()
-            : [];
-        $this->caracteristicas_sel = [];
+        $this->caracteristicas_sel = Caracteristica::whereHas('productos', function ($query) {
+            $query->where('producto_id', $this->producto_id);
+        })->get()->map(function ($caracteristica) {
+            return [
+                'id' => $caracteristica->id,
+                'nombre' => $caracteristica->nombre,
+                'flag_seleccion_multiple' => $caracteristica->flag_seleccion_multiple,
+                'opciones' => []
+            ];
+        })->toArray();
+
         $this->opciones_sel = [];
     }
 
-    public function addCaracteristica()
+    public function addOpcion($caracteristicaIndex, $opcion_id)
     {
-        $caracteristica = Caracteristica::find($this->caracteristica_id);
-        if ($caracteristica && !in_array($caracteristica, $this->caracteristicas_sel)) {
-            $this->caracteristicas_sel[] = $caracteristica;
+        if (!isset($this->caracteristicas_sel[$caracteristicaIndex])) {
+            return;
+        }
+
+        $caracteristica = &$this->caracteristicas_sel[$caracteristicaIndex];
+        $opcion = Opcion::find($opcion_id);
+
+        if ($opcion) {
+            if (!$caracteristica['flag_seleccion_multiple']) {
+                // Si la característica no permite selección múltiple, solo se puede elegir una opción
+                $caracteristica['opciones'] = [
+                    [
+                        'id' => $opcion->id,
+                        'nombre' => $opcion->nombre,
+                        'valoru' => $opcion->valoru,
+                    ]
+                ];
+            } else {
+                // Si permite selección múltiple, se pueden agregar más opciones
+                if (!in_array($opcion->id, array_column($caracteristica['opciones'], 'id'))) {
+                    $caracteristica['opciones'][] = [
+                        'id' => $opcion->id,
+                        'nombre' => $opcion->nombre,
+                        'valoru' => $opcion->valoru,
+                    ];
+                }
+            }
         }
     }
 
-    public function removeCaracteristica($index)
+    public function removeOpcion($caracteristicaIndex, $opcionIndex)
     {
-        unset($this->caracteristicas_sel[$index]);
-        $this->caracteristicas_sel = array_values($this->caracteristicas_sel);
-    }
-
-    public function addOpcion($caracteristicaIndex)
-    {
-        $caracteristica = $this->caracteristicas_sel[$caracteristicaIndex] ?? null;
-        if ($caracteristica) {
-            $opcion = Opcion::find($this->opcion_id);
-            if ($opcion && !isset($this->opciones_sel[$caracteristica->id])) {
-                $this->opciones_sel[$caracteristica->id] = [];
-            }
-            if ($opcion && !in_array($opcion, $this->opciones_sel[$caracteristica->id])) {
-                $this->opciones_sel[$caracteristica->id][] = $opcion;
-            }
-        }
-    }
-
-    public function removeOpcion($caracteristicaId, $opcionIndex)
-    {
-        unset($this->opciones_sel[$caracteristicaId][$opcionIndex]);
-        $this->opciones_sel[$caracteristicaId] = array_values($this->opciones_sel[$caracteristicaId]);
+        unset($this->caracteristicas_sel[$caracteristicaIndex]['opciones'][$opcionIndex]);
+        $this->caracteristicas_sel[$caracteristicaIndex]['opciones'] = array_values($this->caracteristicas_sel[$caracteristicaIndex]['opciones']);
     }
 
     public function create()
@@ -111,42 +116,21 @@ class CreatePreProject extends Component
             'direccion_entrega_id' => 'required|exists:direcciones_entrega,id',
         ]);
 
-        $user = Auth::user();
-        $direccionFiscal = DireccionFiscal::find($this->direccion_fiscal_id);
-        $direccionEntrega = DireccionEntrega::find($this->direccion_entrega_id);
-
-        $direccionConcentrada = "{$direccionFiscal->nombre_contacto}, {$direccionFiscal->calle} | " .
-                                "{$direccionEntrega->nombre_contacto}, {$direccionEntrega->calle}";
-
         $preProyecto = PreProyecto::create([
-            'usuario_id' => $user->id,
+            'usuario_id' => Auth::id(),
             'nombre' => $this->nombre,
             'descripcion' => $this->descripcion,
-            'direccion_fiscal' => $direccionFiscal->calle,
-            'direccion_entrega' => $direccionEntrega->calle,
-            'direccion_concentrada' => $direccionConcentrada,
+            'tipo' => 'PROYECTO',
+            'numero_muestras' => 0,
+            'estado' => 'PENDIENTE',
             'fecha_produccion' => $this->fecha_produccion,
             'fecha_embarque' => $this->fecha_embarque,
             'fecha_entrega' => $this->fecha_entrega,
+            'categoria_sel' => json_encode(['id' => $this->categoria_id, 'nombre' => Categoria::find($this->categoria_id)->nombre]),
+            'producto_sel' => json_encode(['id' => $this->producto_id, 'nombre' => Producto::find($this->producto_id)->nombre]),
+            'caracteristicas_sel' => json_encode($this->caracteristicas_sel),
+            'opciones_sel' => json_encode($this->opciones_sel),
         ]);
-
-
-        $auxiliar_preProyecto_id = $preProyecto->id;
-
-        // Crear Archivos
-        foreach ($this->files as $index => $file) {
-            $rutaArchivo = $file->store('preproyectos/archivos', 'public');
-            ArchivoProyecto::create([
-                'pre_proyecto_id' => $auxiliar_preProyecto_id,
-                'nombre_archivo' => $file->getClientOriginalName(),
-                'ruta_archivo' => $rutaArchivo,
-                'tipo_archivo' => $file->getMimeType(),
-                'usuario_id' => Auth::id(),
-                'descripcion' => $this->fileDescriptions[$index] ?? null,
-            ]);
-        }
-
-
 
         session()->flash('message', 'Preproyecto creado exitosamente.');
         return redirect()->route('preproyectos.index');
@@ -156,8 +140,7 @@ class CreatePreProject extends Component
     {
         return view('livewire.preproyectos.create-pre-project', [
             'categorias' => Categoria::all(),
-            'productos' => $this->categoria_id ? Producto::where('categoria_id', $this->categoria_id)->get() : [],
-            'caracteristicasDisponibles' => $this->producto_id ? Caracteristica::where('producto_id', $this->producto_id)->get() : [],
+            'productos' => $this->productos,
             'direccionesFiscales' => DireccionFiscal::where('usuario_id', Auth::id())->get(),
             'direccionesEntrega' => DireccionEntrega::where('usuario_id', Auth::id())->get(),
         ]);

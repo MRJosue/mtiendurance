@@ -9,22 +9,39 @@ class PreProyecto extends Model
 {
 
 
+    // protected $fillable = [
+    //     'usuario_id', 
+    //     'direccion_fiscal',
+    //     'direccion_entrega',
+    //     'nombre', 
+    //     'descripcion', 
+    //     'tipo',
+    //     'numero_muestras',
+    //     'estado', 
+    //     'fecha_creacion', 
+    //     'fecha_produccion',
+    //     'fecha_embarque',
+    //     'fecha_entrega',
+    // ];
+
+    protected $table = 'pre_proyectos';
+
     protected $fillable = [
-        'usuario_id', 
-        'direccion_fiscal',
-        'direccion_entrega',
-        'nombre', 
-        'descripcion', 
-        'tipo',
-        'numero_muestras',
-        'estado', 
-        'fecha_creacion', 
-        'fecha_produccion',
-        'fecha_embarque',
-        'fecha_entrega',
+        'usuario_id', 'direccion_fiscal', 'direccion_entrega', 'nombre', 'descripcion',
+        'tipo', 'numero_muestras', 'estado', 'fecha_produccion', 'fecha_embarque',
+        'fecha_entrega', 'categoria_sel', 'producto_sel', 'caracteristicas_sel', 'opciones_sel'
     ];
 
-    
+    protected $casts = [
+        'fecha_produccion' => 'date',
+        'fecha_embarque' => 'date',
+        'fecha_entrega' => 'date',
+        'categoria_sel' => 'json',
+        'producto_sel' => 'json',
+        'caracteristicas_sel' => 'json',
+        'opciones_sel' => 'json',
+    ];
+
     public function transferirAProyecto()
     {
         // Crear el nuevo proyecto
@@ -69,4 +86,16 @@ class PreProyecto extends Model
         $this->direccion_concentrada = "{$direccionFiscal->nombre_contacto}, {$direccionFiscal->calle} | " .
                                        "{$direccionEntrega->nombre_contacto}, {$direccionEntrega->calle}";
     }
+
+
+    public function caracteristicas()
+    {
+        return $this->belongsToMany(Caracteristica::class, 'producto_caracteristica');
+    }
+
+    public function opciones()
+    {
+        return $this->belongsToMany(Opcion::class, 'caracteristica_opcion');
+    }
+    
 }

@@ -11,12 +11,12 @@ class Caracteristica extends Model
     use HasFactory;
 
     protected $table = 'caracteristicas';
-    protected $primaryKey = 'id';
-    public $incrementing = true;
-    protected $keyType = 'string';
 
- 
-    protected $fillable = ['nombre'];
+    protected $fillable = ['nombre', 'flag_seleccion_multiple'];
+
+    protected $casts = [
+        'flag_seleccion_multiple' => 'boolean', // Asegurar que se maneja como booleano
+    ];
 
     public function productos()
     {

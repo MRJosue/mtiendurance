@@ -12,6 +12,7 @@ return new class extends Migration {
 
             $table->id();
             $table->string('nombre');
+            $table->tinyInteger('flag_seleccion_multiple')->default(1)->comment('Flag seleccion multiple');
             $table->timestamps();
         });
     }
