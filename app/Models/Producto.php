@@ -17,7 +17,9 @@ class Producto extends Model
 
     protected $fillable = [
 
-        'nombre'
+        'nombre',
+        'dias_produccion',
+        'flag_armado'
     ];
 
 

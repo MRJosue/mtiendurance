@@ -10,9 +10,6 @@ class Talla extends Model
 {
     use HasFactory;
 
-
-
-
     /**
      * Indica si el modelo tiene una clave primaria auto-incremental.
      *
@@ -30,16 +27,12 @@ class Talla extends Model
 
 
     protected $fillable = [
-        'pedido_id',
         'nombre',
-        'cantidad',
+        'descripcion',
     ];
 
     /**
      * Relación con la tabla de pedidos.
      */
-    public function pedido()
-    {
-        return $this->belongsTo(Pedido::class);
-    }
+
 }

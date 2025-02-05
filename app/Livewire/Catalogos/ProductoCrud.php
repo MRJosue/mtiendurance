@@ -11,43 +11,36 @@ class ProductoCrud extends Component
 {
     use WithPagination;
 
-    public $nombre;
+    public $nombre, $dias_produccion, $flag_armado;
     public $categoria_id;
     public $producto_id;
     public $modal = false;
-    public $search; // La búsqueda efectiva
-    public $query;  // Lo que el usuario está escribiendo en el input
-    public $producto;
-    public $categoriaFiltro; // Nuevo: ID de la categoría a filtrar
+    public $search, $query;
+    public $categoriaFiltro;
 
     protected $paginationTheme = 'tailwind';
-
 
     protected $rules = [
         'nombre' => 'required|string|max:255',
         'categoria_id' => 'required|exists:categorias,id',
+        'dias_produccion' => 'required|integer|min:1',
+        'flag_armado' => 'required|boolean',
     ];
 
     public function buscar()
     {
-        // Cuando se presione el botón Buscar, se aplicará el filtro
         $this->search = $this->query;
         $this->resetPage();
     }
 
     public function render()
     {
-        // Construir la consulta filtrada
         $query = Producto::with('categorias');
 
-        // Si hay un término de búsqueda, agregar condición a la consulta
         if (!empty($this->search)) {
             $query->where('nombre', 'like', '%' . $this->search . '%');
-           //
-           // ->orWhere('descripcion', 'like', '%' . $this->search . '%')
         }
 
-        // Filtro por categoría
         if (!empty($this->categoriaFiltro)) {
             $query->where('categoria_id', $this->categoriaFiltro);
         }
@@ -56,10 +49,7 @@ class ProductoCrud extends Component
             'productos' => $query->orderBy('created_at', 'desc')->paginate(5),
             'categorias' => Categoria::orderBy('nombre')->get(),
         ]);
-
-
     }
-
 
     public function crear()
     {
@@ -81,6 +71,8 @@ class ProductoCrud extends Component
     {
         $this->nombre = '';
         $this->categoria_id = '';
+        $this->dias_produccion = 1;
+        $this->flag_armado = 1;
         $this->producto_id = null;
     }
 
@@ -89,25 +81,23 @@ class ProductoCrud extends Component
         $this->validate();
     
         if ($this->producto_id) {
-            // Actualizar el producto existente
             $producto = Producto::findOrFail($this->producto_id);
             $producto->update([
                 'nombre' => $this->nombre,
+                'dias_produccion' => $this->dias_produccion,
+                'flag_armado' => $this->flag_armado,
             ]);
-    
-            // Actualizar la relación en la tabla pivote
+
             $producto->categorias()->sync([$this->categoria_id]);
-    
             session()->flash('message', '¡Producto actualizado exitosamente!');
         } else {
-            // Crear un nuevo producto
             $producto = Producto::create([
                 'nombre' => $this->nombre,
+                'dias_produccion' => $this->dias_produccion,
+                'flag_armado' => $this->flag_armado,
             ]);
-    
-            // Crear la relación en la tabla pivote
+
             $producto->categorias()->attach($this->categoria_id);
-    
             session()->flash('message', '¡Producto creado exitosamente!');
         }
     
@@ -120,6 +110,8 @@ class ProductoCrud extends Component
         $producto = Producto::findOrFail($id);
         $this->producto_id = $producto->id;
         $this->nombre = $producto->nombre;
+        $this->dias_produccion = $producto->dias_produccion;
+        $this->flag_armado = $producto->flag_armado;
         $this->categoria_id = $producto->categoria_id;
         $this->abrirModal();
     }
@@ -130,4 +122,3 @@ class ProductoCrud extends Component
         session()->flash('message', 'Producto eliminado exitosamente.');
     }
 }
-//return view('livewire.catalogos.producto-crud');

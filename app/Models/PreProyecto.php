@@ -7,29 +7,26 @@ use Illuminate\Database\Eloquent\Model;
 
 class PreProyecto extends Model
 {
-
-
-    // protected $fillable = [
-    //     'usuario_id', 
-    //     'direccion_fiscal',
-    //     'direccion_entrega',
-    //     'nombre', 
-    //     'descripcion', 
-    //     'tipo',
-    //     'numero_muestras',
-    //     'estado', 
-    //     'fecha_creacion', 
-    //     'fecha_produccion',
-    //     'fecha_embarque',
-    //     'fecha_entrega',
-    // ];
-
     protected $table = 'pre_proyectos';
 
     protected $fillable = [
-        'usuario_id', 'direccion_fiscal', 'direccion_entrega', 'nombre', 'descripcion',
-        'tipo', 'numero_muestras', 'estado', 'fecha_produccion', 'fecha_embarque',
-        'fecha_entrega', 'categoria_sel', 'producto_sel', 'caracteristicas_sel', 'opciones_sel'
+        'usuario_id', 
+        'direccion_fiscal', 
+        'direccion_entrega', 
+        'nombre', 
+        'descripcion',
+        'id_tipo_envio',
+        'tipo', 
+        'numero_muestras', 
+        'estado', 
+        'fecha_produccion', 
+        'fecha_embarque',
+        'fecha_entrega', 
+        'categoria_sel', 
+        'producto_sel', 
+        'caracteristicas_sel', 
+        'opciones_sel',
+        'total_piezas_sel'
     ];
 
     protected $casts = [
@@ -40,6 +37,7 @@ class PreProyecto extends Model
         'producto_sel' => 'json',
         'caracteristicas_sel' => 'json',
         'opciones_sel' => 'json',
+        'total_piezas_sel' => 'json'
     ];
 
     public function transferirAProyecto()

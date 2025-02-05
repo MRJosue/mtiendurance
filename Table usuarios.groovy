@@ -140,7 +140,9 @@ Table categorias {
 Table productos {
   id INT [pk, unique, not null]
   nombre VARCHAR
- 
+  flag_armado tinyInteger
+  dias_produccion Integer
+
 }
 
 Table categoria_producto {
@@ -153,9 +155,7 @@ Table caracteristicas {
   id INT [pk, unique, not null]
  
   nombre VARCHAR
-  pasos INT
-  minutoPaso INT
-  valoru INT
+  flag_selccion_multiple tinyInteger
 }
 
 Table producto_caracteristica {
@@ -245,6 +245,7 @@ Table pre_proyectos {
   direccion_entrega VARCHAR
   nombre VARCHAR
   descripcion TEXT
+  id_tipo_envio int
   tipo ENUM('PROYECTO', 'MUESTRA') [default: 'PROYECTO']
   numero_muestras INT [default: 0]
   estado ENUM('PENDIENTE', 'RECHAZADO') [default: 'PENDIENTE']

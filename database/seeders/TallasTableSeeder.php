@@ -12,6 +12,18 @@ class TallasTableSeeder extends Seeder
      */
     public function run(): void
     {
-        Talla::factory(10)->create();
+        $tallas = [
+            ['nombre' => 'XS', 'descripcion' => 'Extra pequeño, ideal para cuerpos muy delgados.'],
+            ['nombre' => 'S', 'descripcion' => 'Pequeño, adecuado para cuerpos delgados.'],
+            ['nombre' => 'M', 'descripcion' => 'Mediano, la talla estándar para la mayoría.'],
+            ['nombre' => 'L', 'descripcion' => 'Grande, para quienes necesitan un poco más de espacio.'],
+            ['nombre' => 'XL', 'descripcion' => 'Extra grande, diseñado para mayor comodidad.'],
+            ['nombre' => 'XXL', 'descripcion' => 'Doble extra grande, para cuerpos más amplios.'],
+        ];
+
+        foreach ($tallas as $talla) {
+            Talla::create($talla);
+        }
     }
 }
+

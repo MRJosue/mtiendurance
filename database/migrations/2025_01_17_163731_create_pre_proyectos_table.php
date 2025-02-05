@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('direccion_entrega')->nullable();
             $table->string('nombre');
             $table->text('descripcion')->nullable();
+            $table->bigInteger('id_tipo_envio')->comment('Guarda la referencia del tipo de envio');
             $table->enum('tipo', ['PROYECTO', 'MUESTRA'])->default('PROYECTO');
             $table->integer('numero_muestras')->default(0);
             $table->enum('estado', ['PENDIENTE', 'RECHAZADO'])->default('PENDIENTE');
@@ -29,6 +30,7 @@ return new class extends Migration
             $table->json('producto_sel')->nullable();
             $table->json('caracteristicas_sel')->nullable();
             $table->json('opciones_sel')->nullable();
+            $table->json('total_piezas_sel')->nullable()->comment('Guarda el total de piezas');
             $table->foreign('usuario_id')->references('id')->on('clientes')->onDelete('cascade');
             $table->timestamps();
         });
