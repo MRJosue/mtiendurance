@@ -17,10 +17,10 @@ class PreproyectosController extends Controller
         return view('preproyectos.create');
     }
 
-    public function show(PreProyecto $PreProyecto)
+    public function show(PreProyecto $preproyecto )
     {
 
-        //dd($Proyecto);
-        return view('preproyectos.show',  ['preproyecto' => $PreProyecto]);
+       
+        return view('preproyectos.show',  ['preproyecto' => $preproyecto ]);
     }
 }

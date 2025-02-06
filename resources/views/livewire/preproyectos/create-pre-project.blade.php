@@ -83,6 +83,24 @@
 
 
         <!-- Selección de Cantidades -->
+        @if ($mostrarFormularioTallas)
+
+                <!-- Formulario de Tallas (solo si la categoría es Playeras) -->
+        
+                <div class="mb-4 p-4 border rounded-lg bg-gray-50">
+                    <h3 class="text-lg font-semibold mb-2">Cantidad por Tallas</h3>
+                    @foreach ($tallas as $talla)
+                        <div class="flex items-center space-x-2">
+                            <label class="text-sm font-medium text-gray-700 w-1/3">{{ $talla->nombre }}</label>
+                            <input type="number" 
+                                wire:model="tallasSeleccionadas.{{ $talla->id }}" 
+                                class="w-2/3 border rounded-lg p-2" 
+                                min="0">
+                        </div>
+                    @endforeach
+                </div>
+        @else
+
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Total de Piezas</label>
             <input 
@@ -94,22 +112,43 @@
             @error('total_piezas') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
 
-        <!-- Formulario de Tallas (solo si la categoría es Playeras) -->
-        @if ($mostrarFormularioTallas)
+        
+
+        @endif
+
+
+         <!-- Selección de Archivo -->
+         <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Subir Archivos</label>
+            <input type="file" wire:model="files" multiple class="w-full mt-1 border rounded-lg p-2">
+        </div>
+
+        <!-- Descripciones de Archivos -->
+        @foreach ($files as $index => $file)
+            <div class="mb-2 p-2 border rounded-lg bg-gray-100">
+                <p class="text-sm font-semibold">{{ $file->getClientOriginalName() }}</p>
+                <label class="block text-xs text-gray-600">Descripción</label>
+                <input type="text" wire:model="fileDescriptions.{{ $index }}" class="w-full border rounded-lg p-1 text-sm">
+            </div>
+        @endforeach
+
+        <!-- Vista previa de archivos -->
+        @if ($uploadedFiles)
             <div class="mb-4 p-4 border rounded-lg bg-gray-50">
-                <h3 class="text-lg font-semibold mb-2">Cantidad por Tallas</h3>
-                @foreach ($tallas as $talla)
-                    <div class="flex items-center space-x-2">
-                        <label class="text-sm font-medium text-gray-700 w-1/3">{{ $talla->nombre }}</label>
-                        <input type="number" 
-                            wire:model="tallasSeleccionadas.{{ $talla->id }}" 
-                            class="w-2/3 border rounded-lg p-2" 
-                            min="0">
+                <h3 class="text-lg font-semibold mb-2">Vista Previa de Archivos</h3>
+                @foreach ($uploadedFiles as $file)
+                    <div class="mb-2">
+                        @if (str_starts_with($file['preview'], 'data:image'))
+                            <img src="{{ $file['preview'] }}" class="w-32 h-32 object-cover rounded-lg">
+                        @else
+                            <a href="{{ $file['preview'] }}" target="_blank" class="text-blue-500 underline">
+                                {{ $file['name'] }}
+                            </a>
+                        @endif
                     </div>
                 @endforeach
             </div>
         @endif
-
 
         <!-- Selección de Direcciones -->
         <div class="grid grid-cols-2 gap-4 mb-4">

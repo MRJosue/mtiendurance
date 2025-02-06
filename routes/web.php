@@ -83,7 +83,7 @@ Route::get('/proyectos/{proyecto}', [ProyectosController::class, 'show'])->name(
 //preproyectos
 Route::get('/preproyectos',[PreproyectosController::class, 'index'])->middleware(['auth','verified'])->name('preproyectos.index');
 
-Route::get('/preproyectos/show/{preprooyecto}', [PreproyectosController::class, 'show'])->name('preproyectos.show');
+Route::get('/preproyectos/show/{preproyecto}', [PreproyectosController::class, 'show'])->name('preproyectos.show');
 
 Route::get('/preproyectos/create',[PreproyectosController::class, 'create'])->middleware(['auth','verified'])->name('preproyectos.create');
 

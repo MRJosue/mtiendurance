@@ -8,6 +8,8 @@ use App\Models\PreProyecto;
 use App\Models\DireccionEntrega;
 use App\Models\DireccionFiscal;
 use App\Models\Ciudad;
+use App\Models\Pais;
+use App\Models\Estado;
 use App\Models\TipoEnvio;
 
 use App\Models\ArchivoProyecto;
@@ -32,8 +34,11 @@ class CreatePreProject extends Component
     public $fecha_produccion;
     public $fecha_embarque;
     public $fecha_entrega;
+
+    // Variables para archivos
     public $files = [];
     public $fileDescriptions = [];
+    public $uploadedFiles = [];
 
     public $categoria_id;
     public $producto_id;
@@ -57,20 +62,9 @@ class CreatePreProject extends Component
     public $mensaje_produccion;
 
 
-    
 
     public function onCategoriaChange()
     {
-        // $this->producto_id = null;
-        // $this->productos = Producto::whereHas('categorias', function ($query) {
-        //     $query->where('categoria_id', $this->categoria_id);
-        // })->get();
-
-        // //Ejecutamos el metodo para cargar cantidades
-        // $this->on_muestra_tallas();
-
-        // $this->caracteristicas_sel = [];
-        // $this->opciones_sel = [];
 
         $this->producto_id = null;
         $this->productos = Producto::whereHas('categorias', function ($query) {
@@ -182,6 +176,8 @@ class CreatePreProject extends Component
             'id_tipo_envio'=> 'required',
             'total_piezas' => $this->mostrarFormularioTallas ? 'nullable' : 'required|integer|min:1',
             'tallasSeleccionadas' => $this->mostrarFormularioTallas ? 'required|array|min:1' : 'nullable',
+            'id_tipo_envio' => 'required',
+            'files.*' => 'nullable|file|max:10240',
         ]);
 
         $totalPiezasFinal = $this->mostrarFormularioTallas ? array_sum($this->tallasSeleccionadas) : $this->total_piezas;
@@ -191,7 +187,23 @@ class CreatePreProject extends Component
 
         // Asignamos copnjunto direccion entrega
 
-        $Auxiliar_direccion_entrega = '';
+
+        // Obtener los nombres de país, estado y ciudad para la dirección de entrega
+        $direccionEntrega = DireccionEntrega::find($this->direccion_entrega_id);
+        $pais_name = $direccionEntrega->ciudad->estado->pais->nombre ?? '';
+        $estado_name = $direccionEntrega->ciudad->estado->nombre ?? '';
+        $ciudades_name = $direccionEntrega->ciudad->nombre ?? '';
+
+        // Obtener los nombres de país, estado y ciudad para la dirección fiscal
+        $direccionFiscal = DireccionFiscal::find($this->direccion_fiscal_id);
+        $fiscal_pais_name = $direccionFiscal->ciudad->estado->pais->nombre ?? '';
+        $fiscal_estado_name = $direccionFiscal->ciudad->estado->nombre ?? '';
+        $fiscal_ciudades_name = $direccionFiscal->ciudad->nombre ?? '';
+
+        // Construcción de dirección como texto
+        $Auxiliar_direccion_entrega = trim("$ciudades_name, $estado_name, $pais_name");
+        $Auxiliar_direccion_fiscal = trim("$fiscal_ciudades_name, $fiscal_estado_name, $fiscal_pais_name");
+
 
 
         $preProyecto = PreProyecto::create([
@@ -209,6 +221,7 @@ class CreatePreProject extends Component
             'caracteristicas_sel' => json_encode($this->caracteristicas_sel),
             'opciones_sel' => json_encode($this->opciones_sel),
             'direccion_entrega'=> $Auxiliar_direccion_entrega,
+            'direccion_fiscal'=> $Auxiliar_direccion_fiscal,
             'id_tipo_envio' => $this->id_tipo_envio,
             'total_piezas_sel' => json_encode([
                 'total' => $totalPiezasFinal,
@@ -216,10 +229,37 @@ class CreatePreProject extends Component
             ]),
         ]);
 
+
+
+        // Guardar archivos
+        foreach ($this->files as $index => $file) {
+            $path = $file->store('archivos_proyectos', 'public');
+
+            ArchivoProyecto::create([
+                'pre_proyecto_id' => $preProyecto->id,
+                'usuario_id' => Auth::id(),
+                'nombre_archivo' => $file->getClientOriginalName(),
+                'ruta_archivo' => $path,
+                'tipo_archivo' => $file->getClientMimeType(),
+                'descripcion' => $this->fileDescriptions[$index] ?? '',
+            ]);
+        }
+
         session()->flash('message', 'Preproyecto creado exitosamente.');
         return redirect()->route('preproyectos.index');
     }
 
+    public function updatedFiles()
+    {
+        $this->uploadedFiles = [];
+
+        foreach ($this->files as $file) {
+            $this->uploadedFiles[] = [
+                'name' => $file->getClientOriginalName(),
+                'preview' => $file->temporaryUrl(),
+            ];
+        }
+    }
 
     public function on_Calcula_Fechas_Entrega()
     {

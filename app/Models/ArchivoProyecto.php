@@ -21,14 +21,6 @@ class ArchivoProyecto extends Model
 
     ];
 
-    // 'proyecto_id',
-    // 'nombre_archivo',
-    // 'ruta_archivo',
-    // 'tipo_archivo',
-    // 'fecha_subida',
-    // 'usuario_id',
-    // 'pre_proyecto_id',
-    // 'descripcion',
 
     public function proyecto()
     {
