@@ -8,6 +8,7 @@ use App\Models\MensajeChat;
 use App\Models\Chat;
 use Illuminate\Support\Facades\Auth;
 use App\Events\NewChatMessage;
+use Illuminate\Support\Facades\Log;
 
 class ChatComponent extends Component
 {
@@ -24,13 +25,27 @@ class ChatComponent extends Component
 
     public function mount($proyectoId)
     {
+
+        Log::error("Mostramos la informacion del proyectoId", ['proyectoId' =>  $proyectoId]);
         $this->proyectoId = $proyectoId;
 
         // Obtener el chat asociado al proyecto
+
+
         $chat = Chat::where('proyecto_id', $this->proyectoId)->first();
+        Log::error("Mostramos la informacion del chat", ['chat' =>  $chat]);
+
 
         if (!$chat) {
-            abort(404, 'Chat no encontrado para este proyecto.');
+
+                                // Creamos el chat
+                    Chat::create([
+                        'proyecto_id'=>  $this->proyectoId,
+                    ]);
+            // Recargamos la pagina 
+            return redirect()->back();
+            //$this->redirect(request()->header('Referer'));
+            // abort(404, '404 Chat no encontrado para este proyecto.');
         }
 
         $this->chatId = $chat->id;

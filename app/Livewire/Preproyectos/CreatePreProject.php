@@ -18,6 +18,8 @@ use App\Models\Producto;
 use App\Models\Caracteristica;
 use App\Models\Talla;
 use App\Models\Opcion;
+use App\Models\Chat;
+
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -220,7 +222,9 @@ class CreatePreProject extends Component
             'producto_sel' => json_encode(['id' => $this->producto_id, 'nombre' => Producto::find($this->producto_id)->nombre]),
             'caracteristicas_sel' => json_encode($this->caracteristicas_sel),
             'opciones_sel' => json_encode($this->opciones_sel),
+            'direccion_entrega_id'=>$this->direccion_entrega_id,
             'direccion_entrega'=> $Auxiliar_direccion_entrega,
+            'direccion_fiscal_id'=>$this->direccion_fiscal_id,
             'direccion_fiscal'=> $Auxiliar_direccion_fiscal,
             'id_tipo_envio' => $this->id_tipo_envio,
             'total_piezas_sel' => json_encode([
@@ -228,6 +232,7 @@ class CreatePreProject extends Component
                 'detalle_tallas' => $this->mostrarFormularioTallas ? $this->tallasSeleccionadas : null
             ]),
         ]);
+
 
 
 

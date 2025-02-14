@@ -40,18 +40,18 @@ class DatabaseSeeder extends Seeder
             OpcionesTableSeeder::class,
 
 
-            ProyectosTableSeeder::class,
+           // ProyectosTableSeeder::class,
             TallasTableSeeder::class,
           
             PermissionSeeder::class,
 
            // ProyectoDefinidoSeeder::class,
-            PedidosTableSeeder::class,
-            PedidoTallasTableSeeder::class,
-            PedidoOpcionesTableSeeder::class,
-            PedidoCaracteristicasTableSeeder::class,
+           // PedidosTableSeeder::class,
+           // PedidoTallasTableSeeder::class,
+           // PedidoOpcionesTableSeeder::class,
+           // PedidoCaracteristicasTableSeeder::class,
 
-            PedidoCaracteristicasTableSeeder::class,
+            //PedidoCaracteristicasTableSeeder::class,
             ChatSeeder::class,
 
             TareasTableSeeder::class,

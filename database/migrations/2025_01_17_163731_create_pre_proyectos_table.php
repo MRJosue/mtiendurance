@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('pre_proyectos', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('usuario_id');
+            $table->unsignedBigInteger('direccion_fiscal_id')->nullable();
             $table->string('direccion_fiscal')->nullable();
+            $table->unsignedBigInteger('direccion_entrega_id')->nullable();
             $table->string('direccion_entrega')->nullable();
             $table->string('nombre');
             $table->text('descripcion')->nullable();

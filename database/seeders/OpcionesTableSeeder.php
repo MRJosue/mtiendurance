@@ -26,18 +26,24 @@ class OpcionesTableSeeder extends Seeder
             'Bandola Fundición',
             'Argolla de Llavero',
             'Bandola Caimán',
+            'Algodon',
+            'Lino',
+            '20 mm',
+            '30 mm',
+            'Impresion a una cara',
+            'Impresion a dos caras',
         ];
 
 
         
-            foreach ($opciones as $nombreOpcion) {
+        foreach ($opciones as $nombreOpcion) {
                 Opcion::create([
                     'nombre' => $nombreOpcion,
                     'valoru' => 1, // Puedes cambiar esto si necesitas un valor específico
                     'pasos' => 1,
                     'minutoPaso' => 1
                 ]);
-            }
+        }
         
     }
 }

@@ -11,25 +11,56 @@ return new class extends Migration
      */
     public function up()
     {
+        // Schema::create('proyectos', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->unsignedBigInteger('usuario_id');
+        //     $table->string('direccion_fiscal')->nullable();
+        //     $table->string('direccion_entrega')->nullable();
+        //     $table->string('nombre')->nullable();
+        //     $table->text('descripcion')->nullable();
+        //     $table->enum('tipo', ['PROYECTO', 'MUESTRA'])->default('PROYECTO');
+        //     $table->integer('numero_muestras')->default(0);
+        //     $table->enum('estado', [
+        //         'PENDIENTE', 'APROBADO', 'PROGRAMADO', 'IMPRESIÓN', 'PRODUCCIÓN', 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO','RECHAZADO'
+        //     ])->default('PENDIENTE');
+        //     $table->timestamp('fecha_creacion')->useCurrent();
+        //     $table->date('fecha_produccion')->nullable();
+        //     $table->date('fecha_embarque')->nullable();
+        //     $table->date('fecha_entrega')->nullable();
+        //     $table->foreign('usuario_id')->references('id')->on('users')->onDelete('cascade');
+        //     $table->timestamps();
+        // });
+
         Schema::create('proyectos', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('usuario_id');
+            $table->unsignedBigInteger('direccion_fiscal_id')->nullable();
             $table->string('direccion_fiscal')->nullable();
+            $table->unsignedBigInteger('direccion_entrega_id')->nullable();
             $table->string('direccion_entrega')->nullable();
             $table->string('nombre')->nullable();
             $table->text('descripcion')->nullable();
+            $table->bigInteger('id_tipo_envio')->nullable()->comment('Guarda la referencia del tipo de envío');
             $table->enum('tipo', ['PROYECTO', 'MUESTRA'])->default('PROYECTO');
             $table->integer('numero_muestras')->default(0);
             $table->enum('estado', [
-                'PENDIENTE', 'APROBADO', 'PROGRAMADO', 'IMPRESIÓN', 'PRODUCCIÓN', 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO','RECHAZADO'
+                'PENDIENTE', 'APROBADO', 'PROGRAMADO', 'IMPRESIÓN', 'PRODUCCIÓN', 
+                'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO', 'RECHAZADO'
             ])->default('PENDIENTE');
             $table->timestamp('fecha_creacion')->useCurrent();
             $table->date('fecha_produccion')->nullable();
             $table->date('fecha_embarque')->nullable();
             $table->date('fecha_entrega')->nullable();
-            $table->foreign('usuario_id')->references('id')->on('users')->onDelete('cascade');
+            $table->json('categoria_sel')->nullable();
+            $table->json('producto_sel')->nullable();
+            $table->json('caracteristicas_sel')->nullable();
+            $table->json('opciones_sel')->nullable();
+            $table->json('total_piezas_sel')->nullable()->comment('Guarda el total de piezas');
+            
+            $table->foreign('usuario_id')->references('id')->on('clientes')->onDelete('cascade');
             $table->timestamps();
         });
+        
     }
 
 

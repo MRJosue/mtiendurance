@@ -10,6 +10,8 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 
+use Illuminate\Support\Facades\Log;
+
 class ProjectFiles extends Component
 {
     use WithFileUploads;
@@ -39,6 +41,10 @@ class ProjectFiles extends Component
         ]);
     
         $this->archivo = null; // Limpiar el archivo cargado
+            // Enviar evento para actualizar `UltimoArchivo`
+             $this->dispatch('archivoSubido');
+             Log::warning("Dispatch archivoSubido");
+             
         session()->flash('message', 'Archivo subido exitosamente.');
     }
 

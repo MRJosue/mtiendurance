@@ -20,11 +20,11 @@ class Caracteristica extends Model
 
     public function productos()
     {
-        return $this->belongsToMany(Producto::class, 'producto_caracteristica');
+        return $this->belongsToMany(Producto::class, 'producto_caracteristica', 'caracteristica_id', 'producto_id');
     }
 
     public function opciones()
     {
-        return $this->belongsToMany(Opcion::class, 'caracteristica_opcion');
+        return $this->belongsToMany(Opcion::class, 'caracteristica_opcion', 'caracteristica_id', 'opcion_id');
     }
 }

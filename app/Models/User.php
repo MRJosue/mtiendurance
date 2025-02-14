@@ -48,13 +48,13 @@ class User extends Authenticatable
 
 
 
-        /**
-     * La relación con el modelo Role.
-     */
-    public function role()
-    {
-        return $this->belongsTo(Role::class);
-    }
+    //     /**
+    //  * La relación con el modelo Role.
+    //  */
+    // public function role()
+    // {
+    //     return $this->belongsTo(Role::class);
+    // }
 
 
         /**

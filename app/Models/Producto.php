@@ -25,12 +25,12 @@ class Producto extends Model
 
     public function categorias()
     {
-        return $this->belongsToMany(Categoria::class, 'categoria_producto');
+        return $this->belongsToMany(Categoria::class, 'categoria_producto', 'producto_id', 'categoria_id');
     }
 
     public function caracteristicas()
     {
-        return $this->belongsToMany(Caracteristica::class, 'producto_caracteristica');
+        return $this->belongsToMany(Caracteristica::class, 'producto_caracteristica', 'producto_id', 'caracteristica_id');
     }
 
 }

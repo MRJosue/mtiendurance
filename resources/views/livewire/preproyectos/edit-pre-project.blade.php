@@ -46,7 +46,41 @@
                     <option value="{{ $producto->id }}">{{ $producto->nombre }}</option>
                 @endforeach
             </select>
+            @error('producto_id') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
+        
+        
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Características y Opciones</label>
+            @foreach ($caracteristicas_sel as $index => $caracteristica)
+                <div class="mt-2 p-4 border rounded-lg bg-gray-50">
+                    <p class="font-semibold">{{ $caracteristica['nombre'] }}</p>
+
+                    <!-- Selección de Opciones -->
+                    <select wire:change="addOpcion({{ $index }}, $event.target.value)" class="w-full mt-1 border rounded-lg p-2">
+                        <option value="">Seleccionar Opción</option>
+                        @foreach (\App\Models\Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
+                            $query->where('caracteristica_id', $caracteristica['id']);
+                        })->get() as $opcion)
+                            <option value="{{ $opcion->id }}">{{ $opcion->nombre }} ({{ $opcion->valoru }})</option>
+                        @endforeach
+                    </select>
+
+                    <!-- Lista de Opciones Seleccionadas -->
+                    <ul class="mt-2">
+                        @foreach ($caracteristica['opciones'] as $opcionIndex => $opcion)
+                            <li class="flex justify-between items-center mb-2">
+                                <span>{{ $opcion['nombre'] }} ({{ $opcion['valoru'] }})</span>
+                                <button type="button" wire:click="removeOpcion({{ $index }}, {{ $opcionIndex }})" class="text-red-500 hover:underline">Eliminar</button>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endforeach
+        </div>
+
+       
 
         <!-- Selección de Cantidades -->
         @if ($mostrarFormularioTallas)
@@ -109,26 +143,35 @@
         <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Dirección Fiscal</label>
-
-                <input type="text" wire:model="direccion_fiscal" class="w-full mt-1 border rounded-lg p-2" >
-                {{-- <select wire:model="direccion_fiscal_id" class="w-full mt-1 border rounded-lg p-2">
+                <select wire:model="direccion_fiscal_id" class="w-full mt-1 border rounded-lg p-2">
                     <option value="">Seleccionar Dirección Fiscal</option>
                     @foreach ($direccionesFiscales as $direccion)
                         <option value="{{ $direccion->id }}">{{ $direccion->nombre_contacto }} - {{ $direccion->calle }}</option>
                     @endforeach
-                </select> --}}
+                </select>
+                @error('direccion_fiscal_id') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Dirección de Entrega</label>
-
-                <input type="text" wire:model="direccion_entrega" class="w-full mt-1 border rounded-lg p-2" >
-                {{-- <select wire:model="direccion_entrega_id" class="w-full mt-1 border rounded-lg p-2">
+                <select wire:change='cargarTiposEnvio'  wire:model="direccion_entrega_id" class="w-full mt-1 border rounded-lg p-2">
                     <option value="">Selecciona una dirección</option>
                     @foreach ($direccionesEntrega as $direccion)
                         <option value="{{ $direccion->id }}">{{ $direccion->calle }}</option>
                     @endforeach
-                </select> --}}
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Tipo de Envío</label>
+                <select  wire:change="on_Calcula_Fechas_Entrega" wire:model="id_tipo_envio" class="w-full mt-1 border rounded-lg p-2">
+                    <option value="">Selecciona un tipo de envío</option>
+                    @foreach ($tiposEnvio as $tipo)
+                        <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
+                    @endforeach
+                </select>
             </div>
         </div>
 
@@ -153,7 +196,9 @@
             Guardar Cambios
         </button>
 
-        <button type="submit" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+        <button type="button" 
+            wire:click="preAprobarProyecto" 
+            class="mt-4 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
             Pre aprobar proyecto
         </button>
     </form>
@@ -168,6 +213,10 @@
                     $("select, button").attr("disabled", "disabled"); // Deshabilitar select y botones
                 }, 100); // Se ejecuta después de 100ms para evitar que Livewire lo sobrescriba
             });
+
+            Livewire.on('redirect', function (url) {
+                     window.location.href = url;
+             });
         });
     </script>
     @endpush

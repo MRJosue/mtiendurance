@@ -30,4 +30,9 @@ class PedidoTalla extends Model
     {
         return $this->belongsTo(Talla::class);
     }
+
+//     public function talla()
+// {
+//     return $this->belongsTo(Talla::class, 'talla_id');
+// }
 }
