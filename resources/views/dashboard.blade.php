@@ -7,14 +7,44 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+
+
+
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     {{ __("You're logged in!") }}
 
+                    @hasanyrole('admin|Cliente')
+                    <p>Acceso permitido a Administradores  && Cliente</p>
+                    @endhasanyrole
+        
+        
+                    @hasanyrole('admin')
+                        <p>Acceso permitido a Administradores </p>
+                    @endhasanyrole
+        
+                    @hasanyrole('Cliente')
+                        <p>Acceso permitido a Clientes</p>
+                    @endhasanyrole
+                    
                     @livewire('user-roles-permissions')
                 </div>
             </div>
         </div>
+
+
+      
+
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+                    {{ __("You're logged in!") }}
+
+                    @livewire('client-message')
+                </div>
+            </div>
+        </div>
+
     </div>
 
 

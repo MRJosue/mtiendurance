@@ -34,7 +34,9 @@
                     {{-- catalogos --}}
                     <div class="hidden sm:flex sm:items-center sm:ms-6">
                         <x-dropdown align="right" width="48">
+                         
                             <x-slot name="trigger">
+                                @hasanyrole('admin')
                                 <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
                                     <div>Catalogos</div>
 
@@ -45,16 +47,17 @@
                                     </div>
 
                                 </button>
+                                @endhasanyrole
                             </x-slot>
+                      
 
                             <x-slot name="content">
 
-
-
+                                @hasanyrole('admin')
+                                
                                 <x-dropdown-link :href="route('catalogos.categorias.index')">
                                     {{ __('Categorias') }}
                                 </x-dropdown-link>
-
 
                                 <x-dropdown-link :href="route('catalogos.producto.index')">
                                     {{ __('Producto') }}
@@ -67,7 +70,6 @@
                                 <x-dropdown-link :href="route('catalogos.opciones.index')">
                                     {{ __('Opciones de Caracteristicas') }}
                                 </x-dropdown-link>
-
 
                                 <x-dropdown-link :href="route('catalogos.paises.index')">
                                     {{ __('Paises') }}
@@ -83,6 +85,7 @@
                                     {{ __('Tipos de envio') }}
                                 </x-dropdown-link>
 
+                                @endhasanyrole
 
 
                             </x-slot>
@@ -92,6 +95,8 @@
                     <div class="hidden sm:flex sm:items-center sm:ms-6">
                         <x-dropdown align="right" width="48">
                             <x-slot name="trigger">
+
+                                @hasanyrole('admin')
                                 <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
                                     <div>Usuarios</div>
 
@@ -101,16 +106,19 @@
                                         </svg>
                                     </div>
                                 </button>
+
+                                @endhasanyrole
                             </x-slot>
 
                             <x-slot name="content">
-                                <x-dropdown-link :href="route('usuarios.index')">
-                                    {{ __('Usuarios') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('permisos.index')">
-                                    {{ __('Permisos') }}
-                                </x-dropdown-link>
-
+                                @hasanyrole('admin')
+                                    <x-dropdown-link :href="route('usuarios.index')">
+                                        {{ __('Usuarios') }}
+                                    </x-dropdown-link>
+                                    <x-dropdown-link :href="route('permisos.index')">
+                                        {{ __('Permisos') }}
+                                    </x-dropdown-link>
+                                @endhasanyrole
                             </x-slot>
                         </x-dropdown>
                     </div>
@@ -187,8 +195,12 @@
     <!-- Responsive Catálogos -->
     <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
         <div class="space-y-1">
+
+            @hasanyrole('admin')
+            
+
             <x-responsive-nav-link :href="route('catalogos.categorias.index')">
-                {{ __('Categorías') }}
+                {{ __('Categorias') }}
             </x-responsive-nav-link>
 
             <x-responsive-nav-link :href="route('catalogos.producto.index')">
@@ -196,18 +208,37 @@
             </x-responsive-nav-link>
 
             <x-responsive-nav-link :href="route('catalogos.caracteristica.index')">
-                {{ __('Características') }}
+                {{ __('Caracteristicas') }}
             </x-responsive-nav-link>
 
             <x-responsive-nav-link :href="route('catalogos.opciones.index')">
-                {{ __('Opciones de Características') }}
+                {{ __('Opciones de Caracteristicas') }}
             </x-responsive-nav-link>
+
+            <x-responsive-nav-link :href="route('catalogos.paises.index')">
+                {{ __('Paises') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('catalogos.estados.index')">
+                {{ __('Estados') }}
+            </x-responsive-nav-link>
+            <x-dropdown-link :href="route('catalogos.ciudades.index')">
+                {{ __('Ciudades') }}
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link :href="route('catalogos.tipoenvio.index')">
+                {{ __('Tipos de envio') }}
+            </x-responsive-nav-link>
+
+            @endhasanyrole
+
+   
         </div>
     </div>
 
     <!-- Responsive Usuarios -->
     <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
         <div class="space-y-1">
+            @hasanyrole('admin')
             <x-responsive-nav-link :href="route('usuarios.index')">
                 {{ __('Usuarios') }}
             </x-responsive-nav-link>
@@ -215,6 +246,7 @@
             <x-responsive-nav-link :href="route('permisos.index')">
                 {{ __('Permisos') }}
             </x-responsive-nav-link>
+            @endhasanyrole
         </div>
     </div>
 

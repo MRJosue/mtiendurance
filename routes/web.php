@@ -50,6 +50,8 @@ Route::get('/', function () {
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
+
+
 Route::get('/MessageSent', function () {
     event(new \App\Events\MessageSent("¡Hola desde el servidor!"));
     return "Evento emitido.";
