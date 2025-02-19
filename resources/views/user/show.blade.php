@@ -6,7 +6,7 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-2">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
@@ -22,6 +22,9 @@
                     <br class="text-m font-bold mb-4"">
                     <h2 class="text-m font-bold mb-4"">tipo de usuario: {{$user->tipo_usuario}}</h2>
 
+                    <div>
+                        @livewire('usuarios.cliente-management', ['userId' => $user->id])
+                    </div>
 
                 </div>
             </div>
@@ -29,11 +32,11 @@
     </div>
 
 
-    <div class="py-12">
+    <div class="py-2">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <h1 class="text-2xl font-bold mb-4">Direccion fizcal</h1>
+                    <h1 class="text-2xl font-bold mb-4">Direccion fiscal</h1>
 
                     {{-- @livewire('users-table') --}}
 
@@ -47,7 +50,7 @@
     </div>
 
 
-    <div class="py-12">
+    <div class="py-2">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
@@ -65,11 +68,12 @@
 
 
 
-        <div class="py-12">
+        <div class="py-2">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         <h1 class="text-2xl font-bold mb-4">Permisos y roles del usuario</h1>
+                        @livewire('usuarios.user-roles-permissions', ['userId' => $user->id])
 
                     </div>
                 </div>
@@ -78,7 +82,7 @@
 
 
 {{--
-    <div class="py-12">
+    <div class="py-2">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">

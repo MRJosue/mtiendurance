@@ -11,9 +11,9 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        if (!auth()->user()->hasAnyRole(['Cliente', 'admin'])) {
-            abort(403, 'No tienes acceso a esta sección.');
-        }
+        // if (!auth()->user()->hasAnyRole(['Cliente', 'admin', 'ADMINISTRACION',''])) {
+        //     abort(403, 'No tienes acceso a esta sección.');
+        // }
     
     
         return view('dashboard');

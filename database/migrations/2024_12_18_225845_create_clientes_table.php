@@ -12,10 +12,12 @@ return new class extends Migration
     public function up()
     {
         Schema::create('clientes', function (Blueprint $table) {
-            $table->id(); // Crea un BIGINT UNSIGNED AUTO_INCREMENT
-            $table->unsignedBigInteger('usuario_id'); // Debe coincidir con el tipo de users.id
+            $table->id();
+            $table->unsignedBigInteger('usuario_id');
             $table->string('nombre_empresa')->nullable();
             $table->string('contacto_principal')->nullable();
+            $table->string('telefono')->nullable();
+            $table->string('email')->unique();
             $table->timestamps();
 
             $table->foreign('usuario_id')->references('id')->on('users')->onDelete('cascade');

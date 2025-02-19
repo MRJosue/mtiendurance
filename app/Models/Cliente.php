@@ -7,13 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class Cliente extends Model
 {
+    
     use HasFactory;
-
     protected $fillable = [
-        'nombre',
-        'email',
+        'usuario_id',
+        'nombre_empresa',
+        'contacto_principal',
         'telefono',
+        'email',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(User::class, 'usuario_id');
+    }
 
     /**
      * Relación con la tabla de pedidos.

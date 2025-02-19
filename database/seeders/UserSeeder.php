@@ -22,6 +22,8 @@ class UserSeeder extends Seeder
             'tipo_usuario' => 'ADMINISTRACION',
         ]);
 
+        
+
         // Usuarios de prueba con contraseñas simples
         User::create([
             'name' => 'Admin User',
