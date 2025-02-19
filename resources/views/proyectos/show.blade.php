@@ -107,7 +107,10 @@
                                                 </div>
             
             
-            
+                                                <div>
+                                                    <livewire:pedidos.orden-produccion-pdf :proyectoId="$proyecto->id" />
+
+                                                </div>
                                                 
                                               
                                             </div>
@@ -133,7 +136,10 @@
 
 
                 </div>
+                
             </div>
+
+
 
             <div class=" ">
                 <livewire:proyectos.control-estado :proyecto-id="$proyecto->id" />

@@ -24,7 +24,7 @@
                     @foreach ($pedidos as $pedido)
                         <tr class="border-b hover:bg-gray-50">
                             <td class="py-3 px-4">{{ $pedido->id }}</td>
-                            <td class="py-3 px-4">{{ $pedido->cliente->nombre ?? 'Sin datos' }}</td>
+                            <td class="py-3 px-4">{{ $pedido->cliente->nombre_empresa ?? 'Sin datos' }}</td>
                             <td class="py-3 px-4">{{ $pedido->producto->nombre ?? 'Sin datos' }}</td>
 
                             <!-- Categorías (many-to-many) -->
