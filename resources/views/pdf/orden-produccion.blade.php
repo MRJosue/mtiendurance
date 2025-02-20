@@ -18,7 +18,7 @@
 <body>
     <div class="container">
         <h2>Orden de Producción</h2>
-        <h3>Proyecto: {{ $proyecto->nombre }}</h3>
+        <h3>Proyecto: {{$proyecto->id}}-{{$proyecto->nombre}}</h3>
         <p><strong>Cliente:</strong> {{ $proyecto->cliente->nombre_empresa ?? 'N/A' }}</p>
         <p><strong>Fecha de Producción:</strong> {{ $proyecto->fecha_produccion }}</p>
         <p><strong>Estado:</strong> <span class="estado">{{ strtoupper($proyecto->estado) }}</span></p>

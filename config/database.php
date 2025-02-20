@@ -63,6 +63,21 @@ return [
             ]) : [],
         ],
 
+        'cpanel_mysql' => [  // Nueva conexión secundaria
+            'driver' => 'mysql',
+            'host' => env('CPANEL_DB_HOST', 'www.mtiendurance.com'),
+            'port' => env('CPANEL_DB_PORT', '3306'),
+            'database' => env('CPANEL_DB_DATABASE', 'admin_db'),
+            'username' => env('CPANEL_DB_USERNAME', 'jcardona@mtiendurance.com'),
+            'password' => env('CPANEL_DB_PASSWORD', 'Espectaculo13@'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+            'engine' => null,
+        ],
+
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DATABASE_URL'),

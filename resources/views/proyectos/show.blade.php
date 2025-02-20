@@ -106,11 +106,23 @@
                                                     </p>
                                                 </div>
             
-            
-                                                <div>
-                                                    <livewire:pedidos.orden-produccion-pdf :proyectoId="$proyecto->id" />
-
+                                                <div class="grid grid-cols-1 md:grid-cols-2">
+                                                    <div>
+                                                        <livewire:pedidos.orden-produccion-pdf :proyectoId="$proyecto->id" />
+    
+                                                    </div>
+                                                    <div>
+                                                        <div class="mt-4">
+                                                            <button
+                                                                wire:click=""
+                                                                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                                                            >
+                                                                Enviar solicitud de aprobacion
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
+
                                                 
                                               
                                             </div>

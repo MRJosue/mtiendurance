@@ -31,16 +31,29 @@ class ControlEstado extends Component
     {
         $proyecto = Proyecto::find($this->proyectoId);
 
-        Log::error("Mostramos la informacion del proyecto", ['proyectoId' =>  $proyecto]);
-        Log::error("Mostramos la accion", ['accion' =>  $accion]);
+        Log::info("Información del proyecto", ['proyectoId' => $proyecto]);
+        Log::info("Acción recibida", ['accion' => $accion]);
 
-        if ($proyecto && $proyecto->actualizarEstado($accion)) {
-            $this->estado = $proyecto->fresh()->estado; // Refrescar el estado después de actualizar
-            $this->dispatch('estadoActualizado'); // Evento para que otros componentes escuchen
-            
-        } else {
-            Log::error("No se pudo actualizar el estado", ['proyectoId' => $this->proyectoId, 'accion' => $accion]);
+        if (!$proyecto) {
+            Log::error("No se encontró el proyecto", ['proyectoId' => $this->proyectoId]);
+            return;
         }
+
+        // Si la acción es aprobar, cambia el estado directamente a "APROBADO"
+        if ($accion === 'aprobar') {
+            $proyecto->estado = 'APROBADO';
+        } else {
+            if (!$proyecto->actualizarEstado($accion)) {
+                Log::error("No se pudo actualizar el estado", ['proyectoId' => $this->proyectoId, 'accion' => $accion]);
+                return;
+            }
+        }
+
+        $proyecto->save();
+        $this->estado = $proyecto->fresh()->estado; // Refrescar el estado después de actualizar
+        $this->dispatch('estadoActualizado'); // Notifica a otros componentes
+
+        Log::info("Estado actualizado exitosamente", ['proyectoId' => $this->proyectoId, 'nuevo_estado' => $this->estado]);
     }
 
     public function render()
