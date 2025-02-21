@@ -50,7 +50,7 @@ class ManagePreProjects extends Component
 
     public function render()
     {
-        return view('livewire.preproyectos.manage-pre-projects', [
+        return view('livewire.preproyectos.manage-preprojects', [
             'projects' => PreProyecto::with(['user'])
                                   ->where('estado', 'PENDIENTE')
                                   ->where('usuario_id', auth()->id())
