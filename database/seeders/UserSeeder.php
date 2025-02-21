@@ -22,6 +22,15 @@ class UserSeeder extends Seeder
             'tipo_usuario' => 'ADMINISTRACION',
         ]);
 
+                // Usuarios de prueba con contraseñas simples
+        User::create([
+            'name' => 'Admin User',
+            'email' => 'ingjosue.cardona@gmail.com',
+            'password' => Hash::make('password123'), // Contraseña simple
+            'rol_id' => 1, // Ajusta según el ID de rol para administración
+            'tipo_usuario' => 'ADMINISTRACION',
+        ]);
+
         
 
         // Usuarios de prueba con contraseñas simples
