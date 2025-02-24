@@ -30,7 +30,7 @@ class OrdenProduccionPDF extends Component
 
     public function render()
     {
-        return view('livewire.pedidos.orden-produccion-p-d-f');
+        return view('livewire.pedidos.orden-produccion-pdf');
     }
 }
 
