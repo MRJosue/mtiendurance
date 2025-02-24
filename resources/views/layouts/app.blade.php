@@ -16,6 +16,16 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <livewire:styles />
+
+        <script>
+            document.addEventListener('livewire:init', () => {
+                const baseUrl = '{{ url('/') }}';
+                Livewire.setScriptRoute(`${baseUrl}/livewire`);
+                Livewire.setUpdateUri(`${baseUrl}/livewire/update`);
+            });
+        </script>
+        
+        @livewireScripts
     </head>
     <body class="font-sans antialiased">
 
