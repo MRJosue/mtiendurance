@@ -16,7 +16,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         <livewire:styles />
-
+        <base href="{{ config('app.url') }}/" />
         <script>
             document.addEventListener('livewire:init', () => {
                 const baseUrl = '{{ url('/') }}';
