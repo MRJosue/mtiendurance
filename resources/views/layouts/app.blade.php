@@ -14,15 +14,11 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-
+        
         <livewire:styles />
-        <base href="{{ config('app.url') }}/" />
+ 
         <script>
-            document.addEventListener('livewire:init', () => {
-                const baseUrl = '{{ url('/') }}';
-                Livewire.setScriptRoute(`${baseUrl}/livewire`);
-                Livewire.setUpdateUri(`${baseUrl}/livewire/update`);
-            });
+
         </script>
         
         @livewireScripts
