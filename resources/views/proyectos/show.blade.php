@@ -108,8 +108,8 @@
             
                                                 <div class="grid grid-cols-1 md:grid-cols-2">
                                                     <div>
-                                                        <livewire:pedidos.orden-produccion-pdf :proyectoId="$proyecto->id" />
-    
+                                                       
+                                                            @livewire('pedidos.orden-produccion-pdf', ['proyectoId' => $proyecto->id])
                                                     </div>
                                                     <div>
                                                         <div class="mt-4">
