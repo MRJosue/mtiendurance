@@ -7,7 +7,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\PreProyecto;
 
-class ManagePreProjects extends Component
+class ManagePreprojects extends Component
 {
     use WithPagination;
 
