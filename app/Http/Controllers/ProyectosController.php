@@ -17,7 +17,7 @@ class ProyectosController extends Controller
     {
 
         //dd($Proyecto);
-        return view('Proyectos.show',  ['proyecto' => $Proyecto]);
+        return view('proyectos.show',  ['proyecto' => $Proyecto]);
     }
 
 
