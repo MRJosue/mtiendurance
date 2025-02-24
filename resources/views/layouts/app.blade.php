@@ -14,9 +14,19 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-        <base href="{{ config('app.url') }}/">
 
-        @livewireStyles     
+
+        @livewireStyles    
+        
+        <base href="{{ config('app.url') }}/">
+        <script>
+            document.addEventListener('livewire:init', () => {
+                Livewire.hook('request', ({ uri, options, payload, respond, succeed, fail }) => {
+                    options.url = '{{ url('livewire/update') }}';
+                });
+            });
+        </script>
+        
     </head>
     <body class="font-sans antialiased">
 
