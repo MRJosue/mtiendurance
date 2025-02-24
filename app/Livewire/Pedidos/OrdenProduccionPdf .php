@@ -6,7 +6,7 @@ use App\Models\Pedido;
 use App\Models\Proyecto;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class OrdenProduccionPDF extends Component
+class OrdenProduccionPdf extends Component
 {
     public $proyectoId;
 
