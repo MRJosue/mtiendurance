@@ -432,7 +432,7 @@ class EditPreProject extends Component
 
         // Mensaje de éxito y redirección
         session()->flash('message', 'El proyecto ha sido aprobado y transferido correctamente.');
-        return redirect()->route('dashboard');
+        return redirect()->route('proyectos');
     }
 
 

@@ -115,9 +115,9 @@
                                     <x-dropdown-link :href="route('usuarios.index')">
                                         {{ __('Usuarios') }}
                                     </x-dropdown-link>
-                                    <x-dropdown-link :href="route('permisos.index')">
+                                    {{-- <x-dropdown-link :href="route('permisos.index')">
                                         {{ __('Permisos') }}
-                                    </x-dropdown-link>
+                                    </x-dropdown-link> --}}
                                 @endhasanyrole
                             </x-slot>
                         </x-dropdown>
@@ -243,9 +243,9 @@
                 {{ __('Usuarios') }}
             </x-responsive-nav-link>
 
-            <x-responsive-nav-link :href="route('permisos.index')">
+            {{-- <x-responsive-nav-link :href="route('permisos.index')">
                 {{ __('Permisos') }}
-            </x-responsive-nav-link>
+            </x-responsive-nav-link> --}}
             @endhasanyrole
         </div>
     </div>
