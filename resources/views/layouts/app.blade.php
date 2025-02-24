@@ -14,7 +14,9 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <base href="{{ config('app.url') }}/">
 
+        @livewireStyles     
     </head>
     <body class="font-sans antialiased">
 
