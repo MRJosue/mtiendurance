@@ -167,7 +167,7 @@ class Proyecto extends Model
         $this->update(['estado' => $nuevoEstado]);
 
         // Registrar en `proyecto_estados`
-        Proyecto_Estados::create([
+        proyecto_estados::create([
             'proyecto_id' => $this->id,
             'estado' => $nuevoEstado,
             'fecha_inicio' => now(),
