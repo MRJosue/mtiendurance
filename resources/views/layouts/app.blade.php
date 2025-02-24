@@ -18,15 +18,8 @@
 
         @livewireStyles    
         
-        <base href="{{ config('app.url') }}/">
-        <script>
-            document.addEventListener('livewire:init', () => {
-                Livewire.hook('request', ({ uri, options, payload, respond, succeed, fail }) => {
-                    options.url = '{{ url('livewire/update') }}';
-                });
-            });
-        </script>
-        
+
+
     </head>
     <body class="font-sans antialiased">
 
