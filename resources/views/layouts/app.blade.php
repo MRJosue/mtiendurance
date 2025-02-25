@@ -15,9 +15,10 @@
     
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-
+        @include('notify::components.notify')
         @livewireStyles    
         
+        @notifyCss
 
 
     </head>
@@ -39,10 +40,12 @@
             <main>
                 {{ $slot }}
             </main>
+
+            
         </div>
 
-
-       
+        <x-notify::notify />
+        @notifyJs
         <livewire:scripts />
         @stack('scripts')
         

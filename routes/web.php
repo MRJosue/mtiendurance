@@ -38,6 +38,11 @@ use App\Models\MensajeChat;
 |
 */
 
+use App\Http\Controllers\DemoController;
+
+Route::get('/notificacion', [DemoController::class, 'mostrarNotificacion']);
+
+
 //resources\views\auth\login.blade.php
 Route::get('/', function () {
     return view('auth.login');
