@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <script>
+        window.roles = @json('1');
+        window.permissions = @json('1');
+    </script>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,15 +16,14 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-        @include('notify::components.notify')
-        @livewireStyles    
-        
-        @notifyCss
+
+        @livewireStyles
 
 
+        {{-- @notifyCss Esta sentencia produce errores por el llamado de alphine--}}
     </head>
     <body class="font-sans antialiased">
 
@@ -40,14 +43,19 @@
             <main>
                 {{ $slot }}
             </main>
-
-            
         </div>
+
+
+
+
+        <livewire:scripts />
+        @stack('scripts')
 
         <x-notify::notify />
         @notifyJs
-        <livewire:scripts />
-        @stack('scripts')
-        
+
+
     </body>
 </html>
+
+

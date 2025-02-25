@@ -1,16 +1,8 @@
 import './bootstrap';
-import '../../vendor/rappasoft/laravel-livewire-tables/resources/imports/laravel-livewire-tables-all.js';
+//import '../../vendor/rappasoft/laravel-livewire-tables/resources/imports/laravel-livewire-tables-all.js';
 
 
 console.log('Hola soy app js');
-// import Alpine from 'alpinejs';
-
-
-// import Alpine from 'alpinejs';
-
-// window.Alpine = Alpine;
-
-//Alpine.start();
 
 
 

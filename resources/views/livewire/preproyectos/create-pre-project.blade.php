@@ -219,7 +219,7 @@
         @endif
 
         <!-- Botón de Enviar -->
-        <button type="submit" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+        <button type="submit" class=" bg-blue-500 mt-4 px-4 py-2 text-white rounded-lg hover:bg-blue-600">
             Crear Preproyecto
         </button>
     </form>
