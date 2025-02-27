@@ -61,13 +61,12 @@ class User extends Authenticatable
 
     //     /**
     //  * La relación con el modelo Role.
-    //  */
-    // public function role()
-    // {
-    //     return $this->belongsTo(Role::class);
-    // }
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'rol_id');
+    }
 
-
+    
         /**
      * Define the model's default state.
      *

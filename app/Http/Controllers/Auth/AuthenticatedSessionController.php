@@ -9,6 +9,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Spatie\Permission\Models\Role;
+
 
 class AuthenticatedSessionController extends Controller
 {
@@ -29,6 +31,17 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $user = Auth::user();
+    
+        // Asegurar que el usuario tiene su rol cargado correctamente
+        $user->load('roles.permissions'); 
+    
+        // Opcional: Si `rol_id` es el ID en la tabla `roles`, asigna el rol correcto a Spatie
+        $role = Role::find($user->rol_id);
+        if ($role && !$user->hasRole($role->name)) {
+            $user->syncRoles([$role->name]); // Asigna el rol de la tabla `roles`
+        }
+    
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 

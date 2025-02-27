@@ -17,7 +17,11 @@
                     @hasanyrole('admin|Cliente')
                     <p>Acceso permitido a Administradores  && Cliente</p>
                     @endhasanyrole
-        
+
+                    @role('admin')
+                        <p>Only Role Bienvenido, administrador</p>
+                    @endrole    
+                            
         
                     @hasanyrole('admin')
                         <p>Acceso permitido a Administradores </p>
