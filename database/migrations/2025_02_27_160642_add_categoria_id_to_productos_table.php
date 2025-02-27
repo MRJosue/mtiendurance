@@ -12,8 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('productos', function (Blueprint $table) {
-            $table->unsignedBigInteger('categoria_id')->nullable()->after('id'); // Primero agregamos la columna
-            $table->foreign('categoria_id')->references('id')->on('categorias')->onDelete('cascade'); // Luego la clave foránea
+            if (Schema::hasColumn('productos', 'categoria_id')) {
+                $table->dropForeign(['categoria_id']); // Eliminar clave foránea existente
+            }
+            
+            if (!Schema::hasColumn('productos', 'categoria_id')) {
+                $table->unsignedBigInteger('categoria_id')->nullable()->after('id');
+            }
+    
+            $table->foreign('categoria_id')->references('id')->on('categorias')->onDelete('cascade');
         });
     }
 
