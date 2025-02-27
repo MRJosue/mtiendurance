@@ -25,6 +25,6 @@ class Caracteristica extends Model
 
     public function opciones()
     {
-        return $this->belongsToMany(Opcion::class, 'caracteristica_opcion', 'caracteristica_id', 'opcion_id');
+        return $this->belongsToMany(Opcion::class, 'caracteristica_opcion', 'caracteristica_id', 'opcion_id')->orderBy('nombre', 'asc');
     }
 }

@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Usuarios;
 
-
 use Livewire\Component;
 use App\Models\Cliente;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ClienteManagement extends Component
 {
@@ -18,12 +18,15 @@ class ClienteManagement extends Component
     public $modalOpen = false;
     public $userId;
 
-    protected $rules = [
-        'nombre_empresa' => 'required|string|max:255',
-        'contacto_principal' => 'required|string|max:255',
-        'telefono' => 'nullable|string|max:15',
-        'email' => 'required|email|unique:clientes,email',
-    ];
+    protected function rules()
+    {
+        return [
+            'nombre_empresa' => 'required|string|max:255',
+            'contacto_principal' => 'required|string|max:255',
+            'telefono' => 'nullable|string|max:15',
+            'email' => 'required|email|unique:clientes,email,' . $this->clienteId,
+        ];
+    }
 
     public function mount($userId)
     {
@@ -33,11 +36,6 @@ class ClienteManagement extends Component
 
     public function create()
     {
-        if (Cliente::where('usuario_id', $this->userId)->exists()) {
-            session()->flash('error', 'Ya existe un cliente asociado a este usuario.');
-            return;
-        }
-
         $this->reset(['clienteId', 'nombre_empresa', 'contacto_principal', 'telefono', 'email']);
         $this->modalOpen = true;
     }
@@ -55,17 +53,23 @@ class ClienteManagement extends Component
 
     public function save()
     {
-        $this->validate();
 
+        Log::debug('validate pre', ['fecha_entrega' =>$this->clienteId ]);
+        $this->validate($this->rules());
+        Log::debug('userId pre upd/crate', ['fecha_entrega' =>$this->clienteId ]);
         Cliente::updateOrCreate(
-            ['id' => $this->clienteId, 'usuario_id' => $this->userId],
+
+            ['id' => $this->clienteId],
             [
+                'usuario_id' => $this->userId, // Asigna siempre el usuario
                 'nombre_empresa' => $this->nombre_empresa,
                 'contacto_principal' => $this->contacto_principal,
                 'telefono' => $this->telefono,
                 'email' => $this->email,
             ]
         );
+
+        Log::debug('userId pre close', ['data' => $this->userId]);
 
         $this->modalOpen = false;
         $this->clientes = Cliente::where('usuario_id', $this->userId)->get();
@@ -84,7 +88,6 @@ class ClienteManagement extends Component
         ]);
     }
 }
-
 
 
 

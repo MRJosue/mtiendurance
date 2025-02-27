@@ -8,10 +8,14 @@
     @endif
 
     <div class="flex items-center justify-between mb-3 space-x-2">
-        <button wire:click="crear" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">Nueva Categoría</button>
+        <button wire:click="crear" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">
+            Nueva Categoría
+        </button>
         <div class="flex space-x-2">
             <input type="text" wire:model="query" placeholder="Buscar por nombre..." class="border border-gray-300 rounded px-4 py-2">
-            <button wire:click="buscar" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded">Buscar</button>
+            <button wire:click="buscar" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded">
+                Buscar
+            </button>
         </div>
     </div>
 
@@ -19,6 +23,7 @@
         <thead>
             <tr class="bg-gray-100">
                 <th class="border border-gray-300 p-2 text-left">Nombre</th>
+                <th class="border border-gray-300 p-2 text-center">Formulario de tallas</th>
                 <th class="border border-gray-300 p-2 text-center">Acciones</th>
             </tr>
         </thead>
@@ -26,9 +31,20 @@
             @foreach($categorias as $cat)
                 <tr>
                     <td class="border border-gray-300 p-2">{{ $cat->nombre }}</td>
+                    <td class="border border-gray-300 p-2 text-center">
+                        @if($cat->flag_tallas)
+                            ✅
+                        @else
+                            ❌
+                        @endif
+                    </td>
                     <td class="border border-gray-300 p-2 flex space-x-2 justify-center">
-                        <button wire:click="editar('{{ $cat->id }}')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">Editar</button>
-                        <button wire:click="borrar('{{ $cat->id }}')" class="bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1 rounded" onclick="return confirm('¿Estás seguro de eliminar esta categoría?')">Eliminar</button>
+                        <button wire:click="editar('{{ $cat->id }}')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
+                            Editar
+                        </button>
+                        <button wire:click="borrar('{{ $cat->id }}')" class="bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1 rounded" onclick="return confirm('¿Estás seguro de eliminar esta categoría?')">
+                            Eliminar
+                        </button>
                     </td>
                 </tr>
             @endforeach
@@ -52,10 +68,21 @@
                         <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="nombre">
                         @error('nombre') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
+
+                    <!-- Checkbox para Flag Tallas -->
+                    <div class="mb-4 flex items-center">
+                        <input type="checkbox" class="mr-2" wire:model="flag_tallas">
+                        <label class="text-gray-700">Captura de tallas</label>
+                    </div>
+
                 </div>
                 <div class="flex items-center justify-end border-t border-gray-200 p-4 space-x-2">
-                    <button wire:click="cerrarModal" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">Cancelar</button>
-                    <button wire:click="guardar" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">Guardar</button>
+                    <button wire:click="cerrarModal" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">
+                        Cancelar
+                    </button>
+                    <button wire:click="guardar" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">
+                        Guardar
+                    </button>
                 </div>
             </div>
         </div>

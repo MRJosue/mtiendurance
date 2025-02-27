@@ -26,7 +26,6 @@
                 <th class="border border-gray-300 p-2 text-left">Pasos</th>
                 <th class="border border-gray-300 p-2 text-left">Minuto/Paso</th>
                 <th class="border border-gray-300 p-2 text-left">Valor Unitario</th>
-                <th class="border border-gray-300 p-2 text-left">Características</th>
                 <th class="border border-gray-300 p-2 text-center">Acciones</th>
             </tr>
         </thead>
@@ -37,17 +36,7 @@
                     <td class="border border-gray-300 p-2">{{ $opc->pasos }}</td>
                     <td class="border border-gray-300 p-2">{{ $opc->minutoPaso }}</td>
                     <td class="border border-gray-300 p-2">${{ number_format($opc->valoru, 2) }}</td>
-                    <td class="border border-gray-300 p-2">
-                        @if ($opc->caracteristicas->isNotEmpty())
-                            <ul>
-                                @foreach ($opc->caracteristicas as $car)
-                                    <li>{{ $car->nombre }}</li>
-                                @endforeach
-                            </ul>
-                        @else
-                            N/A
-                        @endif
-                    </td>
+
                     <td class="border border-gray-300 p-2 flex space-x-2 justify-center">
                         <button wire:click="editar('{{ $opc->id }}')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
                             Editar

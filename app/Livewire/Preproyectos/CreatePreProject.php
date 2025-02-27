@@ -69,13 +69,11 @@ class CreatePreProject extends Component
     {
 
         $this->producto_id = null;
-        $this->productos = Producto::whereHas('categorias', function ($query) {
-            $query->where('categoria_id', $this->categoria_id);
-        })->get();
+        $this->productos = Producto::where('categoria_id', $this->categoria_id)->get();
 
         // Verifica si la categoría seleccionada es "Playeras"
         $categoria = Categoria::find($this->categoria_id);
-        $this->mostrarFormularioTallas = $categoria && strtolower($categoria->nombre) === 'playeras';
+        $this->mostrarFormularioTallas = $categoria && $categoria->flag_tallas == 1;
 
         // Reset valores de tallas
         if (!$this->mostrarFormularioTallas) {
@@ -89,16 +87,31 @@ class CreatePreProject extends Component
         $this->caracteristicas_sel = Caracteristica::whereHas('productos', function ($query) {
             $query->where('producto_id', $this->producto_id);
         })->get()->map(function ($caracteristica) {
+            $opciones = Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
+                $query->where('caracteristica_id', $caracteristica->id);
+            })->get();
+
+            $opcionesArray = $opciones->map(function ($opcion) {
+                return [
+                    'id' => $opcion->id,
+                    'nombre' => $opcion->nombre,
+                    'valoru' => $opcion->valoru,
+                ];
+            })->toArray();
+
+            if (count($opcionesArray) === 1) {
+                $opcionesArray = [$opcionesArray[0]]; // Selecciona automáticamente la única opción disponible
+            }
+
             return [
                 'id' => $caracteristica->id,
                 'nombre' => $caracteristica->nombre,
-                'flag_seleccion_multiple' => $caracteristica->flag_seleccion_multiple,
-                'opciones' => []
+                'flag_seleccion_multiple' => 0,
+                'opciones' => $opcionesArray,
             ];
         })->toArray();
 
         $this->opciones_sel = [];
-
         $this->on_Calcula_Fechas_Entrega();
     }
 
@@ -124,10 +137,12 @@ class CreatePreProject extends Component
             } else {
                 // Si permite selección múltiple, se pueden agregar más opciones
                 if (!in_array($opcion->id, array_column($caracteristica['opciones'], 'id'))) {
-                    $caracteristica['opciones'][] = [
-                        'id' => $opcion->id,
-                        'nombre' => $opcion->nombre,
-                        'valoru' => $opcion->valoru,
+                    $caracteristica['opciones'] = [
+                        [
+                            'id' => $opcion->id,
+                            'nombre' => $opcion->nombre,
+                            'valoru' => $opcion->valoru,
+                        ]
                     ];
                 }
             }

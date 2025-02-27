@@ -30,6 +30,7 @@
                 <th class="border border-gray-300 p-2 text-left">Días de Producción</th>
                 <th class="border border-gray-300 p-2 text-left">Armado</th>
                 <th class="border border-gray-300 p-2 text-left">Categoría</th>
+                <th class="border border-gray-300 p-2 text-left">Características</th>
                 <th class="border border-gray-300 p-2 text-center">Acciones</th>
             </tr>
         </thead>
@@ -39,8 +40,10 @@
                     <td class="border border-gray-300 p-2">{{ $prod->nombre }}</td>
                     <td class="border border-gray-300 p-2">{{ $prod->dias_produccion }}</td>
                     <td class="border border-gray-300 p-2">{{ $prod->flag_armado ? 'Sí' : 'No' }}</td>
-                    <td class="border border-gray-300 p-2">{{ $prod->categorias->pluck('nombre')->join(', ') }}</td>
-                    <td class="border border-gray-300 p-2 flex space-x-2 justify-center">
+                    <td class="border border-gray-300 p-2">{{ $prod->categoria ? $prod->categoria->nombre : 'Sin categoría' }}</td>
+
+                    <td class="border border-gray-300 p-2">{{ $prod->caracteristicas->pluck('nombre')->join(', ') }}</td>
+                    <td class="border border-gray-300 p-2 text-center">
                         <button wire:click="editar('{{ $prod->id }}')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
                             Editar
                         </button>
@@ -100,6 +103,20 @@
                         <option value="0">No</option>
                     </select>
                     @error('flag_armado') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+
+                                <!-- Características -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-1">Características</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        @foreach ($caracteristicas as $caracteristica)
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" wire:model="caracteristicasSeleccionadas" value="{{ $caracteristica->id }}">
+                                <span>{{ $caracteristica->nombre }}</span>
+                            </label>
+                        @endforeach
+                    </div>
                 </div>
             </div>
 

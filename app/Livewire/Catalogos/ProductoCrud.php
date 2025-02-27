@@ -5,7 +5,10 @@ namespace App\Livewire\Catalogos;
 use Livewire\Component;
 use App\Models\Producto;
 use App\Models\Categoria;
+use App\Models\Caracteristica;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Log;
+
 
 class ProductoCrud extends Component
 {
@@ -17,6 +20,7 @@ class ProductoCrud extends Component
     public $modal = false;
     public $search, $query;
     public $categoriaFiltro;
+    public $caracteristicasSeleccionadas = [];
 
     protected $paginationTheme = 'tailwind';
 
@@ -35,7 +39,7 @@ class ProductoCrud extends Component
 
     public function render()
     {
-        $query = Producto::with('categorias');
+        $query = Producto::with(['categoria', 'caracteristicas']);
 
         if (!empty($this->search)) {
             $query->where('nombre', 'like', '%' . $this->search . '%');
@@ -47,7 +51,9 @@ class ProductoCrud extends Component
 
         return view('livewire.catalogos.producto-crud', [
             'productos' => $query->orderBy('created_at', 'desc')->paginate(5),
+            
             'categorias' => Categoria::orderBy('nombre')->get(),
+            'caracteristicas' => Caracteristica::orderBy('nombre')->get(),
         ]);
     }
 
@@ -74,6 +80,7 @@ class ProductoCrud extends Component
         $this->dias_produccion = 1;
         $this->flag_armado = 1;
         $this->producto_id = null;
+        $this->caracteristicasSeleccionadas = [];
     }
 
     public function guardar()
@@ -88,16 +95,20 @@ class ProductoCrud extends Component
                 'flag_armado' => $this->flag_armado,
             ]);
 
-            $producto->categorias()->sync([$this->categoria_id]);
+            $producto->categoria_id = $this->categoria_id;
+            $producto->save();
+            $producto->caracteristicas()->sync($this->caracteristicasSeleccionadas);
             session()->flash('message', '¡Producto actualizado exitosamente!');
         } else {
             $producto = Producto::create([
                 'nombre' => $this->nombre,
                 'dias_produccion' => $this->dias_produccion,
                 'flag_armado' => $this->flag_armado,
+                'categoria_id' => $this->categoria_id,
             ]);
 
             $producto->categorias()->attach($this->categoria_id);
+            $producto->caracteristicas()->attach($this->caracteristicasSeleccionadas);
             session()->flash('message', '¡Producto creado exitosamente!');
         }
     
@@ -107,12 +118,17 @@ class ProductoCrud extends Component
 
     public function editar($id)
     {
-        $producto = Producto::findOrFail($id);
+        
+        $producto = Producto::with('caracteristicas')->findOrFail($id);
         $this->producto_id = $producto->id;
         $this->nombre = $producto->nombre;
         $this->dias_produccion = $producto->dias_produccion;
         $this->flag_armado = $producto->flag_armado;
-        $this->categoria_id = $producto->categoria_id;
+        $this->categoria_id = $producto->categoria ? $producto->categoria->id : null;
+        Log::debug('A categoria ID ', ['categoria_id' =>  $producto->categoria_id]);
+        Log::debug('Categoria ID ', ['categoria_id' => $this->categoria_id]);
+    
+        $this->caracteristicasSeleccionadas = $producto->caracteristicas->pluck('id')->toArray();
         $this->abrirModal();
     }
 
@@ -122,3 +138,5 @@ class ProductoCrud extends Component
         session()->flash('message', 'Producto eliminado exitosamente.');
     }
 }
+
+

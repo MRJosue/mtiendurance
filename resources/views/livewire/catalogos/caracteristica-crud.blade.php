@@ -23,8 +23,8 @@
         <thead>
             <tr class="bg-gray-100">
                 <th class="border border-gray-300 p-2 text-left">Nombre</th>
-                <th class="border border-gray-300 p-2 text-left">Seleccion multiple</th>
-                <th class="border border-gray-300 p-2 text-left">Productos</th>
+             
+                <th class="border border-gray-300 p-2 text-left">Opciones</th>
                 <th class="border border-gray-300 p-2 text-center">Acciones</th>
             </tr>
         </thead>
@@ -32,21 +32,19 @@
             @foreach ($caracteristicas as $car)
                 <tr>
                     <td class="border border-gray-300 p-2">{{ $car->nombre }}</td>
-                    <td class="border border-gray-300 p-2 text-center">
-                        {{ $car->flag_seleccion_multiple ? 'Sí' : 'No' }}
-                    </td>
+
                     <td class="border border-gray-300 p-2">
-                        @if ($car->productos->isNotEmpty())
+                        @if ($car->opciones->isNotEmpty())
                             <ul>
-                                @foreach ($car->productos as $prod)
-                                    <li>{{ $prod->nombre }}</li>
+                                @foreach ($car->opciones as $opcion)
+                                    <li>{{ $opcion->nombre }}</li>
                                 @endforeach
                             </ul>
                         @else
                             N/A
                         @endif
                     </td>
-                    <td class="border border-gray-300 p-2 flex space-x-2 justify-center">
+                    <td class="border border-gray-300 p-2 text-center">
                         <button wire:click="editar('{{ $car->id }}')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
                             Editar
                         </button>
@@ -77,21 +75,18 @@
                         @error('nombre') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
-                    <div class="p-4">
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" wire:model.defer="flag_seleccion_multiple" class="form-checkbox h-5 w-5 text-blue-600">
-                            <span class="ml-2 text-gray-700">Permitir Selección Múltiple</span>
-                        </label>
-                    </div>
 
                     <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Productos</label>
-                        <select class="w-full border border-gray-300 rounded p-2" wire:model="producto_id" multiple>
-                            @foreach($productos as $prod)
-                                <option value="{{ $prod->id }}">{{ $prod->nombre }}</option>
+                        <label class="block text-gray-700 mb-1">Opciones</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            @foreach($opciones as $opcion)
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" wire:model="opcion_id" value="{{ $opcion->id }}">
+                                    <span>{{ $opcion->nombre }}</span>
+                                </label>
                             @endforeach
-                        </select>
-                        @error('producto_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                        @error('opcion_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
                 </div>
                 <div class="flex items-center justify-end border-t border-gray-200 p-4 space-x-2">

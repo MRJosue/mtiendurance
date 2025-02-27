@@ -11,6 +11,7 @@ return new class extends Migration {
             //$table->uuid('id')->primary();
             $table->id();
             $table->string('nombre');
+            
             $table->timestamps();
         });
     }

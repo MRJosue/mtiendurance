@@ -7,6 +7,7 @@ console.log('Hola soy app js');
 
 
 
+
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
 window.Pusher = Pusher;

@@ -20,11 +20,13 @@ class ProductosTableSeeder extends Seeder
         foreach ($categorias as $categoria) {
             Producto::create([
                 'nombre' => 'Producto 1 de ' . $categoria->nombre,
+                'categoria_id' => '1',
               
             ]);
 
             Producto::create([
                 'nombre' => 'Producto 2 de ' . $categoria->nombre,
+                'categoria_id' => '2',
               
             ]);
         }

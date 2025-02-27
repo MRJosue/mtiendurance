@@ -35,6 +35,7 @@
         <div class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
             <div class="bg-white p-6 rounded-lg shadow-lg">
                 <h2 class="text-xl font-bold mb-4">{{ $clienteId ? 'Editar Cliente' : 'Nuevo Cliente' }}</h2>
+                
                 <input type="text" wire:model="nombre_empresa" placeholder="Nombre de la Empresa" class="w-full px-4 py-2 border rounded mb-2">
                 <input type="text" wire:model="contacto_principal" placeholder="Contacto Principal" class="w-full px-4 py-2 border rounded mb-2">
                 <input type="text" wire:model="telefono" placeholder="Teléfono" class="w-full px-4 py-2 border rounded mb-2">

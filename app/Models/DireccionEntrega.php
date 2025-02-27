@@ -14,6 +14,7 @@ class DireccionEntrega extends Model
     protected $fillable = [
         'usuario_id',
         'nombre_contacto',
+        'nombre_empresa',
         'calle',
         'ciudad_id',
         'estado_id',

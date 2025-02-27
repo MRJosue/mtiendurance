@@ -7,6 +7,7 @@ use App\Models\Opcion;
 use App\Models\Caracteristica;
 use Livewire\WithPagination;
 
+
 class OpcionCrud extends Component
 {
     use WithPagination;
@@ -15,7 +16,6 @@ class OpcionCrud extends Component
     public $pasos;
     public $minutoPaso;
     public $valoru;
-    public $caracteristica_id = []; // IDs de las características relacionadas
     public $opcion_id;
     public $modal = false;
     public $search = '';
@@ -28,8 +28,6 @@ class OpcionCrud extends Component
         'pasos' => 'required|integer|min:0',
         'minutoPaso' => 'required|integer|min:0',
         'valoru' => 'required|numeric|min:0',
-        'caracteristica_id' => 'required|array|min:1', // Validar que sea un array con al menos una característica
-        'caracteristica_id.*' => 'exists:caracteristicas,id', // Validar que los IDs existan
     ];
 
     public function buscar()
@@ -40,7 +38,7 @@ class OpcionCrud extends Component
 
     public function render()
     {
-        $query = Opcion::with('caracteristicas');
+        $query = Opcion::query();
 
         if (!empty($this->search)) {
             $query->where('nombre', 'like', '%' . $this->search . '%');
@@ -48,7 +46,6 @@ class OpcionCrud extends Component
 
         return view('livewire.catalogos.opcion-crud', [
             'opciones' => $query->orderBy('created_at', 'desc')->paginate(5),
-            'caracteristicas' => Caracteristica::orderBy('nombre')->get(),
         ]);
     }
 
@@ -74,7 +71,6 @@ class OpcionCrud extends Component
         $this->pasos = null;
         $this->minutoPaso = null;
         $this->valoru = null;
-        $this->caracteristica_id = [];
         $this->opcion_id = null;
     }
 
@@ -91,23 +87,15 @@ class OpcionCrud extends Component
                 'minutoPaso' => $this->minutoPaso,
                 'valoru' => $this->valoru,
             ]);
-
-            // Sincronizar características relacionadas
-            $opcion->caracteristicas()->sync($this->caracteristica_id);
-
             session()->flash('message', '¡Opción actualizada exitosamente!');
         } else {
             // Crear nueva opción
-            $opcion = Opcion::create([
+            Opcion::create([
                 'nombre' => $this->nombre,
                 'pasos' => $this->pasos,
                 'minutoPaso' => $this->minutoPaso,
                 'valoru' => $this->valoru,
             ]);
-
-            // Asociar características seleccionadas
-            $opcion->caracteristicas()->attach($this->caracteristica_id);
-
             session()->flash('message', '¡Opción creada exitosamente!');
         }
 
@@ -123,7 +111,6 @@ class OpcionCrud extends Component
         $this->pasos = $opcion->pasos;
         $this->minutoPaso = $opcion->minutoPaso;
         $this->valoru = $opcion->valoru;
-        $this->caracteristica_id = $opcion->caracteristicas->pluck('id')->toArray();
         $this->abrirModal();
     }
 
@@ -132,7 +119,6 @@ class OpcionCrud extends Component
         $opcion = Opcion::find($id);
 
         if ($opcion) {
-            $opcion->caracteristicas()->detach(); // Eliminar relaciones de la tabla pivote
             $opcion->delete(); // Eliminar la opción
             session()->flash('message', 'Opción eliminada exitosamente.');
         }

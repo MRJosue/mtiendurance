@@ -15,13 +15,13 @@ class Categoria extends Model
     public $incrementing = true;
     protected $keyType = 'string';
 
-    protected $fillable = [ 'nombre'];
-
+    protected $fillable = [ 'nombre', 'flag_tallas'];
 
 
     public function productos()
     {
-        return $this->belongsToMany(Producto::class, 'categoria_producto', 'categoria_id', 'producto_id');
+        return $this->hasMany(Producto::class);
     }
+    
 
 }

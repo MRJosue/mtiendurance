@@ -22,6 +22,7 @@
             <thead>
                 <tr class="bg-gray-100">
                     <th class="border border-gray-300 px-4 py-2 text-left">Nombre de Contacto</th>
+                    <th class="border border-gray-300 px-4 py-2 text-left">Nombre de Empresa</th>
                     <th class="border border-gray-300 px-4 py-2 text-left">Calle</th>
                     <th class="border border-gray-300 px-4 py-2 text-left">Ciudad</th>
                     <th class="border border-gray-300 px-4 py-2 text-left">Estado</th>
@@ -34,6 +35,7 @@
                 @foreach($direcciones as $dir)
                     <tr class="hover:bg-gray-50">
                         <td class="border border-gray-300 px-4 py-2">{{ $dir->nombre_contacto }}</td>
+                        <td class="border border-gray-300 px-4 py-2">{{ $dir->nombre_empresa }}</td>
                         <td class="border border-gray-300 px-4 py-2">{{ $dir->calle }}</td>
                         <td class="border border-gray-300 px-4 py-2">{{ $dir->ciudad->nombre ?? '-' }}</td>
                         <td class="border border-gray-300 px-4 py-2">{{ $dir->ciudad->estado->nombre ?? '-' }}</td>
@@ -72,6 +74,13 @@
                         <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="nombre_contacto">
                         @error('nombre_contacto') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">Nombre de Empresa</label>
+                        <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="nombre_empresa">
+                        @error('nombre_empresa') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-1">Calle</label>
                         <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="calle">

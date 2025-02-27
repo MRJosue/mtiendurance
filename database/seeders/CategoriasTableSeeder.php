@@ -15,7 +15,7 @@ class CategoriasTableSeeder extends Seeder
     {
         //Categoria::factory(2)->create();
         Categoria::create(['nombre' => 'Listones']);
-        Categoria::create(['nombre' => 'Playeras']);
+        Categoria::create(['nombre' => 'Playeras','flag_tallas' => 1]);
         Categoria::create(['nombre' => 'Medalla']);
         Categoria::create(['nombre' => 'Pulsera']);
         Categoria::create(['nombre' => 'Gorras']);

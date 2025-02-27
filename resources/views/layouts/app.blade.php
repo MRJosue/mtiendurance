@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <script>
-        window.roles = @json('1');
-        window.permissions = @json('1');
-    </script>
+
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,9 +13,10 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-
+       
+       
+                   @vite(['resources/css/app.css', 'resources/js/app.js'])
+     
 
         @livewireStyles
 

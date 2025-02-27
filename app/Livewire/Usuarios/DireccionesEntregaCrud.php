@@ -15,6 +15,7 @@ class DireccionesEntregaCrud extends Component
 
     public $userId;
     public $nombre_contacto;
+    public $nombre_empresa;
     public $calle;
     public $pais_id;
     public $estado_id;
@@ -28,6 +29,7 @@ class DireccionesEntregaCrud extends Component
 
     protected $rules = [
         'nombre_contacto' => 'required|string|max:255',
+        'nombre_empresa' => 'string|max:255',
         'calle' => 'required|string|max:255',
         'pais_id' => 'required|exists:paises,id',
         'estado_id' => 'required|exists:estados,id',
@@ -82,6 +84,7 @@ class DireccionesEntregaCrud extends Component
     public function limpiar()
     {
         $this->nombre_contacto = '';
+        $this->nombre_empresa = '';
         $this->calle = '';
         $this->pais_id = null;
         $this->estado_id = null;
@@ -98,6 +101,7 @@ class DireccionesEntregaCrud extends Component
         $data = [
             'usuario_id' => $this->userId,
             'nombre_contacto' => $this->nombre_contacto,
+            'nombre_empresa' => $this->nombre_empresa,
             'calle' => $this->calle,
             'pais_id' => $this->pais_id,
             'estado_id' => $this->estado_id,
@@ -124,6 +128,7 @@ class DireccionesEntregaCrud extends Component
         $direccion = DireccionEntrega::with(['ciudad', 'ciudad.estado', 'ciudad.estado.pais'])->findOrFail($id);
         $this->direccion_id = $direccion->id;
         $this->nombre_contacto = $direccion->nombre_contacto;
+        $this->nombre_empresa = $direccion->nombre_empresa;
         $this->calle = $direccion->calle;
         $this->pais_id = $direccion->pais_id;
         $this->estado_id = $direccion->estado_id;

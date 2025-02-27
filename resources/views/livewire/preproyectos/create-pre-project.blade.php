@@ -50,33 +50,27 @@
             @error('producto_id') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
         
-        
-
+        <!-- Características y Opciones -->
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Características y Opciones</label>
             @foreach ($caracteristicas_sel as $index => $caracteristica)
                 <div class="mt-2 p-4 border rounded-lg bg-gray-50">
                     <p class="font-semibold">{{ $caracteristica['nombre'] }}</p>
 
-                    <!-- Selección de Opciones -->
-                    <select wire:change="addOpcion({{ $index }}, $event.target.value)" class="w-full mt-1 border rounded-lg p-2">
-                        <option value="">Seleccionar Opción</option>
-                        @foreach (\App\Models\Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
-                            $query->where('caracteristica_id', $caracteristica['id']);
-                        })->get() as $opcion)
-                            <option value="{{ $opcion->id }}">{{ $opcion->nombre }} ({{ $opcion->valoru }})</option>
-                        @endforeach
-                    </select>
-
-                    <!-- Lista de Opciones Seleccionadas -->
-                    <ul class="mt-2">
-                        @foreach ($caracteristica['opciones'] as $opcionIndex => $opcion)
-                            <li class="flex justify-between items-center mb-2">
-                                <span>{{ $opcion['nombre'] }} ({{ $opcion['valoru'] }})</span>
-                                <button type="button" wire:click="removeOpcion({{ $index }}, {{ $opcionIndex }})" class="text-red-500 hover:underline">Eliminar</button>
-                            </li>
-                        @endforeach
-                    </ul>
+                    @if (count($caracteristica['opciones']) === 1)
+                        <!-- Si hay solo una opción, la seleccionamos automáticamente -->
+                        <p class="text-gray-700">{{ $caracteristica['opciones'][0]['nombre'] }} ({{ $caracteristica['opciones'][0]['valoru'] }})</p>
+                    @else
+                        <!-- Mostrar select si hay múltiples opciones -->
+                        <select wire:change="addOpcion({{ $index }}, $event.target.value)" class="w-full mt-1 border rounded-lg p-2">
+                            <option value="">Seleccionar Opción</option>
+                            @foreach (\App\Models\Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
+                                $query->where('caracteristica_id', $caracteristica['id']);
+                            })->get() as $opcion)
+                                <option value="{{ $opcion->id }}">{{ $opcion->nombre }} ({{ $opcion->valoru }})</option>
+                            @endforeach
+                        </select>
+                    @endif
                 </div>
             @endforeach
         </div>

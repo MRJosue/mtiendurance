@@ -57,6 +57,7 @@ class DireccionesSeeder extends Seeder
                 [
                     'usuario_id' => $user->id,
                     'nombre_contacto' => 'Contacto Principal',
+                    'nombre_empresa'=>'Nombre de empresa',
                     'calle' => 'Calle Entrega 123',
                     'ciudad_id' => 3, // Relacionar con Ciudad de Entrega
                     'estado_id' => 3, // Relacionar con Estado de Entrega
@@ -70,6 +71,7 @@ class DireccionesSeeder extends Seeder
                 [
                     'usuario_id' => $user->id,
                     'nombre_contacto' => 'Contacto Alternativo',
+                    'nombre_empresa'=>'Nombre de empresa',
                     'calle' => 'Avenida Entrega 456',
                     'ciudad_id' => 4, // Relacionar con Ciudad Alternativa
                     'estado_id' => 4, // Relacionar con Estado Alternativo

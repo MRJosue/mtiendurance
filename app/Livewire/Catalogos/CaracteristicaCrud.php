@@ -5,7 +5,9 @@ namespace App\Livewire\Catalogos;
 use Livewire\Component;
 use App\Models\Caracteristica;
 use App\Models\Producto;
+use App\Models\Opcion;
 use Livewire\WithPagination;
+
 
 class CaracteristicaCrud extends Component
 {
@@ -13,7 +15,7 @@ class CaracteristicaCrud extends Component
 
     public $nombre;
     public $flag_seleccion_multiple = 0; // Por defecto, inactivo
-    public $producto_id = [];
+    public $opcion_id = [];
     public $caracteristica_id;
     public $modal = false;
     public $search = '';
@@ -24,8 +26,8 @@ class CaracteristicaCrud extends Component
     protected $rules = [
         'nombre' => 'required|string|max:255',
         'flag_seleccion_multiple' => 'boolean',
-        'producto_id' => 'required|array|min:1',
-        'producto_id.*' => 'exists:productos,id',
+        'opcion_id' => 'required|array|min:1',
+        'opcion_id.*' => 'exists:opciones,id',
     ];
 
     public function buscar()
@@ -36,7 +38,7 @@ class CaracteristicaCrud extends Component
 
     public function render()
     {
-        $query = Caracteristica::with('productos');
+        $query = Caracteristica::with('opciones');
 
         if (!empty($this->search)) {
             $query->where('nombre', 'like', '%' . $this->search . '%');
@@ -44,7 +46,7 @@ class CaracteristicaCrud extends Component
 
         return view('livewire.catalogos.caracteristica-crud', [
             'caracteristicas' => $query->orderBy('created_at', 'desc')->paginate(5),
-            'productos' => Producto::orderBy('nombre')->get(),
+            'opciones' => Opcion::orderBy('nombre','asc')->get(),
         ]);
     }
 
@@ -68,7 +70,7 @@ class CaracteristicaCrud extends Component
     {
         $this->nombre = '';
         $this->flag_seleccion_multiple = 0;
-        $this->producto_id = [];
+        $this->opcion_id = [];
         $this->caracteristica_id = null;
     }
 
@@ -83,7 +85,7 @@ class CaracteristicaCrud extends Component
                 'flag_seleccion_multiple' => (int) $this->flag_seleccion_multiple,
             ]);
     
-            $caracteristica->productos()->sync($this->producto_id);
+            $caracteristica->opciones()->sync($this->opcion_id);
     
             session()->flash('message', '¡Característica actualizada exitosamente!');
         } else {
@@ -92,7 +94,7 @@ class CaracteristicaCrud extends Component
                 'flag_seleccion_multiple' => (int) $this->flag_seleccion_multiple,
             ]);
     
-            $caracteristica->productos()->attach($this->producto_id);
+            $caracteristica->opciones()->attach($this->opcion_id);
     
             session()->flash('message', '¡Característica creada exitosamente!');
         }
@@ -108,7 +110,7 @@ class CaracteristicaCrud extends Component
         $this->caracteristica_id = $caracteristica->id;
         $this->nombre = $caracteristica->nombre;
         $this->flag_seleccion_multiple = (bool) $caracteristica->flag_seleccion_multiple; // Asegurar conversión a booleano
-        $this->producto_id = $caracteristica->productos->pluck('id')->toArray();
+        $this->opcion_id = $caracteristica->opciones->pluck('id')->toArray();
 
         $this->abrirModal();
     }
@@ -118,7 +120,7 @@ class CaracteristicaCrud extends Component
         $caracteristica = Caracteristica::find($id);
 
         if ($caracteristica) {
-            $caracteristica->productos()->detach();
+            $caracteristica->opciones()->detach();
             $caracteristica->delete();
 
             session()->flash('message', 'Característica eliminada exitosamente.');
