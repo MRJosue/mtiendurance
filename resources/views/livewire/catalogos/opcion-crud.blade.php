@@ -86,15 +86,7 @@
                         @error('valoru') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Características</label>
-                        <select class="w-full border border-gray-300 rounded p-2" wire:model="caracteristica_id" multiple>
-                            @foreach($caracteristicas as $car)
-                                <option value="{{ $car->id }}">{{ $car->nombre }}</option>
-                            @endforeach
-                        </select>
-                        @error('caracteristica_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+
                 </div>
                 <div class="flex items-center justify-end border-t border-gray-200 p-4 space-x-2">
                     <button wire:click="cerrarModal" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">
