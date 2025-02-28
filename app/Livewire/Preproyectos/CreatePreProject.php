@@ -81,6 +81,8 @@ class CreatePreProject extends Component
         }
     }
 
+
+
     public function onProductoChange()
     {
         $this->caracteristica_id = null;
@@ -99,19 +101,22 @@ class CreatePreProject extends Component
                 ];
             })->toArray();
 
-            if (count($opcionesArray) === 1) {
-                $opcionesArray = [$opcionesArray[0]]; // Selecciona automáticamente la única opción disponible
-            }
-
             return [
                 'id' => $caracteristica->id,
                 'nombre' => $caracteristica->nombre,
-                'flag_seleccion_multiple' => 0,
-                'opciones' => $opcionesArray,
+                'flag_seleccion_multiple' => $caracteristica->flag_seleccion_multiple,
+                'opciones' => count($opcionesArray) === 1 ? $opcionesArray : [],
             ];
         })->toArray();
 
+        // Limpiar opciones previas
         $this->opciones_sel = [];
+        foreach ($this->caracteristicas_sel as $caracteristica) {
+            if (isset($caracteristica['opciones']) && count($caracteristica['opciones']) === 1) {
+                $this->opciones_sel[$caracteristica['id']] = $caracteristica['opciones'][0];
+            }
+        }
+
         $this->on_Calcula_Fechas_Entrega();
     }
 

@@ -57,19 +57,37 @@
                 <div class="mt-2 p-4 border rounded-lg bg-gray-50">
                     <p class="font-semibold">{{ $caracteristica['nombre'] }}</p>
 
-                    @if (count($caracteristica['opciones']) === 1)
-                        <!-- Si hay solo una opción, la seleccionamos automáticamente -->
-                        <p class="text-gray-700">{{ $caracteristica['opciones'][0]['nombre'] }} ({{ $caracteristica['opciones'][0]['valoru'] }})</p>
+                    @php
+                        $opciones = \App\Models\Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
+                            $query->where('caracteristica_id', $caracteristica['id']);
+                        })->get();
+                    @endphp
+
+                    @if ($opciones->count() === 1)
+                        <!-- Si solo hay una opción, seleccionarla automáticamente -->
+                        <p class="text-gray-700">{{ $opciones->first()->nombre }} ({{ $opciones->first()->valoru }})</p>
+                        <input type="hidden" wire:model="caracteristicas_sel.{{ $index }}.opciones.0.id" value="{{ $opciones->first()->id }}">
                     @else
-                        <!-- Mostrar select si hay múltiples opciones -->
-                        <select wire:change="addOpcion({{ $index }}, $event.target.value)" class="w-full mt-1 border rounded-lg p-2">
-                            <option value="">Seleccionar Opción</option>
-                            @foreach (\App\Models\Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
-                                $query->where('caracteristica_id', $caracteristica['id']);
-                            })->get() as $opcion)
-                                <option value="{{ $opcion->id }}">{{ $opcion->nombre }} ({{ $opcion->valoru }})</option>
-                            @endforeach
-                        </select>
+                            <!-- Si hay múltiples opciones, mantener el select siempre visible -->
+                            <!-- Selección de Opciones -->
+                            <select wire:change="addOpcion({{ $index }}, $event.target.value)" class="w-full mt-1 border rounded-lg p-2">
+                                <option value="">Seleccionar Opción</option>
+                                @foreach (\App\Models\Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
+                                    $query->where('caracteristica_id', $caracteristica['id']);
+                                })->get() as $opcion)
+                                    <option value="{{ $opcion->id }}">{{ $opcion->nombre }} ({{ $opcion->valoru }})</option>
+                                @endforeach
+                            </select>
+
+                                            <!-- Lista de Opciones Seleccionadas -->
+                            <ul class="mt-2">
+                                @foreach ($caracteristica['opciones'] as $opcionIndex => $opcion)
+                                    <li class="flex justify-between items-center mb-2">
+                                        <span>{{ $opcion['nombre'] }} ({{ $opcion['valoru'] }})</span>
+                                        <button type="button" wire:click="removeOpcion({{ $index }}, {{ $opcionIndex }})" class="text-red-500 hover:underline">Eliminar</button>
+                                    </li>
+                                @endforeach
+                            </ul>
                     @endif
                 </div>
             @endforeach
