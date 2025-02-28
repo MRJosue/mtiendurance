@@ -79,7 +79,7 @@
                                 @endforeach
                             </select>
 
-                                            <!-- Lista de Opciones Seleccionadas -->
+                            <!-- Lista de Opciones Seleccionadas -->
                             <ul class="mt-2">
                                 @foreach ($caracteristica['opciones'] as $opcionIndex => $opcion)
                                     <li class="flex justify-between items-center mb-2">
@@ -96,9 +96,6 @@
 
         <!-- Selección de Cantidades -->
         @if ($mostrarFormularioTallas)
-
-                <!-- Formulario de Tallas (solo si la categoría es Playeras) -->
-        
                 <div class="mb-4 p-4 border rounded-lg bg-gray-50">
                     <h3 class="text-lg font-semibold mb-2">Cantidad por Tallas</h3>
                     @foreach ($tallas as $talla)
