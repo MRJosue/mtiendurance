@@ -125,10 +125,7 @@ class EditPreProject extends Component
         $this->id_tipo_envio = $preProyecto->id_tipo_envio;
 
         // Cargar productos de la categoría seleccionada
-        $this->productos = Producto::whereHas('categorias', function ($query) {
-            $query->where('categoria_id', $this->categoria_id);
-        })->get();
-
+        $this->productos = Producto::where('categoria_id', $this->categoria_id)->get();
         // Carga lascategorias
         $this -> onProductoChange();
 
@@ -308,9 +305,7 @@ class EditPreProject extends Component
     {
 
         $this->producto_id = null;
-        $this->productos = Producto::whereHas('categorias', function ($query) {
-            $query->where('categoria_id', $this->categoria_id);
-        })->get();
+        $this->productos = Producto::where('categoria_id', $this->categoria_id)->get();
 
         // Verifica si la categoría seleccionada es "Playeras"
         $categoria = Categoria::find($this->categoria_id);

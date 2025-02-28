@@ -49,7 +49,7 @@ class ManageProjects extends Component
     public function render()
     {
         return view('livewire.proyectos.manage-projects', [
-            'projects' => Proyecto::with(['user', 'pedidos.producto.categorias'])->paginate($this->perPage)
+          'projects' => Proyecto::with(['user', 'pedidos.producto.categoria'])->paginate($this->perPage)
         ]);
     }
 }

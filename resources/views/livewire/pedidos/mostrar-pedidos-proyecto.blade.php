@@ -29,12 +29,8 @@
 
                             <!-- Categorías (many-to-many) -->
                             <td class="py-3 px-4">
-                                @if ($pedido->producto->categorias->isNotEmpty())
-                                    <ul class="list-disc list-inside">
-                                        @foreach ($pedido->producto->categorias as $categoria)
-                                            <li>{{ $categoria->nombre }}</li>
-                                        @endforeach
-                                    </ul>
+                                @if ($pedido->producto->categoria) {{-- Verifica si existe la categoría --}}
+                                    <span>{{ $pedido->producto->categoria->nombre }}</span>
                                 @else
                                     <span class="text-gray-500">Sin categoría</span>
                                 @endif

@@ -19,7 +19,7 @@ class MostrarPedidosProyecto extends Component
         return view('livewire.pedidos.mostrar-pedidos-proyecto', [
             'pedidos' => Pedido::with([
                 'cliente',
-                'producto.categorias', // Corregido para Many-to-Many
+               'producto.categoria', // Corregido para Many-to-Many
                 'pedidoCaracteristicas.caracteristica',
                 'pedidoOpciones.opcion',
                 'pedidoTallas.talla'
