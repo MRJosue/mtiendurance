@@ -22,6 +22,8 @@ use App\Http\Controllers\ProyectosController;
 use App\Http\Controllers\PreproyectosController;
 use App\Http\Controllers\DashboardController;
 
+use App\Http\Controllers\TallasController;
+
 use App\Events\TestEvent;
 use App\Events\MessageSent;
 use App\Events\NewChatMessage;
@@ -118,6 +120,10 @@ Route::get('/usuarios/permisos',[permisoscontroller::class, 'index'])->middlewar
     Route::get('catalogos/ciudades', [ciudadescontroller::class, 'index'])->name('catalogos.ciudades.index');
     //Tipo de envvio
     Route::get('catalogos/tipoenvio', [tipoenviocontroller::class, 'index'])->name('catalogos.tipoenvio.index');
+    // Tallas 
+    Route::get('catalogos/tallas', [TallasController::class, 'tallas'])->name('catalogos.tallas.tallas');
+    // Grupos
+    Route::get('catalogos/grupos', [TallasController::class, 'grupos'])->name('catalogos.tallas.grupos');
 
 // Prueba data tables
 

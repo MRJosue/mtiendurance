@@ -31,6 +31,7 @@
                 <th class="border border-gray-300 p-2 text-left">Armado</th>
                 <th class="border border-gray-300 p-2 text-left">Categoría</th>
                 <th class="border border-gray-300 p-2 text-left">Características</th>
+                <th class="border border-gray-300 p-2 text-left">Grupos de Tallas</th>
                 <th class="border border-gray-300 p-2 text-center">Acciones</th>
             </tr>
         </thead>
@@ -43,6 +44,11 @@
                     <td class="border border-gray-300 p-2">{{ $prod->categoria ? $prod->categoria->nombre : 'Sin categoría' }}</td>
 
                     <td class="border border-gray-300 p-2">{{ $prod->caracteristicas->pluck('nombre')->join(', ') }}</td>
+
+                    <td class="border border-gray-300 p-2">
+                        {{ implode(', ', $prod->gruposTallas->pluck('nombre')->toArray()) }}
+                    </td>
+
                     <td class="border border-gray-300 p-2 text-center">
                         <button wire:click="editar('{{ $prod->id }}')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
                             Editar
@@ -118,9 +124,24 @@
                         @endforeach
                     </div>
                 </div>
+
+
+                            <!-- Grupos de Tallas -->
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-1">Grupos de Tallas</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        @foreach ($gruposTallasDisponibles as $grupoTalla)
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" wire:model="gruposTallasSeleccionados" value="{{ $grupoTalla->id }}">
+                                <span>{{ $grupoTalla->nombre }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
             </div>
 
-            <div class="flex items-center justify-end border-t border-gray-200 p-4 space-x-2">
+
+                        <div class="flex items-center justify-end border-t border-gray-200 p-4 space-x-2">
                 <button wire:click="cerrarModal"
                     class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">
                     Cancelar

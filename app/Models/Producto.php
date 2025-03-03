@@ -35,4 +35,11 @@ class Producto extends Model
         return $this->belongsToMany(Caracteristica::class, 'producto_caracteristica', 'producto_id', 'caracteristica_id');
     }
 
+
+    public function gruposTallas()
+    {
+        return $this->belongsToMany(GrupoTalla::class, 'producto_grupo_talla', 'producto_id', 'grupo_talla_id');
+    }
+
+
 }

@@ -71,6 +71,14 @@
                                     {{ __('Opciones de Caracteristicas') }}
                                 </x-dropdown-link>
 
+                                <x-dropdown-link :href="route('catalogos.tallas.tallas')">
+                                    {{ __('Tallas') }}
+                                </x-dropdown-link>
+
+                                <x-dropdown-link :href="route('catalogos.tallas.grupos')">
+                                    {{ __('Grupos') }}
+                                </x-dropdown-link>
+
                                 <x-dropdown-link :href="route('catalogos.paises.index')">
                                     {{ __('Paises') }}
                                 </x-dropdown-link>

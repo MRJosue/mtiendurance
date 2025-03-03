@@ -31,8 +31,11 @@ class Talla extends Model
         'descripcion',
     ];
 
-    /**
-     * Relación con la tabla de pedidos.
-     */
+    // Relación con los grupos de tallas
+    public function gruposTallas()
+    {
+        return $this->belongsToMany(GrupoTalla::class, 'grupo_tallas_detalle', 'talla_id', 'grupo_talla_id');
+    }
+        
 
 }

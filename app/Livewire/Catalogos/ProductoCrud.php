@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Producto;
 use App\Models\Categoria;
 use App\Models\Caracteristica;
+use App\Models\GrupoTalla;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Log;
 
@@ -21,6 +22,7 @@ class ProductoCrud extends Component
     public $search, $query;
     public $categoriaFiltro;
     public $caracteristicasSeleccionadas = [];
+    public $gruposTallasSeleccionados = [];
 
     protected $paginationTheme = 'tailwind';
 
@@ -50,10 +52,11 @@ class ProductoCrud extends Component
         }
 
         return view('livewire.catalogos.producto-crud', [
-            'productos' => $query->orderBy('created_at', 'desc')->paginate(5),
+            'productos' => Producto::with(['categoria', 'caracteristicas', 'gruposTallas'])->orderBy('created_at', 'desc')->paginate(5),
             
             'categorias' => Categoria::orderBy('nombre')->get(),
             'caracteristicas' => Caracteristica::orderBy('nombre')->get(),
+            'gruposTallasDisponibles' => GrupoTalla::orderBy('nombre')->get(),
         ]);
     }
 
@@ -81,36 +84,52 @@ class ProductoCrud extends Component
         $this->flag_armado = 1;
         $this->producto_id = null;
         $this->caracteristicasSeleccionadas = [];
+        $this->gruposTallasSeleccionados = [];
     }
 
     public function guardar()
     {
         $this->validate();
-    
-        if ($this->producto_id) {
-            $producto = Producto::findOrFail($this->producto_id);
-            $producto->update([
-                'nombre' => $this->nombre,
-                'dias_produccion' => $this->dias_produccion,
-                'flag_armado' => $this->flag_armado,
-            ]);
 
-            $producto->categoria_id = $this->categoria_id;
-            $producto->save();
-            $producto->caracteristicas()->sync($this->caracteristicasSeleccionadas);
-            session()->flash('message', '¡Producto actualizado exitosamente!');
-        } else {
-            $producto = Producto::create([
+        $producto = Producto::updateOrCreate(
+            ['id' => $this->producto_id],
+            [
                 'nombre' => $this->nombre,
                 'dias_produccion' => $this->dias_produccion,
                 'flag_armado' => $this->flag_armado,
                 'categoria_id' => $this->categoria_id,
-            ]);
+            ]
+        );
+    
+        $producto->caracteristicas()->sync($this->caracteristicasSeleccionadas);
+        $producto->gruposTallas()->sync($this->gruposTallasSeleccionados); // Sincronizar grupos de tallas seleccionados
+    
+        session()->flash('message', '¡Producto guardado exitosamente!');
+    
+        // if ($this->producto_id) {
+        //     $producto = Producto::findOrFail($this->producto_id);
+        //     $producto->update([
+        //         'nombre' => $this->nombre,
+        //         'dias_produccion' => $this->dias_produccion,
+        //         'flag_armado' => $this->flag_armado,
+        //     ]);
 
-            $producto->categorias()->attach($this->categoria_id);
-            $producto->caracteristicas()->attach($this->caracteristicasSeleccionadas);
-            session()->flash('message', '¡Producto creado exitosamente!');
-        }
+        //     $producto->categoria_id = $this->categoria_id;
+        //     $producto->save();
+        //     $producto->caracteristicas()->sync($this->caracteristicasSeleccionadas);
+        //     session()->flash('message', '¡Producto actualizado exitosamente!');
+        // } else {
+        //     $producto = Producto::create([
+        //         'nombre' => $this->nombre,
+        //         'dias_produccion' => $this->dias_produccion,
+        //         'flag_armado' => $this->flag_armado,
+        //         'categoria_id' => $this->categoria_id,
+        //     ]);
+
+        //     $producto->categorias()->attach($this->categoria_id);
+        //     $producto->caracteristicas()->attach($this->caracteristicasSeleccionadas);
+        //     session()->flash('message', '¡Producto creado exitosamente!');
+        // }
     
         $this->cerrarModal();
         $this->limpiar();
@@ -119,16 +138,16 @@ class ProductoCrud extends Component
     public function editar($id)
     {
         
-        $producto = Producto::with('caracteristicas')->findOrFail($id);
+        $producto = Producto::with(['caracteristicas', 'gruposTallas'])->findOrFail($id);
         $this->producto_id = $producto->id;
         $this->nombre = $producto->nombre;
         $this->dias_produccion = $producto->dias_produccion;
         $this->flag_armado = $producto->flag_armado;
         $this->categoria_id = $producto->categoria ? $producto->categoria->id : null;
-        Log::debug('A categoria ID ', ['categoria_id' =>  $producto->categoria_id]);
-        Log::debug('Categoria ID ', ['categoria_id' => $this->categoria_id]);
     
         $this->caracteristicasSeleccionadas = $producto->caracteristicas->pluck('id')->toArray();
+        $this->gruposTallasSeleccionados = $producto->gruposTallas->pluck('id')->toArray(); // Cargar grupos de tallas asignados
+
         $this->abrirModal();
     }
 
