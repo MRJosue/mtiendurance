@@ -21,8 +21,12 @@ class ProductoCrud extends Component
     public $modal = false;
     public $search, $query;
     public $categoriaFiltro;
+    public $mostrarCaracteristicas = false;
+    public $mostrarGruposTallas = false;
     public $caracteristicasSeleccionadas = [];
     public $gruposTallasSeleccionados = [];
+    public $caracteristicasDisponibles = []; // Características de la categoría seleccionada
+
 
     protected $paginationTheme = 'tailwind';
 
@@ -32,6 +36,42 @@ class ProductoCrud extends Component
         'dias_produccion' => 'required|integer|min:1',
         'flag_armado' => 'required|boolean',
     ];
+
+    public function onCategoriaChange()
+    {
+        Log::debug('Cambio en la categoría seleccionada: ' . $this->categoria_id);
+    
+        if ($this->categoria_id) {
+            // Buscar la categoría seleccionada con sus características
+            $categoria = Categoria::with('caracteristicas')->find($this->categoria_id);
+    
+            // Obtener todas las características configuradas en la categoría
+            $this->caracteristicasDisponibles = $categoria->caracteristicas->pluck('id')->toArray();
+    
+            // Si es una nueva categoría, se deben limpiar las características seleccionadas
+            if ($this->producto_id) {
+                $producto = Producto::with('caracteristicas')->find($this->producto_id);
+                $this->caracteristicasSeleccionadas = array_intersect($producto->caracteristicas->pluck('id')->toArray(), $this->caracteristicasDisponibles);
+            } else {
+                $this->caracteristicasSeleccionadas = [];
+            }
+    
+            // Controlar la visibilidad de las características
+            $this->mostrarCaracteristicas = count($this->caracteristicasDisponibles) > 0;
+    
+            // Verificar si la categoría tiene flag_tallas activo
+            $this->mostrarGruposTallas = $categoria->flag_tallas == 1;
+        } else {
+            // Resetear valores cuando no hay categoría seleccionada
+            $this->caracteristicasDisponibles = [];
+            $this->caracteristicasSeleccionadas = [];
+            $this->mostrarCaracteristicas = false;
+            $this->mostrarGruposTallas = false;
+        }
+    }
+    
+    
+    
 
     public function buscar()
     {
@@ -63,16 +103,21 @@ class ProductoCrud extends Component
     public function crear()
     {
         $this->limpiar();
+        
+        $this->onCategoriaChange();
         $this->abrirModal();
     }
 
     public function abrirModal()
     {
         $this->modal = true;
+       
+        
     }
 
     public function cerrarModal()
     {
+        $this->limpiar();
         $this->modal = false;
     }
 
@@ -90,54 +135,36 @@ class ProductoCrud extends Component
     public function guardar()
     {
         $this->validate();
-
+    
         $producto = Producto::updateOrCreate(
             ['id' => $this->producto_id],
             [
                 'nombre' => $this->nombre,
                 'dias_produccion' => $this->dias_produccion,
                 'flag_armado' => $this->flag_armado,
-                'categoria_id' => $this->categoria_id,
+                'categoria_id' => $this->categoria_id, // Asegurar que la categoría se actualiza correctamente
             ]
         );
     
-        $producto->caracteristicas()->sync($this->caracteristicasSeleccionadas);
-        $producto->gruposTallas()->sync($this->gruposTallasSeleccionados); // Sincronizar grupos de tallas seleccionados
+        // Solo mantener las características válidas para la categoría
+        $caracteristicasValidas = array_intersect($this->caracteristicasSeleccionadas, $this->caracteristicasDisponibles);
+        $producto->caracteristicas()->sync($caracteristicasValidas);
+    
+        // Sincronizar grupos de tallas seleccionados si flag_tallas es 1
+        if ($this->mostrarGruposTallas) {
+            $producto->gruposTallas()->sync($this->gruposTallasSeleccionados);
+        } else {
+            $producto->gruposTallas()->detach();
+        }
     
         session()->flash('message', '¡Producto guardado exitosamente!');
-    
-        // if ($this->producto_id) {
-        //     $producto = Producto::findOrFail($this->producto_id);
-        //     $producto->update([
-        //         'nombre' => $this->nombre,
-        //         'dias_produccion' => $this->dias_produccion,
-        //         'flag_armado' => $this->flag_armado,
-        //     ]);
-
-        //     $producto->categoria_id = $this->categoria_id;
-        //     $producto->save();
-        //     $producto->caracteristicas()->sync($this->caracteristicasSeleccionadas);
-        //     session()->flash('message', '¡Producto actualizado exitosamente!');
-        // } else {
-        //     $producto = Producto::create([
-        //         'nombre' => $this->nombre,
-        //         'dias_produccion' => $this->dias_produccion,
-        //         'flag_armado' => $this->flag_armado,
-        //         'categoria_id' => $this->categoria_id,
-        //     ]);
-
-        //     $producto->categorias()->attach($this->categoria_id);
-        //     $producto->caracteristicas()->attach($this->caracteristicasSeleccionadas);
-        //     session()->flash('message', '¡Producto creado exitosamente!');
-        // }
     
         $this->cerrarModal();
         $this->limpiar();
     }
-
+    
     public function editar($id)
     {
-        
         $producto = Producto::with(['caracteristicas', 'gruposTallas'])->findOrFail($id);
         $this->producto_id = $producto->id;
         $this->nombre = $producto->nombre;
@@ -145,12 +172,16 @@ class ProductoCrud extends Component
         $this->flag_armado = $producto->flag_armado;
         $this->categoria_id = $producto->categoria ? $producto->categoria->id : null;
     
-        $this->caracteristicasSeleccionadas = $producto->caracteristicas->pluck('id')->toArray();
-        $this->gruposTallasSeleccionados = $producto->gruposTallas->pluck('id')->toArray(); // Cargar grupos de tallas asignados
-
+        // Actualizamos las características disponibles antes de asignar las seleccionadas
+        $this->onCategoriaChange();
+    
+        // Solo mantener las características válidas
+        $this->caracteristicasSeleccionadas = array_intersect($producto->caracteristicas->pluck('id')->toArray(), $this->caracteristicasDisponibles);
+        $this->gruposTallasSeleccionados = $producto->gruposTallas->pluck('id')->toArray();
+    
         $this->abrirModal();
     }
-
+    
     public function borrar($id)
     {
         Producto::find($id)->delete();

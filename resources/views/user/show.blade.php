@@ -2,8 +2,9 @@
 
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Usuarios') }}
-        </h2>
+            <a href="{{route('usuarios.index')}}">{{ __('Usuarios') }}</a>   /
+               {{ __('Detalles') }}
+           </h2>
     </x-slot>
 
     <div class="py-2">

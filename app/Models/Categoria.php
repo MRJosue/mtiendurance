@@ -24,4 +24,9 @@ class Categoria extends Model
     }
     
 
+    public function caracteristicas()
+    {
+        return $this->belongsToMany(Caracteristica::class, 'categoria_caracteristica', 'categoria_id', 'caracteristica_id');
+    }
+    
 }

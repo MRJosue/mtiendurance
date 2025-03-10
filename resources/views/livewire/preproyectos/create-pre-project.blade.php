@@ -95,20 +95,24 @@
 
 
         <!-- Selección de Cantidades -->
+    <div wire:key="tallas-{{ $producto_id }}">
         @if ($mostrarFormularioTallas)
-                <div class="mb-4 p-4 border rounded-lg bg-gray-50">
-                    <h3 class="text-lg font-semibold mb-2">Cantidad por Tallas</h3>
-                    @foreach ($tallas as $talla)
-                        <div class="flex items-center space-x-2">
-                            <label class="text-sm font-medium text-gray-700 w-1/3">{{ $talla->nombre }}</label>
-                            <input type="number" 
-                                wire:model="tallasSeleccionadas.{{ $talla->id }}" 
-                                class="w-2/3 border rounded-lg p-2" 
-                                min="0">
-                        </div>
-                    @endforeach
-                </div>
+        <div class="mb-4 p-4 border rounded-lg bg-gray-50" wire:key="tallas-{{ $producto_id }}">
+            <div class="mb-4 p-4 border rounded-lg bg-gray-50">
+                <h3 class="text-lg font-semibold mb-2">Cantidad por Tallas</h3>
+                @foreach ($tallas as $talla)
+                    <div class="flex items-center space-x-2">
+                        <label class="text-sm font-medium text-gray-700 w-1/3">{{ $talla->nombre }}</label>
+                        <input type="number" 
+                            wire:model="tallasSeleccionadas.{{ $talla->id }}" 
+                            class="w-2/3 border rounded-lg p-2" 
+                            min="0">
+                    </div>
+                @endforeach
+            </div>
+        </div>
         @else
+    
 
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Total de Piezas</label>
@@ -121,10 +125,8 @@
             @error('total_piezas') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
 
-        
-
         @endif
-
+    </div>
 
          <!-- Selección de Archivo -->
          <div class="mb-4">

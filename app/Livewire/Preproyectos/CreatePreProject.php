@@ -23,7 +23,7 @@ use App\Models\Chat;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
-
+use Livewire\Attributes\On;
 
 use Illuminate\Support\Facades\Log;
 
@@ -65,26 +65,51 @@ class CreatePreProject extends Component
 
 
 
+
+
+
     public function onCategoriaChange()
     {
 
         $this->producto_id = null;
         $this->productos = Producto::where('categoria_id', $this->categoria_id)->get();
 
-        // Verifica si la categoría seleccionada es "Playeras"
+    }
+
+    public function despliega_form_tallas()
+    {
+        // Verifica si la categoría seleccionada requiere tallas
         $categoria = Categoria::find($this->categoria_id);
         $this->mostrarFormularioTallas = $categoria && $categoria->flag_tallas == 1;
 
-        // Reset valores de tallas
-        if (!$this->mostrarFormularioTallas) {
-            $this->tallasSeleccionadas = [];
+        // Reinicializar las tallas y las cantidades seleccionadas
+        $this->tallas = collect(); // Vaciar antes de asignar nuevas tallas
+        $this->tallasSeleccionadas = [];
+
+        if ($this->mostrarFormularioTallas && $this->producto_id) {
+            // Cargar las tallas asociadas al producto mediante los grupos de tallas
+            $this->tallas = Talla::whereHas('gruposTallas.productos', function ($query) {
+                $query->where('producto_id', $this->producto_id);
+            })->get();
+
+            // Inicializar el array de selección con valores en 0
+            foreach ($this->tallas as $talla) {
+                $this->tallasSeleccionadas[$talla->id] = 0;
+            }
         }
     }
-
-
-
     public function onProductoChange()
     {
+
+        $this->despliega_form_tallas(); // Obtiene las tallas según el nuevo producto
+
+            // Reinicia las cantidades para cada talla
+            $this->tallasSeleccionadas = [];
+            foreach ($this->tallas as $talla) {
+                $this->tallasSeleccionadas[$talla->id] = 0;
+            }
+
+            
         $this->caracteristica_id = null;
         $this->caracteristicas_sel = Caracteristica::whereHas('productos', function ($query) {
             $query->where('producto_id', $this->producto_id);
@@ -355,10 +380,10 @@ class CreatePreProject extends Component
     }
 
 
-    public function mount()
-    {
-        $this->tallas = Talla::all();
-    }
+    // public function mount()
+    // {
+    //     $this->tallas = Talla::all();
+    // }
 
 
 

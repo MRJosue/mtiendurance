@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class Pedido extends Model
 {
@@ -19,6 +20,16 @@ class Pedido extends Model
         'fecha_creacion',
         'total',
         'estatus',
+        'direccion_fiscal_id',
+        'direccion_fiscal',
+        'direccion_entrega_id',
+        'direccion_entrega',
+        'tipo',
+        'estado',
+        'fecha_produccion',
+        'fecha_embarque',
+        'fecha_entrega',
+        'id_tipo_envio'
     ];
 
     /**
@@ -67,19 +78,81 @@ class Pedido extends Model
         return $this->hasMany(PedidoTalla::class, 'pedido_id');
     }
 
-    // /**
-    //  * Relación con la tabla de proveedores.
-    //  */
-    // public function proveedor()
-    // {
-    //     return $this->belongsTo(Proveedor::class);
-    // }
+    // Relación con TipoEnvio
+    public function tipoEnvio()
+    {
+        return $this->belongsTo(TipoEnvio::class, 'id_tipo_envio');
+    }
 
-    // /**
-    //  * Relación con la tabla de tallas.
-    //  */
-    // public function tallas()
-    // {
-    //     return $this->hasMany(Talla::class);
-    // }
+
+    public static function crearDesdeProyecto($proyectoId, $data)
+    {
+
+        Log::debug('ON crearDesdeProyecto');
+        // Buscar el proyecto
+        $proyecto = Proyecto::findOrFail($proyectoId);
+        Log::debug('Proyecto cargado:', ['proyecto' => $proyecto]);
+    
+        // Decodificar producto_sel (si es JSON)
+        $producto = is_string($proyecto->producto_sel) 
+            ? json_decode($proyecto->producto_sel, true) 
+            : $proyecto->producto_sel;
+    
+        Log::debug('Producto decodificado:', ['producto' => $producto]);
+    
+        // Verificar si el producto tiene ID
+        if (!isset($producto['id'])) {
+            throw new \Exception("Error: No se encontró un producto válido en el proyecto.");
+        }
+    
+        // Obtener cliente_id desde el proyecto o establecer un valor por defecto
+        $clienteId = $data['cliente_id'] ?? $proyecto->usuario_id ?? null;
+    
+        // Si cliente_id sigue siendo null, lanzar un error
+        if (!$clienteId) {
+            throw new \Exception("Error: No se encontró un cliente válido para el pedido.");
+        }
+
+
+                        
+    
+        // Crear pedido
+        $pedido = self::create([
+            'proyecto_id' => $proyecto->id,
+            'producto_id' => $producto['id'],
+            'cliente_id' => $clienteId, // Ahora tiene un valor asegurado
+            'fecha_creacion' => now(),
+            'total' => $data['total'] ?? 0,
+            'estatus' => $data['estatus'] ?? 'PENDIENTE',
+            'direccion_fiscal_id' => $data['direccion_fiscal_id'] ?? null,
+            'direccion_fiscal' => $data['direccion_fiscal'] ?? null,
+            'direccion_entrega_id' => $data['direccion_entrega_id'] ?? null,
+            'direccion_entrega' => $data['direccion_entrega'] ?? null,
+            'tipo' => $data['tipo'] ?? 'PEDIDO',
+            'estado' => $data['estado'] ?? 'POR PROGRAMAR',
+            'fecha_produccion' => $data['fecha_produccion'] ?? null,
+            'fecha_embarque' => $data['fecha_embarque'] ?? null,
+            'fecha_entrega' => $data['fecha_entrega'] ?? null,
+            'id_tipo_envio' => $data['id_tipo_envio'] ?? null,
+        ]);
+
+
+        // Guardar tallas si están disponibles
+        if (!empty($data['cantidades_tallas'])) {
+            foreach ($data['cantidades_tallas'] as $tallaId => $cantidad) {
+                if ($cantidad > 0) {
+                    PedidoTalla::create([
+                        'pedido_id' => $pedido->id,
+                        'talla_id' => $tallaId,
+                        'cantidad' => $cantidad,
+                    ]);
+                }
+            }
+        }
+
+    
+        return $pedido;
+    }
+    
+
 }

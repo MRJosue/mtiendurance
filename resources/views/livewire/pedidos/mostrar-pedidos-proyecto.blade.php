@@ -1,5 +1,5 @@
 <div class="container mx-auto p-6">
-    <h2 class="text-2xl font-bold mb-4 text-gray-800">Pedidos del Proyecto ID: {{ $proyectoId }}</h2>
+ 
 
     @if ($pedidos->isEmpty())
         <p class="text-gray-500 text-center">No hay pedidos relacionados con este proyecto.</p>
@@ -8,57 +8,47 @@
             <table class="min-w-full border border-gray-200 rounded-lg">
                 <thead class="bg-gray-100 text-gray-600 uppercase text-sm">
                     <tr>
-                        <th class="py-3 px-4 text-left">ID</th>
+                        <th class="py-4 px-4 text-left  w-32">ID</th>
                         <th class="py-3 px-4 text-left">Cliente</th>
-                        <th class="py-3 px-4 text-left">Producto</th>
-                        <th class="py-3 px-4 text-left">Categorías</th>
-                        <th class="py-3 px-4 text-left">Características</th>
-                        <th class="py-3 px-4 text-left">Opciones</th>
+                        <th class="py-3 px-4 text-left">Fecha de Produccion</th>
+                        <th class="py-3 px-4 text-left">Fecha de Embarque</th>
+                        <th class="py-3 px-4 text-left">Fecha de Entrega</th>
                         <th class="py-3 px-4 text-left">Tallas</th>
-                        <th class="py-3 px-4 text-left">Fecha Creación</th>
-                        <th class="py-3 px-4 text-left">Total</th>
+                        <th class="py-3 px-4 text-left">No de piezas</th>
                         <th class="py-3 px-4 text-left">Estatus</th>
+                        <th class="py-3 px-4 text-left">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="text-gray-700 text-sm">
                     @foreach ($pedidos as $pedido)
                         <tr class="border-b hover:bg-gray-50">
-                            <td class="py-3 px-4">{{ $pedido->id }}</td>
+                            <td class="py-3 px-4 w-32"><p>{{$pedido->proyecto_id.'-'.$pedido->id }}</p></td>
                             <td class="py-3 px-4">{{ $pedido->cliente->nombre_empresa ?? 'Sin datos' }}</td>
-                            <td class="py-3 px-4">{{ $pedido->producto->nombre ?? 'Sin datos' }}</td>
 
                             <!-- Categorías (many-to-many) -->
                             <td class="py-3 px-4">
-                                @if ($pedido->producto->categoria) {{-- Verifica si existe la categoría --}}
-                                    <span>{{ $pedido->producto->categoria->nombre }}</span>
+                                @if ($pedido->fecha_produccion) {{-- Verifica si existe la categoría --}}
+                                    <span>{{ $pedido->fecha_produccion}}</span>
                                 @else
-                                    <span class="text-gray-500">Sin categoría</span>
+                                    <span class="text-gray-500">Sin Fecha</span>
                                 @endif
                             </td>
 
                             <!-- Características -->
                             <td class="py-3 px-4">
-                                @if ($pedido->pedidoCaracteristicas->isNotEmpty())
-                                    <ul class="list-disc list-inside">
-                                        @foreach ($pedido->pedidoCaracteristicas as $caracteristica)
-                                            <li>{{ $caracteristica->caracteristica->nombre ?? 'N/A' }}</li>
-                                        @endforeach
-                                    </ul>
+                                @if ($pedido->fecha_embarque) {{-- Verifica si existe la categoría --}}
+                                    <span>{{ $pedido->fecha_embarque}}</span>
                                 @else
-                                    <span class="text-gray-500">Sin características</span>
+                                    <span class="text-gray-500">Sin Fecha</span>
                                 @endif
                             </td>
 
                             <!-- Opciones -->
                             <td class="py-3 px-4">
-                                @if ($pedido->pedidoOpciones->isNotEmpty())
-                                    <ul class="list-disc list-inside">
-                                        @foreach ($pedido->pedidoOpciones as $opcion)
-                                            <div>{{ $opcion->opcion->nombre??'N/A' }}</div>
-                                        @endforeach
-                                    </ul>
+                                @if ($pedido->fecha_embarque) {{-- Verifica si existe la categoría --}}
+                                    <span>{{ $pedido->fecha_embarque}}</span>
                                 @else
-                                    <span class="text-gray-500">Sin opciones</span>
+                                    <span class="text-gray-500">Sin Fecha</span>
                                 @endif
                             </td>
 
@@ -75,14 +65,19 @@
                                 @endif
                             </td>
 
-                            <td class="py-3 px-4">{{ $pedido->fecha_creacion }}</td>
-                            <td class="py-3 px-4 font-semibold">${{ number_format($pedido->total, 2) }}</td>
+                     
+                            <td class="py-3 px-4 font-semibold">{{ number_format($pedido->total, 2) }}</td>
                             <td class="py-3 px-4">
                                 <span class="px-2 py-1 rounded-lg text-xs font-bold 
                                     {{ $pedido->estatus === 'PENDIENTE' ? 'bg-yellow-200 text-yellow-800' : 'bg-green-200 text-green-800' }}">
                                     {{ strtoupper($pedido->estatus) }}
                                 </span>
                             </td>
+                             <th class="py-3 px-4">
+                              <a href="#">Aprobar produccion</a>
+                              <a href="#">Detalles</a> 
+                            </th>
+
                         </tr>
                     @endforeach
                 </tbody>

@@ -6,7 +6,12 @@
             {{ session('message') }}
         </div>
     @endif
+    <div class="flex items-center justify-between mb-3 space-x-2">
+        <button wire:click="crear" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">
+            Nuevo Usuario
+        </button>
 
+    </div>
     <div class="overflow-x-auto">
         <table class="min-w-full border-collapse border border-gray-300">
             <thead>

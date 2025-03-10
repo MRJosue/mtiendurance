@@ -114,14 +114,19 @@ Table proyectos {
   direccion_entrega VARCHAR
   nombre VARCHAR
   descripcion TEXT
-  referencia INT
+  id_tipo_envio BIGINT [not null, note: 'Guarda la referencia del tipo de envío']
   tipo ENUM('PROYECTO', 'MUESTRA') [default: 'PROYECTO']
   numero_muestras INT [default: 0]
-  estado ENUM('PENDIENTE', 'APROBADO', 'PROGRAMADO', 'IMPRESIÓN', 'PRODUCCIÓN', 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO','RECHAZADO')
+  estado ENUM('PENDIENTE', 'APROBADO', 'PROGRAMADO', 'IMPRESIÓN', 'PRODUCCIÓN', 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO', 'RECHAZADO')
   fecha_creacion TIMESTAMP [default: `now()`]
-  fecha_Produccion DATE
+  fecha_produccion DATE
   fecha_embarque DATE
   fecha_entrega DATE
+  categoria_sel JSON [note: 'Guarda la selección de categorías']
+  producto_sel JSON [note: 'Guarda la selección de productos']
+  caracteristicas_sel JSON [note: 'Guarda las características seleccionadas']
+  opciones_sel JSON [note: 'Guarda las opciones seleccionadas']
+  total_piezas_sel JSON [note: 'Guarda el total de piezas']
 }
 
 Table tareas {
@@ -158,6 +163,12 @@ Table caracteristicas {
   flag_selccion_multiple tinyInteger
 }
 
+Table categoria_caracteristica {
+  id INT [pk, unique, not null]
+  categoria_id INT [not null, ref: > categorias.id]
+  caracteristica_id INT [not null, ref: > caracteristicas.id]
+}
+
 Table producto_caracteristica {
   id INT [pk, unique, not null]
   producto_id INT [not null, ref: > productos.id]
@@ -186,15 +197,51 @@ Table tallas {
   descripcion TEXT
 }
 
+
+Table grupos_tallas {
+  id INT [pk, unique, not null]
+  nombre VARCHAR [not null] 
+}
+
+Table grupo_tallas_detalle {
+  id INT [pk, unique, not null]
+  grupo_talla_id INT [not null, ref: > grupos_tallas.id]
+  talla_id INT [not null, ref: > tallas.id]
+}
+
+Table producto_grupo_talla {
+  id INT [pk, unique, not null]
+  producto_id INT [not null, ref: > productos.id]
+  grupo_talla_id INT [not null, ref: > grupos_tallas.id]
+}
+
 Table pedido {
   id INT [pk, unique, not null]
   proyecto_id INT [not null, unique, ref: > proyectos.id] 
   producto_id INT [not null, ref: > productos.id]
+  cliente_id  INT [not null, ref: > clientes.id]
   fecha_creacion TIMESTAMP [default: `now()`]
+  tipo  ENUM('POR PROGRAMAR', 'PROGRAMADO',  'IMPRESIÓN', 'PRODUCCIÓN', 
+                'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO', 'RECHAZADO') [default: 'POR PROGRAMAR']
+  estado ENUM('POR DEFINIR','PEDIDO', 'MUESTRA') [default: 'POR DEFINIR']
+  fecha_produccion date
+  fecha_embarque date
+  fecha_entrega date
   totalpasos INT
   totalminutoPaso INT
   totalvalor INT
 }
+
+Table pedido_estados {
+  id INT [pk, not null]
+  pedido_id INT [not null, ref: > pedido.id]
+  estado VARCHAR [not null]
+  fecha_inicio TIMESTAMP
+  fecha_fin TIMESTAMP
+  created_at TIMESTAMP [default: `now()`]
+  updated_at TIMESTAMP
+}
+
 
 Table pedido_caracteristicas {
   pedido_id INT [not null, ref: > pedido.id]
@@ -257,6 +304,7 @@ Table pre_proyectos {
   producto_sel json
   caracteristicas_sel json
   opciones_sel json
+  total_sel json
   created_at TIMESTAMP
   updated_at TIMESTAMP
 }
@@ -279,3 +327,8 @@ Table proyecto_referencias {
   created_at TIMESTAMP [default: `now()`]
   updated_at TIMESTAMP
 }
+
+
+Ref: "proyectos"."total_piezas_sel" < "proyectos"."direccion_fiscal"
+
+Ref: "proyecto_estados"."created_at" < "proyecto_referencias"."created_at"

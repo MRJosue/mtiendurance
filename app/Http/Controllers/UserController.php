@@ -27,6 +27,14 @@ class UserController extends Controller
         return view('user.show',['user' => $user]);
     }
 
+    public function create(){
+        
+        if (!auth()->user()->hasRole('admin')) {
+            return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
+        }
+        return view('user.create');
+    }
+
     public function actions(){
 
                 if (!auth()->user()->hasRole('admin')) {

@@ -41,7 +41,7 @@ class ControlEstado extends Component
 
         // Si la acción es aprobar, cambia el estado directamente a "APROBADO"
         if ($accion === 'aprobar') {
-            $proyecto->estado = 'APROBADO';
+            $proyecto->estado = 'ASIGNADO';
         } else {
             if (!$proyecto->actualizarEstado($accion)) {
                 Log::error("No se pudo actualizar el estado", ['proyectoId' => $this->proyectoId, 'accion' => $accion]);

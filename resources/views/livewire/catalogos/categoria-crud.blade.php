@@ -24,6 +24,7 @@
             <tr class="bg-gray-100">
                 <th class="border border-gray-300 p-2 text-left">Nombre</th>
                 <th class="border border-gray-300 p-2 text-center">Formulario de tallas</th>
+                <th class="border border-gray-300 p-2 text-center">Características</th> 
                 <th class="border border-gray-300 p-2 text-center">Acciones</th>
             </tr>
         </thead>
@@ -38,6 +39,19 @@
                             ❌
                         @endif
                     </td>
+
+                    <td class="border border-gray-300 p-2">
+                        @if($cat->caracteristicas->isNotEmpty())
+                            <ul class="list-disc list-inside">
+                                @foreach($cat->caracteristicas as $caracteristica)
+                                    <li class="text-gray-600">{{ $caracteristica->nombre }}</li>
+                                @endforeach
+                            </ul>
+                        @else
+                            <span class="text-gray-500">Sin características</span>
+                        @endif
+                    </td>
+                    
                     <td class="border border-gray-300 p-2 flex space-x-2 justify-center">
                         <button wire:click="editar('{{ $cat->id }}')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
                             Editar
@@ -73,6 +87,20 @@
                     <div class="mb-4 flex items-center">
                         <input type="checkbox" class="mr-2" wire:model="flag_tallas">
                         <label class="text-gray-700">Captura de tallas</label>
+                    </div>
+
+
+                        <!-- Relación con Características -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">Características</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            @foreach($caracteristicas as $caracteristica)
+                                <label class="flex items-center">
+                                    <input type="checkbox" wire:model="caracteristicasSeleccionadas" value="{{ $caracteristica->id }}" class="mr-2">
+                                    {{ $caracteristica->nombre }}
+                                </label>
+                            @endforeach
+                        </div>
                     </div>
 
                 </div>

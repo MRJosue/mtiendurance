@@ -24,7 +24,6 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -52,84 +51,58 @@
                                                 </p>
                                             </div>
             
-                                            <div class="sm:col-span-2">
-                                                <p class="text-lg">
-                                                    <span class="font-semibold">Direccion de etrega:</span>
-                                                    <br>
-                                                    {{$proyecto->direccion_entrega}}
-                                                </p>
-                                            </div>
                                         </div>
-            
-                                        
-            
-                                        <!-- Fechas -->
-                                        <div class="mt-6">
-                                            <h3 class="text-xl font-bold mb-2">Fechas</h3>
-                                            <div class="grid grid-cols-1  gap-4">
-                                                {{-- <div>
-                                                    <p class="text-lg">
-                                                        <span class="font-semibold">Fecha de Creación:</span>
-                                                        {{ \Carbon\Carbon::parse($proyecto->fecha_creacion)->format('d-m-Y') }}
-                                                    </p>
-                                                </div> --}}
-                                                <div>
-                                                    <p class="text-lg">
-                                                        <span class="font-semibold">Produccion:</span>
-                                                        @if ($proyecto->fecha_produccion)
-                                                            {{ \Carbon\Carbon::parse($proyecto->fecha_produccion)->format('d-m-Y') }}
-                                                        @else
-                                                            <span class="text-gray-500">No definida</span>
-                                                        @endif
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p class="text-lg">
-                                                        <span class="font-semibold">Fecha de Embarque:</span>
-                                                        @if ($proyecto->fecha_embarque)
-                                                        {{ \Carbon\Carbon::parse($proyecto->fecha_embarque)->format('d-m-Y') }}
-                                                        @else
-                                                            <span class="text-gray-500">No definida</span>
-                                                        @endif
-                                                    </p>
-                                                </div>
-            
-                                                <div>
-                                                    <p class="text-lg">
-                                                        <span class="font-semibold">Fecha de Entrega:</span>
-                                                        @if ($proyecto->fecha_entrega)
-            
-                                                        {{ \Carbon\Carbon::parse($proyecto->fecha_entrega)->format('d-m-Y') }}
-                                                        @else
-                                                            <span class="text-gray-500">No definida</span>
-                                                        @endif
-                                                    </p>
-                                                </div>
-            
-                                                <div class="grid grid-cols-1 md:grid-cols-2">
-                                                    <div>
-                                                       
-                                                            @livewire('pedidos.orden-produccion-pdf', ['proyectoId' => $proyecto->id])
-                                                    </div>
-                                                    <div>
-                                                        <div class="mt-4">
-                                                            <button
-                                                                wire:click=""
-                                                                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                                                            >
-                                                                Enviar solicitud de aprobacion
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
 
-                                                
-                                              
-                                            </div>
+                                        @php
+
+                                            $categoria = is_array($proyecto->categoria_sel) 
+                                                ? $proyecto->categoria_sel 
+                                                : json_decode($proyecto->categoria_sel, true);
+                                        @endphp
+
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-1 gap-4 mb-4  ">
+                                        <div class="sm:col-span-2">
+                                            <span class="text-lg font-semibold">Categoria:</span> <span class="font-medium">{{ $categoria['nombre'] ?? 'Sin categoría' }}</span>
                                         </div>
-            
-            
-            
+                                    </div>
+
+                                    
+                                        @php
+                                        $producto = is_array($proyecto->producto_sel) 
+                                            ? $proyecto->producto_sel 
+                                            : json_decode($proyecto->producto_sel, true);
+                                        @endphp
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-1 gap-4 mb-4  ">
+                                        <div class="sm:col-span-2">
+                                            <span class="text-lg font-semibold">Producto:</span> <span class="font-medium">{{ $producto['id'].' '.$producto['nombre'] ?? 'Sin producto' }}</span>
+                                    </div>
+
+
+                                
+                                    </div>
+
+                                        @php
+                                        $caracteristicas = is_array($proyecto->caracteristicas_sel) 
+                                            ? $proyecto->caracteristicas_sel 
+                                            : json_decode($proyecto->caracteristicas_sel, true);
+                                          @endphp
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-1 gap-4">
+                                        @foreach($caracteristicas as $caracteristica)
+                                            <div class="p-4 border rounded-lg shadow">
+                                                <h3 class="text-lg font-semibold">{{ $caracteristica['nombre'] }}</h3>
+                                                <ul class="mt-2 list-disc list-inside">
+                                                    @foreach($caracteristica['opciones'] as $opcion)
+                                                        <li>
+                                                            <span class="font-medium">{{ $opcion['nombre'] }}</span>
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        @endforeach
+                                    </div>
             
                                     </div>
                                 </div>
@@ -144,7 +117,9 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
 
-                    @livewire('pedidos.mostrar-pedidos-proyecto', ['proyectoId' => $proyecto->id])
+                    {{-- @livewire('pedidos.mostrar-pedidos-proyecto', ['proyectoId' => $proyecto->id]) --}}
+                    @livewire('pedidos.pedidos-crud-proyecto', ['proyectoId' => $proyecto->id])
+
 
 
                 </div>

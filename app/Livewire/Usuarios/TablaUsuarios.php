@@ -19,6 +19,13 @@ class TablaUsuarios extends Component
             'usuarios' => User::orderBy('id')->paginate(10),
         ]);
     }
+
+
+    public function crear(){
+        return redirect()->route('usuarios.create');
+
+
+    }
 }
 
 //livewire.usuarios.tabla-usuarios

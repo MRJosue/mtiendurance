@@ -85,7 +85,7 @@
                 <!-- Categoría -->
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-1">Categoría</label>
-                    <select class="w-full border border-gray-300 rounded p-2" wire:model="categoria_id">
+                    <select wire:change="onCategoriaChange" class="w-full border border-gray-300 rounded p-2" wire:model="categoria_id">
                         <option value="">Seleccione una categoría</option>
                         @foreach ($categorias as $cat)
                             <option value="{{ $cat->id }}">{{ $cat->nombre }}</option>
@@ -112,36 +112,42 @@
                 </div>
 
 
-                                <!-- Características -->
+                <!-- Características - Se muestra solo si hay características asociadas -->
+                @if($mostrarCaracteristicas)
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-1">Características</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        @foreach ($caracteristicas as $caracteristica)
-                            <label class="flex items-center space-x-2">
-                                <input type="checkbox" wire:model="caracteristicasSeleccionadas" value="{{ $caracteristica->id }}">
-                                <span>{{ $caracteristica->nombre }}</span>
-                            </label>
+                    <div class="grid grid-cols-2 gap-2">
+                        @foreach($caracteristicas as $caracteristica)
+                            @if(in_array($caracteristica->id, $caracteristicasDisponibles))
+                                <label class="flex items-center">
+                                    <input type="checkbox" wire:model="caracteristicasSeleccionadas" value="{{ $caracteristica->id }}" class="mr-2"
+                                        {{ in_array($caracteristica->id, $caracteristicasSeleccionadas) ? 'checked' : '' }}>
+                                    {{ $caracteristica->nombre }}
+                                </label>
+                            @endif
                         @endforeach
                     </div>
                 </div>
+                @endif
 
-
-                            <!-- Grupos de Tallas -->
+                <!-- Grupos de Tallas - Se muestra solo si la categoría tiene flag_tallas = 1 -->
+                @if($mostrarGruposTallas)
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-1">Grupos de Tallas</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        @foreach ($gruposTallasDisponibles as $grupoTalla)
-                            <label class="flex items-center space-x-2">
-                                <input type="checkbox" wire:model="gruposTallasSeleccionados" value="{{ $grupoTalla->id }}">
-                                <span>{{ $grupoTalla->nombre }}</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        @foreach($gruposTallasDisponibles as $grupoTalla)
+                            <label class="flex items-center">
+                                <input type="checkbox" wire:model="gruposTallasSeleccionados" value="{{ $grupoTalla->id }}" class="mr-2">
+                                {{ $grupoTalla->nombre }}
                             </label>
                         @endforeach
                     </div>
                 </div>
+                @endif
             </div>
 
 
-                        <div class="flex items-center justify-end border-t border-gray-200 p-4 space-x-2">
+            <div class="flex items-center justify-end border-t border-gray-200 p-4 space-x-2">
                 <button wire:click="cerrarModal"
                     class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">
                     Cancelar

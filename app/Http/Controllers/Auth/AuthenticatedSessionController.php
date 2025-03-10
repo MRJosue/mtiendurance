@@ -36,11 +36,7 @@ class AuthenticatedSessionController extends Controller
         // Asegurar que el usuario tiene su rol cargado correctamente
         $user->load('roles.permissions'); 
     
-        // Opcional: Si `rol_id` es el ID en la tabla `roles`, asigna el rol correcto a Spatie
-        $role = Role::find($user->rol_id);
-        if ($role && !$user->hasRole($role->name)) {
-            $user->syncRoles([$role->name]); // Asigna el rol de la tabla `roles`
-        }
+
     
         return redirect()->intended(RouteServiceProvider::HOME);
     }

@@ -22,7 +22,7 @@
     <!-- Botón para aprobar -->
     <button wire:click="cambiarEstado('aprobar')" 
             class="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="$estado === 'APROBADO'">
+            :disabled="$estado === 'ASIGNADO'">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
         </svg>

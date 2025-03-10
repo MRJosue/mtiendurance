@@ -46,23 +46,24 @@ class PreProyecto extends Model
 
     public function transferirAProyecto()
             {
+
                 // Crear el nuevo proyecto con los nuevos campos
                 $proyecto = Proyecto::create([
                     'usuario_id' => $this->usuario_id,
-                    'direccion_fiscal' => $this->direccion_fiscal,
-                    'direccion_entrega' => $this->direccion_entrega,
-                    'direccion_fiscal_id' => $this->direccion_fiscal_id,
-                    'direccion_entrega_id' => $this->direccion_entrega_id,
+                    // 'direccion_fiscal' => $this->direccion_fiscal,
+                    // 'direccion_entrega' => $this->direccion_entrega,
+                    // 'direccion_fiscal_id' => $this->direccion_fiscal_id,
+                    // 'direccion_entrega_id' => $this->direccion_entrega_id,
                     'nombre' => $this->nombre,
                     'descripcion' => $this->descripcion,
-                    'id_tipo_envio' => $this->id_tipo_envio,
-                    'tipo' => $this->tipo,
+                    //'id_tipo_envio' => $this->id_tipo_envio,
+                    //'tipo' => $this->tipo,
                     'numero_muestras' => $this->numero_muestras,
-                    'estado' => 'PENDIENTE',
+                    //'estado' => 'PENDIENTE',
                     'fecha_creacion' => now(),
-                    'fecha_produccion' => $this->fecha_produccion,
-                    'fecha_embarque' => $this->fecha_embarque,
-                    'fecha_entrega' => $this->fecha_entrega,
+                    // 'fecha_produccion' => $this->fecha_produccion,
+                    // 'fecha_embarque' => $this->fecha_embarque,
+                    // 'fecha_entrega' => $this->fecha_entrega,
                     'categoria_sel' => $this->categoria_sel,
                     'producto_sel' => $this->producto_sel,
                     'caracteristicas_sel' => $this->caracteristicas_sel,
@@ -102,6 +103,17 @@ class PreProyecto extends Model
                         'fecha_creacion' => now(),
                         'total' => $totalPiezas['total'] ?? 0,
                         'estatus' => 'PENDIENTE',
+
+                        'direccion_fiscal_id'=>  $this->direccion_fiscal_id,
+                        'direccion_fiscal'=> $this->direccion_fiscal,
+                        'direccion_entrega_id'=> $this->direccion_entrega_id,
+                        'direccion_entrega'=> $this->direccion_entrega,
+                        'tipo'=> 'PEDIDO',
+                        'estado'=> 'POR PROGRAMAR',
+                        'fecha_produccion'=> $this->fecha_produccion,
+                        'fecha_embarque'=> $this->fecha_embarque,
+                        'fecha_entrega'=> $this->fecha_entrega,
+                        'id_tipo_envio' => $this->id_tipo_envio,
                     ]);
 
 
@@ -152,7 +164,7 @@ class PreProyecto extends Model
                     'pre_proyecto_id' => null,
                 ]);
 
-                // // Eliminar el preproyecto después de la transferencia
+                // Eliminar el preproyecto después de la transferencia
                 $this->delete();
 
                 return $proyecto;

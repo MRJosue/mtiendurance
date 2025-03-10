@@ -8,6 +8,13 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Auth;
 
+use App\Models\DireccionEntrega;
+use App\Models\DireccionFiscal;
+use App\Models\Ciudad;
+use App\Models\Pais;
+use App\Models\Estado;
+use App\Models\TipoEnvio;
+
 
 use Illuminate\Support\Facades\Log;
 
@@ -59,8 +66,7 @@ class Proyecto extends Model
 
         // Lista de estados fijos en orden correcto
         protected static $estados = [
-            'PENDIENTE', 'APROBADO', 'PROGRAMADO', 'IMPRESIÓN', 'PRODUCCIÓN',
-            'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO', 'RECHAZADO'
+            'PENDIENTE', 'ASIGNADO', 'REVISION', 'DISEÑO APROBADO'
         ];
 
 
@@ -118,6 +124,10 @@ class Proyecto extends Model
         $estados = self::$estados; // Obtener lista de estados
         $indiceActual = array_search($this->estado, $estados);
 
+        Log::emergency("Control estados", ['estados' => $estados]);
+        Log::emergency("Control en el indiceActual", ['indiceActual' => $indiceActual]);
+
+
         // Si el estado actual no está en la lista, hay un error
         if ($indiceActual === false) {
             Log::error("Estado desconocido en el proyecto", ['proyecto_id' => $this->id, 'estado' => $this->estado]);
@@ -135,7 +145,8 @@ class Proyecto extends Model
 
         // Determinar el nuevo estado
         if ($accion === 'siguiente') {
-            if ($indiceActual < count($estados) - 2) { // Evita avanzar después de 'COMPLETADO'
+
+            if ($indiceActual < count($estados) - 1) { // Evita avanzar después de 'COMPLETADO'
                 $nuevoEstado = $estados[$indiceActual + 1];
             } else {
                 Log::warning("El proyecto ya está en el estado final", ['proyecto_id' => $this->id, 'estado' => $this->estado]);
