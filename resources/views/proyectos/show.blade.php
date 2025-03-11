@@ -145,7 +145,7 @@
                     <h2 class="text-2xl font-bold mb-4">Chat del proyecto</h2>
                     <div wire:poll.2s class="chat-container">
                         <!-- Chat content -->
-                        {{-- <livewire:chat-component :proyecto-id="$proyecto->id" /> --}}
+                        <livewire:chat-component :proyecto-id="$proyecto->id" />
                     </div>
                 </div>
             </div>

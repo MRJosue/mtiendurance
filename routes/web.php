@@ -68,7 +68,7 @@ Route::get('/MessageSent', function () {
 Route::get('/ChatMessageTest', function () {
     // Crea un mensaje de ejemplo
     $mensaje = MensajeChat::create([
-        'chat_id' => 50, // ID del chat asociado
+        'chat_id' => 4, // ID del chat asociado
         'usuario_id' => 1, // ID de un usuario existente
         'mensaje' => 'Este es un mensaje de prueba desde Tinker.',
     ]);

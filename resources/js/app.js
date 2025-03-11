@@ -1,4 +1,6 @@
 import './bootstrap';
+import Echo from "laravel-echo";
+import Pusher from "pusher-js";
 //import '../../vendor/rappasoft/laravel-livewire-tables/resources/imports/laravel-livewire-tables-all.js';
 
 
@@ -8,8 +10,7 @@ console.log('Hola soy app js');
 
 
 
-import Echo from "laravel-echo";
-import Pusher from "pusher-js";
+
 window.Pusher = Pusher;
 window.Echo = new Echo({
     broadcaster: "pusher",
