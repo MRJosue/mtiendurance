@@ -341,13 +341,15 @@ class PedidosCrudProyecto extends Component
 
     public function render()
     {
+        $proyecto = Proyecto::find($this->proyectoId);
+    
         return view('livewire.pedidos.pedidos-crud-proyecto', [
             'tiposEnvio' => TipoEnvio::all(),
-            'direccionesFiscales' => DireccionFiscal::where('usuario_id', Auth::id())->get(),
-            'direccionesEntrega' => DireccionEntrega::where('usuario_id', Auth::id())->get(),
+            'direccionesFiscales' => DireccionFiscal::where('usuario_id', $proyecto->usuario_id)->get(),
+            'direccionesEntrega' => DireccionEntrega::where('usuario_id', $proyecto->usuario_id)->get(),
             'pedidos' => Pedido::where('proyecto_id', $this->proyectoId)
-            ->with(['tipoEnvio']) // Cargar relación con TipoEnvio
-            ->paginate(6),
+                ->with(['tipoEnvio']) // Cargar relación con TipoEnvio
+                ->paginate(6),
         ]);
     }
 }
