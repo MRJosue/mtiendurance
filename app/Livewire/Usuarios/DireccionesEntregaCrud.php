@@ -58,7 +58,7 @@ class DireccionesEntregaCrud extends Component
         }
 
         return view('livewire.usuarios.direcciones-entrega-crud', [
-            'direcciones' => $query->with(['ciudad', 'ciudad.estado', 'ciudad.estado.pais'])->orderBy('created_at', 'desc')->paginate(5),
+            'direcciones' => $query->with(['ciudad', 'ciudad.estado', 'ciudad.estado.pais'])->orderBy('created_at', 'desc')->paginate(15),
             'paises' => Pais::all(),
             'estados' => $this->pais_id ? Estado::where('pais_id', $this->pais_id)->get() : [],
             'ciudades' => $this->estado_id ? Ciudad::where('estado_id', $this->estado_id)->get() : [],

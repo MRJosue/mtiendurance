@@ -24,7 +24,7 @@ class GruposTallasCrud extends Component
     public function render()
     {
         return view('livewire.catalogos.grupos-tallas-crud', [
-            'grupos' => GrupoTalla::with('tallas')->orderBy('nombre')->paginate(10),
+            'grupos' => GrupoTalla::with('tallas')->orderBy('nombre')->paginate(15),
             'tallasDisponibles' => Talla::orderBy('nombre')->get()
         ]);
     }

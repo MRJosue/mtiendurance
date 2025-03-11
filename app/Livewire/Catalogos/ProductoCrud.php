@@ -92,7 +92,7 @@ class ProductoCrud extends Component
         }
 
         return view('livewire.catalogos.producto-crud', [
-            'productos' => Producto::with(['categoria', 'caracteristicas', 'gruposTallas'])->orderBy('created_at', 'desc')->paginate(5),
+            'productos' => Producto::with(['categoria', 'caracteristicas', 'gruposTallas'])->orderBy('created_at', 'desc')->paginate(15),
             
             'categorias' => Categoria::orderBy('nombre')->get(),
             'caracteristicas' => Caracteristica::orderBy('nombre')->get(),

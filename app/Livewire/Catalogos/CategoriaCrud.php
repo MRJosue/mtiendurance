@@ -37,7 +37,7 @@ class CategoriaCrud extends Component
     {
         $categorias = Categoria::where('nombre', 'like', '%'.$this->search.'%')
             ->orderBy('created_at', 'desc')
-            ->paginate(8);
+            ->paginate(15);
 
         $caracteristicas = Caracteristica::all();
 

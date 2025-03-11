@@ -45,7 +45,7 @@ class CaracteristicaCrud extends Component
         }
 
         return view('livewire.catalogos.caracteristica-crud', [
-            'caracteristicas' => $query->orderBy('created_at', 'desc')->paginate(5),
+            'caracteristicas' => $query->orderBy('created_at', 'desc')->paginate(15),
             'opciones' => Opcion::orderBy('nombre','asc')->get(),
         ]);
     }
