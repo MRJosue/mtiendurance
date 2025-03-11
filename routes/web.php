@@ -24,6 +24,10 @@ use App\Http\Controllers\DashboardController;
 
 use App\Http\Controllers\TallasController;
 
+use App\Http\Controllers\DisenioController;
+
+use App\Http\Controllers\ProgramacionController;
+
 use App\Events\TestEvent;
 use App\Events\MessageSent;
 use App\Events\NewChatMessage;
@@ -91,9 +95,7 @@ Route::get('/proyectos/{proyecto}', [ProyectosController::class, 'show'])->name(
 
 //preproyectos
 Route::get('/preproyectos',[PreproyectosController::class, 'index'])->middleware(['auth','verified'])->name('preproyectos.index');
-
 Route::get('/preproyectos/show/{preproyecto}', [PreproyectosController::class, 'show'])->name('preproyectos.show');
-
 Route::get('/preproyectos/create',[PreproyectosController::class, 'create'])->middleware(['auth','verified'])->name('preproyectos.create');
 
 
@@ -101,10 +103,20 @@ Route::get('/preproyectos/create',[PreproyectosController::class, 'create'])->mi
 Route::get('/usuarios',[UserController::class, 'index'])->middleware(['auth','verified'])->name('usuarios.index');
 Route::get('/usuarios/crear',[UserController::class, 'create'])->middleware(['auth','verified'])->name('usuarios.create');
 Route::get('/usuarios/detalles/{user}',[UserController::class, 'show'])->middleware(['auth','verified'])->name('usuarios.show');
-
 Route::get('/usuarios/modal',[UserController::class, 'actions'])->middleware(['auth','verified'])->name('usuarios.actions');
+
 // permisos
 Route::get('/usuarios/permisos',[permisoscontroller::class, 'index'])->middleware(['auth','verified'])->name('permisos.index');
+
+//Rutas Panel de diseño
+Route::get('/diseño',[DisenioController::class, 'index'])->middleware(['auth','verified'])->name('disenio.index');
+Route::get('/diseño/create_tarea',[DisenioController::class, 'disenio_detalle'])->middleware(['auth','verified'])->name('disenio.disenio_detalle');
+Route::get('/diseño/admin_tarea',[DisenioController::class, 'admin_tarea'])->middleware(['auth','verified'])->name('disenio.admin_tarea');
+
+
+// Rutas de programacion 
+Route::get('/programacion',[ProgramacionController::class, 'index'])->middleware(['auth','verified'])->name('programacion.index');
+
 
 //Catalogos
     //Categorias

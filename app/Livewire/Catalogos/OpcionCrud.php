@@ -45,7 +45,7 @@ class OpcionCrud extends Component
         }
 
         return view('livewire.catalogos.opcion-crud', [
-            'opciones' => $query->orderBy('created_at', 'desc')->paginate(5),
+            'opciones' => $query->orderBy('created_at', 'desc')->paginate(15),
         ]);
     }
 

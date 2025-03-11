@@ -117,6 +117,10 @@ class Proyecto extends Model
         return $this->hasMany(Proyecto_Referencia::class, 'proyecto_origen_id');
     }
 
+    public function tareas()
+{
+    return $this->hasMany(Tarea::class, 'proyecto_id');
+}
 
 
     public function actualizarEstado($accion)

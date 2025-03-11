@@ -28,8 +28,14 @@
                     </x-nav-link>
 
 
-  
+                    <x-nav-link :href="route('disenio.index')" :active="request()->routeIs('disenio.index')">
+                        {{ __('Diseño') }}
+                    </x-nav-link>
 
+                    
+                    <x-nav-link :href="route('programacion.index')" :active="request()->routeIs('programacion.index')">
+                        {{ __('Programacon') }}
+                    </x-nav-link>
 
                     {{-- catalogos --}}
                     <div class="hidden sm:flex sm:items-center sm:ms-6">
