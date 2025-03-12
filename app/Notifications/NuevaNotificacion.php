@@ -13,10 +13,12 @@ class NuevaNotificacion extends Notification
     use Queueable;
 
     public $mensaje;
+    public $liga;
 
-    public function __construct($mensaje)
+    public function __construct($mensaje, $liga = null)
     {
         $this->mensaje = $mensaje;
+        $this->liga = $liga;
     }
 
     public function via($notifiable)
@@ -28,6 +30,7 @@ class NuevaNotificacion extends Notification
     {
         return [
             'mensaje' => $this->mensaje,
+            'liga' => $this->liga, // Guarda la liga en la base de datos
         ];
     }
 
@@ -35,6 +38,7 @@ class NuevaNotificacion extends Notification
     {
         return new BroadcastMessage([
             'mensaje' => $this->mensaje,
+            'liga' => $this->liga, // Asegurar que se envíe la URL en tiempo real
         ]);
     }
 }

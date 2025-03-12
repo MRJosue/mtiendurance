@@ -20,6 +20,12 @@
                 @foreach($notificaciones as $notificacion)
                     <li class="p-2 flex justify-between items-center {{ $notificacion->read_at ? 'text-gray-500' : 'text-black font-bold' }}">
                         <span>{{ $notificacion->data['mensaje'] }}</span>
+                        @if(!empty($notificacion->data['liga'])) 
+                        <a href="{{ url($notificacion->data['liga']) }}" class="text-blue-500 underline" target="_blank">
+                            Ver más
+                        </a>
+                          @endif
+
                         @if(!$notificacion->read_at)
                             <button wire:click="marcarComoLeida('{{ $notificacion->id }}')" class="text-blue-500 text-sm">
                                 ✓

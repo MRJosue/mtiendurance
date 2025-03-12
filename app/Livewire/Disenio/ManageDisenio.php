@@ -7,7 +7,10 @@ use Livewire\WithPagination;
 use App\Models\Proyecto;
 use App\Models\User;
 use App\Models\Tarea;
+use App\Notifications\NuevaNotificacion;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
+
 
 class ManageDisenio extends Component
 {
@@ -79,8 +82,33 @@ class ManageDisenio extends Component
             'estado' => 'PENDIENTE',
         ]);
 
+
+        // Cambia el estatus del proyecto a asignado
+
+        // Dispara el evento de creacion de estatus de proyecto
+
+        // Enviamos notificacion al usuario para la asignacion 
+    
+        $ruta = 'proyectos/'.$this->selectedProject->id.'';
+        $this -> enviarNotificacion(Auth::id(),'Asignaste la tarea del prollecto'.$this->selectedProject->id.' ', $ruta);
+        $this -> enviarNotificacion($this->selectedUser,'Tienes asignado el diseño del proyecto ID:'.$this->selectedProject->id.' ', $ruta);
         session()->flash('message', 'Tarea asignada exitosamente.');
         $this->cerrarModal();
+    }
+
+    public function enviarNotificacion($userId = null, $mensaje = "Tienes una nueva notificación.", $ruta = null)
+    {
+        $user = $userId ? User::find($userId) : Auth::user(); // Si no se proporciona un ID, usa el usuario autenticado
+        
+        $dominioBase = config('app.url'); // Obtiene la URL base de la aplicación desde config
+        $liga = $ruta ? $dominioBase . $ruta : null; // Construye la URL completa
+    
+        if ($user) {
+            $user->notify(new NuevaNotificacion($mensaje, $liga));
+            $this->dispatch('notificacionEnviada');
+        } else {
+            // Log::warning("Intento de enviar notificación a un usuario inexistente.", ['user_id' => $userId]);
+        }
     }
 
     public function cerrarModal()
