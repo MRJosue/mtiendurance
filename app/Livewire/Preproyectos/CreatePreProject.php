@@ -379,6 +379,27 @@ class CreatePreProject extends Component
 
     }
 
+    public function validarFechaEntrega()
+{
+    if ($this->fecha_entrega) {
+        $fecha = Carbon::parse($this->fecha_entrega);
+        $diaSemana = $fecha->dayOfWeek; // 0 = Domingo, 6 = Sábado
+
+        if ($diaSemana === 6) {
+            // Si es sábado, mover al lunes siguiente
+            $fecha->addDays(2);
+        } elseif ($diaSemana === 0) {
+            // Si es domingo, mover al lunes siguiente
+            $fecha->addDay();
+        }
+
+        // Asignar la nueva fecha corregida
+        $this->fecha_entrega = $fecha->format('Y-m-d');
+
+        $this->on_Calcula_Fechas_Entrega();
+    }
+}
+
 
     // public function mount()
     // {

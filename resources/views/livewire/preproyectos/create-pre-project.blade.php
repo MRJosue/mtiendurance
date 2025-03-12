@@ -213,11 +213,12 @@
                 <label class="block text-sm font-medium text-gray-700">Fecha Entrega</label>
                 {{-- <input wire:change="on_Calcula_Fechas_Entrega" type="date" wire:model="fecha_entrega" class="w-full mt-1 border rounded-lg p-2"> --}}
                 <input 
-                wire:change="on_Calcula_Fechas_Entrega"
+                wire:change="validarFechaEntrega"
                 wire:model="fecha_entrega"
                 type="date" 
                 class="w-full mt-1 border rounded-lg p-2"
-                min="<?= date('Y-m-d'); ?>" >
+                min="{{ date('Y-m-d') }}"
+                id="fechaEntrega">
 
             </div>
         </div>
@@ -234,4 +235,6 @@
             Crear Preproyecto
         </button>
     </form>
+
+    
 </div>
