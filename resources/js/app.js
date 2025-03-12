@@ -7,10 +7,6 @@ import Pusher from "pusher-js";
 console.log('Hola soy app js');
 
 
-
-
-
-
 window.Pusher = Pusher;
 window.Echo = new Echo({
     broadcaster: "pusher",
@@ -27,37 +23,3 @@ window.Echo.channel("chat").listen("MessageSent", (e) => {
 });
 
 
-
-function configurarFechasPermitidas(input) {
-    const hoy = new Date();
-    let fechaMinima = hoy.toISOString().split('T')[0]; // Fecha mínima es hoy
-    input.min = fechaMinima; 
-
-    input.addEventListener('input', function () {
-        let fechaSeleccionada = new Date(this.value);
-        let diaSemana = fechaSeleccionada.getDay(); // 0 = Domingo, 6 = Sábado
-
-        if (diaSemana === 0 || diaSemana === 6) {
-            let nuevaFecha = fechaSeleccionada;
-            
-            // Si es sábado, mueve la fecha al próximo lunes
-            if (diaSemana === 6) {
-                nuevaFecha.setDate(nuevaFecha.getDate() + 2);
-            } 
-            // Si es domingo, mueve la fecha al próximo lunes
-            else if (diaSemana === 0) {
-                nuevaFecha.setDate(nuevaFecha.getDate() + 1);
-            }
-
-            // Establece la nueva fecha en el input
-            this.value = nuevaFecha.toISOString().split('T')[0];
-        }
-    });
-}
-
-document.addEventListener('livewire:navigated', () => {
-    let inputFecha = document.querySelector('input[type="date"][wire\\:model="fecha_entrega"]');
-    if (inputFecha) {
-        configurarFechasPermitidas(inputFecha);
-    }
-});

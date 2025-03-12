@@ -34,7 +34,7 @@
 
                     
                     <x-nav-link :href="route('programacion.index')" :active="request()->routeIs('programacion.index')">
-                        {{ __('Programacon') }}
+                        {{ __('Programacion') }}
                     </x-nav-link>
 
                     {{-- catalogos --}}
