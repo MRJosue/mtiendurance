@@ -84,6 +84,7 @@ class ManageDisenio extends Component
 
 
         // Cambia el estatus del proyecto a asignado
+        
 
         // Dispara el evento de creacion de estatus de proyecto
 
