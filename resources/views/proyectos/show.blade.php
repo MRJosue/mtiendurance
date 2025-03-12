@@ -115,17 +115,39 @@
 
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-
-
-                    {{-- @livewire('pedidos.mostrar-pedidos-proyecto', ['proyectoId' => $proyecto->id]) --}}
-                    @livewire('pedidos.pedidos-crud-proyecto', ['proyectoId' => $proyecto->id])
-
-
-
+                    <div x-data="{ tab: 'pedidos' }">
+                        <!-- Pestañas -->
+                        <div class="flex border-b border-gray-300 dark:border-gray-600">
+                            <button 
+                                @click="tab = 'pedidos'" 
+                                :class="tab === 'pedidos' ? 'border-blue-500 text-blue-500' : 'text-gray-500 dark:text-gray-300'"
+                                class="py-2 px-4 font-semibold border-b-2 focus:outline-none">
+                                Pedidos
+                            </button>
+                            <button 
+                                @click="tab = 'muestras'" 
+                                :class="tab === 'muestras' ? 'border-blue-500 text-blue-500' : 'text-gray-500 dark:text-gray-300'"
+                                class="py-2 px-4 font-semibold border-b-2 focus:outline-none">
+                                Muestras
+                            </button>
+                        </div>
+            
+                        <!-- Contenido de las pestañas -->
+                        <div class="mt-4">
+                            <!-- Pestaña de Pedidos -->
+                            <div x-show="tab === 'pedidos'">
+                                @livewire('pedidos.pedidos-crud-proyecto', ['proyectoId' => $proyecto->id])
+                            </div>
+            
+                            <!-- Pestaña de Muestras -->
+                            <div x-show="tab === 'muestras'">
+                                @livewire('pedidos.muestras-crud-proyecto', ['proyectoId' => $proyecto->id])
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
             </div>
-
+            
 
 
             <div class=" ">

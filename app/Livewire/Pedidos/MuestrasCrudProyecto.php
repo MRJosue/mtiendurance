@@ -1,5 +1,6 @@
 <?php
 
+
 namespace App\Livewire\Pedidos;
 
 use Livewire\Component;
@@ -21,7 +22,7 @@ use App\Models\GrupoTalla;
 use App\Models\ProductoGrupoTalla;
 
 
-class PedidosCrudProyecto extends Component
+class MuestrasCrudProyecto extends Component
 {
     use WithPagination;
 
@@ -343,14 +344,18 @@ class PedidosCrudProyecto extends Component
     {
         $proyecto = Proyecto::find($this->proyectoId);
     
-        return view('livewire.pedidos.pedidos-crud-proyecto', [
+        return view('livewire.pedidos.muestras-crud-proyecto', [
             'tiposEnvio' => TipoEnvio::all(),
             'direccionesFiscales' => DireccionFiscal::where('usuario_id', $proyecto->usuario_id)->get(),
             'direccionesEntrega' => DireccionEntrega::where('usuario_id', $proyecto->usuario_id)->get(),
+            
             'pedidos' => Pedido::where('proyecto_id', $this->proyectoId)
-            ->where('tipo', 'PEDIDO') // Filtra solo los pedidos de tipo "MUESTRA"
-            ->with(['tipoEnvio']) // Cargar relación con TipoEnvio
-            ->paginate(6), // Volver a usar paginación
+                ->where('tipo', 'MUESTRA') // Filtra solo los pedidos de tipo MUESTRA
+                ->with(['tipoEnvio']) // Cargar relación con TipoEnvio
+                ->paginate(6),
         ]);
     }
 }
+
+
+//MuestrasCrudProyecto  return view('livewire.pedidos.muestras-crud-proyecto');
