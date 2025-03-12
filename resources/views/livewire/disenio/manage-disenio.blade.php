@@ -7,6 +7,13 @@
         </div>
     @endif
 
+    @error('selectedUser')
+        <div class="bg-red-100 text-red-800 p-3 rounded mb-3">{{ $message }}</div>
+    @enderror
+    @error('taskDescription')
+        <div class="bg-red-100 text-red-800 p-3 rounded mb-3">{{ $message }}</div>
+    @enderror
+
     <div class="flex items-center justify-between mb-3">
         <button wire:click="exportSelected" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">
             Exportar Seleccionados
@@ -77,8 +84,14 @@
                         <option value="{{ $user->id }}">{{ $user->name }}</option>
                     @endforeach
                 </select>
+                @error('selectedUser')
+
+                <div class="bg-red-100 text-red-800 p-3 rounded mb-3">{{ $message }}</div>
+        
+            @enderror
                 <label class="block text-sm font-medium text-gray-700">Descripción</label>
                 <textarea wire:model="taskDescription" class="w-full p-2 border rounded mb-3"></textarea>
+                @error('taskDescription') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 <div class="flex justify-end space-x-2">
                     <button wire:click="cerrarModal" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded">
                         Cancelar
