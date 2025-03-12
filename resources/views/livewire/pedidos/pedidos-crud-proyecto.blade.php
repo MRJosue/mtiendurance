@@ -199,7 +199,15 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Entrega</label>
-                        <input wire:change="on_Calcula_Fechas_Entrega" type="date" class="w-full border border-gray-300 rounded p-2" wire:model="fecha_entrega">
+                        {{-- <input wire:change="on_Calcula_Fechas_Entrega" type="date" class="w-full border border-gray-300 rounded p-2" wire:model="fecha_entrega">
+                         --}}
+                         <input 
+                         wire:change="validarFechaEntrega"
+                         wire:model="fecha_entrega"
+                         type="date" 
+                         class="w-full mt-1 border rounded-lg p-2"
+                         min="{{ date('Y-m-d') }}"
+                         id="fechaEntrega">
                     </div>
                 </div>
             </div>

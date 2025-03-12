@@ -272,70 +272,102 @@ class PedidosCrudProyecto extends Component
 
     public function on_Calcula_Fechas_Entrega()
     {
-
-
-     if ( $this->fecha_entrega) {
-               // Registrar la fecha ingresada
-               Log::debug('Fecha de entrega ingresada', ['fecha_entrega' => $this->fecha_entrega]);
+        if ($this->fecha_entrega) {
+            // Registrar la fecha ingresada
+            Log::debug('Fecha de entrega ingresada', ['fecha_entrega' => $this->fecha_entrega]);
     
-               // Convertir la fecha ingresada a un objeto Carbon
-               $fecha_entrega = Carbon::parse($this->fecha_entrega);
-               $ahora = Carbon::now();
-               // Definir los días requeridos
-               $dias_produccion_producto = 6;
-               $dias_envio = 2;
-       
-                   // Consultar el tipo de envío seleccionado
-                   if (!empty($this->id_tipo_envio)) {
-                       $tipoEnvio = TipoEnvio::find($this->id_tipo_envio);
-       
-                       if ($tipoEnvio) {
-                           $dias_envio = $tipoEnvio->dias_envio;
-                           Log::debug('Días de envío obtenidos de la BD', ['dias_envio' => $dias_envio]);
-                       } else {
-                           Log::warning('No se encontró el tipo de envío en la BD', ['id_tipo_envio' => $this->id_tipo_envio]);
-                       }
-                   }
-       
-                   // Consultar el producto seleccionado almacenado en dias_produccion
-       
-                   if (!empty($this->producto_id)) {
-                       $tipoEnvio = Producto::find($this->producto_id);
-       
-                       if ($tipoEnvio) {
-                           $dias_produccion_producto = $tipoEnvio->dias_produccion;
-                           Log::debug('Días de Producto obtenidos de la BD', ['dias_produccion' => $dias_produccion_producto]);
-                       } else {
-                           Log::warning('No se encontró el tipo de envío en la BD', ['producto_id' => $this->producto_id]);
-                       }
-                   }
-           
-               // Calcular fechas
-            
-               $fecha_embarque = $fecha_entrega->copy()->subDays($dias_envio);
-               $fecha_produccion = $fecha_embarque->copy()->subDays($dias_produccion_producto);
-           
-               // Guardar las fechas en el formato adecuado para los inputs de tipo "date"
-               $this->fecha_produccion = $fecha_produccion->format('Y-m-d'); // Correcto para input date
-               $this->fecha_embarque = $fecha_embarque->format('Y-m-d');
-       
-       
-               // Evaluamos si la fecha de produccion esta en tiempo de produccion
-       
-               if ($fecha_produccion->lt($ahora)) {
-                 //  $this->mensaje_produccion = "⚠️ La fecha de producción calculada ({$this->fecha_produccion}) ya ha pasado. Se requiere una autorización adicional para continuar.";
-                   Log::warning('Este proyecto requiere autorización adicional para producción.');
-               }else{
-                 //  $this->mensaje_produccion = NULL;
-               }
-           
-               // Log para depuración
-               Log::debug('Fechas calculadas', [
-                   'fecha_produccion' => $this->fecha_produccion,
-                   'fecha_embarque' => $this->fecha_embarque,
-               ]);
-     }
+            // Convertir la fecha ingresada a un objeto Carbon
+            $fecha_entrega = Carbon::parse($this->fecha_entrega);
+            $ahora = Carbon::now();
+    
+            // Definir los días requeridos por defecto
+            $dias_produccion_producto = 6;
+            $dias_envio = 2;
+    
+            // Consultar el tipo de envío seleccionado
+            if (!empty($this->id_tipo_envio)) {
+                $tipoEnvio = TipoEnvio::find($this->id_tipo_envio);
+    
+                if ($tipoEnvio) {
+                    $dias_envio = $tipoEnvio->dias_envio;
+                    Log::debug('Días de envío obtenidos de la BD', ['dias_envio' => $dias_envio]);
+                } else {
+                    Log::warning('No se encontró el tipo de envío en la BD', ['id_tipo_envio' => $this->id_tipo_envio]);
+                }
+            }
+    
+            // Consultar el producto seleccionado almacenado en dias_produccion
+            if (!empty($this->producto_id)) {
+                $producto = Producto::find($this->producto_id);
+    
+                if ($producto) {
+                    $dias_produccion_producto = $producto->dias_produccion;
+                    Log::debug('Días de producción obtenidos de la BD', ['dias_produccion' => $dias_produccion_producto]);
+                } else {
+                    Log::warning('No se encontró el producto en la BD', ['producto_id' => $this->producto_id]);
+                }
+            }
+    
+            // Calcular fechas
+            $fecha_embarque = $fecha_entrega->copy()->subDays($dias_envio);
+            $fecha_produccion = $fecha_embarque->copy()->subDays($dias_produccion_producto);
+    
+            // Ajustar las fechas para que no caigan en sábado o domingo
+            $fecha_embarque = Carbon::parse($this->ajustarFechaSinFinesDeSemana($fecha_embarque));
+            $fecha_produccion = Carbon::parse($this->ajustarFechaSinFinesDeSemana($fecha_produccion));
+    
+            // Guardar las fechas en el formato adecuado para los inputs de tipo "date"
+            $this->fecha_produccion = $fecha_produccion->format('Y-m-d'); // Correcto para input date
+            $this->fecha_embarque = $fecha_embarque->format('Y-m-d');
+    
+            // Evaluamos si la fecha de producción está en tiempo de producción
+            if ($fecha_produccion->lt($ahora)) {
+                Log::warning('Este proyecto requiere autorización adicional para producción.');
+            }
+    
+            // Log para depuración
+            Log::debug('Fechas calculadas', [
+                'fecha_produccion' => $this->fecha_produccion,
+                'fecha_embarque' => $this->fecha_embarque,
+            ]);
+        }
+    }
 
+    public function validarFechaEntrega()
+    {
+        if ($this->fecha_entrega) {
+            $fecha = Carbon::parse($this->fecha_entrega);
+            $diaSemana = $fecha->dayOfWeek; // 0 = Domingo, 6 = Sábado
+    
+            if ($diaSemana === 6) {
+                // Si es sábado, mover al lunes siguiente
+                $fecha->addDays(2);
+            } elseif ($diaSemana === 0) {
+                // Si es domingo, mover al lunes siguiente
+                $fecha->addDay();
+            }
+    
+            // Asignar la nueva fecha corregida
+            $this->fecha_entrega = $fecha->format('Y-m-d');
+    
+            $this->on_Calcula_Fechas_Entrega();
+        }
+    }
+    
+    public function ajustarFechaSinFinesDeSemana($fecha)
+    {
+        $fecha = Carbon::parse($fecha);
+        $diaSemana = $fecha->dayOfWeek; // 0 = Domingo, 6 = Sábado
+    
+        if ($diaSemana === 6) {
+            // Si es sábado, mover al lunes siguiente
+            $fecha->addDays(2);
+        } elseif ($diaSemana === 0) {
+            // Si es domingo, mover al lunes siguiente
+            $fecha->addDay();
+        }
+    
+        return $fecha->format('Y-m-d');
     }
 
 

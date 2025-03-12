@@ -355,7 +355,11 @@ class CreatePreProject extends Component
             
                $fecha_embarque = $fecha_entrega->copy()->subDays($dias_envio);
                $fecha_produccion = $fecha_embarque->copy()->subDays($dias_produccion_producto);
-           
+
+                           // Ajustar las fechas para que no caigan en sábado o domingo
+                $fecha_embarque = Carbon::parse($this->ajustarFechaSinFinesDeSemana($fecha_embarque));
+                $fecha_produccion = Carbon::parse($this->ajustarFechaSinFinesDeSemana($fecha_produccion));
+            
                // Guardar las fechas en el formato adecuado para los inputs de tipo "date"
                $this->fecha_produccion = $fecha_produccion->format('Y-m-d'); // Correcto para input date
                $this->fecha_embarque = $fecha_embarque->format('Y-m-d');
@@ -398,6 +402,23 @@ class CreatePreProject extends Component
 
         $this->on_Calcula_Fechas_Entrega();
     }
+}
+
+
+public function ajustarFechaSinFinesDeSemana($fecha)
+{
+    $fecha = Carbon::parse($fecha);
+    $diaSemana = $fecha->dayOfWeek; // 0 = Domingo, 6 = Sábado
+
+    if ($diaSemana === 6) {
+        // Si es sábado, mover al lunes siguiente
+        $fecha->addDays(2);
+    } elseif ($diaSemana === 0) {
+        // Si es domingo, mover al lunes siguiente
+        $fecha->addDay();
+    }
+
+    return $fecha->format('Y-m-d');
 }
 
 
