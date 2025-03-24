@@ -20,6 +20,9 @@ class proyecto_estados extends Model
         'fecha_inicio',
         'fecha_fin',
         'usuario_id',
+        'comentario',
+        'url',
+        'last_uploaded_file_id',
     ];
 
     /**

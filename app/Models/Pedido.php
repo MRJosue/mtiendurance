@@ -16,6 +16,7 @@ class Pedido extends Model
         'id',
         'proyecto_id',
         'producto_id',
+        'user_id',
         'cliente_id',
         'fecha_creacion',
         'total',
@@ -120,6 +121,7 @@ class Pedido extends Model
         $pedido = self::create([
             'proyecto_id' => $proyecto->id,
             'producto_id' => $producto['id'],
+            'user_id' => $proyecto->usuario_id, // Ahora tiene un valor asegurado
             'cliente_id' => $clienteId, // Ahora tiene un valor asegurado
             'fecha_creacion' => now(),
             'total' => $data['total'] ?? 0,

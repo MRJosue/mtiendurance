@@ -9,6 +9,7 @@ use App\Models\proyecto;
 use App\Models\Producto;
 use App\Models\DireccionEntrega;
 use App\Models\DireccionFiscal;
+use App\Models\Cliente;
 use App\Models\Ciudad;
 use App\Models\Pais;
 use App\Models\Estado;
@@ -33,6 +34,7 @@ class PedidosCrudProyecto extends Component
     public $direccion_entrega_id;
     public $direccion_entrega;
     public $id_tipo_envio;
+  
     public $nombre_tipo_envio;
     public $tipos_envio = [];
     public $mensaje_produccion;
@@ -40,8 +42,14 @@ class PedidosCrudProyecto extends Component
     public $tallas_disponibles = [];
     public $cantidades_tallas = [];
     public $mostrar_total = true;
-
     public $producto_id;
+    public $error_total;
+
+
+    public $clientes = []; // Lista de clientes relacionados con el usuario
+    public $cliente_id; // Cliente seleccionado en el formulario
+    
+
 
     protected function rules()
     {
@@ -62,12 +70,79 @@ class PedidosCrudProyecto extends Component
             'fecha_entrega' => 'nullable|date',
         ];
     }
-    public function abrirModal($pedidoId = null)
+    // public function abrirModal($pedidoId = null)
+    // {
+
+
+    //     if ($pedidoId) {
+    //         $pedido = Pedido::findOrFail($pedidoId);
+    //         $this->pedidoId = $pedido->id;
+    //         $this->total = $pedido->total;
+    //         $this->estatus = $pedido->estatus;
+    //         $this->tipo = $pedido->tipo;
+    //         $this->estado = $pedido->estado;
+    //         $this->fecha_produccion = $pedido->fecha_produccion;
+    //         $this->fecha_embarque = $pedido->fecha_embarque;
+    //         $this->fecha_entrega = $pedido->fecha_entrega;
+            
+    //         // Establecer valores en los selects
+    //         $this->direccion_fiscal_id = $pedido->direccion_fiscal_id;
+    //         $this->direccion_entrega_id = $pedido->direccion_entrega_id;
+    //         $this->id_tipo_envio = $pedido->id_tipo_envio;
+    
+    //         // Disparar la carga de tipos de envío si hay una dirección de entrega
+    //         if (!empty($this->direccion_entrega_id)) {
+    //             $this->cargarTiposEnvio();
+    //         }
+
+    //         //
+            
+    //         $this->producto_id = $pedido->producto_id;
+    //         $this->updatedCantidadesTallas();
+    //         // Obtener tallas disponibles para el producto
+    //         $this->cargarTallas($pedido->producto_id);
+
+    //         // Cargar cantidades actuales si es edición
+    //         foreach ($pedido->pedidoTallas as $talla) {
+    //             $this->cantidades_tallas[$talla->talla_id] = $talla->cantidad;
+    //         }
+
+    //     } else {
+    //         $this->reset([
+    //             'pedidoId', 'total', 'estatus', 'tipo', 'estado',
+    //             'fecha_produccion', 'fecha_embarque', 'fecha_entrega',
+    //             'direccion_fiscal_id', 'direccion_entrega_id', 'id_tipo_envio',
+    //             'tallas_disponibles', 'cantidades_tallas'
+    //         ]);
+        
+    //         // Obtener el producto desde `producto_sel` del proyecto
+    //         $proyecto = Proyecto::findOrFail($this->proyectoId);
+    //         $producto = is_string($proyecto->producto_sel) 
+    //             ? json_decode($proyecto->producto_sel, true) 
+    //             : $proyecto->producto_sel;
+        
+    //         if (isset($producto['id'])) {
+    //             $this->producto_id = $producto['id']; // Guardamos el ID del producto
+
+    //             $this->cargarTallas($this->producto_id); // Cargar tallas del producto
+    //             // 
+
+    //         } else {
+    //             $this->producto_id = null;
+    //         }
+        
+    //         $this->estatus = 'PENDIENTE';
+    //         $this->tipo = 'PEDIDO';
+    //         $this->estado = 'POR PROGRAMAR';
+    //     }
+    
+    //     $this->modal = true;
+    // }
+
+        public function abrirModal($pedidoId = null)
     {
-
-
         if ($pedidoId) {
-            $pedido = Pedido::findOrFail($pedidoId);
+            $pedido = Pedido::with(['pedidoTallas.talla', 'pedidoTallas.grupoTalla'])->findOrFail($pedidoId);
             $this->pedidoId = $pedido->id;
             $this->total = $pedido->total;
             $this->estatus = $pedido->estatus;
@@ -81,22 +156,38 @@ class PedidosCrudProyecto extends Component
             $this->direccion_fiscal_id = $pedido->direccion_fiscal_id;
             $this->direccion_entrega_id = $pedido->direccion_entrega_id;
             $this->id_tipo_envio = $pedido->id_tipo_envio;
-    
+
+            $this->cliente_id = $pedido->cliente_id;
+
             // Disparar la carga de tipos de envío si hay una dirección de entrega
             if (!empty($this->direccion_entrega_id)) {
                 $this->cargarTiposEnvio();
             }
 
-            //
-            
             $this->producto_id = $pedido->producto_id;
             $this->updatedCantidadesTallas();
+            
             // Obtener tallas disponibles para el producto
             $this->cargarTallas($pedido->producto_id);
 
-            // Cargar cantidades actuales si es edición
-            foreach ($pedido->pedidoTallas as $talla) {
-                $this->cantidades_tallas[$talla->talla_id] = $talla->cantidad;
+            // Reiniciar el array de cantidades
+            $this->cantidades_tallas = [];
+
+            // Cargar cantidades actuales organizadas por grupo de tallas y talla
+            foreach ($pedido->pedidoTallas as $pedidoTalla) {
+                $grupoId = $pedidoTalla->grupo_talla_id;
+                $tallaId = $pedidoTalla->talla_id;
+                $this->cantidades_tallas[$grupoId][$tallaId] = $pedidoTalla->cantidad;
+            }
+
+
+                // Obtener el usuario asociado al proyecto
+            $proyecto = Proyecto::find($this->proyectoId);
+            if ($proyecto) {
+                // Cargar los clientes asociados al usuario del proyecto
+                $this->clientes = Cliente::where('usuario_id', $proyecto->usuario_id)->get();
+            } else {
+                $this->clientes = collect(); // Si no hay proyecto, dejar vacío
             }
 
         } else {
@@ -104,93 +195,84 @@ class PedidosCrudProyecto extends Component
                 'pedidoId', 'total', 'estatus', 'tipo', 'estado',
                 'fecha_produccion', 'fecha_embarque', 'fecha_entrega',
                 'direccion_fiscal_id', 'direccion_entrega_id', 'id_tipo_envio',
-                'tallas_disponibles', 'cantidades_tallas'
+                'tallas_disponibles', 'cantidades_tallas','cliente_id'
             ]);
-        
+
             // Obtener el producto desde `producto_sel` del proyecto
             $proyecto = Proyecto::findOrFail($this->proyectoId);
             $producto = is_string($proyecto->producto_sel) 
                 ? json_decode($proyecto->producto_sel, true) 
                 : $proyecto->producto_sel;
-        
+
             if (isset($producto['id'])) {
                 $this->producto_id = $producto['id']; // Guardamos el ID del producto
-
                 $this->cargarTallas($this->producto_id); // Cargar tallas del producto
-                // 
-
             } else {
                 $this->producto_id = null;
             }
-        
+
+            
+                // Obtener el usuario asociado al proyecto
+            $proyecto = Proyecto::find($this->proyectoId);
+            if ($proyecto) {
+                // Cargar los clientes asociados al usuario del proyecto
+                $this->clientes = Cliente::where('usuario_id', $proyecto->usuario_id)->get();
+            } else {
+                $this->clientes = collect(); // Si no hay proyecto, dejar vacío
+            }
+
             $this->estatus = 'PENDIENTE';
             $this->tipo = 'PEDIDO';
             $this->estado = 'POR PROGRAMAR';
         }
-    
+
         $this->modal = true;
     }
 
     public function guardar()
     {
-
         Log::debug('Pre validate');
         $this->validate();
         Log::debug('Pre Guardado');
 
-        
+        // Resetear error antes de validar
+        $this->error_total = null;
+
+        // Calcular el total de tallas ingresadas
+        $totalTallas = 0;
+        foreach ($this->cantidades_tallas as $grupoId => $tallas) {
+            foreach ($tallas as $tallaId => $cantidad) {
+                $totalTallas += (int) $cantidad;
+            }
+        }
+
+        // Validación: Si hay tallas ingresadas, el total de tallas debe coincidir con el total general
+        if ($totalTallas > 0 && $totalTallas != $this->total) {
+            Log::debug('Show Error');
+            $this->error_total = "El total de las tallas ($totalTallas) no coincide con el total general ($this->total).";
+            return;
+        }
+    
         // Obtener los nombres de país, estado y ciudad para la dirección de entrega
         $direccionEntrega = DireccionEntrega::find($this->direccion_entrega_id);
         $pais_name = $direccionEntrega->ciudad->estado->pais->nombre ?? '';
         $estado_name = $direccionEntrega->ciudad->estado->nombre ?? '';
         $ciudades_name = $direccionEntrega->ciudad->nombre ?? '';
-
+    
         // Obtener los nombres de país, estado y ciudad para la dirección fiscal
         $direccionFiscal = DireccionFiscal::find($this->direccion_fiscal_id);
         $fiscal_pais_name = $direccionFiscal->ciudad->estado->pais->nombre ?? '';
         $fiscal_estado_name = $direccionFiscal->ciudad->estado->nombre ?? '';
         $fiscal_ciudades_name = $direccionFiscal->ciudad->nombre ?? '';
-
+    
         // Construcción de dirección como texto
         $Auxiliar_direccion_entrega = trim("$ciudades_name, $estado_name, $pais_name");
         $Auxiliar_direccion_fiscal = trim("$fiscal_ciudades_name, $fiscal_estado_name, $fiscal_pais_name");
-
-
-
+    
         if ($this->pedidoId) {
             // Actualizar un pedido existente
-         Pedido::where('id', $this->pedidoId)->update([
-            'total' => $this->total,
-            'estatus' => $this->estatus,
-            'tipo' => $this->tipo,
-            'estado' => $this->estado,
-            'fecha_produccion' => $this->fecha_produccion,
-            'fecha_embarque' => $this->fecha_embarque,
-            'fecha_entrega' => $this->fecha_entrega,
-            'direccion_fiscal_id' => $this->direccion_fiscal_id,
-            'direccion_fiscal' => $Auxiliar_direccion_fiscal,
-            'direccion_entrega_id' => $this->direccion_entrega_id,
-            'direccion_entrega' => $Auxiliar_direccion_entrega,
-            'id_tipo_envio' => $this->id_tipo_envio,
-        ]);
-
-            // Eliminar tallas anteriores y guardar nuevas
-            PedidoTalla::where('pedido_id', $this->pedidoId)->delete();
-            foreach ($this->cantidades_tallas as $tallaId => $cantidad) {
-                if ($cantidad > 0) {
-                    PedidoTalla::create([
-                        'pedido_id' => $this->pedidoId,
-                        'talla_id' => $tallaId,
-                        'cantidad' => $cantidad,
-                    ]);
-                }
-            }
-        } else {
-
-
-            Log::debug('Pre crearDesdeProyecto');
-            // Crear un nuevo pedido usando `crearDesdeProyecto`
-            Pedido::crearDesdeProyecto($this->proyectoId, [
+            Pedido::where('id', $this->pedidoId)->update([
+                'cliente_id' => $this->cliente_id,
                 'total' => $this->total,
                 'estatus' => $this->estatus,
                 'tipo' => $this->tipo,
@@ -203,18 +285,63 @@ class PedidosCrudProyecto extends Component
                 'direccion_entrega_id' => $this->direccion_entrega_id,
                 'direccion_entrega' => $Auxiliar_direccion_entrega,
                 'id_tipo_envio' => $this->id_tipo_envio,
-                'cantidades_tallas' => $this->cantidades_tallas, // Agregar tallas al array
+                
             ]);
+    
+            // Eliminar tallas anteriores y guardar nuevas
+            PedidoTalla::where('pedido_id', $this->pedidoId)->delete();
+    
+            // Guardar tallas organizadas por grupos
+            foreach ($this->cantidades_tallas as $grupoId => $tallas) {
+                foreach ($tallas as $tallaId => $cantidad) {
+                    if ($cantidad > 0) {
+                        PedidoTalla::create([
+                            'pedido_id' => $this->pedidoId,
+                            'grupo_talla_id' => $grupoId,
+                            'talla_id' => $tallaId,
+                            'cantidad' => $cantidad,
+                        ]);
+                    }
+                }
+            }
+        } else {
+            Log::debug('Pre crearDesdeProyecto');
+            
+            // Crear un nuevo pedido
+            $nuevoPedido = Pedido::crearDesdeProyecto($this->proyectoId, [
+                'cliente_id' => $this->cliente_id,
+                'total' => $this->total,
+                'estatus' => $this->estatus,
+                'tipo' => $this->tipo,
+                'estado' => $this->estado,
+                'fecha_produccion' => $this->fecha_produccion,
+                'fecha_embarque' => $this->fecha_embarque,
+                'fecha_entrega' => $this->fecha_entrega,
+                'direccion_fiscal_id' => $this->direccion_fiscal_id,
+                'direccion_fiscal' => $Auxiliar_direccion_fiscal,
+                'direccion_entrega_id' => $this->direccion_entrega_id,
+                'direccion_entrega' => $Auxiliar_direccion_entrega,
+                'id_tipo_envio' => $this->id_tipo_envio,
+            ]);
+    
+            // Guardar tallas organizadas por grupos
+            foreach ($this->cantidades_tallas as $grupoId => $tallas) {
+                foreach ($tallas as $tallaId => $cantidad) {
+                    if ($cantidad > 0) {
+                        PedidoTalla::create([
+                            'pedido_id' => $nuevoPedido->id,
+                            'grupo_talla_id' => $grupoId,
+                            'talla_id' => $tallaId,
+                            'cantidad' => $cantidad,
+                        ]);
+                    }
+                }
+            }
         }
-
-        
-
-
-
+    
         session()->flash('message', $this->pedidoId ? 'Pedido actualizado correctamente.' : 'Pedido creado correctamente.');
         $this->modal = false;
     }
-
 
     public function cargarTallas($productoId)
     {
@@ -222,15 +349,23 @@ class PedidosCrudProyecto extends Component
 
         $gruposTallas = ProductoGrupoTalla::where('producto_id', $productoId)
             ->pluck('grupo_talla_id');
-
+    
         if ($gruposTallas->isNotEmpty()) {
             $this->tallas_disponibles = GrupoTalla::whereIn('id', $gruposTallas)
                 ->with('tallas')
                 ->get()
-                ->flatMap->tallas
-                ->unique('id')
-                ->values()
-                ->toArray();
+                ->map(function ($grupo) {
+                    return [
+                        'id' => $grupo->id,
+                        'nombre' => $grupo->nombre,
+                        'tallas' => $grupo->tallas->map(function ($talla) {
+                            return [
+                                'id' => $talla->id,
+                                'nombre' => $talla->nombre
+                            ];
+                        })->toArray(),
+                    ];
+                })->toArray();
         }
     }
 
@@ -244,14 +379,10 @@ class PedidosCrudProyecto extends Component
     
         // Revisar si el producto tiene grupos de tallas asignados
         if (!empty($this->producto_id)) {
-            Log::debug('producto_id', ['data' => $this->producto_id]);
             $gruposTallas = ProductoGrupoTalla::where('producto_id', $this->producto_id)->exists();
-            $this->mostrar_total = !$gruposTallas; // Si hay grupos de tallas, ocultar "Total", sino mostrarlo
+            $this->mostrar_total = !$gruposTallas;
         } else {
-
-            Log::debug('Else', ['data' => $this->producto_id]);
-
-            $this->mostrar_total = true; // Si no hay producto seleccionado, mostrar "Total"
+            $this->mostrar_total = true;
         }
     }
 
@@ -380,9 +511,14 @@ class PedidosCrudProyecto extends Component
             'direccionesFiscales' => DireccionFiscal::where('usuario_id', $proyecto->usuario_id)->get(),
             'direccionesEntrega' => DireccionEntrega::where('usuario_id', $proyecto->usuario_id)->get(),
             'pedidos' => Pedido::where('proyecto_id', $this->proyectoId)
-            ->where('tipo', 'PEDIDO') // Filtra solo los pedidos de tipo "MUESTRA"
-            ->with(['tipoEnvio']) // Cargar relación con TipoEnvio
-            ->paginate(6), // Volver a usar paginación
+                ->where('tipo', 'PEDIDO')
+                ->with([
+                    'pedidoTallas.talla' => function ($query) {
+                        $query->with('gruposTallas'); // Cargar los grupos de talla correctamente
+                    },
+                    'tipoEnvio'
+                ])
+                ->paginate(6),
         ]);
     }
 }

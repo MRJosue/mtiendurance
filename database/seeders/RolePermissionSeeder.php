@@ -21,6 +21,9 @@ class RolePermissionSeeder extends Seeder
         $user =  Role::create(['name' => 'cliente']);
         $user =  Role::create(['name' => 'proveedor']);
         $user =  Role::create(['name' => 'estaf']);
+        $user =  Role::create(['name' => 'diseñador']);
+        $user =  Role::create(['name' => 'jefediseñador']);
+        $user =  Role::create(['name' => 'operador']);
 
         $admin->givePermissionTo(['manage users', 'edit profile']);
         $user->givePermissionTo(['edit profile']);

@@ -14,17 +14,19 @@
     @endif
 
     <form wire:submit.prevent="update">
-        <!-- Nombre -->
+        <!-- Nombre y Descripción -->
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Nombre</label>
             <input type="text" wire:model="nombre" class="w-full mt-1 border rounded-lg p-2">
+            @error('nombre') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
 
-        <!-- Descripción -->
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Descripción</label>
             <textarea wire:model="descripcion" class="w-full mt-1 border rounded-lg p-2"></textarea>
+            @error('descripcion') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
+
 
         <!-- Selección de Categoría -->
         <div class="mb-4">
@@ -35,6 +37,7 @@
                     <option value="{{ $categoria->id }}">{{ $categoria->nombre }}</option>
                 @endforeach
             </select>
+            @error('categoria_id') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
 
         <!-- Selección de Producto -->
@@ -49,56 +52,95 @@
             @error('producto_id') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
         
-        
 
+        <!-- Características y Opciones -->
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Características y Opciones</label>
             @foreach ($caracteristicas_sel as $index => $caracteristica)
                 <div class="mt-2 p-4 border rounded-lg bg-gray-50">
                     <p class="font-semibold">{{ $caracteristica['nombre'] }}</p>
 
-                    <!-- Selección de Opciones -->
-                    <select wire:change="addOpcion({{ $index }}, $event.target.value)" class="w-full mt-1 border rounded-lg p-2">
-                        <option value="">Seleccionar Opción</option>
-                        @foreach (\App\Models\Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
+                    @php
+                        $opciones = \App\Models\Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
                             $query->where('caracteristica_id', $caracteristica['id']);
-                        })->get() as $opcion)
-                            <option value="{{ $opcion->id }}">{{ $opcion->nombre }} ({{ $opcion->valoru }})</option>
-                        @endforeach
-                    </select>
+                        })->get();
+                    @endphp
 
-                    <!-- Lista de Opciones Seleccionadas -->
-                    <ul class="mt-2">
-                        @foreach ($caracteristica['opciones'] as $opcionIndex => $opcion)
-                            <li class="flex justify-between items-center mb-2">
-                                <span>{{ $opcion['nombre'] }} ({{ $opcion['valoru'] }})</span>
-                                <button type="button" wire:click="removeOpcion({{ $index }}, {{ $opcionIndex }})" class="text-red-500 hover:underline">Eliminar</button>
-                            </li>
-                        @endforeach
-                    </ul>
+                    @if ($opciones->count() === 1)
+                        <!-- Si solo hay una opción, seleccionarla automáticamente -->
+                        <p class="text-gray-700">{{ $opciones->first()->nombre }} ({{ $opciones->first()->valoru }})</p>
+                        <input type="hidden" wire:model="caracteristicas_sel.{{ $index }}.opciones.0.id" value="{{ $opciones->first()->id }}">
+                    @else
+                            <!-- Si hay múltiples opciones, mantener el select siempre visible -->
+                            <!-- Selección de Opciones -->
+                            <select wire:change="addOpcion({{ $index }}, $event.target.value)" class="w-full mt-1 border rounded-lg p-2">
+                                <option value="">Seleccionar Opción</option>
+                                @foreach (\App\Models\Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
+                                    $query->where('caracteristica_id', $caracteristica['id']);
+                                })->get() as $opcion)
+                                    <option value="{{ $opcion->id }}">{{ $opcion->nombre }} ({{ $opcion->valoru }})</option>
+                                @endforeach
+                            </select>
+
+                            <!-- Lista de Opciones Seleccionadas -->
+                            <ul class="mt-2">
+                                @foreach ($caracteristica['opciones'] as $opcionIndex => $opcion)
+                                    <li class="flex justify-between items-center mb-2">
+                                        <span>{{ $opcion['nombre'] }} ({{ $opcion['valoru'] }})</span>
+                                        <button type="button" wire:click="removeOpcion({{ $index }}, {{ $opcionIndex }})" class="text-red-500 hover:underline">Eliminar</button>
+                                    </li>
+                                @endforeach
+                            </ul>
+                    @endif
                 </div>
             @endforeach
+                <!-- 🚨 Mensaje de error si no se seleccionó una opción por característica -->
+                @error('opciones_sel') 
+                <span class="text-red-600 text-sm">{{ $message }}</span> 
+            @enderror
         </div>
 
        
 
         <!-- Selección de Cantidades -->
-        @if ($mostrarFormularioTallas)
-            <div class="mb-4 p-4 border rounded-lg bg-gray-50">
-                <h3 class="text-lg font-semibold mb-2">Cantidad por Tallas</h3>
-                @foreach ($tallas as $talla)
-                    <div class="flex items-center space-x-2">
-                        <label class="text-sm font-medium text-gray-700 w-1/3">{{ $talla->nombre }}</label>
-                        <input type="number" wire:model="tallasSeleccionadas.{{ $talla->id }}" class="w-2/3 border rounded-lg p-2" min="0">
-                    </div>
-                @endforeach
-            </div>
-        @else
+        <div wire:key="tallas-{{ $producto_id }}">
+            @if ($mostrarFormularioTallas)
+                <div class="mb-4 p-4 border rounded-lg bg-gray-50">
+                    <h3 class="text-lg font-semibold mb-2">Cantidad por Tallas</h3>
+                
+                    @foreach ($tallas->flatMap->gruposTallas->unique('id') as $grupoTalla)
+                        <div class="mb-4">
+                            <p class="font-semibold text-gray-700 border-b pb-2">{{ $grupoTalla->nombre }}</p>
+                
+                            @foreach ($tallas->filter(fn($talla) => $talla->gruposTallas->contains('id', $grupoTalla->id)) as $talla)
+                                <div class="flex items-center space-x-2 mt-2">
+                                    <label class="text-sm font-medium text-gray-700 w-1/3">{{ $talla->nombre }}</label>
+                                    <input type="number"
+                                        wire:model.defer="tallasSeleccionadas.{{ $grupoTalla->id }}.{{ $talla->id }}"
+                                        class="w-2/3 border rounded-lg p-2"
+                                        min="0"
+                                        value="{{ $tallasSeleccionadas[$grupoTalla->id][$talla->id] ?? 0 }}">
+                                </div>
+                            @endforeach
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        
+
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700">Total de Piezas</label>
-                <input type="number" wire:model="total_piezas" class="w-full mt-1 border rounded-lg p-2" min="1">
+                <input 
+                    type="number" 
+                    wire:model="total_piezas" 
+                    class="w-full mt-1 border rounded-lg p-2" 
+                    min="1" >
+                @error('total_piezas') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
             </div>
-        @endif
+
+            
+        </div>
+
 
         <!-- Subir Nuevos Archivos -->
         <div class="mb-4">
@@ -179,18 +221,29 @@
         <div class="grid grid-cols-3 gap-4 mb-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Fecha Producción</label>
-                <input type="date" wire:model="fecha_produccion" class="w-full mt-1 border rounded-lg p-2" >
+                <input type="date" wire:model="fecha_produccion" class="w-full mt-1 border rounded-lg p-2" readonly>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">Fecha Embarque</label>
-                <input type="date" wire:model="fecha_embarque" class="w-full mt-1 border rounded-lg p-2" >
+                <input type="date" wire:model="fecha_embarque" class="w-full mt-1 border rounded-lg p-2" readonly>
             </div>
+
+
             <div>
                 <label class="block text-sm font-medium text-gray-700">Fecha Entrega</label>
-                <input type="date" wire:model="fecha_entrega" class="w-full mt-1 border rounded-lg p-2" >
-            </div>
-        </div>
+                {{-- <input wire:change="on_Calcula_Fechas_Entrega" type="date" wire:model="fecha_entrega" class="w-full mt-1 border rounded-lg p-2"> --}}
+                <input 
+                wire:change="validarFechaEntrega"
+                wire:model="fecha_entrega"
+                type="date" 
+                class="w-full mt-1 border rounded-lg p-2"
+                min="{{ date('Y-m-d') }}"
+                id="fechaEntrega">
 
+            </div>
+
+            @error('error') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+        </div>
         <!-- Botón de Guardar Cambios -->
         <button type="submit" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
             Guardar Cambios

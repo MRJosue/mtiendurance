@@ -66,7 +66,7 @@ class Proyecto extends Model
 
         // Lista de estados fijos en orden correcto
         protected static $estados = [
-            'PENDIENTE', 'ASIGNADO', 'REVISION', 'DISEÑO APROBADO'
+            'PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION', 'DISEÑO APROBADO','RECHAZADO'
         ];
 
 
@@ -115,6 +115,12 @@ class Proyecto extends Model
     public function proyectosClonados()
     {
         return $this->hasMany(Proyecto_Referencia::class, 'proyecto_origen_id');
+    }
+
+
+    public function estados()
+    {
+        return $this->hasMany(proyecto_estados::class, 'proyecto_id');
     }
 
     public function tareas()

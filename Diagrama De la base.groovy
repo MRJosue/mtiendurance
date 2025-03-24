@@ -132,9 +132,11 @@ Table proyectos {
 Table tareas {
   id INT [pk, unique, not null]
   proyecto_id INT [not null, ref: > proyectos.id]
+ 
   staff_id INT [not null, ref: > users.id]
   descripcion TEXT
   estado ENUM('PENDIENTE', 'EN PROCESO', 'COMPLETADA')
+  disenio_flag_first_proceso INT
 }
 
 Table categorias {
@@ -219,7 +221,8 @@ Table pedido {
   id INT [pk, unique, not null]
   proyecto_id INT [not null, unique, ref: > proyectos.id] 
   producto_id INT [not null, ref: > productos.id]
-  cliente_id  INT [not null, ref: > clientes.id]
+  cliente_id  INT [null, ref: > clientes.id]
+  user_id  INT [not null, ref: > users.id]
   fecha_creacion TIMESTAMP [default: `now()`]
   tipo  ENUM('POR PROGRAMAR', 'PROGRAMADO',  'IMPRESIÓN', 'PRODUCCIÓN', 
                 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO', 'RECHAZADO') [default: 'POR PROGRAMAR']
@@ -255,6 +258,7 @@ Table pedido_opciones {
 
 Table pedido_tallas {
   pedido_id INT [not null, ref: > pedido.id]
+   grupo_id INT [not null, ref: > grupos_tallas.id]
   talla_id INT [not null, ref: > tallas.id]
   cantidad INT
 }
@@ -314,6 +318,9 @@ Table proyecto_estados {
   id INT [pk, not null]
   proyecto_id INT [not null, ref: > proyectos.id]
   estado VARCHAR [not null]
+  comentario text
+  url string
+  last_uploaded_file_id INT
   fecha_inicio TIMESTAMP
   fecha_fin TIMESTAMP
   created_at TIMESTAMP [default: `now()`]
@@ -327,8 +334,3 @@ Table proyecto_referencias {
   created_at TIMESTAMP [default: `now()`]
   updated_at TIMESTAMP
 }
-
-
-Ref: "proyectos"."total_piezas_sel" < "proyectos"."direccion_fiscal"
-
-Ref: "proyecto_estados"."created_at" < "proyecto_referencias"."created_at"

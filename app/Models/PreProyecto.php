@@ -99,7 +99,8 @@ class PreProyecto extends Model
                         'proyecto_id' => $proyecto->id,
                         'pre_proyecto_id' => $this->id,
                         'producto_id' => $producto['id'] ?? null,
-                        'cliente_id' => $this->usuario_id, // Si el cliente es el mismo usuario, ajusta esto según sea necesario
+                        'user_id' => $this->usuario_id, // Si el cliente es el mismo usuario, ajusta esto según sea necesario
+                        'cliente_id' => null, // Si el cliente es el mismo usuario, ajusta esto según sea necesario
                         'fecha_creacion' => now(),
                         'total' => $totalPiezas['total'] ?? 0,
                         'estatus' => 'PENDIENTE',
@@ -147,13 +148,16 @@ class PreProyecto extends Model
                     // Si la categoría es "playeras", insertar tallas,
                     // isset($categoria['id']) && $categoria['id'] == 1 &&
                     if (isset($totalPiezas['detalle_tallas'])) {
-                        foreach ($totalPiezas['detalle_tallas'] as $tallaId => $cantidad) {
-                            if (!empty($cantidad)) {
-                                PedidoTalla::create([
-                                    'pedido_id' => $pedido->id,
-                                    'talla_id' => $tallaId,
-                                    'cantidad' => $cantidad,
-                                ]);
+                        foreach ($totalPiezas['detalle_tallas'] as $grupoId => $tallas) {
+                            foreach ($tallas as $tallaId => $cantidad) {
+                                if (!empty($cantidad)) {
+                                    PedidoTalla::create([
+                                        'pedido_id' => $pedido->id,
+                                        'talla_id' => $tallaId,
+                                        'grupo_talla_id' => $grupoId, // Ahora se captura el grupo correctamente
+                                        'cantidad' => $cantidad,
+                                    ]);
+                                }
                             }
                         }
                     }
@@ -168,7 +172,7 @@ class PreProyecto extends Model
                 $this->delete();
 
                 return $proyecto;
-            }
+        }
 
 
     // public function transferirAProyecto()

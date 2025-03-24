@@ -30,12 +30,14 @@ class Talla extends Model
         'nombre',
         'descripcion',
     ];
+    protected $table = 'tallas';
 
-    // Relación con los grupos de tallas
     public function gruposTallas()
     {
         return $this->belongsToMany(GrupoTalla::class, 'grupo_tallas_detalle', 'talla_id', 'grupo_talla_id');
     }
+
         
+    
 
 }

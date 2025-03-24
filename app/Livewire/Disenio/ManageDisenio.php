@@ -7,9 +7,11 @@ use Livewire\WithPagination;
 use App\Models\Proyecto;
 use App\Models\User;
 use App\Models\Tarea;
+use App\Models\proyecto_estados;
 use App\Notifications\NuevaNotificacion;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Role;
 
 
 class ManageDisenio extends Component
@@ -23,6 +25,11 @@ class ManageDisenio extends Component
     public $selectedProject;
     public $selectedUser;
     public $taskDescription;
+
+    public $modalVerMas = false;
+    public $proyectoSeleccionado = null;
+
+    
 
     protected $rules = [
         'selectedUser' => 'required|exists:users,id',
@@ -84,15 +91,28 @@ class ManageDisenio extends Component
 
 
         // Cambia el estatus del proyecto a asignado
-        
+        $proyecto = Proyecto::find($this->selectedProject->id);
 
-        // Dispara el evento de creacion de estatus de proyecto
+  
+        if ($proyecto) {
+            $proyecto->estado = 'ASIGNADO';
+            $proyecto->save(); // ✅ Guardar cambios en la base de datos
+        }
+        // Insertamos un registro al pool de eventos de tareas 
+        $asignador = Auth::user()->name; // Usuario que asigna la tarea
+        $propietario = $this->selectedUser->user->name ?? 'Desconocido'; // Usuario propietario del proyecto
 
-        // Enviamos notificacion al usuario para la asignacion 
+        proyecto_estados::create([
+            'proyecto_id' =>  $this->selectedProject->id,
+            'estado' => "El usuario '$asignador' asignó el diseño del proyecto ID {$this->selectedProject->id} a '$propietario'",
+            'fecha_inicio' => now(),
+            'usuario_id' => Auth::id(),
+        ]);
     
         $ruta = 'proyectos/'.$this->selectedProject->id.'';
         $this -> enviarNotificacion(Auth::id(),'Asignaste la tarea del prollecto'.$this->selectedProject->id.' ', $ruta);
         $this -> enviarNotificacion($this->selectedUser,'Tienes asignado el diseño del proyecto ID:'.$this->selectedProject->id.' ', $ruta);
+        $this -> enviarNotificacion($proyecto->usuario_id,'Hubo un cambio de estatus en el proyecto:'.$this->selectedProject->id.' ', $ruta);
         session()->flash('message', 'Tarea asignada exitosamente.');
         $this->cerrarModal();
     }
@@ -120,11 +140,29 @@ class ManageDisenio extends Component
         $this->resetErrorBag(); // Reiniciar los errores al cerrar el modal
     }
 
-    public function render()
+
+    public function verMas($proyectoId)
     {
-        return view('livewire.disenio.manage-disenio', [
-            'projects' => Proyecto::with(['user', 'tareas.staff'])->paginate($this->perPage),
-            'users' => User::all()
-        ]);
+        $this->proyectoSeleccionado = Proyecto::with('estados.usuario')->find($proyectoId);
+        $this->modalVerMas = true;
     }
+    
+    public function cerrarModalVerMas()
+    {
+        $this->modalVerMas = false;
+        $this->proyectoSeleccionado = null;
+    }
+
+
+    public function render()
+        {
+            return view('livewire.disenio.manage-disenio', [
+                'projects' => Proyecto::with(['user', 'tareas.staff', 'estados.usuario'])->paginate($this->perPage),
+                'users' => User::whereHas('roles', function ($query) {
+                    $query->where('name', 'diseñador');
+                })->get()
+            ]);
+        }
+
+
 }

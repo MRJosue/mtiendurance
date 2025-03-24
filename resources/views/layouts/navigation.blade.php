@@ -32,6 +32,11 @@
                         {{ __('Diseño') }}
                     </x-nav-link>
 
+
+                    <x-nav-link :href="route('disenio.admin_tarea')" :active="request()->routeIs('disenio.admin_tarea')">
+                        {{ __('Tareas') }}
+                    </x-nav-link>
+                    
                     
                     <x-nav-link :href="route('programacion.index')" :active="request()->routeIs('programacion.index')">
                         {{ __('Programacion') }}
@@ -205,6 +210,16 @@
         <x-responsive-nav-link :href="route('proyectos.index')" :active="request()->routeIs('proyectos.index')">
             {{ __('Proyectos') }}
         </x-responsive-nav-link>
+
+
+        
+        <x-nav-link :href="route('disenio.index')" :active="request()->routeIs('disenio.index')">
+            {{ __('Diseño') }}
+        </x-nav-link>
+
+        <x-nav-link :href="route('disenio.admin_tarea')" :active="request()->routeIs('disenio.admin_tarea')">
+            {{ __('Tareas') }}
+        </x-nav-link>
 
 
     </div>

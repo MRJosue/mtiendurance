@@ -40,14 +40,34 @@
                         <!-- Piezas Totales -->
                         <td class="border border-gray-300 p-2 font-semibold w-56">
                             @if($pedido->pedidoTallas->isNotEmpty())
-                                <ul class="list-disc list-inside">
-                                    @foreach($pedido->pedidoTallas as $talla)
-                                        <li>{{ $talla->talla->nombre ?? 'N/A' }}: {{ $talla->cantidad ?? '0' }}</li>
+                                @php
+                                    // Agrupar por el grupo de tallas (no solo por el nombre de la talla)
+                                    $tallasAgrupadas = $pedido->pedidoTallas->groupBy('grupo_talla_id');
+                                @endphp
+                                <ul class="list-none">
+                                    @foreach($tallasAgrupadas as $grupoTallaId => $tallas)
+                                        <li class="font-semibold text-gray-700 border-b pb-1 mt-2">
+                                            {{ $tallas->first()->grupoTalla->nombre ?? 'Sin Grupo' }}
+                                        </li>
+                                        <ul class="list-disc list-inside text-gray-600">
+                                            @foreach($tallas as $talla)
+                                                <li>{{ $talla->talla->nombre ?? 'N/A' }}: {{ $talla->cantidad ?? '0' }}</li>
+                                            @endforeach
+                                        </ul>
                                     @endforeach
                                 </ul>
-                            @else
-                                {{ number_format($pedido->total, 2) }}
+                            
                             @endif
+                            <ul class="list-none">
+                                <li class="font-semibold text-gray-700 border-b pb-1 mt-2">
+                                    Total
+                                </li>
+                                <ul>
+                                    {{ number_format($pedido->total, 2) }}
+                                </ul>
+                            </ul>
+
+                            
                         </td>
             
                         <td class="border border-gray-300 p-2">{{ $pedido->direccion_fiscal ?? 'No definida' }}</td>
@@ -92,38 +112,48 @@
     </div>
     @if($modal)
     <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div class="bg-white rounded shadow-lg w-full max-w-lg">
+        <div class="bg-white rounded shadow-lg w-full max-w-lg flex flex-col">
+            <!-- Encabezado -->
             <div class="flex items-center justify-between border-b border-gray-200 p-4">
                 <h5 class="text-xl font-bold">{{ $pedidoId ? 'Editar Pedido' : 'Nuevo Pedido' }}</h5>
                 <button class="text-gray-500 hover:text-gray-700" wire:click="$set('modal', false)">&times;</button>
             </div>
 
-            <div class="p-4">
-                <!-- SECCIÓN: Información General -->
+            <!-- Contenedor con scroll -->
+            <div class="overflow-y-auto max-h-[60vh] p-4">
                 <!-- SECCIÓN: Cantidades por Tallas -->
                 @if(!empty($tallas_disponibles))
                     <h6 class="text-lg font-semibold mt-4">Cantidades por Tallas</h6>
-                    <div class="grid grid-cols-3 gap-4 mb-4">
-                        @foreach($tallas_disponibles as $talla)
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">{{ $talla['nombre'] }}</label>
-                                <input type="number" class="w-full border border-gray-300 rounded p-2"
-                                    wire:model.lazy="cantidades_tallas.{{ $talla['id'] }}" min="0">
-                            </div>
-                        @endforeach
-                    </div>
+                    @foreach ($tallas_disponibles as $grupoTalla)
+                        <p class="font-semibold text-gray-700 border-b pb-2 mt-2">{{ $grupoTalla['nombre'] }}</p>
+                        <div class="grid grid-cols-3 gap-4 mb-4">
+                            @foreach ($grupoTalla['tallas'] as $talla)
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">{{ $talla['nombre'] }}</label>
+                                    <input type="number" class="w-full border border-gray-300 rounded p-2"
+                                        wire:model.lazy="cantidades_tallas.{{ $grupoTalla['id'] }}.{{ $talla['id'] }}" min="0">
+                                </div>
+                            @endforeach
+                        </div>
+                    @endforeach
                 @endif
 
-                <!-- Campo Total (Oculto si hay tallas seleccionadas) -->
-                @if($mostrar_total)
+                <!-- Campo Total -->
+                {{-- @if($mostrar_total) --}}
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700">Total</label>
                         <input type="number" step="0.01" class="w-full border border-gray-300 rounded p-2"
                             wire:model="total">
-                        @error('total') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                   <!-- Mensaje de error si el total de tallas no coincide -->
+                        @if($error_total)
+                            <div class="bg-red-100 text-red-800 p-3 rounded mb-3 mx-4">
+                                {{ $error_total }}
+                            </div>
+                        @endif
                     </div>
-                @endif
+                {{-- @endif --}}
 
+                <!-- SECCIÓN: Tipo y Estado -->
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Tipo</label>
@@ -185,6 +215,19 @@
                         @endforeach
                     </select>
                 </div>
+                
+                <!-- SECCIÓN: Cliente -->
+                <h6 class="text-lg font-semibold mb-2">Cliente</h6>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Selecciona un Cliente</label>
+                    <select wire:model="cliente_id" class="w-full border border-gray-300 rounded p-2">
+                        <option value="">-- Seleccionar Cliente --</option>
+                        @foreach($clientes as $cliente)
+                            <option value="{{ $cliente->id }}">{{ $cliente->nombre_empresa }}</option>
+                        @endforeach
+                    </select>
+                    @error('cliente_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
 
                 <!-- SECCIÓN: Fechas -->
                 <h6 class="text-lg font-semibold mb-2">Fechas</h6>
@@ -199,21 +242,15 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Entrega</label>
-                        {{-- <input wire:change="on_Calcula_Fechas_Entrega" type="date" class="w-full border border-gray-300 rounded p-2" wire:model="fecha_entrega">
-                         --}}
-                         <input 
-                         wire:change="validarFechaEntrega"
-                         wire:model="fecha_entrega"
-                         type="date" 
-                         class="w-full mt-1 border rounded-lg p-2"
-                         min="{{ date('Y-m-d') }}"
-                         id="fechaEntrega">
+                        <input wire:change="validarFechaEntrega" wire:model="fecha_entrega"
+                               type="date" class="w-full mt-1 border rounded-lg p-2"
+                               min="{{ date('Y-m-d') }}" id="fechaEntrega">
                     </div>
                 </div>
             </div>
 
-            <!-- SECCIÓN: Botones de Acción -->
-            <div class="flex items-center justify-end border-t border-gray-200 p-4 space-x-2">
+            <!-- SECCIÓN: Botones de Acción (Siempre visibles) -->
+            <div class="sticky bottom-0 bg-white border-t border-gray-200 p-4 flex justify-end space-x-2">
                 <button wire:click="$set('modal', false)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">
                     Cancelar
                 </button>
@@ -223,6 +260,7 @@
             </div>
         </div>
     </div>
-@endif
+    @endif
+
 
 </div>

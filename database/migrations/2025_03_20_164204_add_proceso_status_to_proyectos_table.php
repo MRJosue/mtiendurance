@@ -5,30 +5,37 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
+
 return new class extends Migration
 {
     public function up()
     {
-        // **Primero aseguramos que los valores en 'estado' sean válidos**
+        // Asegurar que todos los valores en 'estado' sean válidos antes de cambiar la estructura
         DB::statement("
             UPDATE proyectos 
             SET estado = 'PENDIENTE' 
-            WHERE estado NOT IN ('PENDIENTE', 'APROBADO', 'PROGRAMADO', 'IMPRESIÓN', 'PRODUCCIÓN', 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO', 'RECHAZADO')
+            WHERE estado NOT IN ('PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION', 'DISEÑO APROBADO', 'RECHAZADO')
         ");
 
         Schema::table('proyectos', function (Blueprint $table) {
-            // Modificando la columna estado
+            // Modificar la columna estado para aceptar el nuevo valor 'PROCESO'
             $table->enum('estado', [
-                'PENDIENTE', 'APROBADO', 'PROGRAMADO', 'IMPRESIÓN', 'PRODUCCIÓN',
-                'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO', 'RECHAZADO'
+                'PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION', 'DISEÑO APROBADO', 'RECHAZADO'
             ])->default('PENDIENTE')->change();
         });
     }
 
     public function down()
     {
+        // Restaurar los valores anteriores
+        DB::statement("
+            UPDATE proyectos 
+            SET estado = 'PENDIENTE' 
+            WHERE estado NOT IN ('PENDIENTE', 'ASIGNADO', 'REVISION', 'DISEÑO APROBADO')
+        ");
+
         Schema::table('proyectos', function (Blueprint $table) {
-            // Restaurando la columna estado a su versión anterior (si es necesario)
+            // Restaurar los valores anteriores en la columna estado (sin "PROCESO")
             $table->enum('estado', [
                 'PENDIENTE', 'ASIGNADO', 'REVISION', 'DISEÑO APROBADO'
             ])->default('PENDIENTE')->change();

@@ -26,6 +26,7 @@
         </div>
 
 
+
         <!-- Selección de Categoría -->
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Categoría</label>
@@ -91,42 +92,51 @@
                     @endif
                 </div>
             @endforeach
+                <!-- 🚨 Mensaje de error si no se seleccionó una opción por característica -->
+                @error('opciones_sel') 
+                <span class="text-red-600 text-sm">{{ $message }}</span> 
+            @enderror
         </div>
 
 
         <!-- Selección de Cantidades -->
-    <div wire:key="tallas-{{ $producto_id }}">
-        @if ($mostrarFormularioTallas)
-        <div class="mb-4 p-4 border rounded-lg bg-gray-50" wire:key="tallas-{{ $producto_id }}">
-            <div class="mb-4 p-4 border rounded-lg bg-gray-50">
-                <h3 class="text-lg font-semibold mb-2">Cantidad por Tallas</h3>
-                @foreach ($tallas as $talla)
-                    <div class="flex items-center space-x-2">
-                        <label class="text-sm font-medium text-gray-700 w-1/3">{{ $talla->nombre }}</label>
-                        <input type="number" 
-                            wire:model="tallasSeleccionadas.{{ $talla->id }}" 
-                            class="w-2/3 border rounded-lg p-2" 
-                            min="0">
-                    </div>
-                @endforeach
+        <div wire:key="tallas-{{ $producto_id }}">
+            @if ($mostrarFormularioTallas)
+                <div class="mb-4 p-4 border rounded-lg bg-gray-50">
+                    <h3 class="text-lg font-semibold mb-2">Cantidad por Tallas</h3>
+                
+                    @foreach ($tallas->flatMap->gruposTallas->unique('id') as $grupoTalla)
+                        <div class="mb-4">
+                            <p class="font-semibold text-gray-700 border-b pb-2">{{ $grupoTalla->nombre }}</p>
+                
+                            @foreach ($tallas->filter(fn($talla) => $talla->gruposTallas->contains('id', $grupoTalla->id)) as $talla)
+                                <div class="flex items-center space-x-2 mt-2">
+                                    <label class="text-sm font-medium text-gray-700 w-1/3">{{ $talla->nombre }}</label>
+                                    <input type="number"
+                                        wire:model.defer="tallasSeleccionadas.{{ $grupoTalla->id }}.{{ $talla->id }}"
+                                        class="w-2/3 border rounded-lg p-2"
+                                        min="0"
+                                        value="{{ $tallasSeleccionadas[$grupoTalla->id][$talla->id] ?? 0 }}">
+                                </div>
+                            @endforeach
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">Total de Piezas</label>
+                <input 
+                    type="number" 
+                    wire:model="total_piezas" 
+                    class="w-full mt-1 border rounded-lg p-2" 
+                    min="1" >
+                @error('total_piezas') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
             </div>
-        </div>
-        @else
-    
 
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Total de Piezas</label>
-            <input 
-                type="number" 
-                wire:model="total_piezas" 
-                class="w-full mt-1 border rounded-lg p-2" 
-                min="1" 
-                {{ $mostrarFormularioTallas ? 'disabled' : '' }}>
-            @error('total_piezas') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+            
         </div>
-
-        @endif
-    </div>
 
          <!-- Selección de Archivo -->
          <div class="mb-4">
@@ -221,6 +231,8 @@
                 id="fechaEntrega">
 
             </div>
+
+            @error('error') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
 
         <!-- Mensaje de advertencia si la fecha de producción está en el pasado -->
@@ -236,5 +248,47 @@
         </button>
     </form>
 
-    
+    @if($mostrarModalCliente)
+        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+                <div class="flex items-center justify-between border-b border-gray-200 p-4">
+                    <h5 class="text-xl font-bold">Agregar Cliente</h5>
+                    <button class="text-gray-500 hover:text-gray-700" wire:click="$set('mostrarModalCliente', false)">&times;</button>
+                </div>
+
+                <div class="p-4">
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700">Nombre de Empresa</label>
+                        <input type="text" wire:model="nuevoCliente.nombre_empresa" class="w-full border border-gray-300 rounded p-2">
+                        @error('nuevoCliente.nombre_empresa') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700">Contacto Principal</label>
+                        <input type="text" wire:model="nuevoCliente.contacto_principal" class="w-full border border-gray-300 rounded p-2">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                        <input type="text" wire:model="nuevoCliente.telefono" class="w-full border border-gray-300 rounded p-2">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" wire:model="nuevoCliente.email" class="w-full border border-gray-300 rounded p-2">
+                    </div>
+
+                    <div class="flex justify-end space-x-2">
+                        <button wire:click="$set('mostrarModalCliente', false)" class="bg-gray-300 text-gray-800 px-4 py-2 rounded">
+                            Cancelar
+                        </button>
+                        <button wire:click="guardarCliente" class="bg-blue-500 text-white px-4 py-2 rounded">
+                            Guardar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
 </div>

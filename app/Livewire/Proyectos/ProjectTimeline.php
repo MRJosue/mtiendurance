@@ -12,7 +12,7 @@ class ProjectTimeline extends Component
     
     // Lista de estados en orden
     public $estados = [
-        'PENDIENTE', 'ASIGNADO', 'REVISION', 'DISEÑO APROBADO'
+        'PENDIENTE', 'ASIGNADO', 'EN PROCESO','REVISION', 'DISEÑO APROBADO'
     ];
 
     protected $listeners = ['estadoActualizado' => 'actualizarEstado'];

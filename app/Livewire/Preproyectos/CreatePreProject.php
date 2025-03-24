@@ -11,6 +11,7 @@ use App\Models\Ciudad;
 use App\Models\Pais;
 use App\Models\Estado;
 use App\Models\TipoEnvio;
+use App\Models\Cliente;
 
 use App\Models\ArchivoProyecto;
 use App\Models\Categoria;
@@ -63,7 +64,197 @@ class CreatePreProject extends Component
 
     public $mensaje_produccion;
 
+    public $clientes = [];
+    public $cliente_id; // Cliente seleccionado
+    public $mostrarModalCliente = false;
 
+
+
+    // Propiedades para crear un nuevo cliente
+    public $nuevoCliente = [
+        'nombre_empresa' => '',
+        'contacto_principal' => '',
+        'telefono' => '',
+        'email' => '',
+    ];
+
+
+
+    public function create()
+    {
+
+        Log::debug('Pre Pruebas');
+
+        $this->validate([
+            'nombre' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'fecha_produccion' => 'nullable|date',
+            'fecha_embarque' => 'nullable|date',
+            'fecha_entrega' => 'nullable|date',
+            'categoria_id' => 'required|exists:categorias,id',
+            'producto_id' => 'required|exists:productos,id',
+            'direccion_fiscal_id' => 'required|exists:direcciones_entrega,id',
+            'direccion_entrega_id' => 'required|exists:direcciones_entrega,id',
+            'id_tipo_envio'=> 'required',
+            'total_piezas' => $this->mostrarFormularioTallas ? 'required|integer|min:1' : 'required|integer|min:1',
+            'tallasSeleccionadas' => $this->mostrarFormularioTallas ? 'required|array|min:1' : 'nullable',
+            'files.*' => 'nullable|file|max:10240',
+        ]);
+    
+        Log::debug('PRE error mostrarFormularioTallas');
+        // **Si hay tallas, la suma de tallas debe ser igual a total_piezas**
+        if ($this->mostrarFormularioTallas) {
+            // Filtrar solo los grupos que realmente contienen tallas
+            $gruposValidos = array_filter($this->tallasSeleccionadas, 'is_array');
+        
+            // Sumar todas las cantidades de tallas correctamente
+            $sumaTallas = collect($gruposValidos)->flatMap(function ($grupo) {
+                return array_values($grupo);
+            })->sum();
+        
+            Log::debug('Suma calculada de tallas', ['data' => $sumaTallas]);
+            Log::debug('Total de piezas ingresado', ['data' => $this->total_piezas]);
+        
+            if ($sumaTallas != $this->total_piezas) {
+                $this->addError('total_piezas', 'La suma de las cantidades de tallas debe ser igual al total de piezas.');
+                return;
+            }
+        }
+
+
+
+        Log::debug('No error mostrarFormularioTallas');
+
+        // 🚨 Validación: Cada característica debe tener al menos una opción en `opciones`
+        foreach ($this->caracteristicas_sel as $caracteristica) {
+            if (empty($caracteristica['opciones']) || count($caracteristica['opciones']) == 0) {
+                $this->addError('caracteristicas_sel', "Debe seleccionar al menos una opción para '{$caracteristica['nombre']}'.");
+                return;
+            }
+        }
+
+
+        // $cliente_id = $this->cliente_id ?? null;
+
+        // if (!$cliente_id) {
+        //     session()->flash('error', 'El usuario autenticado no tiene un cliente asociado.');
+        //     return;
+        // }
+
+
+        Log::debug('No error caracteristica');
+
+        $totalPiezasFinal = $this->mostrarFormularioTallas ? array_sum($this->tallasSeleccionadas) : $this->total_piezas;
+
+        //antes de crear asignamos fechas
+        $this->on_Calcula_Fechas_Entrega();
+
+        // Asignamos copnjunto direccion entrega
+
+
+        // Obtener los nombres de país, estado y ciudad para la dirección de entrega
+        $direccionEntrega = DireccionEntrega::find($this->direccion_entrega_id);
+        $pais_name = $direccionEntrega->ciudad->estado->pais->nombre ?? '';
+        $estado_name = $direccionEntrega->ciudad->estado->nombre ?? '';
+        $ciudades_name = $direccionEntrega->ciudad->nombre ?? '';
+
+        // Obtener los nombres de país, estado y ciudad para la dirección fiscal
+        $direccionFiscal = DireccionFiscal::find($this->direccion_fiscal_id);
+        $fiscal_pais_name = $direccionFiscal->ciudad->estado->pais->nombre ?? '';
+        $fiscal_estado_name = $direccionFiscal->ciudad->estado->nombre ?? '';
+        $fiscal_ciudades_name = $direccionFiscal->ciudad->nombre ?? '';
+
+        // Construcción de dirección como texto
+        $Auxiliar_direccion_entrega = trim("$ciudades_name, $estado_name, $pais_name");
+        $Auxiliar_direccion_fiscal = trim("$fiscal_ciudades_name, $fiscal_estado_name, $fiscal_pais_name");
+
+
+        // Filtrar solo grupos que tienen tallas con cantidad > 0
+        $tallasEstructuradas = collect($this->tallasSeleccionadas)
+            ->map(function ($tallas) {
+                return collect($tallas)->map(fn($cantidad) => intval($cantidad))->toArray();
+            })
+            ->toArray();
+
+
+
+        $preProyecto = PreProyecto::create([
+            'usuario_id' => Auth::id(),
+            'nombre' => $this->nombre,
+            'descripcion' => $this->descripcion,
+            'tipo' => 'PROYECTO',
+            'numero_muestras' => 0,
+            'estado' => 'PENDIENTE',
+            'fecha_produccion' => $this->fecha_produccion,
+            'fecha_embarque' => $this->fecha_embarque,
+            'fecha_entrega' => $this->fecha_entrega,
+            'categoria_sel' => json_encode(['id' => $this->categoria_id, 'nombre' => Categoria::find($this->categoria_id)->nombre]),
+            'producto_sel' => json_encode(['id' => $this->producto_id, 'nombre' => Producto::find($this->producto_id)->nombre]),
+            'caracteristicas_sel' => json_encode($this->caracteristicas_sel),
+            'opciones_sel' => json_encode($this->opciones_sel),
+            'direccion_entrega_id'=>$this->direccion_entrega_id,
+            'direccion_entrega'=> $Auxiliar_direccion_entrega,
+            'direccion_fiscal_id'=>$this->direccion_fiscal_id,
+            'direccion_fiscal'=> $Auxiliar_direccion_fiscal,
+            'id_tipo_envio' => $this->id_tipo_envio,
+            'total_piezas_sel' => json_encode([
+                'total' => intval($this->total_piezas), 
+                'detalle_tallas' => $this->mostrarFormularioTallas ?  $tallasEstructuradas : null
+            ]),
+            'cliente_id'=> null
+
+        ]);
+
+
+
+
+        // Guardar archivos
+        foreach ($this->files as $index => $file) {
+            $path = $file->store('archivos_proyectos', 'public');
+
+            ArchivoProyecto::create([
+                'pre_proyecto_id' => $preProyecto->id,
+                'usuario_id' => Auth::id(),
+                'nombre_archivo' => $file->getClientOriginalName(),
+                'ruta_archivo' => $path,
+                'tipo_archivo' => $file->getClientMimeType(),
+                'descripcion' => $this->fileDescriptions[$index] ?? '',
+            ]);
+        }
+
+        session()->flash('message', 'Preproyecto creado exitosamente.');
+        return redirect()->route('preproyectos.index');
+    }
+
+    public function mount()
+    {
+        $this->tallasSeleccionadas = [];
+
+        $this->cargarClientes();
+    
+        // Verificar si la relación existe antes de acceder a ella
+        foreach (Talla::with('gruposTallas')->get() as $talla) {
+            if ($talla->gruposTallas->isNotEmpty()) {
+                foreach ($talla->gruposTallas as $grupo) {
+                    $this->tallasSeleccionadas[$grupo->id][$talla->id] = 0;
+                }
+            }
+        }
+    
+        Log::debug('Estructura de tallasSeleccionadas después de mount()', ['data' => $this->tallasSeleccionadas]);
+    }
+
+    public function render()
+    {
+        return view('livewire.preproyectos.create-pre-project', [
+            'categorias' => Categoria::all(),
+            'productos' => $this->productos,
+            'tiposEnvio' => $this->tipos_envio,
+            'mostrarFormularioTallas'=> $this->mostrarFormularioTallas,
+            'direccionesFiscales' => DireccionFiscal::where('usuario_id', Auth::id())->get(),
+            'direccionesEntrega' => DireccionEntrega::where('usuario_id', Auth::id())->get(),
+        ]);
+    }
 
 
 
@@ -88,9 +279,11 @@ class CreatePreProject extends Component
 
         if ($this->mostrarFormularioTallas && $this->producto_id) {
             // Cargar las tallas asociadas al producto mediante los grupos de tallas
-            $this->tallas = Talla::whereHas('gruposTallas.productos', function ($query) {
+            $this->tallas = Talla::with('gruposTallas')
+            ->whereHas('gruposTallas.productos', function ($query) {
                 $query->where('producto_id', $this->producto_id);
-            })->get();
+            })
+            ->get();
 
             // Inicializar el array de selección con valores en 0
             foreach ($this->tallas as $talla) {
@@ -98,52 +291,74 @@ class CreatePreProject extends Component
             }
         }
     }
+
+
     public function onProductoChange()
-    {
+            {
+                $this->despliega_form_tallas(); // Obtiene las tallas según el nuevo producto
 
-        $this->despliega_form_tallas(); // Obtiene las tallas según el nuevo producto
+                // Asegurar que el producto ha sido seleccionado
+                if (!$this->producto_id) {
+                    $this->tallas = collect(); // Vaciar las tallas si no hay producto seleccionado
+                    return;
+                }
 
-            // Reinicia las cantidades para cada talla
-            $this->tallasSeleccionadas = [];
-            foreach ($this->tallas as $talla) {
-                $this->tallasSeleccionadas[$talla->id] = 0;
-            }
+                // Obtener todas las tallas asociadas al producto a través de los grupos de tallas
+                $this->tallas = Talla::with('gruposTallas')
+                    ->whereHas('gruposTallas.productos', function ($query) {
+                        $query->where('producto_id', $this->producto_id);
+                    })
+                    ->get();
 
-            
-        $this->caracteristica_id = null;
-        $this->caracteristicas_sel = Caracteristica::whereHas('productos', function ($query) {
-            $query->where('producto_id', $this->producto_id);
-        })->get()->map(function ($caracteristica) {
-            $opciones = Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
-                $query->where('caracteristica_id', $caracteristica->id);
-            })->get();
+                Log::debug('Tallas obtenidas al seleccionar producto:', ['data' => $this->tallas->toArray()]);
 
-            $opcionesArray = $opciones->map(function ($opcion) {
-                return [
-                    'id' => $opcion->id,
-                    'nombre' => $opcion->nombre,
-                    'valoru' => $opcion->valoru,
-                ];
-            })->toArray();
+                // Reiniciar la selección de tallas
+                $this->tallasSeleccionadas = [];
 
-            return [
-                'id' => $caracteristica->id,
-                'nombre' => $caracteristica->nombre,
-                'flag_seleccion_multiple' => $caracteristica->flag_seleccion_multiple,
-                'opciones' => count($opcionesArray) === 1 ? $opcionesArray : [],
-            ];
-        })->toArray();
+                foreach ($this->tallas as $talla) {
+                    foreach ($talla->gruposTallas as $grupo) {
+                        $this->tallasSeleccionadas[$grupo->id][$talla->id] = 0;
+                    }
+                }
 
-        // Limpiar opciones previas
-        $this->opciones_sel = [];
-        foreach ($this->caracteristicas_sel as $caracteristica) {
-            if (isset($caracteristica['opciones']) && count($caracteristica['opciones']) === 1) {
-                $this->opciones_sel[$caracteristica['id']] = $caracteristica['opciones'][0];
-            }
+                Log::debug('Estructura de tallas seleccionadas después de reset:', ['data' => $this->tallasSeleccionadas]);
+
+                // Limpiar opciones previas de características
+                $this->caracteristica_id = null;
+                $this->caracteristicas_sel = Caracteristica::whereHas('productos', function ($query) {
+                    $query->where('producto_id', $this->producto_id);
+                })->get()->map(function ($caracteristica) {
+                    $opciones = Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
+                        $query->where('caracteristica_id', $caracteristica->id);
+                    })->get();
+
+                    $opcionesArray = $opciones->map(function ($opcion) {
+                        return [
+                            'id' => $opcion->id,
+                            'nombre' => $opcion->nombre,
+                            'valoru' => $opcion->valoru,
+                        ];
+                    })->toArray();
+
+                    return [
+                        'id' => $caracteristica->id,
+                        'nombre' => $caracteristica->nombre,
+                        'flag_seleccion_multiple' => $caracteristica->flag_seleccion_multiple,
+                        'opciones' => count($opcionesArray) === 1 ? $opcionesArray : [],
+                    ];
+                })->toArray();
+
+                $this->opciones_sel = [];
+
+                foreach ($this->caracteristicas_sel as $caracteristica) {
+                    if (isset($caracteristica['opciones']) && count($caracteristica['opciones']) === 1) {
+                        $this->opciones_sel[$caracteristica['id']] = $caracteristica['opciones'][0];
+                    }
+                }
+
+                // Calcular fechas de entrega
+                $this->on_Calcula_Fechas_Entrega();
         }
-
-        $this->on_Calcula_Fechas_Entrega();
-    }
 
     public function addOpcion($caracteristicaIndex, $opcion_id)
     {
@@ -205,99 +420,6 @@ class CreatePreProject extends Component
         }
     }
 
-
-    public function create()
-    {
-
-
-        $this->validate([
-            'nombre' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
-            'fecha_produccion' => 'nullable|date',
-            'fecha_embarque' => 'nullable|date',
-            'fecha_entrega' => 'nullable|date',
-            'categoria_id' => 'required|exists:categorias,id',
-            'producto_id' => 'required|exists:productos,id',
-            'direccion_fiscal_id' => 'required|exists:direcciones_entrega,id',
-            'direccion_entrega_id' => 'required|exists:direcciones_entrega,id',
-            'id_tipo_envio'=> 'required',
-            'total_piezas' => $this->mostrarFormularioTallas ? 'nullable' : 'required|integer|min:1',
-            'tallasSeleccionadas' => $this->mostrarFormularioTallas ? 'required|array|min:1' : 'nullable',
-            'id_tipo_envio' => 'required',
-            'files.*' => 'nullable|file|max:10240',
-        ]);
-
-        $totalPiezasFinal = $this->mostrarFormularioTallas ? array_sum($this->tallasSeleccionadas) : $this->total_piezas;
-
-        //antes de crear asignamos fechas
-        $this->on_Calcula_Fechas_Entrega();
-
-        // Asignamos copnjunto direccion entrega
-
-
-        // Obtener los nombres de país, estado y ciudad para la dirección de entrega
-        $direccionEntrega = DireccionEntrega::find($this->direccion_entrega_id);
-        $pais_name = $direccionEntrega->ciudad->estado->pais->nombre ?? '';
-        $estado_name = $direccionEntrega->ciudad->estado->nombre ?? '';
-        $ciudades_name = $direccionEntrega->ciudad->nombre ?? '';
-
-        // Obtener los nombres de país, estado y ciudad para la dirección fiscal
-        $direccionFiscal = DireccionFiscal::find($this->direccion_fiscal_id);
-        $fiscal_pais_name = $direccionFiscal->ciudad->estado->pais->nombre ?? '';
-        $fiscal_estado_name = $direccionFiscal->ciudad->estado->nombre ?? '';
-        $fiscal_ciudades_name = $direccionFiscal->ciudad->nombre ?? '';
-
-        // Construcción de dirección como texto
-        $Auxiliar_direccion_entrega = trim("$ciudades_name, $estado_name, $pais_name");
-        $Auxiliar_direccion_fiscal = trim("$fiscal_ciudades_name, $fiscal_estado_name, $fiscal_pais_name");
-
-
-
-        $preProyecto = PreProyecto::create([
-            'usuario_id' => Auth::id(),
-            'nombre' => $this->nombre,
-            'descripcion' => $this->descripcion,
-            'tipo' => 'PROYECTO',
-            'numero_muestras' => 0,
-            'estado' => 'PENDIENTE',
-            'fecha_produccion' => $this->fecha_produccion,
-            'fecha_embarque' => $this->fecha_embarque,
-            'fecha_entrega' => $this->fecha_entrega,
-            'categoria_sel' => json_encode(['id' => $this->categoria_id, 'nombre' => Categoria::find($this->categoria_id)->nombre]),
-            'producto_sel' => json_encode(['id' => $this->producto_id, 'nombre' => Producto::find($this->producto_id)->nombre]),
-            'caracteristicas_sel' => json_encode($this->caracteristicas_sel),
-            'opciones_sel' => json_encode($this->opciones_sel),
-            'direccion_entrega_id'=>$this->direccion_entrega_id,
-            'direccion_entrega'=> $Auxiliar_direccion_entrega,
-            'direccion_fiscal_id'=>$this->direccion_fiscal_id,
-            'direccion_fiscal'=> $Auxiliar_direccion_fiscal,
-            'id_tipo_envio' => $this->id_tipo_envio,
-            'total_piezas_sel' => json_encode([
-                'total' => $totalPiezasFinal,
-                'detalle_tallas' => $this->mostrarFormularioTallas ? $this->tallasSeleccionadas : null
-            ]),
-        ]);
-
-
-
-
-        // Guardar archivos
-        foreach ($this->files as $index => $file) {
-            $path = $file->store('archivos_proyectos', 'public');
-
-            ArchivoProyecto::create([
-                'pre_proyecto_id' => $preProyecto->id,
-                'usuario_id' => Auth::id(),
-                'nombre_archivo' => $file->getClientOriginalName(),
-                'ruta_archivo' => $path,
-                'tipo_archivo' => $file->getClientMimeType(),
-                'descripcion' => $this->fileDescriptions[$index] ?? '',
-            ]);
-        }
-
-        session()->flash('message', 'Preproyecto creado exitosamente.');
-        return redirect()->route('preproyectos.index');
-    }
 
     public function updatedFiles()
     {
@@ -384,9 +506,30 @@ class CreatePreProject extends Component
     }
 
     public function validarFechaEntrega()
-{
-    if ($this->fecha_entrega) {
-        $fecha = Carbon::parse($this->fecha_entrega);
+    {
+        if ($this->fecha_entrega) {
+            $fecha = Carbon::parse($this->fecha_entrega);
+            $diaSemana = $fecha->dayOfWeek; // 0 = Domingo, 6 = Sábado
+
+            if ($diaSemana === 6) {
+                // Si es sábado, mover al lunes siguiente
+                $fecha->addDays(2);
+            } elseif ($diaSemana === 0) {
+                // Si es domingo, mover al lunes siguiente
+                $fecha->addDay();
+            }
+
+            // Asignar la nueva fecha corregida
+            $this->fecha_entrega = $fecha->format('Y-m-d');
+
+            $this->on_Calcula_Fechas_Entrega();
+        }
+    }
+
+
+    public function ajustarFechaSinFinesDeSemana($fecha)
+    {
+        $fecha = Carbon::parse($fecha);
         $diaSemana = $fecha->dayOfWeek; // 0 = Domingo, 6 = Sábado
 
         if ($diaSemana === 6) {
@@ -397,50 +540,69 @@ class CreatePreProject extends Component
             $fecha->addDay();
         }
 
-        // Asignar la nueva fecha corregida
-        $this->fecha_entrega = $fecha->format('Y-m-d');
-
-        $this->on_Calcula_Fechas_Entrega();
-    }
-}
-
-
-public function ajustarFechaSinFinesDeSemana($fecha)
-{
-    $fecha = Carbon::parse($fecha);
-    $diaSemana = $fecha->dayOfWeek; // 0 = Domingo, 6 = Sábado
-
-    if ($diaSemana === 6) {
-        // Si es sábado, mover al lunes siguiente
-        $fecha->addDays(2);
-    } elseif ($diaSemana === 0) {
-        // Si es domingo, mover al lunes siguiente
-        $fecha->addDay();
+        return $fecha->format('Y-m-d');
     }
 
-    return $fecha->format('Y-m-d');
-}
 
 
-    // public function mount()
-    // {
-    //     $this->tallas = Talla::all();
-    // }
-
-
-
-
-    public function render()
+    public function actualizarTalla($grupoId, $tallaId, $cantidad)
     {
-        return view('livewire.preproyectos.create-pre-project', [
-            'categorias' => Categoria::all(),
-            'productos' => $this->productos,
-            'tiposEnvio' => $this->tipos_envio,
-            'mostrarFormularioTallas'=> $this->mostrarFormularioTallas,
-            'direccionesFiscales' => DireccionFiscal::where('usuario_id', Auth::id())->get(),
-            'direccionesEntrega' => DireccionEntrega::where('usuario_id', Auth::id())->get(),
-        ]);
+        $cantidad = intval($cantidad); // Asegurar que el valor sea un entero
+    
+        // Si el grupo no existe, inicializarlo como array
+        if (!isset($this->tallasSeleccionadas[$grupoId]) || !is_array($this->tallasSeleccionadas[$grupoId])) {
+            $this->tallasSeleccionadas[$grupoId] = [];
+        }
+    
+        // Si la talla ya existe, actualizar el valor
+        if (isset($this->tallasSeleccionadas[$grupoId][$tallaId])) {
+            $this->tallasSeleccionadas[$grupoId][$tallaId] = $cantidad;
+        } else {
+            // Si la talla no existe, agregarla al arreglo
+            $this->tallasSeleccionadas[$grupoId][$tallaId] = $cantidad;
+        }
+    
+        Log::debug("Tallas seleccionadas actualizadas:", ['data' => $this->tallasSeleccionadas]);
+    }
+    
+    // Función para cargar clientes del usuario autenticado
+    public function cargarClientes()
+    {
+        $this->clientes = Cliente::where('usuario_id', Auth::id())->get();
     }
 
+        // Función para guardar un nuevo cliente
+    public function guardarCliente()
+    {
+        $this->validate([
+            'nuevoCliente.nombre_empresa' => 'required|string|max:255',
+            'nuevoCliente.contacto_principal' => 'nullable|string|max:255',
+            'nuevoCliente.telefono' => 'nullable|string|max:20',
+            'nuevoCliente.email' => 'nullable|email|max:255',
+        ]);
+
+        // Crear el cliente y asociarlo al usuario autenticado
+        $cliente = Cliente::create([
+            'usuario_id' => Auth::id(),
+            'nombre_empresa' => $this->nuevoCliente['nombre_empresa'],
+            'contacto_principal' => $this->nuevoCliente['contacto_principal'],
+            'telefono' => $this->nuevoCliente['telefono'],
+            'email' => $this->nuevoCliente['email'],
+        ]);
+
+        // Cargar clientes actualizados
+        $this->cargarClientes();
+
+        // Seleccionar el nuevo cliente
+        $this->cliente_id = $cliente->id;
+
+        // Cerrar el modal
+        $this->mostrarModalCliente = false;
+
+        // Reiniciar datos del formulario de cliente
+        $this->reset('nuevoCliente');
+
+        session()->flash('message', 'Cliente agregado correctamente.');
+    }
 
 }

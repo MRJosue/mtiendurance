@@ -110,7 +110,9 @@ Route::get('/usuarios/permisos',[permisoscontroller::class, 'index'])->middlewar
 
 //Rutas Panel de diseño
 Route::get('/diseño',[DisenioController::class, 'index'])->middleware(['auth','verified'])->name('disenio.index');
-Route::get('/diseño/create_tarea',[DisenioController::class, 'disenio_detalle'])->middleware(['auth','verified'])->name('disenio.disenio_detalle');
+// Administrador de diseño
+Route::get('/diseño/disenio_detalle/{proyecto}',[DisenioController::class, 'disenio_detalle'])->middleware(['auth','verified'])->name('disenio.disenio_detalle');
+// 
 Route::get('/diseño/admin_tarea',[DisenioController::class, 'admin_tarea'])->middleware(['auth','verified'])->name('disenio.admin_tarea');
 
 

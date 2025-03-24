@@ -108,6 +108,14 @@
                                 </div>
                             </div>
 
+                            <div class=" ">
+                                <livewire:proyectos.subir-diseno :proyecto-id="$proyecto->id" />
+                            </div>
+
+{{-- 
+                            <div class=" ">
+                                <livewire:proyectos.control-estado :proyecto-id="$proyecto->id" />
+                            </div> --}}
 
                     </div>
                 </div>
@@ -150,9 +158,7 @@
             
 
 
-            <div class=" ">
-                <livewire:proyectos.control-estado :proyecto-id="$proyecto->id" />
-            </div>
+
 
         </div>
     </div>
