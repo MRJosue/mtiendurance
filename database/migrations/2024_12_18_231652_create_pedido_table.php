@@ -15,7 +15,9 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('proyecto_id')->nullable();
             $table->unsignedBigInteger('producto_id');
-            $table->foreignId('cliente_id')->constrained('clientes')->onDelete('cascade');
+            
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->unsignedBigInteger('user_id');
             $table->foreign('proyecto_id')->references('id')->on('proyectos')->onDelete('cascade');
             $table->foreign('producto_id')->references('id')->on('productos')->onDelete('cascade');
             $table->timestamp('fecha_creacion')->useCurrent();
