@@ -100,7 +100,7 @@ class PreProyecto extends Model
                         'pre_proyecto_id' => $this->id,
                         'producto_id' => $producto['id'] ?? null,
                         'user_id' => $this->usuario_id, // Si el cliente es el mismo usuario, ajusta esto según sea necesario
-                        'cliente_id' => null, // Si el cliente es el mismo usuario, ajusta esto según sea necesario
+                        'cliente_id' => 1, // Si el cliente es el mismo usuario, ajusta esto según sea necesario
                         'fecha_creacion' => now(),
                         'total' => $totalPiezas['total'] ?? 0,
                         'estatus' => 'PENDIENTE',
