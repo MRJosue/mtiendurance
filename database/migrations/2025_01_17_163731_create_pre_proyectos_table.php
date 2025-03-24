@@ -33,7 +33,8 @@ return new class extends Migration
             $table->json('caracteristicas_sel')->nullable();
             $table->json('opciones_sel')->nullable();
             $table->json('total_piezas_sel')->nullable()->comment('Guarda el total de piezas');
-            $table->foreign('usuario_id')->references('id')->on('clientes')->onDelete('cascade');
+          //$table->foreign('usuario_id')->references('id')->on('clientes')->onDelete('cascade');
+            $table->foreign('usuario_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });
     }
