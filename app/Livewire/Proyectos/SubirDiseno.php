@@ -9,6 +9,7 @@ use App\Models\ArchivoProyecto;
 use App\Models\Proyecto;
 use App\Models\proyecto_estados;
 use App\Models\Tarea;
+use App\Models\Pedido; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -23,6 +24,8 @@ class SubirDiseno extends Component
     public $modalOpen = false;
     public $modalAprobar = false;
     public $modalRechazar = false;
+    public $modalConfirmarMuestra = false;
+
     public $comentarioRechazo;
     public $estado;
 
@@ -167,6 +170,52 @@ class SubirDiseno extends Component
             'tipo' => 2,
             'fecha_envio' => now(),
         ]);
+    }
+
+    public function crearMuestraDesdeDiseno()
+    {
+        $proyecto = Proyecto::find($this->proyectoId);
+    
+        if (!$proyecto) {
+            session()->flash('error', 'No se encontró el proyecto.');
+            return;
+        }
+    
+        $archivo = ArchivoProyecto::where('proyecto_id', $proyecto->id)->latest()->first();
+    
+        if (!$archivo) {
+            session()->flash('error', 'No puedes crear una muestra sin haber subido al menos un archivo de diseño.');
+            return;
+        }
+    
+        // Validar si ya existe una muestra para este archivo y proyecto
+        $existe = Pedido::where('proyecto_id', $proyecto->id)
+            ->where('last_uploaded_file_id', $archivo->id)
+            ->where('tipo', 'MUESTRA')
+            ->exists();
+    
+        if ($existe) {
+            session()->flash('error', 'Ya existe una muestra registrada para este diseño.');
+            $this->modalConfirmarMuestra = false;
+            return;
+        }
+    
+        Pedido::crearMuestra($proyecto->id, [
+            'cliente_id' => $proyecto->usuario_id,
+            'direccion_fiscal_id' => null,
+            'direccion_entrega_id' => null,
+            'tipo' => 'MUESTRA',
+            'estado' => 'POR PROGRAMAR',
+            'total' => 0,
+            'fecha_produccion' => null,
+            'fecha_embarque' => null,
+            'fecha_entrega' => null,
+            'id_tipo_envio' => null,
+        ]);
+    
+        $this->modalConfirmarMuestra = false;
+        session()->flash('message', 'Muestra creada correctamente.');
+        $this->dispatch('muestraCreada');
     }
 
     public function render()

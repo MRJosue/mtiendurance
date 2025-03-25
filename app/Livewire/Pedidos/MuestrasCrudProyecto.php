@@ -372,8 +372,8 @@ class MuestrasCrudProyecto extends Component
             'direccionesEntrega' => DireccionEntrega::where('usuario_id', $proyecto->usuario_id)->get(),
             
             'pedidos' => Pedido::where('proyecto_id', $this->proyectoId)
-                ->where('tipo', 'MUESTRA') // Filtra solo los pedidos de tipo MUESTRA
-                ->with(['tipoEnvio']) // Cargar relación con TipoEnvio
+                ->where('tipo', 'MUESTRA')
+                ->with(['archivo', 'usuario']) // relación para archivo y usuario
                 ->paginate(6),
         ]);
     }

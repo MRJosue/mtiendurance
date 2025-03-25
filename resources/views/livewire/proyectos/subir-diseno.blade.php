@@ -1,4 +1,5 @@
 <div>
+
     @if($estado === 'EN PROCESO')
         <!-- Botón para subir diseño -->
         <button wire:click="$set('modalOpen', true)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">
@@ -16,6 +17,28 @@
         <button wire:click="$set('modalRechazar', true)" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mb-4 ml-2">
             Rechazar Diseño
         </button>
+
+        <button
+            wire:click="$set('modalConfirmarMuestra', true)"
+            class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded mb-4 ml-2"
+        >
+            Crear Muestra
+        </button>
+    @endif
+
+
+    @if (session()->has('error'))
+    <div class="bg-red-100 border border-red-400 text-red-800 px-4 py-3 rounded relative mb-4" role="alert">
+        <strong class="font-bold">Error:</strong>
+        <span class="block sm:inline">{{ session('error') }}</span>
+    </div>
+    @endif
+
+    @if (session()->has('message'))
+        <div class="bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong class="font-bold">Éxito:</strong>
+            <span class="block sm:inline">{{ session('message') }}</span>
+        </div>
     @endif
 
     <!-- Modal de subir archivo -->
@@ -32,6 +55,19 @@
                 <div class="flex justify-end space-x-2">
                     <button wire:click="$set('modalOpen', false)" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">Cancelar</button>
                     <button wire:click="subir" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Subir</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if($modalConfirmarMuestra)
+        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
+                <h2 class="text-lg font-semibold mb-4">Confirmar creación de muestra</h2>
+                <p class="mb-4">¿Estás seguro de que deseas generar una muestra con base en el diseño actual?</p>
+                <div class="flex justify-end space-x-2">
+                    <button wire:click="$set('modalConfirmarMuestra', false)" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">Cancelar</button>
+                    <button wire:click="crearMuestraDesdeDiseno" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">Confirmar</button>
                 </div>
             </div>
         </div>

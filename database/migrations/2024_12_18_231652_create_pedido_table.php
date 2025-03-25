@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('pedido', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('proyecto_id')->nullable();
-            $table->unsignedBigInteger('producto_id');
+            $table->unsignedBigInteger('producto_id')->nullable();
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             
