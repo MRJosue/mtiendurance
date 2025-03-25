@@ -8,7 +8,7 @@
 
     @if($estado === 'REVISION')
         <!-- Botón Aprobar Diseño -->
-        <button wire:click="$set('modalAprobar', true)" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded mb-4 ml-2">
+        <button wire:click="$set('modalAprobar', true)" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4 ml-2">
             Aprobar Diseño
         </button>
 
