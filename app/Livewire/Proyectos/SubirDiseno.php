@@ -66,7 +66,10 @@ class SubirDiseno extends Component
 
     public function subir()
     {
-        $this->validate();
+        Log::debug('function subir');
+        Log::debug('function pre validate');
+        $this->validate($this->rulesArchivo());
+        Log::debug('function validate');
 
         $proyecto = Proyecto::find($this->proyectoId);
         if (!$proyecto) return;
@@ -265,7 +268,8 @@ class SubirDiseno extends Component
         $this->id_tipo_envio = $pedido->id_tipo_envio;
     
         // Validación
-        $this->validate($this->rules());
+       
+        $this->validate($this->rulesPedido());
     
         // Calcular fechas si es necesario
         if (!$this->fecha_produccion || !$this->fecha_embarque) {
@@ -301,11 +305,19 @@ class SubirDiseno extends Component
         $this->dispatch('pedidoAprobado');
     }
     
-    
-    protected function rules()
+    protected function rulesArchivo()
     {
         return [
+            'archivo' => 'required|file|max:10240',
+            'comentario' => 'nullable|string|max:500',
+        ];
+    }
 
+
+
+    protected function rulesPedido()
+    {
+        return [
             'estatus' => 'required|string',
             'tipo' => 'required|in:PEDIDO,MUESTRA',
             'estado' => 'required|in:POR PROGRAMAR,PROGRAMADO,IMPRESIÓN,PRODUCCIÓN,COSTURA,ENTREGA,FACTURACIÓN,COMPLETADO,RECHAZADO',
