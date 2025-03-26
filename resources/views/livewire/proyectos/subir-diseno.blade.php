@@ -87,6 +87,20 @@
         </div>
     @endif
 
+        <!-- Modal de aprobar Pedido -->
+    @if($modalAprobarPedido)
+        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
+                <h2 class="text-lg font-semibold mb-4">¿Aprobar pedido?</h2>
+                <p class="mb-4">¿Deseas aprobar y programar el pedido generado para este proyecto?</p>
+                <div class="flex justify-end space-x-2">
+                    <button wire:click="$set('modalAprobarPedido', false)" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">Cancelar</button>
+                    <button wire:click="aprobarUltimoPedido" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Aprobar Pedido</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Modal de rechazar diseño -->
     @if($modalRechazar)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">

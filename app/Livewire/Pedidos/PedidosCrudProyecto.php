@@ -49,7 +49,8 @@ class PedidosCrudProyecto extends Component
     public $clientes = []; // Lista de clientes relacionados con el usuario
     public $cliente_id; // Cliente seleccionado en el formulario
     
-
+    protected $listeners = ['abrirModalEdicion' => 'abrirModal',
+                            'ActualizarTablaPedido' => 'actualizarTabla',];
 
     protected function rules()
     {
@@ -70,74 +71,7 @@ class PedidosCrudProyecto extends Component
             'fecha_entrega' => 'nullable|date',
         ];
     }
-    // public function abrirModal($pedidoId = null)
-    // {
 
-
-    //     if ($pedidoId) {
-    //         $pedido = Pedido::findOrFail($pedidoId);
-    //         $this->pedidoId = $pedido->id;
-    //         $this->total = $pedido->total;
-    //         $this->estatus = $pedido->estatus;
-    //         $this->tipo = $pedido->tipo;
-    //         $this->estado = $pedido->estado;
-    //         $this->fecha_produccion = $pedido->fecha_produccion;
-    //         $this->fecha_embarque = $pedido->fecha_embarque;
-    //         $this->fecha_entrega = $pedido->fecha_entrega;
-            
-    //         // Establecer valores en los selects
-    //         $this->direccion_fiscal_id = $pedido->direccion_fiscal_id;
-    //         $this->direccion_entrega_id = $pedido->direccion_entrega_id;
-    //         $this->id_tipo_envio = $pedido->id_tipo_envio;
-    
-    //         // Disparar la carga de tipos de envío si hay una dirección de entrega
-    //         if (!empty($this->direccion_entrega_id)) {
-    //             $this->cargarTiposEnvio();
-    //         }
-
-    //         //
-            
-    //         $this->producto_id = $pedido->producto_id;
-    //         $this->updatedCantidadesTallas();
-    //         // Obtener tallas disponibles para el producto
-    //         $this->cargarTallas($pedido->producto_id);
-
-    //         // Cargar cantidades actuales si es edición
-    //         foreach ($pedido->pedidoTallas as $talla) {
-    //             $this->cantidades_tallas[$talla->talla_id] = $talla->cantidad;
-    //         }
-
-    //     } else {
-    //         $this->reset([
-    //             'pedidoId', 'total', 'estatus', 'tipo', 'estado',
-    //             'fecha_produccion', 'fecha_embarque', 'fecha_entrega',
-    //             'direccion_fiscal_id', 'direccion_entrega_id', 'id_tipo_envio',
-    //             'tallas_disponibles', 'cantidades_tallas'
-    //         ]);
-        
-    //         // Obtener el producto desde `producto_sel` del proyecto
-    //         $proyecto = Proyecto::findOrFail($this->proyectoId);
-    //         $producto = is_string($proyecto->producto_sel) 
-    //             ? json_decode($proyecto->producto_sel, true) 
-    //             : $proyecto->producto_sel;
-        
-    //         if (isset($producto['id'])) {
-    //             $this->producto_id = $producto['id']; // Guardamos el ID del producto
-
-    //             $this->cargarTallas($this->producto_id); // Cargar tallas del producto
-    //             // 
-
-    //         } else {
-    //             $this->producto_id = null;
-    //         }
-        
-    //         $this->estatus = 'PENDIENTE';
-    //         $this->tipo = 'PEDIDO';
-    //         $this->estado = 'POR PROGRAMAR';
-    //     }
-    
-    //     $this->modal = true;
-    // }
 
         public function abrirModal($pedidoId = null)
     {
@@ -499,6 +433,12 @@ class PedidosCrudProyecto extends Component
         }
     
         return $fecha->format('Y-m-d');
+    }
+
+
+    public function actualizarTabla()
+    {
+        $this->resetPage(); // Reinicia a la primera página si estás paginando
     }
 
 
