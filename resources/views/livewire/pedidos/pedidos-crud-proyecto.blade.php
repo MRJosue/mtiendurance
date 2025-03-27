@@ -231,7 +231,14 @@
 
                 <!-- SECCIÓN: Fechas -->
                 <h6 class="text-lg font-semibold mb-2">Fechas</h6>
+                @if($mensaje_produccion)
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-3 rounded mb-4">
+                        {{ $mensaje_produccion }}
+                    </div>
+                @endif
+
                 <div class="grid grid-cols-3 gap-4 mb-4">
+
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Producción</label>
                         <input type="date" class="w-full border border-gray-300 rounded p-2" wire:model="fecha_produccion">
@@ -246,6 +253,7 @@
                                type="date" class="w-full mt-1 border rounded-lg p-2"
                                min="{{ date('Y-m-d') }}" id="fechaEntrega">
                     </div>
+
                 </div>
             </div>
 

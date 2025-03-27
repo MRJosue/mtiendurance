@@ -124,6 +124,9 @@ class PedidosCrudProyecto extends Component
                 $this->clientes = collect(); // Si no hay proyecto, dejar vacío
             }
 
+            // valiamos fechas solo si es edicion
+            $this -> on_Calcula_Fechas_Entrega();
+            
         } else {
             $this->reset([
                 'pedidoId', 'total', 'estatus', 'tipo', 'estado',
@@ -387,7 +390,10 @@ class PedidosCrudProyecto extends Component
     
             // Evaluamos si la fecha de producción está en tiempo de producción
             if ($fecha_produccion->lt($ahora)) {
+                $this->mensaje_produccion = '⚠️ La fecha de producción está pasada. Este proyecto requiere autorización adicional para producción.';
                 Log::warning('Este proyecto requiere autorización adicional para producción.');
+            }else {
+                $this->mensaje_produccion =null;
             }
     
             // Log para depuración

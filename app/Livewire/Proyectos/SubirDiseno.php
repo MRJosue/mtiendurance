@@ -247,6 +247,7 @@ class SubirDiseno extends Component
     {
         $pedido = Pedido::where('proyecto_id', $this->proyectoId)
             ->where('estado', 'POR PROGRAMAR')
+            ->where('tipo', 'PEDIDO')
             ->latest('created_at')
             ->first();
     
