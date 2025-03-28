@@ -8,18 +8,15 @@
 <body>
     <h1>Escuchando "canal-demo"...</h1>
 
-    <script src="https://js.pusher.com/7.0/pusher.min.js"></script>
     <script>
         const pusher = new Pusher('clave-demo-websockets', {
-            cluster: 'mt1', // Obligatorio para compatibilidad
-            wsHost: window.location.hostname, // www.admin.mtiendurance.com
+            cluster: 'mt1',
+            wsHost: window.location.hostname,
             wsPort: 6001,
-            wssPort: 6001,
-            forceTLS: true,
-            enabledTransports: ['ws', 'wss'], // 🔥 Evita fallback a HTTP (sockjs)
-            disableStats: true, // 🔇 Evita estadísticas que intentan conectar a pusher.com
+            forceTLS: false,
+            disableStats: true
         });
-    
+
         const channel = pusher.subscribe('canal-demo');
         channel.bind('evento.demo', function(data) {
             console.log('📡 Evento recibido:', data.mensaje);
