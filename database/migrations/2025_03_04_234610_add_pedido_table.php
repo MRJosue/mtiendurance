@@ -15,13 +15,18 @@ return new class extends Migration
 
             $table->unsignedBigInteger('direccion_fiscal_id')->nullable();
             $table->string('direccion_fiscal')->nullable();
-            $table->unsignedBigInteger('direccion_entrega_id')->nullable();
+            $table->unsignedBigInteger('direccion_entrega_id')->nullable(); 
             $table->string('direccion_entrega')->nullable();
             
             $table->bigInteger('id_tipo_envio')->comment('Guarda la referencia del tipo de envio');
             
             $table->enum('tipo', ['POR DEFINIR','PEDIDO', 'MUESTRA', ])->default('POR DEFINIR');
-            $table->enum('estado', ['POR PROGRAMAR', 'PROGRAMADO',  'IMPRESIÓN', 'PRODUCCIÓN', 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO', 'RECHAZADO'])->default('POR PROGRAMAR');
+
+            $table->enum('estado', ['POR APROBAR', 'APROBADO',  'ENTREGADO', 'RECHAZADO', 'ARCHIVADO'])->default('POR APROBAR');
+            
+            $table->enum('estado_produccion', ['POR PROGRAMAR', 'PROGRAMADO',  'IMPRESIÓN', 'CORTE', 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO', 'RECHAZADO'])->default('POR PROGRAMAR');
+            
+
             $table->date('fecha_produccion')->nullable();
             $table->date('fecha_embarque')->nullable();
             $table->date('fecha_entrega')->nullable();
@@ -45,7 +50,8 @@ return new class extends Migration
                 'fecha_embarque',
                 'fecha_entrega',
                 'tipo',
-                'estado'
+                'estado',
+                'estado_produccion'
             ]);
 
 

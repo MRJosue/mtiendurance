@@ -28,6 +28,7 @@ class PedidosCrudProyecto extends Component
 
     public $proyectoId;
     public $modal = false;
+    public $modal_aprobar = false;
     public $pedidoId, $total, $estatus, $tipo, $estado, $fecha_produccion, $fecha_embarque, $fecha_entrega;
     public $direccion_fiscal_id;
     public $direccion_fiscal;
@@ -126,7 +127,7 @@ class PedidosCrudProyecto extends Component
 
             // valiamos fechas solo si es edicion
             $this -> on_Calcula_Fechas_Entrega();
-            
+
         } else {
             $this->reset([
                 'pedidoId', 'total', 'estatus', 'tipo', 'estado',
@@ -446,6 +447,9 @@ class PedidosCrudProyecto extends Component
     {
         $this->resetPage(); // Reinicia a la primera página si estás paginando
     }
+
+
+
 
 
     public function render()

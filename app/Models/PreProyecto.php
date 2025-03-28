@@ -110,7 +110,7 @@ class PreProyecto extends Model
                         'direccion_entrega_id'=> $this->direccion_entrega_id,
                         'direccion_entrega'=> $this->direccion_entrega,
                         'tipo'=> 'PEDIDO',
-                        'estado'=> 'POR PROGRAMAR',
+                        'estado'=> 'POR APROBAR',
                         'fecha_produccion'=> $this->fecha_produccion,
                         'fecha_embarque'=> $this->fecha_embarque,
                         'fecha_entrega'=> $this->fecha_entrega,

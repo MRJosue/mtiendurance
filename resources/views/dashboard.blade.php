@@ -103,7 +103,10 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-
+            Echo.private('test-channel')
+            .listen('SomeEvent', (e) => {
+                console.log('Recibido:', e);
+            });
 
         });
 

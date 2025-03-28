@@ -69,6 +69,32 @@ Route::get('/MessageSent', function () {
 });
 
 
+Route::get('/emitir-demo', function () {
+    broadcast(new class('Hola desde canal-demo') implements \Illuminate\Contracts\Broadcasting\ShouldBroadcastNow {
+        public $mensaje;
+
+        public function __construct($mensaje)
+        {
+            $this->mensaje = $mensaje;
+        }
+
+        public function broadcastOn()
+        {
+            return new \Illuminate\Broadcasting\Channel('canal-demo');
+        }
+
+        public function broadcastAs()
+        {
+            return 'evento.demo';
+        }
+    });
+
+    return 'Evento emitido.';
+});
+
+Route::view('/demo', 'demo');
+
+
 Route::get('/ChatMessageTest', function () {
     // Crea un mensaje de ejemplo
     $mensaje = MensajeChat::create([
