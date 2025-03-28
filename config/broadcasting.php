@@ -43,12 +43,11 @@ return [
                 // 'port' => 6001,
                 // 'scheme' => 'http',
 
-                'cluster' => env('PUSHER_APP_CLUSTER', 'mt1'),
                 'host' => env('PUSHER_HOST', '127.0.0.1'),
                 'port' => env('PUSHER_PORT', 6001),
-                'scheme' => env('PUSHER_SCHEME', 'http'),
-                'useTLS' => false,
-                'encrypted' => false,
+                'scheme' => env('PUSHER_SCHEME', 'https'),
+                'useTLS' => true,
+                'encrypted' => true,
 
 
             ],

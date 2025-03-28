@@ -14,10 +14,10 @@
             cluster: 'mt1',
             wsHost: window.location.hostname,
             wsPort: 6001,
-            forceTLS: false,
-            encrypted: false,
-            enabledTransports: ['ws'], // 🔥 IMPORTANTE: solo WS (no WSS)
-            disableStats: true
+            wssPort: 6001,
+            forceTLS: true,
+            enabledTransports: ['ws', 'wss'],
+            disableStats: true,
         });
     
         const channel = pusher.subscribe('canal-demo');
