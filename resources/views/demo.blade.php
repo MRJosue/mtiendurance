@@ -20,7 +20,7 @@
         const channel = pusher.subscribe('canal-demo');
         channel.bind('evento.demo', function(data) {
             console.log('📡 Evento recibido:', data.mensaje);
-        });
+        }); 
     </script>
 </body>
 </html>
