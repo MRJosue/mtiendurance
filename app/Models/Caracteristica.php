@@ -12,7 +12,7 @@ class Caracteristica extends Model
 
     protected $table = 'caracteristicas';
 
-    protected $fillable = ['nombre', 'flag_seleccion_multiple'];
+    protected $fillable = ['nombre', 'flag_seleccion_multiple','ind_activo'];
 
     protected $casts = [
         'flag_seleccion_multiple' => 'boolean', // Asegurar que se maneja como booleano

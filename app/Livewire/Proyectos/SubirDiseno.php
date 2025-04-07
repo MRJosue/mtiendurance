@@ -13,7 +13,7 @@ use App\Models\Pedido;
 use App\Models\TipoEnvio; 
 use App\Models\Producto; 
 use Carbon\Carbon;
-
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\log;
@@ -230,7 +230,7 @@ class SubirDiseno extends Component
             'direccion_fiscal_id' => null,
             'direccion_entrega_id' => null,
             'tipo' => 'MUESTRA',
-            'estado' => 'POR PROGRAMAR',
+            'estado' => 'POR APROBAR',
             'total' => 0,
             'fecha_produccion' => null,
             'fecha_embarque' => null,
@@ -245,42 +245,56 @@ class SubirDiseno extends Component
 
     public function aprobarUltimoPedido()
     {
+
+        Log::debug('aprobarUltimoPedido');
         $pedido = Pedido::where('proyecto_id', $this->proyectoId)
-            ->where('estado', 'POR PROGRAMAR')
+            ->where('estado', 'POR APROBAR')
             ->where('tipo', 'PEDIDO')
             ->latest('created_at')
             ->first();
+
+        Log::debug('Busqueda de pedido');
     
         if (!$pedido) {
-            session()->flash('error', 'No se encontró un pedido en estado POR PROGRAMAR.');
+            session()->flash('error', 'No se encontró un pedido en estado POR APROBAR.');
             $this->modalAprobarPedido = false;
             return;
         }
+
+        Log::debug('No se encontro pedido');
     
         // Asignación de datos
         $this->total = $pedido->total;
         $this->estatus = $pedido->estatus ?? 'PENDIENTE';
         $this->tipo = $pedido->tipo ?? 'PEDIDO';
-        $this->estado = 'PROGRAMADO';
+        $this->estado = 'APROBADO';
         $this->fecha_produccion = $pedido->fecha_produccion;
         $this->fecha_embarque = $pedido->fecha_embarque;
         $this->fecha_entrega = $pedido->fecha_entrega;
         $this->producto_id = $pedido->producto_id;
         $this->id_tipo_envio = $pedido->id_tipo_envio;
-    
+
+        Log::debug('Asignacion de datos');
+        Log::debug('estatus',['data' =>  $this->estatus]);
+        Log::debug('tipo',['data' => $this->tipo]);
+        Log::debug('estado', ['data' => $this->estado]);
+        Log::debug('fecha_produccion', ['data' =>  $this->fecha_produccion]);
+        Log::debug('fecha_embarque', ['data' =>  $this->fecha_embarque]);
+        Log::debug('fecha_entrega', ['data' =>  $this->fecha_entrega]);
         // Validación
-       
+        Log::debug('Pre validacion');
         $this->validate($this->rulesPedido());
-    
+        Log::debug('Validacion');
         // Calcular fechas si es necesario
         if (!$this->fecha_produccion || !$this->fecha_embarque) {
             $this->on_Calcula_Fechas_Entrega();
         }
-    
+        Log::debug('Fechas');
         // ¿Se requiere autorización? fecha de producción es anterior a hoy
         $fechaProduccion = Carbon::parse($this->fecha_produccion);
         $ahora = Carbon::now();
-    
+        Log::debug('Fechas');
+
         if ($fechaProduccion->lt($ahora)) {
             // Cierra modal actual
             $this->modalAprobarPedido = false;
@@ -291,8 +305,10 @@ class SubirDiseno extends Component
         }
     
         // Si no se requiere autorización, actualizar normalmente
+
+        Log::debug('Update pedido');
         $pedido->update([
-            'estado' => 'PROGRAMADO',
+            'estado' => 'APROBADO',
             'fecha_produccion' => $this->fecha_produccion,
             'fecha_embarque' => $this->fecha_embarque,
             'fecha_entrega' => $this->fecha_entrega,
@@ -321,7 +337,7 @@ class SubirDiseno extends Component
         return [
             'estatus' => 'required|string',
             'tipo' => 'required|in:PEDIDO,MUESTRA',
-            'estado' => 'required|in:POR PROGRAMAR,PROGRAMADO,IMPRESIÓN,PRODUCCIÓN,COSTURA,ENTREGA,FACTURACIÓN,COMPLETADO,RECHAZADO',
+            'estado' => 'required|in:POR APROBAR,APROBADO,ENTREGADO,RECHAZADO,ARCHIVADO',
             'fecha_produccion' => 'nullable|date',
             'fecha_embarque' => 'nullable|date',
             'fecha_entrega' => 'nullable|date',

@@ -29,6 +29,7 @@ class Talla extends Model
     protected $fillable = [
         'nombre',
         'descripcion',
+        'ind_activo',
     ];
     protected $table = 'tallas';
 

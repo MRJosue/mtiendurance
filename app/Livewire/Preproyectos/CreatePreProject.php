@@ -247,7 +247,7 @@ class CreatePreProject extends Component
     public function render()
     {
         return view('livewire.preproyectos.create-pre-project', [
-            'categorias' => Categoria::all(),
+            'categorias' => Categoria::where('ind_activo', 1)->get(),
             'productos' => $this->productos,
             'tiposEnvio' => $this->tipos_envio,
             'mostrarFormularioTallas'=> $this->mostrarFormularioTallas,
@@ -263,7 +263,7 @@ class CreatePreProject extends Component
     {
 
         $this->producto_id = null;
-        $this->productos = Producto::where('categoria_id', $this->categoria_id)->get();
+        $this->productos = Producto::where('categoria_id', $this->categoria_id)->where('ind_activo', 1)->get();
 
     }
 
@@ -310,7 +310,7 @@ class CreatePreProject extends Component
                     })
                     ->get();
 
-                Log::debug('Tallas obtenidas al seleccionar producto:', ['data' => $this->tallas->toArray()]);
+               
 
                 // Reiniciar la selección de tallas
                 $this->tallasSeleccionadas = [];
@@ -325,13 +325,18 @@ class CreatePreProject extends Component
 
                 // Limpiar opciones previas de características
                 $this->caracteristica_id = null;
-                $this->caracteristicas_sel = Caracteristica::whereHas('productos', function ($query) {
+                $this->caracteristicas_sel = Caracteristica::where('ind_activo', 1)
+                ->whereHas('productos', function ($query) {
                     $query->where('producto_id', $this->producto_id);
-                })->get()->map(function ($caracteristica) {
-                    $opciones = Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
-                        $query->where('caracteristica_id', $caracteristica->id);
-                    })->get();
-
+                })
+                ->get()
+                ->map(function ($caracteristica) {
+                    $opciones = Opcion::where('ind_activo', 1)
+                        ->whereHas('caracteristicas', function ($query) use ($caracteristica) {
+                            $query->where('caracteristica_id', $caracteristica->id);
+                        })
+                        ->get();
+            
                     $opcionesArray = $opciones->map(function ($opcion) {
                         return [
                             'id' => $opcion->id,
@@ -339,14 +344,15 @@ class CreatePreProject extends Component
                             'valoru' => $opcion->valoru,
                         ];
                     })->toArray();
-
+            
                     return [
                         'id' => $caracteristica->id,
                         'nombre' => $caracteristica->nombre,
                         'flag_seleccion_multiple' => $caracteristica->flag_seleccion_multiple,
                         'opciones' => count($opcionesArray) === 1 ? $opcionesArray : [],
                     ];
-                })->toArray();
+                })
+                ->toArray();
 
                 $this->opciones_sel = [];
 

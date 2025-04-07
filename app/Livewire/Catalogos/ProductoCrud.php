@@ -27,8 +27,13 @@ class ProductoCrud extends Component
     public $gruposTallasSeleccionados = [];
     public $caracteristicasDisponibles = []; // Características de la categoría seleccionada
 
+    public $filtroActivo = '1'; // Por defecto solo productos activos
+    public $ind_activo = true; // Para el modal de edición
 
     protected $paginationTheme = 'tailwind';
+
+    public $bloquear_nombre = false;
+
 
     protected $rules = [
         'nombre' => 'required|string|max:255',
@@ -43,7 +48,8 @@ class ProductoCrud extends Component
     
         if ($this->categoria_id) {
             // Buscar la categoría seleccionada con sus características
-            $categoria = Categoria::with('caracteristicas')->find($this->categoria_id);
+            $categoria = Categoria::with('caracteristicasActivas')->find($this->categoria_id);
+            $this->caracteristicasDisponibles = $categoria->caracteristicasActivas->pluck('id')->toArray();
     
             // Obtener todas las características configuradas en la categoría
             $this->caracteristicasDisponibles = $categoria->caracteristicas->pluck('id')->toArray();
@@ -81,7 +87,8 @@ class ProductoCrud extends Component
 
     public function render()
     {
-        $query = Producto::with(['categoria', 'caracteristicas']);
+        $query = Producto::with(['categoria', 'caracteristicas', 'gruposTallas'])
+        ->where('ind_activo', $this->filtroActivo);
 
         if (!empty($this->search)) {
             $query->where('nombre', 'like', '%' . $this->search . '%');
@@ -91,12 +98,13 @@ class ProductoCrud extends Component
             $query->where('categoria_id', $this->categoriaFiltro);
         }
 
+        //   'productos' => Producto::with(['categoria', 'caracteristicas', 'gruposTallas'])->orderBy('created_at', 'desc')->paginate(15),
         return view('livewire.catalogos.producto-crud', [
-            'productos' => Producto::with(['categoria', 'caracteristicas', 'gruposTallas'])->orderBy('created_at', 'desc')->paginate(15),
-            
-            'categorias' => Categoria::orderBy('nombre')->get(),
-            'caracteristicas' => Caracteristica::orderBy('nombre')->get(),
-            'gruposTallasDisponibles' => GrupoTalla::orderBy('nombre')->get(),
+         
+            'productos' => $query->orderBy('created_at', 'desc')->paginate(15),
+            'categorias' => Categoria::where('ind_activo', 1)->orderBy('nombre')->get(),
+            'caracteristicas' => Caracteristica::where('ind_activo', 1)->orderBy('nombre')->get(),
+            'gruposTallasDisponibles' => GrupoTalla::where('ind_activo', 1)->orderBy('nombre')->get(),
         ]);
     }
 
@@ -130,6 +138,7 @@ class ProductoCrud extends Component
         $this->producto_id = null;
         $this->caracteristicasSeleccionadas = [];
         $this->gruposTallasSeleccionados = [];
+        
     }
 
     public function guardar()
@@ -143,19 +152,37 @@ class ProductoCrud extends Component
                 'dias_produccion' => $this->dias_produccion,
                 'flag_armado' => $this->flag_armado,
                 'categoria_id' => $this->categoria_id, // Asegurar que la categoría se actualiza correctamente
+                'ind_activo' => $this->ind_activo,
             ]
         );
+
+
     
         // Solo mantener las características válidas para la categoría
-        $caracteristicasValidas = array_intersect($this->caracteristicasSeleccionadas, $this->caracteristicasDisponibles);
-        $producto->caracteristicas()->sync($caracteristicasValidas);
+        // $caracteristicasValidas = array_intersect($this->caracteristicasSeleccionadas, $this->caracteristicasDisponibles);
+        // $producto->caracteristicas()->sync($caracteristicasValidas);
     
+        // ✅ Validar características activas y disponibles para esta categoría
+        $caracteristicasValidas = \App\Models\Caracteristica::whereIn('id', $this->caracteristicasSeleccionadas)
+        ->where('ind_activo', 1)
+        ->whereIn('id', $this->caracteristicasDisponibles)
+        ->pluck('id')
+        ->toArray();
+
+        $producto->caracteristicas()->sync($caracteristicasValidas);
+
         // Sincronizar grupos de tallas seleccionados si flag_tallas es 1
         if ($this->mostrarGruposTallas) {
-            $producto->gruposTallas()->sync($this->gruposTallasSeleccionados);
+            $gruposValidos = \App\Models\GrupoTalla::whereIn('id', $this->gruposTallasSeleccionados)
+                ->where('ind_activo', 1)
+                ->pluck('id')
+                ->toArray();
+
+            $producto->gruposTallas()->sync($gruposValidos);
         } else {
             $producto->gruposTallas()->detach();
         }
+        
     
         session()->flash('message', '¡Producto guardado exitosamente!');
     
@@ -171,9 +198,18 @@ class ProductoCrud extends Component
         $this->dias_produccion = $producto->dias_produccion;
         $this->flag_armado = $producto->flag_armado;
         $this->categoria_id = $producto->categoria ? $producto->categoria->id : null;
+
+        $this->ind_activo = (bool) $producto->ind_activo;
+
+        // ⚠️ Verificar relaciones activas antes de permitir editar el nombre
+        $tieneCaracteristicas = $producto->caracteristicas()->exists();
+        $tienePedidos = \App\Models\Pedido::where('producto_id', $producto->id)->count() > 1;
     
+        $this->bloquear_nombre = $tieneCaracteristicas || $tienePedidos;
+        
         // Actualizamos las características disponibles antes de asignar las seleccionadas
         $this->onCategoriaChange();
+        
     
         // Solo mantener las características válidas
         $this->caracteristicasSeleccionadas = array_intersect($producto->caracteristicas->pluck('id')->toArray(), $this->caracteristicasDisponibles);
@@ -184,7 +220,8 @@ class ProductoCrud extends Component
     
     public function borrar($id)
     {
-        Producto::find($id)->delete();
+        $producto = Producto::findOrFail($id);
+        $producto->update(['ind_activo' => 0]);
         session()->flash('message', 'Producto eliminado exitosamente.');
     }
 }

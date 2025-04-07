@@ -23,7 +23,7 @@
                     <th class="border border-gray-300 p-2 w-40">Dirección Fiscal</th>
                     <th class="border border-gray-300 p-2 w-40">Dirección Entrega</th>
                     <th class="border border-gray-300 p-2 w-32">Tipo Envío</th>
-                    <th class="border border-gray-300 p-2 w-28">Tipo</th>
+             
                     <th class="border border-gray-300 p-2 w-32">Estado</th>
                     <th class="border border-gray-300 p-2 w-36">Producción</th>
                     <th class="border border-gray-300 p-2 w-36">Embarque</th>
@@ -63,7 +63,7 @@
                                     Total
                                 </li>
                                 <ul>
-                                    {{ number_format($pedido->total, 2) }}
+                                    {{ $pedido->total }}
                                 </ul>
                             </ul>
 
@@ -73,20 +73,17 @@
                         <td class="border border-gray-300 p-2">{{ $pedido->direccion_fiscal ?? 'No definida' }}</td>
                         <td class="border border-gray-300 p-2">{{ $pedido->direccion_entrega ?? 'No definida' }}</td>
                         <td class="border border-gray-300 p-2">{{ $pedido->tipoEnvio->nombre ?? 'No definido' }}</td>
-                        <td class="border border-gray-300 p-2">{{ $pedido->tipo }}</td>
+                       
                         
                         <!-- Estado con Colores -->
                         <td class="border border-gray-300 p-2 font-bold text-center">
                             <span class="px-2 py-1 rounded-lg text-white text-xs"
                                   style="background-color: 
-                                      @if($pedido->estado == 'POR PROGRAMAR') #FFDD57 
-                                      @elseif($pedido->estado == 'PROGRAMADO') #F39C12
-                                      @elseif($pedido->estado == 'IMPRESIÓN') #3498DB
-                                      @elseif($pedido->estado == 'PRODUCCIÓN') #9B59B6
-                                      @elseif($pedido->estado == 'COSTURA') #E67E22
-                                      @elseif($pedido->estado == 'ENTREGA') #27AE60
-                                      @elseif($pedido->estado == 'FACTURACIÓN') #2C3E50
-                                      @elseif($pedido->estado == 'COMPLETADO') #1ABC9C
+                                      @if    ($pedido->estado == 'POR APROBAR') #FFDD57 
+                                      @elseif($pedido->estado == 'APROBADO') #F39C12
+                                      @elseif($pedido->estado == 'ENTREGADO') #3498DB
+                                      @elseif($pedido->estado == 'RECHAZADO') #9B59B6
+                                      @elseif($pedido->estado == 'ARCHIVADO') #E67E22
                                       @elseif($pedido->estado == 'RECHAZADO') #E74C3C
                                       @else #BDC3C7 @endif;">
                                 {{ strtoupper($pedido->estado) }}
@@ -100,6 +97,14 @@
                             <button wire:click="abrirModal({{ $pedido->id }})" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
                                 Editar
                             </button>
+                            @if ($pedido->proyecto && $pedido->proyecto->estado === 'DISEÑO APROBADO' && $pedido->estado == 'POR APROBAR')
+                            <button wire:click="confirmarAprobacion({{ $pedido->id }})"
+                                    class="bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-1 rounded">
+                                Aprobar
+                            </button>
+                        
+                            @endif
+
                         </td>
                     </tr>
                 @endforeach
@@ -130,9 +135,15 @@
                             @foreach ($grupoTalla['tallas'] as $talla)
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">{{ $talla['nombre'] }}</label>
-                                    <input type="number" class="w-full border border-gray-300 rounded p-2"
-                                        wire:model.lazy="cantidades_tallas.{{ $grupoTalla['id'] }}.{{ $talla['id'] }}" min="0">
+                                    {{-- <input type="number" class="w-full border border-gray-300 rounded p-2"
+                                        wire:model.lazy="cantidades_tallas.{{ $grupoTalla['id'] }}.{{ $talla['id'] }}" min="0"> --}}
+                                        <input type="number" min="0"
+                                        wire:model.defer="inputsTallas.{{ $grupoTalla['id'] }}_{{ $talla['id'] }}"
+                                        class="w-full border border-gray-300 rounded p-2"
+                                        placeholder="0">
+
                                 </div>
+
                             @endforeach
                         </div>
                     @endforeach
@@ -166,15 +177,12 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Estado</label>
                         <select wire:model="estado" class="w-full border border-gray-300 rounded p-2">
-                            <option value="POR PROGRAMAR">Por Programar</option>
-                            <option value="PROGRAMADO">Programado</option>
-                            <option value="IMPRESIÓN">Impresión</option>
-                            <option value="PRODUCCIÓN">Producción</option>
-                            <option value="COSTURA">Costura</option>
-                            <option value="ENTREGA">Entrega</option>
-                            <option value="FACTURACIÓN">Facturación</option>
-                            <option value="COMPLETADO">Completado</option>
+                            <option value="POR APROBAR">Por aprobar</option>
+                            <option value="APROBADO">Aprobado</option>
+                            <option value="ENTREGADO">Entrega</option>
                             <option value="RECHAZADO">Rechazado</option>
+                            <option value="ARCHIVADO">Archivado</option>
+
                         </select>
                         @error('estado') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
@@ -268,6 +276,41 @@
             </div>
         </div>
     </div>
+    @endif
+
+    @if ($modal_confirmar_aprobacion)
+        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div class="bg-white rounded shadow-lg w-full max-w-md p-6">
+                <h3 class="text-xl font-semibold mb-4">¿Confirmar aprobación del pedido?</h3>
+                
+                <p class="text-gray-700 mb-2">ID del Pedido: <strong>{{ $pedidoId }}</strong></p>
+                @php
+                    $pedido = \App\Models\Pedido::find($pedidoId);
+                @endphp
+
+                @if($pedido)
+                    <ul class="text-sm text-gray-600 space-y-1 mb-4">
+                        <li><strong>Cliente:</strong> {{ $pedido->cliente->nombre_empresa ?? 'Sin cliente' }}</li>
+                        <li><strong>Total:</strong> {{ $pedido->total }}</li>
+                        <li><strong>Producción:</strong> {{ $pedido->fecha_produccion ?? 'No definida' }}</li>
+                        <li><strong>Embarque:</strong> {{ $pedido->fecha_embarque ?? 'No definida' }}</li>
+                        <li><strong>Entrega:</strong> {{ $pedido->fecha_entrega ?? 'No definida' }}</li>
+                        <li><strong>Flag Aprobación sin fechas:</strong> {{ $pedido->flag_aprobar_sin_fechas ? 'Sí' : 'No' }}</li>
+                    </ul>
+                @endif
+
+                <div class="flex justify-end gap-2 mt-4">
+                    <button wire:click="$set('modal_confirmar_aprobacion', false)"
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                        Cancelar
+                    </button>
+                    <button wire:click="aprobar_pedido"
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                        Confirmar y Aprobar
+                    </button>
+                </div>
+            </div>
+        </div>
     @endif
 
 

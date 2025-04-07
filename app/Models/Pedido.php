@@ -30,6 +30,7 @@ class Pedido extends Model
         'direccion_entrega',
         'tipo',
         'estado',
+        'estado_produccion',
         'fecha_produccion',
         'fecha_embarque',
         'fecha_entrega',
@@ -62,8 +63,6 @@ class Pedido extends Model
     {
         return $this->belongsTo(Producto::class, 'producto_id');
     }
-
-
 
     // Relacion con el modelo de pedidoCaracteristica
 

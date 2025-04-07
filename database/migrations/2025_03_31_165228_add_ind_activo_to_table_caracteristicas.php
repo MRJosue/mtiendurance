@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('categorias', function (Blueprint $table) {
-            // Se define como default 1 para matenero activo 
-            // 1 activo 2 in activo 
+        Schema::table('caracteristicas', function (Blueprint $table) {
+            //
             $table->tinyInteger('ind_activo')->default(1)->comment('Define si el registro esta activo 1 = activo 0 = in activo');
+
         });
     }
 
@@ -23,7 +23,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('categorias', function (Blueprint $table) {
+        Schema::table('caracteristicas', function (Blueprint $table) {
+            //
             $table->dropColumn('ind_activo');
         });
     }

@@ -15,7 +15,7 @@ class Categoria extends Model
     public $incrementing = true;
     protected $keyType = 'string';
 
-    protected $fillable = [ 'nombre', 'flag_tallas'];
+    protected $fillable = [ 'nombre', 'flag_tallas','ind_activo'];
 
 
     public function productos()
@@ -28,5 +28,13 @@ class Categoria extends Model
     {
         return $this->belongsToMany(Caracteristica::class, 'categoria_caracteristica', 'categoria_id', 'caracteristica_id');
     }
+
+    public function caracteristicasActivas()
+    {
+        return $this->belongsToMany(Caracteristica::class, 'categoria_caracteristica')
+                    ->where('caracteristicas.ind_activo', 1);
+    }
+
+
     
 }

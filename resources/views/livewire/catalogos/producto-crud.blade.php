@@ -17,6 +17,11 @@
                     <option value="{{ $cat->id }}">{{ $cat->nombre }}</option>
                 @endforeach
             </select>
+            <select wire:model="filtroActivo" class="border border-gray-300 rounded px-4 py-2">
+                <option value="1">Activos</option>
+                <option value="0">Inactivos</option>
+            </select>
+            
             <button wire:click="buscar" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded">
                 Buscar
             </button>
@@ -78,9 +83,18 @@
                 <!-- Nombre -->
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-1">Nombre</label>
-                    <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="nombre">
+                    <input type="text"
+                        class="w-full border border-gray-300 rounded p-2 {{ $bloquear_nombre ? 'bg-gray-100 text-gray-500' : '' }}"
+                        wire:model="nombre"
+                        @if($bloquear_nombre) readonly @endif>
                     @error('nombre') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
+
+                <div class="mb-4 flex items-center space-x-2">
+                    <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" wire:model="ind_activo">
+                    <label class="text-gray-700 font-medium select-none">Producto activo</label>
+                </div>
+                
 
                 <!-- Categoría -->
                 <div class="mb-4">

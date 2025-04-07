@@ -14,6 +14,8 @@ use App\Models\Ciudad;
 use App\Models\Pais;
 use App\Models\Estado;
 use App\Models\TipoEnvio;
+use App\Models\PedidoCaracteristica;
+use App\Models\PedidoOpcion;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -28,7 +30,8 @@ class PedidosCrudProyecto extends Component
 
     public $proyectoId;
     public $modal = false;
-    public $modal_aprobar = false;
+    public $modal_confirmar_aprobacion = false;
+
     public $pedidoId, $total, $estatus, $tipo, $estado, $fecha_produccion, $fecha_embarque, $fecha_entrega;
     public $direccion_fiscal_id;
     public $direccion_fiscal;
@@ -42,6 +45,8 @@ class PedidosCrudProyecto extends Component
 
     public $tallas_disponibles = [];
     public $cantidades_tallas = [];
+    public $inputsTallas = [];
+
     public $mostrar_total = true;
     public $producto_id;
     public $error_total;
@@ -66,7 +71,7 @@ class PedidosCrudProyecto extends Component
             ],
             'estatus' => 'required|string',
             'tipo' => 'required|in:PEDIDO,MUESTRA',
-            'estado' => 'required|in:POR PROGRAMAR,PROGRAMADO,IMPRESIÓN,PRODUCCIÓN,COSTURA,ENTREGA,FACTURACIÓN,COMPLETADO,RECHAZADO',
+            'estado' => 'required|in:POR APROBAR,APROBADO,ENTREGADO,RECHAZADO,ARCHIVADO',
             'fecha_produccion' => 'nullable|date',
             'fecha_embarque' => 'nullable|date',
             'fecha_entrega' => 'nullable|date',
@@ -77,7 +82,12 @@ class PedidosCrudProyecto extends Component
         public function abrirModal($pedidoId = null)
     {
         if ($pedidoId) {
+
             $pedido = Pedido::with(['pedidoTallas.talla', 'pedidoTallas.grupoTalla'])->findOrFail($pedidoId);
+
+            // Limpio el error 
+            $this->error_total = null;
+
             $this->pedidoId = $pedido->id;
             $this->total = $pedido->total;
             $this->estatus = $pedido->estatus;
@@ -110,9 +120,12 @@ class PedidosCrudProyecto extends Component
 
             // Cargar cantidades actuales organizadas por grupo de tallas y talla
             foreach ($pedido->pedidoTallas as $pedidoTalla) {
-                $grupoId = $pedidoTalla->grupo_talla_id;
-                $tallaId = $pedidoTalla->talla_id;
-                $this->cantidades_tallas[$grupoId][$tallaId] = $pedidoTalla->cantidad;
+                // $grupoId = $pedidoTalla->grupo_talla_id;
+                // $tallaId = $pedidoTalla->talla_id;
+                // $this->cantidades_tallas[$grupoId][$tallaId] = $pedidoTalla->cantidad;
+
+                $clave = $pedidoTalla->grupo_talla_id . '_' . $pedidoTalla->talla_id;
+                $this->inputsTallas[$clave] = $pedidoTalla->cantidad;
             }
 
 
@@ -161,14 +174,17 @@ class PedidosCrudProyecto extends Component
 
             $this->estatus = 'PENDIENTE';
             $this->tipo = 'PEDIDO';
-            $this->estado = 'POR PROGRAMAR';
+            $this->estado = 'POR APROBAR';
         }
 
         $this->modal = true;
     }
+    
 
     public function guardar()
     {
+
+        $this->recopilarCantidadesTallas();
         Log::debug('Pre validate');
         $this->validate();
         Log::debug('Pre Guardado');
@@ -275,6 +291,35 @@ class PedidosCrudProyecto extends Component
                     }
                 }
             }
+
+
+            $proyecto = Proyecto::find($this->proyectoId);
+
+            $caracteristicas = is_string($proyecto->caracteristicas_sel)
+                ? json_decode($proyecto->caracteristicas_sel, true)
+                : $proyecto->caracteristicas_sel;
+            
+            if (!empty($caracteristicas)) {
+                foreach ($caracteristicas as $caracteristica) {
+                    // Guardar relación con la característica
+                   PedidoCaracteristica::create([
+                        'pedido_id' => $nuevoPedido->id,
+                        'caracteristica_id' => $caracteristica['id'],
+                    ]);
+            
+                    // Guardar opciones si existen
+                    if (!empty($caracteristica['opciones'])) {
+                        foreach ($caracteristica['opciones'] as $opcion) {
+                           PedidoOpcion::create([
+                                'pedido_id' => $nuevoPedido->id,
+                                'opcion_id' => $opcion['id'],
+                                'valor' => $opcion['valoru'] ?? null,
+                            ]);
+                        }
+                    }
+                }
+            }
+
         }
     
         session()->flash('message', $this->pedidoId ? 'Pedido actualizado correctamente.' : 'Pedido creado correctamente.');
@@ -449,6 +494,56 @@ class PedidosCrudProyecto extends Component
     }
 
 
+    public function recopilarCantidadesTallas()
+    {
+        $this->cantidades_tallas = [];
+
+        foreach ($this->inputsTallas as $clave => $cantidad) {
+            if (!is_numeric($cantidad) || (int)$cantidad <= 0) continue;
+
+            [$grupoId, $tallaId] = explode('_', $clave);
+            $this->cantidades_tallas[$grupoId][$tallaId] = (int)$cantidad;
+        }
+    }
+
+
+    public function confirmarAprobacion($id_pedido)
+    {
+        $this->pedidoId = $id_pedido;
+        $this->modal_confirmar_aprobacion = true;
+    }
+
+    public function aprobar_pedido()
+    {
+        $pedido = Pedido::findOrFail($this->pedidoId);
+
+        // Validaciones del pedido 
+        $ahora = now();
+        $fechaProduccion = \Carbon\Carbon::parse($pedido->fecha_produccion);
+
+
+        // Validar fechas si el flag indica que NO se puede aprobar sin ellas
+        if ($pedido->flag_aprobar_sin_fechas == 0) {
+
+            if ($fechaProduccion->lt($ahora)) {
+                $this->modal_confirmar_aprobacion = false;
+    
+                // Redirigir a edición si la fecha es inválida
+                $this->dispatch('abrirModalEdicion', pedidoId: $pedido->id);
+                return;
+            }
+        }
+
+        // Aprobar el pedido
+        $pedido->update([
+            'estado' => 'APROBADO',
+            'estado_produccion' => 'POR PROGRAMAR',
+        ]);
+
+        $this->modal_confirmar_aprobacion = false;
+        $this->dispatch('ActualizarTablaPedido');
+        session()->flash('message', '✅ Pedido aprobado correctamente.');
+    }
 
 
 

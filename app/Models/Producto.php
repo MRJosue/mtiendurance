@@ -20,7 +20,8 @@ class Producto extends Model
         'categoria_id',
         'nombre',
         'dias_produccion',
-        'flag_armado'
+        'flag_armado',
+        'ind_activo'
     ];
 
 

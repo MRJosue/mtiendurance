@@ -1,10 +1,25 @@
 <div class="container mx-auto p-6">
-    <div class="mb-4 flex justify-between items-center">
-        <h2 class="text-xl font-bold">Administrar Grupos de Tallas</h2>
-        <button wire:click="openModal"
-            class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-            Nuevo Grupo
-        </button>
+    <div class="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+        <div class="flex items-center space-x-2">
+            <button wire:click="openModal"
+                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                Nuevo Grupo
+            </button>
+    
+   
+        </div>
+    
+        <div class="flex space-x-2">
+
+            <input type="text" wire:model="query" placeholder="Buscar por nombre..." class="px-3 py-2 border rounded-lg">
+            <select wire:model="filtroActivo" class="px-3 py-2 border rounded-lg">
+                <option value="1">Activos</option>
+                <option value="0">Inactivos</option>
+            </select>
+            <button wire:click="buscar" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+                Buscar
+            </button>
+        </div>
     </div>
 
     <div class="overflow-x-auto bg-white rounded-lg shadow">
@@ -46,6 +61,10 @@
                 <h2 class="text-lg font-bold mb-4">{{ $grupo_id ? 'Editar' : 'Nuevo' }} Grupo de Tallas</h2>
                 <input type="text" wire:model="nombre" placeholder="Nombre del grupo"
                     class="w-full px-4 py-2 border rounded-lg mb-2" />
+                <div class="mb-2 flex items-center space-x-2">
+                    <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" wire:model="ind_activo">
+                    <label class="text-gray-700 font-medium select-none">Grupo activo</label>
+                </div>
 
                 <div class="mb-4">
                     <label class="block font-bold mb-2">Asignar Tallas:</label>

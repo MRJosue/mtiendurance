@@ -16,7 +16,7 @@ class Opcion extends Model
     protected $keyType = 'string';
 
 
-    protected $fillable = ['nombre', 'pasos', 'minutoPaso', 'valoru'];
+    protected $fillable = ['nombre', 'pasos', 'minutoPaso', 'valoru', 'ind_activo'];
 
     public function caracteristicas()
     {

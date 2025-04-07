@@ -117,7 +117,7 @@ Route::middleware('auth')->group(function () {
 
 // proyectos
 Route::get('/proyectos',[ProyectosController::class, 'index'])->middleware(['auth','verified'])->name('proyectos.index');
-Route::get('/proyectos/{proyecto}', [ProyectosController::class, 'show'])->name('proyecto.show');
+Route::get('/proyectos/{proyecto}', [ProyectosController::class, 'show'])->middleware(['auth', 'verified'])->name('proyecto.show');
 
 //preproyectos
 Route::get('/preproyectos',[PreproyectosController::class, 'index'])->middleware(['auth','verified'])->name('preproyectos.index');
@@ -149,22 +149,22 @@ Route::get('/programacion',[ProgramacionController::class, 'index'])->middleware
 //Catalogos
     //Categorias
     // Route::get('/catalogos/categorias',[categoriacontroller::class, 'index'])->name('catalogos.categorias.index');
-    Route::get('catalogos/categorias', [CategoriaController::class, 'index'])->name('catalogos.categorias.index');
-    Route::get('catalogos/producto',   [productocontroller::class, 'index'])->name('catalogos.producto.index');
-    Route::get('catalogos/caracteristicas', [caracteristicacontroller::class, 'index'])->name('catalogos.caracteristica.index');
-    Route::get('catalogos/opciones', [opcionescontroller::class, 'index'])->name('catalogos.opciones.index');
+    Route::get('catalogos/categorias', [CategoriaController::class, 'index'])->middleware(['auth', 'verified'])->name('catalogos.categorias.index');
+    Route::get('catalogos/producto',   [productocontroller::class, 'index'])->middleware(['auth', 'verified'])->name('catalogos.producto.index');
+    Route::get('catalogos/caracteristicas', [caracteristicacontroller::class, 'index'])->middleware(['auth', 'verified'])->name('catalogos.caracteristica.index');
+    Route::get('catalogos/opciones', [opcionescontroller::class, 'index'])->middleware(['auth', 'verified'])->name('catalogos.opciones.index');
     //Paises 
-    Route::get('catalogos/paises', [paisescontroller::class, 'index'])->name('catalogos.paises.index');
+    Route::get('catalogos/paises', [paisescontroller::class, 'index'])->middleware(['auth', 'verified'])->name('catalogos.paises.index');
     //Estados
-    Route::get('catalogos/estados', [estadoscontroller::class, 'index'])->name('catalogos.estados.index');
+    Route::get('catalogos/estados', [estadoscontroller::class, 'index'])->middleware(['auth', 'verified'])->name('catalogos.estados.index');
     //Ciudades
-    Route::get('catalogos/ciudades', [ciudadescontroller::class, 'index'])->name('catalogos.ciudades.index');
+    Route::get('catalogos/ciudades', [ciudadescontroller::class, 'index'])->middleware(['auth', 'verified'])->name('catalogos.ciudades.index');
     //Tipo de envvio
-    Route::get('catalogos/tipoenvio', [tipoenviocontroller::class, 'index'])->name('catalogos.tipoenvio.index');
+    Route::get('catalogos/tipoenvio', [tipoenviocontroller::class, 'index'])->middleware(['auth', 'verified'])->name('catalogos.tipoenvio.index');
     // Tallas 
-    Route::get('catalogos/tallas', [TallasController::class, 'tallas'])->name('catalogos.tallas.tallas');
+    Route::get('catalogos/tallas', [TallasController::class, 'tallas'])->middleware(['auth', 'verified'])->name('catalogos.tallas.tallas');
     // Grupos
-    Route::get('catalogos/grupos', [TallasController::class, 'grupos'])->name('catalogos.tallas.grupos');
+    Route::get('catalogos/grupos', [TallasController::class, 'grupos'])->middleware(['auth', 'verified'])->name('catalogos.tallas.grupos');
 
 // Prueba data tables
 

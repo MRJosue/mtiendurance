@@ -7,7 +7,7 @@ use App\Models\Caracteristica;
 use App\Models\Producto;
 use App\Models\Opcion;
 use Livewire\WithPagination;
-
+use Illuminate\Support\Facades\DB; 
 
 class CaracteristicaCrud extends Component
 {
@@ -20,6 +20,9 @@ class CaracteristicaCrud extends Component
     public $modal = false;
     public $search = '';
     public $query = '';
+
+    public $filtroActivo = '1'; // Filtro por estado activo/inactivo
+    public $ind_activo = true; // Checkbox en el modal
 
     protected $paginationTheme = 'tailwind';
 
@@ -38,7 +41,10 @@ class CaracteristicaCrud extends Component
 
     public function render()
     {
-        $query = Caracteristica::with('opciones');
+
+        $query = Caracteristica::with('opciones')
+        ->where('ind_activo', $this->filtroActivo);
+
 
         if (!empty($this->search)) {
             $query->where('nombre', 'like', '%' . $this->search . '%');
@@ -46,7 +52,7 @@ class CaracteristicaCrud extends Component
 
         return view('livewire.catalogos.caracteristica-crud', [
             'caracteristicas' => $query->orderBy('created_at', 'desc')->paginate(15),
-            'opciones' => Opcion::orderBy('nombre','asc')->get(),
+            'opciones' => Opcion::where('ind_activo', 1)->orderBy('nombre', 'asc')->get(),
         ]);
     }
 
@@ -83,18 +89,33 @@ class CaracteristicaCrud extends Component
             $caracteristica->update([
                 'nombre' => $this->nombre,
                 'flag_seleccion_multiple' => (int) $this->flag_seleccion_multiple,
+                'ind_activo' => $this->ind_activo,
             ]);
+
+            $opcionesActivas = Opcion::whereIn('id', $this->opcion_id)
+            ->where('ind_activo', 1)
+            ->pluck('id')
+            ->toArray();
+
+            $caracteristica->opciones()->sync($opcionesActivas);
     
-            $caracteristica->opciones()->sync($this->opcion_id);
+            //$caracteristica->opciones()->sync($this->opcion_id);
     
             session()->flash('message', '¡Característica actualizada exitosamente!');
         } else {
             $caracteristica = Caracteristica::create([
                 'nombre' => $this->nombre,
                 'flag_seleccion_multiple' => (int) $this->flag_seleccion_multiple,
+                'ind_activo' => $this->ind_activo,
             ]);
+
+            $opcionesActivas = Opcion::whereIn('id', $this->opcion_id)
+            ->where('ind_activo', 1)
+            ->pluck('id')
+            ->toArray();
+
     
-            $caracteristica->opciones()->attach($this->opcion_id);
+            $caracteristica->opciones()->attach($opcionesActivas);
     
             session()->flash('message', '¡Característica creada exitosamente!');
         }
@@ -112,18 +133,16 @@ class CaracteristicaCrud extends Component
         $this->flag_seleccion_multiple = (bool) $caracteristica->flag_seleccion_multiple; // Asegurar conversión a booleano
         $this->opcion_id = $caracteristica->opciones->pluck('id')->toArray();
 
+        $this->ind_activo = (bool) $caracteristica->ind_activo;
+
         $this->abrirModal();
     }
 
     public function borrar($id)
     {
-        $caracteristica = Caracteristica::find($id);
+        $caracteristica = Caracteristica::findOrFail($id);
+        $caracteristica->update(['ind_activo' => 0]);
+        session()->flash('message', 'Característica desactivada exitosamente.');
 
-        if ($caracteristica) {
-            $caracteristica->opciones()->detach();
-            $caracteristica->delete();
-
-            session()->flash('message', 'Característica eliminada exitosamente.');
-        }
     }
 }

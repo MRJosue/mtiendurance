@@ -8,15 +8,26 @@
     @endif
 
     <div class="flex items-center justify-between mb-3 space-x-2">
+
+
+
         <button wire:click="crear" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">
             Nueva Categoría
         </button>
-        <div class="flex space-x-2">
+
+
+
+        <div class="flex space-x-3">
             <input type="text" wire:model="query" placeholder="Buscar por nombre..." class="border border-gray-300 rounded px-4 py-2">
+            <select wire:model="filtroActivo" class="border border-gray-300 rounded px-2 py-2">
+                <option value="1">Activas</option>
+                <option value="0">In activas</option>
+            </select>
             <button wire:click="buscar" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded">
                 Buscar
             </button>
         </div>
+
     </div>
 
     <table class="w-full border-collapse border border-gray-300">
@@ -76,11 +87,28 @@
                     <h5 class="text-xl font-bold">{{ $categoria_id ? 'Editar Categoría' : 'Crear Nueva Categoría' }}</h5>
                     <button class="text-gray-500 hover:text-gray-700" wire:click="cerrarModal">&times;</button>
                 </div>
+
+
+
                 <div class="p-4">
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Nombre</label>
-                        <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="nombre">
-                        @error('nombre') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    <div class="mb-4 flex flex-col sm:flex-row sm:items-end sm:space-x-4 space-y-4 sm:space-y-0">
+                        <!-- Campo Nombre -->
+                        <div class="w-full sm:w-3/4">
+                            <label class="block text-gray-700 mb-1">Nombre de la Categoría</label>
+                            <input 
+                            type="text" 
+                            class="w-full border border-gray-300 rounded p-2"
+                            wire:model="nombre"
+                            @if($nombreReadonly) readonly title="No se puede editar el nombre porque la categoría está asociada a más de un producto." @endif
+                        >
+                            @error('nombre') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                    
+                        <!-- Checkbox Estado activo -->
+                        <div class="w-full sm:w-1/4 flex items-center space-x-2 mt-2 sm:mt-6">
+                            <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" wire:model="ind_activo">
+                            <label class="text-gray-700 font-medium select-none">Estado activo</label>
+                        </div>
                     </div>
 
                     <!-- Checkbox para Flag Tallas -->
@@ -89,6 +117,8 @@
                         <label class="text-gray-700">Captura de tallas</label>
                     </div>
 
+                   
+       
 
                         <!-- Relación con Características -->
                     <div class="mb-4">

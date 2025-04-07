@@ -13,6 +13,10 @@
         </button>
         <div class="flex space-x-2">
             <input type="text" wire:model="query" placeholder="Buscar por nombre..." class="border border-gray-300 rounded px-4 py-2">
+            <select wire:model="filtroActivo" class="border border-gray-300 rounded px-4 py-2">
+                <option value="1">Activas</option>
+                <option value="0">In activas</option>
+            </select>
             <button wire:click="buscar" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded">
                 Buscar
             </button>
@@ -41,9 +45,12 @@
                         <button wire:click="editar('{{ $opc->id }}')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
                             Editar
                         </button>
-                        <button wire:click="borrar('{{ $opc->id }}')" class="bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1 rounded" onclick="return confirm('¿Estás seguro de eliminar esta opción?')">
+                        {{-- <button wire:click="confirmarDesactivacion('{{ $opc->id }}')" class="bg-red-500 hover:bg-red-600 text-white font-semibold px-3 py-1 rounded">
+                            Desactivar
+                        </button> --}}
+                        {{-- <button wire:click="confirmarEliminacionTotal('{{ $opc->id }}')" class="bg-red-700 hover:bg-red-800 text-white font-semibold px-3 py-1 rounded">
                             Eliminar
-                        </button>
+                        </button> --}}
                     </td>
                 </tr>
             @endforeach
@@ -53,6 +60,24 @@
     <div class="mt-4">
         {{ $opciones->links() }}
     </div>
+
+
+    @if($mostrarConfirmacion)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+                <h2 class="text-lg font-bold mb-4">Advertencia</h2>
+                <p class="mb-6">{{ $mensajeConfirmacion }}</p>
+                <div class="flex justify-end space-x-2">
+                    <button wire:click="$set('mostrarConfirmacion', false)" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                        Cancelar
+                    </button>
+                    <button wire:click="ejecutarAccionConfirmada" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 
     @if($modal)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -68,6 +93,11 @@
                         @error('nombre') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
+                    <div class="mb-4 flex items-center space-x-2">
+                        <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" wire:model="ind_activo">
+                        <label class="text-gray-700 font-medium select-none">Opción activa</label>
+                    </div>
+                    
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-1">Pasos</label>
                         <input type="number" class="w-full border border-gray-300 rounded p-2" wire:model="pasos">

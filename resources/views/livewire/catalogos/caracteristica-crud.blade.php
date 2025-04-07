@@ -13,6 +13,10 @@
         </button>
         <div class="flex space-x-2">
             <input type="text" wire:model="query" placeholder="Buscar por nombre..." class="border border-gray-300 rounded px-4 py-2">
+            <select wire:model="filtroActivo" class="border border-gray-300 rounded px-4 py-2">
+                <option value="1">Activas</option>
+                <option value="0">In activas</option>
+            </select>
             <button wire:click="buscar" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded">
                 Buscar
             </button>
@@ -74,7 +78,11 @@
                         <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="nombre">
                         @error('nombre') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
-
+                    <div class="mb-4 flex items-center space-x-2">
+                        <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" wire:model="ind_activo">
+                        <label class="text-gray-700 font-medium select-none">Característica activa</label>
+                    </div>
+                    
 
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-1">Opciones</label>

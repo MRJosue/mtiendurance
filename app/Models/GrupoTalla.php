@@ -10,7 +10,7 @@ class GrupoTalla extends Model
     use HasFactory;
 
     protected $table = 'grupos_tallas';
-    protected $fillable = ['nombre'];
+    protected $fillable = ['nombre', 'ind_activo'];
 
     // Relación con las tallas a través de GrupoTallaDetalle
     public function tallas()

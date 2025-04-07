@@ -24,7 +24,7 @@ return new class extends Migration
 
             $table->enum('estado', ['POR APROBAR', 'APROBADO',  'ENTREGADO', 'RECHAZADO', 'ARCHIVADO'])->default('POR APROBAR');
             
-            $table->enum('estado_produccion', ['POR PROGRAMAR', 'PROGRAMADO',  'IMPRESIÓN', 'CORTE', 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO', 'RECHAZADO'])->default('POR PROGRAMAR');
+            $table->enum('estado_produccion', ['POR APROBAR','POR PROGRAMAR', 'PROGRAMADO',  'IMPRESIÓN', 'CORTE', 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO', 'RECHAZADO'])->default('POR APROBAR');
             
 
             $table->date('fecha_produccion')->nullable();

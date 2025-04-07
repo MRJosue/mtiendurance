@@ -21,6 +21,17 @@ class OpcionCrud extends Component
     public $search = '';
     public $query = '';
 
+
+    public $filtroActivo = '1'; // Mostrar activas por defecto
+    public $ind_activo = true;  // Control en el modal
+
+    public $mostrarConfirmacion = false;
+    public $mensajeConfirmacion = '';
+    public $accionPendiente = null;
+
+    public $datosPendientes = [];
+
+
     protected $paginationTheme = 'tailwind';
 
     protected $rules = [
@@ -38,7 +49,8 @@ class OpcionCrud extends Component
 
     public function render()
     {
-        $query = Opcion::query();
+        $query = Opcion::where('ind_activo', $this->filtroActivo);
+
 
         if (!empty($this->search)) {
             $query->where('nombre', 'like', '%' . $this->search . '%');
@@ -68,41 +80,63 @@ class OpcionCrud extends Component
     public function limpiar()
     {
         $this->nombre = '';
-        $this->pasos = null;
-        $this->minutoPaso = null;
-        $this->valoru = null;
+        $this->pasos = 0;
+        $this->minutoPaso = 0;
+        $this->valoru = 0;
         $this->opcion_id = null;
     }
 
     public function guardar()
     {
         $this->validate();
+    
+            if ($this->opcion_id) {
+                $opcion = Opcion::findOrFail($this->opcion_id);
+        
+                // Si está intentando desactivar
+                if (!$this->ind_activo && $opcion->caracteristicas()->count() > 0) {
+                    $this->cerrarModal(); // Cierra el modal principal primero
 
-        if ($this->opcion_id) {
-            // Actualizar opción existente
-            $opcion = Opcion::findOrFail($this->opcion_id);
+                    $this->mensajeConfirmacion = "La opción que estás desactivando tiene relaciones activas con características. ¿Deseas continuar y eliminar esas relaciones?";
+                    $this->mostrarConfirmacion = true;
+                    $this->accionPendiente = 'guardar';
+                    $this->datosPendientes = [
+                        'id' => $this->opcion_id,
+                        'nombre' => $this->nombre,
+                        'pasos' => $this->pasos,
+                        'minutoPaso' => $this->minutoPaso,
+                        'valoru' => $this->valoru,
+                        'ind_activo' => false,
+                    ];
+                    return;
+            }
+    
+            // Actualizar directamente si no hay conflicto
             $opcion->update([
                 'nombre' => $this->nombre,
                 'pasos' => $this->pasos,
                 'minutoPaso' => $this->minutoPaso,
                 'valoru' => $this->valoru,
+                'ind_activo' => $this->ind_activo,
             ]);
+    
             session()->flash('message', '¡Opción actualizada exitosamente!');
         } else {
-            // Crear nueva opción
+            // Crear nueva
             Opcion::create([
                 'nombre' => $this->nombre,
                 'pasos' => $this->pasos,
                 'minutoPaso' => $this->minutoPaso,
                 'valoru' => $this->valoru,
+                'ind_activo' => $this->ind_activo,
             ]);
             session()->flash('message', '¡Opción creada exitosamente!');
         }
-
+    
         $this->cerrarModal();
         $this->limpiar();
     }
-
+    
     public function editar($id)
     {
         $opcion = Opcion::findOrFail($id);
@@ -111,6 +145,8 @@ class OpcionCrud extends Component
         $this->pasos = $opcion->pasos;
         $this->minutoPaso = $opcion->minutoPaso;
         $this->valoru = $opcion->valoru;
+        $this->ind_activo = (bool) $opcion->ind_activo;
+
         $this->abrirModal();
     }
 
@@ -119,8 +155,62 @@ class OpcionCrud extends Component
         $opcion = Opcion::find($id);
 
         if ($opcion) {
-            $opcion->delete(); // Eliminar la opción
-            session()->flash('message', 'Opción eliminada exitosamente.');
+            $opcion->update(['ind_activo' => 0]);
+            session()->flash('message', 'Opción desactivada exitosamente.');
         }
     }
+
+
+    public function eliminarRelacionesCaracteristicas($id)
+    {
+        $opcion = Opcion::findOrFail($id);
+        $opcion->caracteristicas()->detach();
+    }
+
+
+    public function confirmarDesactivacion($id)
+    {
+        $opcion = Opcion::findOrFail($id);
+        $relaciones = $opcion->caracteristicas()->count();
+
+        $this->mensajeConfirmacion = "La opción tiene {$relaciones} relación(es) con características. ¿Deseas continuar y eliminar esas relaciones?";
+        $this->opcion_id = $id;
+        $this->accionPendiente = 'desactivar';
+        $this->mostrarConfirmacion = true;
+    }
+
+    public function confirmarEliminacionTotal($id)
+    {
+        $opcion = Opcion::findOrFail($id);
+        $relaciones = $opcion->caracteristicas()->count();
+
+        $this->mensajeConfirmacion = "La opción tiene {$relaciones} relación(es) con características. ¿Deseas continuar y eliminar la opción junto con sus relaciones?";
+        $this->opcion_id = $id;
+        $this->accionPendiente = 'eliminar';
+        $this->mostrarConfirmacion = true;
+    }
+
+    public function ejecutarAccionConfirmada()
+    {
+        if ($this->accionPendiente === 'guardar') {
+            $opcion = Opcion::findOrFail($this->datosPendientes['id']);
+    
+            // Eliminar relaciones
+            $opcion->caracteristicas()->detach();
+    
+            // Actualizar con los datos pendientes
+            $opcion->update($this->datosPendientes);
+    
+            session()->flash('message', '¡Relaciones eliminadas y opción desactivada exitosamente!');
+        }
+    
+        $this->mostrarConfirmacion = false;
+        $this->accionPendiente = null;
+        $this->datosPendientes = [];
+    
+        $this->cerrarModal();
+        $this->limpiar();
+    }
+    
+
 }

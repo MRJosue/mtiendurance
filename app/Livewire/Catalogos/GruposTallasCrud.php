@@ -8,6 +8,8 @@ use Livewire\WithPagination;
 use App\Models\GrupoTalla;
 use App\Models\Talla;
 
+use Illuminate\Support\Facades\Log;
+
 class GruposTallasCrud extends Component
 {
     use WithPagination;
@@ -16,6 +18,13 @@ class GruposTallasCrud extends Component
     public $modalOpen = false;
     public $confirmingDelete = false;
 
+    public $filtroActivo = '1';
+    public $ind_activo = true;
+
+    public $search = '';
+    public $query = '';
+
+
     protected $rules = [
         'nombre' => 'required|string|max:255',
         'selectedTallas' => 'array'
@@ -23,15 +32,31 @@ class GruposTallasCrud extends Component
 
     public function render()
     {
+        $grupos = GrupoTalla::with('tallas')
+        ->where('ind_activo', $this->filtroActivo)
+        ->when($this->search, function ($query) {
+            $query->where('nombre', 'like', '%' . $this->search . '%');
+        })
+        ->orderBy('nombre')
+        ->paginate(15);
+
         return view('livewire.catalogos.grupos-tallas-crud', [
-            'grupos' => GrupoTalla::with('tallas')->orderBy('nombre')->paginate(15),
-            'tallasDisponibles' => Talla::orderBy('nombre')->get()
+            'grupos' => $grupos,
+            'tallasDisponibles' => Talla::where('ind_activo', 1)->orderBy('nombre')->get()
         ]);
+    }
+
+    public function buscar()
+    {
+        $this->search = $this->query;
+        $this->resetPage();
     }
 
     public function openModal()
     {
+
         $this->reset(['nombre', 'grupo_id', 'selectedTallas']);
+      
         $this->modalOpen = true;
     }
 
@@ -39,7 +64,11 @@ class GruposTallasCrud extends Component
     {
         $this->grupo_id = $grupo->id;
         $this->nombre = $grupo->nombre;
+
         $this->selectedTallas = $grupo->tallas()->pluck('tallas.id')->toArray();
+
+        $this->ind_activo = (bool) $grupo->ind_activo;
+
         $this->modalOpen = true;
     }
 
@@ -49,11 +78,19 @@ class GruposTallasCrud extends Component
 
         $grupo = GrupoTalla::updateOrCreate(['id' => $this->grupo_id], [
             'nombre' => $this->nombre,
+            'ind_activo' => $this->ind_activo,
         ]);
-
-        // Sincronizar tallas seleccionadas
-        $grupo->tallas()->sync($this->selectedTallas);
-
+    
+        // 🔍 Validar tallas activas seleccionadas
+        $tallasValidas = Talla::whereIn('id', $this->selectedTallas)
+            ->where('ind_activo', 1)
+            ->pluck('id')
+            ->toArray();
+    
+        // 💣 Limpieza previa y sincronización
+        $grupo->tallas()->detach();
+        $grupo->tallas()->sync($tallasValidas);
+    
         $this->dispatch('alert', ['message' => 'Grupo de tallas guardado correctamente.']);
         $this->modalOpen = false;
     }
@@ -66,8 +103,8 @@ class GruposTallasCrud extends Component
 
     public function delete()
     {
-        GrupoTalla::findOrFail($this->grupo_id)->delete();
-        $this->dispatch('alert', ['message' => 'Grupo de tallas eliminado correctamente.']);
+        GrupoTalla::findOrFail($this->grupo_id)->update(['ind_activo' => 0]);
+        $this->dispatch('alert', ['message' => 'Grupo de tallas desactivado correctamente.']);
         $this->confirmingDelete = false;
     }
 }
