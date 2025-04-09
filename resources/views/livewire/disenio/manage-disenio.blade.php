@@ -66,7 +66,7 @@
                         <td class="px-4 py-2 border whitespace-normal">
                             @if($project->estados->isNotEmpty())
                                 <ul class="list-disc list-inside text-gray-600 space-y-1 text-xs">
-                                    @foreach($project->estados->sortByDesc('fecha_inicio')->take(2) as $estado)
+                                    @foreach($project->estados->sortByDesc('id')->take(2) as $estado)
                                         <li>
                                             <strong>{{ $estado->estado }}</strong> 
                                             ({{ \Carbon\Carbon::parse($estado->fecha_inicio)->format('d-m-Y H:i') }})
@@ -152,7 +152,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($proyectoSeleccionado->estados->sortByDesc('fecha_inicio') as $estado)
+                    @foreach($proyectoSeleccionado->estados->sortByDesc('id') as $estado)
                         <tr>
                             <td class="border px-4 py-2">{{ $estado->estado }}</td>
                             <td class="border px-4 py-2">{{ $estado->comentario ?? '-' }}</td>

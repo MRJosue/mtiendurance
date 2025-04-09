@@ -27,6 +27,7 @@ use App\Http\Controllers\TallasController;
 use App\Http\Controllers\DisenioController;
 
 use App\Http\Controllers\ProgramacionController;
+use App\Http\Controllers\ReprogramacionProyecto;
 
 use App\Events\TestEvent;
 use App\Events\MessageSent;
@@ -145,6 +146,9 @@ Route::get('/diseño/admin_tarea',[DisenioController::class, 'admin_tarea'])->mi
 // Rutas de programacion 
 Route::get('/programacion',[ProgramacionController::class, 'index'])->middleware(['auth','verified'])->name('programacion.index');
 
+
+// Reprogramacion 
+Route::get('/reprogramacion/{proyecto}',[ReprogramacionProyecto::class, 'index'])->middleware(['auth','verified'])->name('reprogramacion.reprogramacionproyectopedido');
 
 //Catalogos
     //Categorias

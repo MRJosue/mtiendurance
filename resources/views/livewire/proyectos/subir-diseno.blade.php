@@ -1,4 +1,9 @@
 <div>
+    @if($estado === 'PENDIENTE' || $estado === 'ASIGNADO' || $estado === 'EN PROCESO')
+        <button wire:click="$set('modalSubirArchivoDiseno', true)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">
+            Subir arte
+        </button>
+    @endif
 
     @if($estado === 'EN PROCESO')
         <!-- Botón para subir diseño -->
@@ -111,6 +116,25 @@
                 <div class="flex justify-end space-x-2">
                     <button wire:click="$set('modalRechazar', false)" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">Cancelar</button>
                     <button wire:click="rechazarDiseno" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Rechazar</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+
+    @if($modalSubirArchivoDiseno)
+        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
+                <h2 class="text-xl font-bold mb-4">Subir Archivo de Diseño</h2>
+                <input type="file" wire:model="archivo" class="mb-3">
+                @error('archivo') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+
+                <textarea wire:model="comentario" placeholder="Comentario (opcional)" class="w-full border rounded p-2 mb-3"></textarea>
+                @error('comentario') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+
+                <div class="flex justify-end space-x-2">
+                    <button wire:click="$set('modalSubirArchivoDiseno', false)" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">Cancelar</button>
+                    <button wire:click="subirArchivoDiseno" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">Subir</button>
                 </div>
             </div>
         </div>

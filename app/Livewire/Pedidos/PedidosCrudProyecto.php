@@ -10,11 +10,13 @@ use App\Models\Producto;
 use App\Models\DireccionEntrega;
 use App\Models\DireccionFiscal;
 use App\Models\Cliente;
+use App\Models\Categoria;
 use App\Models\Ciudad;
 use App\Models\Pais;
 use App\Models\Estado;
 use App\Models\TipoEnvio;
 use App\Models\PedidoCaracteristica;
+use App\Models\Caracteristica;
 use App\Models\PedidoOpcion;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -31,6 +33,7 @@ class PedidosCrudProyecto extends Component
     public $proyectoId;
     public $modal = false;
     public $modal_confirmar_aprobacion = false;
+    public $modal_reconfigurar_proyecto = false;
 
     public $pedidoId, $total, $estatus, $tipo, $estado, $fecha_produccion, $fecha_embarque, $fecha_entrega;
     public $direccion_fiscal_id;
@@ -383,7 +386,6 @@ class PedidosCrudProyecto extends Component
         }
     }
 
-
     public function on_Calcula_Fechas_Entrega()
     {
         if ($this->fecha_entrega) {
@@ -487,12 +489,10 @@ class PedidosCrudProyecto extends Component
         return $fecha->format('Y-m-d');
     }
 
-
     public function actualizarTabla()
     {
         $this->resetPage(); // Reinicia a la primera página si estás paginando
     }
-
 
     public function recopilarCantidadesTallas()
     {
@@ -506,7 +506,6 @@ class PedidosCrudProyecto extends Component
         }
     }
 
-
     public function confirmarAprobacion($id_pedido)
     {
         $this->pedidoId = $id_pedido;
@@ -516,6 +515,14 @@ class PedidosCrudProyecto extends Component
     public function aprobar_pedido()
     {
         $pedido = Pedido::findOrFail($this->pedidoId);
+
+
+        if (!$this->validarConfiguracionProyecto()) {
+            $this->modal_confirmar_aprobacion = false;
+            $this->modal_reconfigurar_proyecto = true;
+            return;
+        }
+
 
         // Validaciones del pedido 
         $ahora = now();
@@ -534,6 +541,18 @@ class PedidosCrudProyecto extends Component
             }
         }
 
+
+        // Validar si la configuracion del proyecto esta coorectamente configurado 
+        // Tomamos el proyecto
+        // categoria_sel, Producto_sel, caracterisiticas_sel, total_piezas_sel
+        
+        // tomamos cada id y evaluamos Ind_activo
+        // si no hay errores regresar true si hay errores regresa false
+        // Si hay error en esta parte cierra el modal de aprobacion 
+        // Muestra un nuevo modal donde indicamos que el proyecto necesita reconfiguracion
+        // mostrar si decea solicitar la reconfiguracion
+        // al seleccionar si. enviar notificacion  
+
         // Aprobar el pedido
         $pedido->update([
             'estado' => 'APROBADO',
@@ -546,6 +565,66 @@ class PedidosCrudProyecto extends Component
     }
 
 
+    public function validarConfiguracionProyecto(): bool
+    {
+        $proyecto = Proyecto::find($this->proyectoId);
+
+        if (!$proyecto || !$proyecto->producto_sel || !$proyecto->categoria_sel || !$proyecto->caracteristicas_sel || !$proyecto->total_piezas_sel) {
+            return false;
+        }
+
+        $producto = is_string($proyecto->producto_sel) ? json_decode($proyecto->producto_sel, true) : $proyecto->producto_sel;
+        $categoria = is_string($proyecto->categoria_sel) ? json_decode($proyecto->categoria_sel, true) : $proyecto->categoria_sel;
+        $caracteristicas = is_string($proyecto->caracteristicas_sel) ? json_decode($proyecto->caracteristicas_sel, true) : $proyecto->caracteristicas_sel;
+
+        if (empty($producto['id']) || empty($categoria['id']) || empty($caracteristicas)) {
+            return false;
+        }
+
+        if (!Producto::where('id', $producto['id'])->where('ind_activo', 1)->exists()) return false;
+        if (!Categoria::where('id', $categoria['id'])->where('ind_activo', 1)->exists()) return false;
+
+        foreach ($caracteristicas as $caracteristica) {
+            if (isset($caracteristica['id']) && !Caracteristica::where('id', $caracteristica['id'])->where('ind_activo', 1)->exists()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function solicitarReconfiguracion( $id_pedido)
+    {
+        $proyecto = Proyecto::find($this->proyectoId);
+        $this->pedidoId = $id_pedido;
+        $pedido = Pedido::findOrFail($this->pedidoId);
+
+        if ($pedido) {
+            // Aquí puedes usar una notificación, email, log, o evento personalizado
+            Log::warning("🛠 Se ha solicitado reconfiguración para el proyecto ID {$proyecto->id}");
+    
+            // Ejemplo con una notificación a admin:
+            // Notification::route('mail', 'admin@example.com')->notify(new SolicitudReconfiguracion($proyecto));
+
+            $pedido->update([
+                'estado' => 'POR REPROGRAMAR',
+                'estado_produccion' => 'POR PROGRAMAR',
+            ]);
+
+
+    
+            session()->flash('message', '🔧 Se ha solicitado la reconfiguración del proyecto.');
+
+            // Añadir flag_solicitud_reconfiguracion 
+            // una vez este este flag en programacion mostrar un boton que al accionar nos envie a la pantalla de reconfiguracion
+            // Añadir estatus 'Por Reconfigurar'
+
+        
+        }
+    
+        $this->modal_reconfigurar_proyecto = false;
+    }
+    
 
     public function render()
     {

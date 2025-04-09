@@ -36,7 +36,8 @@ class Pedido extends Model
         'fecha_entrega',
         'id_tipo_envio',
         'url',
-        'last_uploaded_file_id'
+        'last_uploaded_file_id',
+        'flag_aprobar_sin_fechas'
     ];
 
     /**

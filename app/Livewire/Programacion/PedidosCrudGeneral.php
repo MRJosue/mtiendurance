@@ -66,6 +66,8 @@ class PedidosCrudGeneral extends Component
     public $selectedPedidos = [];
     public $selectAll = false;
 
+    public $modal_aprobar_sin_fechas = false;
+
 
     public function mount()
     {
@@ -375,6 +377,34 @@ class PedidosCrudGeneral extends Component
     {
         // Implementa la lógica de exportación aquí
         session()->flash('message', 'Exportación completada.');
+    }
+
+
+    public function confirmarAprobarSinFechas($pedidoId)
+    {
+        $this->pedidoId = $pedidoId;
+        $this->modal_aprobar_sin_fechas = true;
+    }
+    
+    public function aprobarSinFechas()
+    {
+        $pedido = Pedido::findOrFail($this->pedidoId);
+        
+        Log::debug('Mensaje', ['data' => $this->pedidoId]);
+
+        Log::debug('Pedido encontrado', ['pedido' => $pedido]);
+
+        $pedido->update([
+            'flag_aprobar_sin_fechas' => 1,
+            'estado' => 'POR APROBAR',
+            'estado_produccion' => 'POR PROGRAMAR',
+        ]);
+        
+        Log::debug('LOG update');
+
+        $this->modal_aprobar_sin_fechas = false;
+        $this->dispatch('ActualizarTablaPedido');
+        session()->flash('message', '✅ Pedido aprobado sin validar fechas.');
     }
 
     public function aplicarFiltros()

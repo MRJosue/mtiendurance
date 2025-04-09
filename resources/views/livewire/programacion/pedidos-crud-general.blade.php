@@ -111,115 +111,114 @@
         </button>
     </div>
         
-    <div class="overflow-x-auto bg-white rounded-lg shadow">
-        <table class="min-w-full border-collapse border border-gray-200 text-sm">
-            <thead class="bg-gray-100 text-gray-700">
-                <tr>
-                    <th class="px-4 py-2 border">
-                        <input type="checkbox"
-                            wire:model="selectAll"
-                            @change="selectedPedidos = $event.target.checked ? @js($pedidos->pluck('id')) : []"
-                        />
-                    </th>
-                    <th class="px-4 py-2 border">ID</th>
-                    <th class="px-4 py-2 border">Usuario</th>
-                    <th class="px-4 py-2 border">Producto / Categoría</th>
-                    <th class="px-4 py-2 border">Total</th>
-                    <th class="px-4 py-2 border">Tipo</th>
-                    <th class="px-4 py-2 border">Estado</th>
-                    <th class="px-4 py-2 border">Producción</th>
-                    <th class="px-4 py-2 border">Embarque</th>
-                    <th class="px-4 py-2 border">Entrega</th>
-                    <th class="px-4 py-2 border">Estatus Producción</th>
-                    <th class="px-4 py-2 border">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-
-
-
-                @forelse($pedidos as $pedido)
-                    @php
-                        $hoy = \Carbon\Carbon::today();
-                        $color = 'bg-white';
-
-                        $fechaEntrega = $pedido->fecha_entrega ? \Carbon\Carbon::parse($pedido->fecha_entrega) : null;
-
-                        if ($pedido->estado_produccion === 'COMPLETADO') {
-                            $color = 'bg-green-100';
-                        } elseif ($fechaEntrega) {
-                            $diff = $hoy->diffInDays($fechaEntrega, false); // Negativo si ya pasó
-
-                            if ($diff > 7) {
-                                $color = 'bg-white';
-                            } elseif ($diff >= 4) {
-                                $color = 'bg-yellow-100';
-                            } elseif ($diff >= 1) {
-                                $color = 'bg-orange-100';
-                            } elseif ($diff <= 0) {
-                                $color = 'bg-red-100';
-                            }
-                        }
-                    @endphp
-                
-                <tr class="{{ $color }} hover:bg-gray-50 transition">
-                    <td class="px-4 py-2 border">
-                        <input type="checkbox"
-                            wire:model="selectedPedidos"
-                            value="{{ $pedido->id }}"
-                        />
-                    </td>  
-                        <td class="px-4 py-2 border font-medium">{{ $pedido->id }}-{{ $pedido->proyecto_id }}</td>
-
-                        <td class="px-4 py-2 border">{{ $pedido->proyecto->user->name ?? 'Sin usuario' }}</td>
-            
-                        <td class="px-4 py-2 border">
-                            <div class="font-semibold">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
-                            <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
-                        </td>
-            
-                        <td class="px-4 py-2 border">{{ $pedido->total }} piezas</td>
-                        <td class="px-4 py-2 border">{{ $pedido->tipo }}</td>
-            
-                        <td class="px-4 py-2 border">
-                            <span class="text-xs font-bold px-2 py-1 rounded text-white"
-                                  style="background-color:
-                                      @if($pedido->estado === 'POR APROBAR') #FBBF24
-                                      @elseif($pedido->estado === 'APROBADO') #10B981
-                                      @elseif($pedido->estado === 'ENTREGADO') #3B82F6
-                                      @elseif($pedido->estado === 'RECHAZADO') #EF4444
-                                      @elseif($pedido->estado === 'ARCHIVADO') #6B7280
-                                      @else #D1D5DB @endif;">
-                                {{ strtoupper($pedido->estado) }}
-                            </span>
-                        </td>
-            
-                        <td class="px-4 py-2 border">{{ $pedido->fecha_produccion ?? 'No definida' }}</td>
-                        <td class="px-4 py-2 border">{{ $pedido->fecha_embarque ?? 'No definida' }}</td>
-                        <td class="px-4 py-2 border">{{ $pedido->fecha_entrega ?? 'No definida' }}</td>
-            
-                        <td class="px-4 py-2 border">
-                            <span class="text-xs bg-gray-100 px-2 py-1 rounded text-gray-800">
-                                {{ $pedido->estado_produccion ?? 'Sin definir' }}
-                            </span>
-                        </td>
-            
-                        <td class="px-4 py-2 border text-center">
-                            <button wire:click="abrirModal({{ $pedido->id }})"
-                                    class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">
-                                Editar
-                            </button>
-                        </td>
-                    </tr>
-                @empty
+    <div class="overflow-x-auto">
+        <div class="inline-block min-w-full align-middle">
+            <table class="min-w-full text-sm text-left text-gray-700">
+                <thead class="bg-gray-100 text-xs uppercase tracking-wider">
                     <tr>
-                        <td colspan="12" class="text-center py-4 text-gray-500">
-                            No hay pedidos disponibles.
-                        </td>
+                        <th class="px-4 py-3 border">
+                            <input type="checkbox"
+                                wire:model="selectAll"
+                                @change="selectedPedidos = $event.target.checked ? @js($pedidos->pluck('id')) : []"
+                            />
+                        </th>
+                        <th class="px-4 py-3 border">ID</th>
+                        <th class="px-4 py-3 border">Usuario</th>
+                        <th class="px-4 py-3 border">Producto / Categoría</th>
+                        <th class="px-4 py-3 border">Total</th>
+                        <th class="px-4 py-3 border">Tipo</th>
+                        <th class="px-4 py-3 border">Estado</th>
+                        <th class="px-4 py-3 border">Producción</th>
+                        <th class="px-4 py-3 border">Embarque</th>
+                        <th class="px-4 py-3 border">Entrega</th>
+                        <th class="px-4 py-3 border">Producción</th>
+                        <th class="px-4 py-3 border text-center">Acciones</th>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse($pedidos as $pedido)
+                        @php
+                            $hoy = \Carbon\Carbon::today();
+                            $color = 'bg-white';
+                            $fechaEntrega = $pedido->fecha_entrega ? \Carbon\Carbon::parse($pedido->fecha_entrega) : null;
+        
+                            if ($pedido->estado_produccion === 'COMPLETADO') {
+                                $color = 'bg-green-100';
+                            } elseif ($fechaEntrega) {
+                                $diff = $hoy->diffInDays($fechaEntrega, false);
+                                if ($diff > 7) $color = 'bg-white';
+                                elseif ($diff >= 4) $color = 'bg-yellow-100';
+                                elseif ($diff >= 1) $color = 'bg-orange-100';
+                                else $color = 'bg-red-100';
+                            }
+                        @endphp
+        
+                        <tr class="{{ $color }} hover:bg-gray-50 transition">
+                            <td class="px-4 py-2 border">
+                                <input type="checkbox"
+                                    wire:model="selectedPedidos"
+                                    value="{{ $pedido->id }}"
+                                />
+                            </td>
+                            <td class="px-4 py-2 border font-semibold">{{ $pedido->id }}-{{ $pedido->proyecto_id }}</td>
+                            <td class="px-4 py-2 border">{{ $pedido->proyecto->user->name ?? 'Sin usuario' }}</td>
+                            <td class="px-4 py-2 border">
+                                <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
+                                <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
+                            </td>
+                            <td class="px-4 py-2 border">{{ $pedido->total }} piezas</td>
+                            <td class="px-4 py-2 border">{{ $pedido->tipo }}</td>
+                            <td class="px-4 py-2 border">
+                                <span class="text-xs font-bold px-2 py-1 rounded text-white"
+                                    style="background-color:
+                                        @if($pedido->estado === 'POR APROBAR') #FBBF24
+                                        @elseif($pedido->estado === 'APROBADO') #10B981
+                                        @elseif($pedido->estado === 'ENTREGADO') #3B82F6
+                                        @elseif($pedido->estado === 'RECHAZADO') #EF4444
+                                        @elseif($pedido->estado === 'ARCHIVADO') #6B7280
+                                        @elseif($pedido->estado === 'POR REPROGRAMAR') #E74C3C
+                                        @else #D1D5DB @endif;">
+                                    {{ strtoupper($pedido->estado) }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 border">{{ $pedido->fecha_produccion ?? 'No definida' }}</td>
+                            <td class="px-4 py-2 border">{{ $pedido->fecha_embarque ?? 'No definida' }}</td>
+                            <td class="px-4 py-2 border">{{ $pedido->fecha_entrega ?? 'No definida' }}</td>
+                            <td class="px-4 py-2 border">
+                                <span class="text-xs bg-gray-100 px-2 py-1 rounded text-gray-800">
+                                    {{ $pedido->estado_produccion ?? 'Sin definir' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 border text-center space-y-1">
+                                <button wire:click="abrirModal({{ $pedido->id }})"
+                                        class="w-full px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                                    Editar
+                                </button>
+        
+                                @if($pedido->estado === 'POR REPROGRAMAR')
+                                    <a href="{{ route('reprogramacion.reprogramacionproyectopedido', ['proyecto' => $pedido->proyecto_id]) }}"
+                                    class="w-full block px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600">
+                                        Reprogramar
+                                    </a>
+                                @endif
+                                @if($pedido->flag_aprobar_sin_fechas == 0 && $pedido->estado == 'POR APROBAR')
+                                    <button wire:click="confirmarAprobarSinFechas({{ $pedido->id }})"
+                                            class="w-full px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                        Aprobar sin fechas
+                                    </button>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="12" class="text-center py-4 text-gray-500">
+                                No hay pedidos disponibles.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="mt-4">
@@ -441,5 +440,30 @@
             </div>
         </div>
     @endif
+
+    @if($modal_aprobar_sin_fechas)
+        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+                <h2 class="text-xl font-bold text-blue-600 mb-4">¿Aprobar este pedido sin validar fechas?</h2>
+
+                <p class="text-gray-700 mb-4">
+                    Esta acción permitirá al cliente  <strong>APROBAR</strong> ,
+                    aunque no tenga fechas de produccion y entrega en tiempo. ¿Deseas continuar?
+                </p>
+
+                <div class="flex justify-end gap-2">
+                    <button wire:click="$set('modal_aprobar_sin_fechas', false)"
+                            class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
+                        Cancelar
+                    </button>
+                    <button wire:click="aprobarSinFechas"
+                            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Sí, aprobar sin fechas
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
 
 </div>

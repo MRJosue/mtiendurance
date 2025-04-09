@@ -84,7 +84,7 @@
                                       @elseif($pedido->estado == 'ENTREGADO') #3498DB
                                       @elseif($pedido->estado == 'RECHAZADO') #9B59B6
                                       @elseif($pedido->estado == 'ARCHIVADO') #E67E22
-                                      @elseif($pedido->estado == 'RECHAZADO') #E74C3C
+                                      @elseif($pedido->estado == 'POR REPROGRAMAR') #E74C3C
                                       @else #BDC3C7 @endif;">
                                 {{ strtoupper($pedido->estado) }}
                             </span>
@@ -307,6 +307,35 @@
                     <button wire:click="aprobar_pedido"
                             class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
                         Confirmar y Aprobar
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+
+    @if ($modal_reconfigurar_proyecto)
+        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div class="bg-white rounded shadow-lg w-full max-w-lg p-6">
+                <!-- Encabezado -->
+                <div class="mb-4">
+                    <h2 class="text-xl font-bold text-red-600">⚠️ Proyecto mal configurado</h2>
+                    <p class="text-gray-700 mt-2">
+                        Este proyecto tiene errores de configuración y no puede aprobarse aún. 
+                        
+                    </p>
+                </div>
+
+                <!-- Opciones -->
+                <div class="mt-6 flex justify-end space-x-2">
+                    <button wire:click="$set('modal_reconfigurar_proyecto', false)"
+                            class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">
+                        Cancelar
+                    </button>
+
+                    <button wire:click="solicitarReconfiguracion({{ $pedido->id }})"
+                            class="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded">
+                        Solicitar Reconfiguración
                     </button>
                 </div>
             </div>

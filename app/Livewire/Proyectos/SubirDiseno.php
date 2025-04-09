@@ -32,6 +32,8 @@ class SubirDiseno extends Component
     public $modalRechazar = false;
     public $modalConfirmarMuestra = false;
 
+    public $modalSubirArchivoDiseno = false;
+
     public $comentarioRechazo;
     public $estado;
 
@@ -330,8 +332,6 @@ class SubirDiseno extends Component
         ];
     }
 
-
-
     protected function rulesPedido()
     {
         return [
@@ -407,7 +407,6 @@ class SubirDiseno extends Component
         }
     }
 
-
     public function ajustarFechaSinFinesDeSemana($fecha)
     {
         $fecha = Carbon::parse($fecha);
@@ -422,6 +421,52 @@ class SubirDiseno extends Component
         }
     
         return $fecha->format('Y-m-d');
+    }
+
+    public function subirArchivoDiseno()
+    {
+        $this->validate([
+            'archivo' => 'required|file|max:10240',
+            'comentario' => 'nullable|string|max:500',
+        ]);
+
+        $proyecto = Proyecto::find($this->proyectoId);
+        if (!$proyecto) return;
+
+        $path = $this->archivo->store('disenos', 'public');
+
+        ArchivoProyecto::create([
+            'proyecto_id' => $proyecto->id,
+            'nombre_archivo' => $this->archivo->getClientOriginalName(),
+            'ruta_archivo' => $path,
+            'tipo_archivo' => $this->archivo->getClientMimeType(),
+            'usuario_id' => Auth::id(),
+            'descripcion' => $this->comentario,
+        ]);
+
+        $archivo = ArchivoProyecto::where('proyecto_id', $proyecto->id)->latest('id')->first();
+        $totalArchivos = ArchivoProyecto::where('proyecto_id', $proyecto->id)->count();
+        
+        $comentarioEstado = $totalArchivos > 1
+            ? 'El cliente ha actualizado el archivo de arte del proyecto'
+            : 'El cliente ha cargado el primer arte del proyecto';
+
+        $AuxEstado = $totalArchivos > 1
+        ? 'ARTE CARGADO'
+        : 'PRIMER ARTE CARGADO';
+        
+        proyecto_estados::create([
+            'proyecto_id' => $proyecto->id,
+            'estado' => $AuxEstado,
+            'comentario' => $comentarioEstado,
+            'url' => $archivo?->ruta_archivo,
+            'fecha_inicio' => now(),
+            'usuario_id' => Auth::id(),
+            'last_uploaded_file_id' => $archivo?->id,
+        ]);
+
+        $this->reset(['archivo', 'comentario', 'modalSubirArchivoDiseno']);
+        session()->flash('message', 'Archivo de diseño subido correctamente.');
     }
 
 

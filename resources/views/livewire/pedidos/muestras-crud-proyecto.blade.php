@@ -1,4 +1,7 @@
-<div class="overflow-x-auto">
+<div class="max-w-6xl mx-auto p-4">
+
+    <h2 class="text-2xl font-bold mb-4">Gestión de Muestras</h2>
+
     <table class="min-w-full bg-white border border-gray-300 text-sm text-left">
         <thead class="bg-gray-100">
             <tr>

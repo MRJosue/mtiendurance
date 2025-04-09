@@ -27,7 +27,7 @@ class UltimoArchivo extends Component
     public function cargarUltimoArchivo()
     {
         $this->ultimoArchivo = ArchivoProyecto::where('proyecto_id', $this->proyectoId)
-            ->latest('created_at')
+            ->latest('id')
             ->first();
 
         if (!$this->ultimoArchivo) {
