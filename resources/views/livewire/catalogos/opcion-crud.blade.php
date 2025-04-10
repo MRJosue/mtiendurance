@@ -87,50 +87,80 @@
                     <button class="text-gray-500 hover:text-gray-700" wire:click="cerrarModal">&times;</button>
                 </div>
                 <div class="p-4">
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Nombre</label>
-                        <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="nombre">
-                        @error('nombre') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+                    <div class="overflow-y-auto p-4 space-y-4 flex-1">
 
-                    <div class="mb-4 flex items-center space-x-2">
-                        <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" wire:model="ind_activo">
-                        <label class="text-gray-700 font-medium select-none">Opción activa</label>
-                    </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-1">Nombre</label>
+                            <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="nombre">
+                            @error('nombre') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
 
-                    <div x-data="{ mostrar: false }" class="mb-4 border border-gray-200 rounded">
-                        <button
-                            type="button"
-                            class="w-full text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 font-semibold text-gray-700 rounded-t flex justify-between items-center"
-                            @click="mostrar = !mostrar"
-                        >
-                            <span>Tiempos (Pasos, Minuto/Paso, Valor Unitario)</span>
-                            <svg :class="{'transform rotate-180': mostrar}" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
+                        <div class="mb-4 flex items-center space-x-2">
+                            <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" wire:model="ind_activo">
+                            <label class="text-gray-700 font-medium select-none">Opción activa</label>
+                        </div>
 
-                        <div x-show="mostrar" x-transition class="p-4 space-y-4">
-                            <div>
-                                <label class="block text-gray-700 mb-1">Pasos</label>
-                                <input type="number" class="w-full border border-gray-300 rounded p-2" wire:model="pasos">
-                                @error('pasos') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
+                        <div x-data="{ mostrar: false }" class="mb-4 border border-gray-200 rounded">
+                            <button
+                                type="button"
+                                class="w-full text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 font-semibold text-gray-700 rounded-t flex justify-between items-center"
+                                @click="mostrar = !mostrar"
+                            >
+                                    <span>Tiempos (Pasos, Minuto/Paso, Valor Unitario)</span>
+                                    <svg :class="{'transform rotate-180': mostrar}" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
 
-                            <div>
-                                <label class="block text-gray-700 mb-1">Minuto/Paso</label>
-                                <input type="number" class="w-full border border-gray-300 rounded p-2" wire:model="minutoPaso">
-                                @error('minutoPaso') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                            </div>
+                                <div x-show="mostrar" x-transition class="p-4 space-y-4">
+                                    <div>
+                                        <label class="block text-gray-700 mb-1">Pasos</label>
+                                        <input type="number" class="w-full border border-gray-300 rounded p-2" wire:model="pasos">
+                                        @error('pasos') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                    </div>
 
-                            <div>
-                                <label class="block text-gray-700 mb-1">Valor Unitario</label>
-                                <input type="number" step="0.01" class="w-full border border-gray-300 rounded p-2" wire:model="valoru">
-                                @error('valoru') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                    <div>
+                                        <label class="block text-gray-700 mb-1">Minuto/Paso</label>
+                                        <input type="number" class="w-full border border-gray-300 rounded p-2" wire:model="minutoPaso">
+                                        @error('minutoPaso') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-gray-700 mb-1">Valor Unitario</label>
+                                        <input type="number" step="0.01" class="w-full border border-gray-300 rounded p-2" wire:model="valoru">
+                                        @error('valoru') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                        </div>
+
+
+                        <div x-data="{ mostrar: false }" class="mb-4 border border-gray-200 rounded">
+                            <button
+                                type="button"
+                                class="w-full text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 font-semibold text-gray-700 rounded-t flex justify-between items-center"
+                                @click="mostrar = !mostrar"
+                            >
+                                <span>Relación con Características</span>
+                                <svg :class="{'transform rotate-180': mostrar}" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            <div x-show="mostrar" x-transition class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+                                @foreach($caracteristicas as $caracteristica)
+                                    <label class="flex items-center space-x-2">
+                                        <input
+                                            type="checkbox"
+                                            wire:model="caracteristicasSeleccionadas"
+                                            value="{{ $caracteristica->id }}"
+                                            class="form-checkbox text-blue-600"
+                                        >
+                                        <span class="text-gray-700">{{ $caracteristica->nombre }}</span>
+                                    </label>
+                                @endforeach
                             </div>
                         </div>
                     </div>
-
                 </div>
                 <div class="flex items-center justify-end border-t border-gray-200 p-4 space-x-2">
                     <button wire:click="cerrarModal" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">

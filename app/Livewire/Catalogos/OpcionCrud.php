@@ -30,6 +30,8 @@ class OpcionCrud extends Component
     public $accionPendiente = null;
 
     public $datosPendientes = [];
+    public $caracteristicasSeleccionadas = [];
+
 
 
     protected $paginationTheme = 'tailwind';
@@ -51,13 +53,15 @@ class OpcionCrud extends Component
     {
         $query = Opcion::where('ind_activo', $this->filtroActivo);
 
-
         if (!empty($this->search)) {
             $query->where('nombre', 'like', '%' . $this->search . '%');
         }
 
+        $caracteristicas = Caracteristica::where('ind_activo', 1)->orderBy('nombre')->get();
+
         return view('livewire.catalogos.opcion-crud', [
             'opciones' => $query->orderBy('created_at', 'desc')->paginate(15),
+            'caracteristicas' => $caracteristicas,
         ]);
     }
 
@@ -84,34 +88,34 @@ class OpcionCrud extends Component
         $this->minutoPaso = 0;
         $this->valoru = 0;
         $this->opcion_id = null;
+        $this->caracteristicasSeleccionadas = [];
     }
 
     public function guardar()
     {
         $this->validate();
-    
-            if ($this->opcion_id) {
-                $opcion = Opcion::findOrFail($this->opcion_id);
-        
-                // Si está intentando desactivar
-                if (!$this->ind_activo && $opcion->caracteristicas()->count() > 0) {
-                    $this->cerrarModal(); // Cierra el modal principal primero
 
-                    $this->mensajeConfirmacion = "La opción que estás desactivando tiene relaciones activas con características. ¿Deseas continuar y eliminar esas relaciones?";
-                    $this->mostrarConfirmacion = true;
-                    $this->accionPendiente = 'guardar';
-                    $this->datosPendientes = [
-                        'id' => $this->opcion_id,
-                        'nombre' => $this->nombre,
-                        'pasos' => $this->pasos,
-                        'minutoPaso' => $this->minutoPaso,
-                        'valoru' => $this->valoru,
-                        'ind_activo' => false,
-                    ];
-                    return;
+        if ($this->opcion_id) {
+            $opcion = Opcion::findOrFail($this->opcion_id);
+
+            if (!$this->ind_activo && $opcion->caracteristicas()->count() > 0) {
+                $this->cerrarModal();
+
+                $this->mensajeConfirmacion = "La opción que estás desactivando tiene relaciones activas con características. ¿Deseas continuar y eliminar esas relaciones?";
+                $this->mostrarConfirmacion = true;
+                $this->accionPendiente = 'guardar';
+                $this->datosPendientes = [
+                    'id' => $this->opcion_id,
+                    'nombre' => $this->nombre,
+                    'pasos' => $this->pasos,
+                    'minutoPaso' => $this->minutoPaso,
+                    'valoru' => $this->valoru,
+                    'ind_activo' => false,
+                    'caracteristicas' => $this->caracteristicasSeleccionadas,
+                ];
+                return;
             }
-    
-            // Actualizar directamente si no hay conflicto
+
             $opcion->update([
                 'nombre' => $this->nombre,
                 'pasos' => $this->pasos,
@@ -119,24 +123,27 @@ class OpcionCrud extends Component
                 'valoru' => $this->valoru,
                 'ind_activo' => $this->ind_activo,
             ]);
-    
+
+            $opcion->caracteristicas()->sync($this->caracteristicasSeleccionadas);
+
             session()->flash('message', '¡Opción actualizada exitosamente!');
         } else {
-            // Crear nueva
-            Opcion::create([
+            $opcion = Opcion::create([
                 'nombre' => $this->nombre,
                 'pasos' => $this->pasos,
                 'minutoPaso' => $this->minutoPaso,
                 'valoru' => $this->valoru,
                 'ind_activo' => $this->ind_activo,
             ]);
+
+            $opcion->caracteristicas()->sync($this->caracteristicasSeleccionadas);
+
             session()->flash('message', '¡Opción creada exitosamente!');
         }
-    
+
         $this->cerrarModal();
         $this->limpiar();
     }
-    
     public function editar($id)
     {
         $opcion = Opcion::findOrFail($id);
@@ -146,6 +153,9 @@ class OpcionCrud extends Component
         $this->minutoPaso = $opcion->minutoPaso;
         $this->valoru = $opcion->valoru;
         $this->ind_activo = (bool) $opcion->ind_activo;
+        $this->caracteristicasSeleccionadas = $opcion->caracteristicas()->pluck('caracteristicas.id')->toArray();
+
+        // $this->mostrarTiempos = ($this->pasos > 0 || $this->minutoPaso > 0 || $this->valoru > 0);
 
         $this->abrirModal();
     }
@@ -194,23 +204,23 @@ class OpcionCrud extends Component
     {
         if ($this->accionPendiente === 'guardar') {
             $opcion = Opcion::findOrFail($this->datosPendientes['id']);
-    
+
             // Eliminar relaciones
             $opcion->caracteristicas()->detach();
-    
+
             // Actualizar con los datos pendientes
             $opcion->update($this->datosPendientes);
-    
+
             session()->flash('message', '¡Relaciones eliminadas y opción desactivada exitosamente!');
         }
-    
+
         $this->mostrarConfirmacion = false;
         $this->accionPendiente = null;
         $this->datosPendientes = [];
-    
+
         $this->cerrarModal();
         $this->limpiar();
     }
-    
+
 
 }
