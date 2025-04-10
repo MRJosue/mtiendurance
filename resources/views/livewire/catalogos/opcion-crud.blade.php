@@ -97,25 +97,39 @@
                         <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" wire:model="ind_activo">
                         <label class="text-gray-700 font-medium select-none">Opción activa</label>
                     </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Pasos</label>
-                        <input type="number" class="w-full border border-gray-300 rounded p-2" wire:model="pasos">
-                        @error('pasos') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
 
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Minuto/Paso</label>
-                        <input type="number" class="w-full border border-gray-300 rounded p-2" wire:model="minutoPaso">
-                        @error('minutoPaso') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+                    <div x-data="{ mostrar: false }" class="mb-4 border border-gray-200 rounded">
+                        <button
+                            type="button"
+                            class="w-full text-left px-4 py-2 bg-gray-100 hover:bg-gray-200 font-semibold text-gray-700 rounded-t flex justify-between items-center"
+                            @click="mostrar = !mostrar"
+                        >
+                            <span>Tiempos (Pasos, Minuto/Paso, Valor Unitario)</span>
+                            <svg :class="{'transform rotate-180': mostrar}" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
 
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Valor Unitario</label>
-                        <input type="number" step="0.01" class="w-full border border-gray-300 rounded p-2" wire:model="valoru">
-                        @error('valoru') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+                        <div x-show="mostrar" x-transition class="p-4 space-y-4">
+                            <div>
+                                <label class="block text-gray-700 mb-1">Pasos</label>
+                                <input type="number" class="w-full border border-gray-300 rounded p-2" wire:model="pasos">
+                                @error('pasos') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
 
+                            <div>
+                                <label class="block text-gray-700 mb-1">Minuto/Paso</label>
+                                <input type="number" class="w-full border border-gray-300 rounded p-2" wire:model="minutoPaso">
+                                @error('minutoPaso') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div>
+                                <label class="block text-gray-700 mb-1">Valor Unitario</label>
+                                <input type="number" step="0.01" class="w-full border border-gray-300 rounded p-2" wire:model="valoru">
+                                @error('valoru') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                    </div>
 
                 </div>
                 <div class="flex items-center justify-end border-t border-gray-200 p-4 space-x-2">
