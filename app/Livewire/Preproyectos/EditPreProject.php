@@ -295,12 +295,12 @@ class EditPreProject extends Component
 
                 // Obtener todas las tallas asociadas al producto a través de los grupos de tallas
                 $this->tallas = Talla::with('gruposTallas')
-                    ->whereHas('gruposTallas.productos', function ($query) {
-                        $query->where('producto_id', $this->producto_id);
-                    })
-                    ->get();
+                ->whereHas('gruposTallas.productos', function ($query) {
+                    $query->where('producto_id', $this->producto_id);
+                })
+                ->get();
 
-                Log::debug('Tallas obtenidas al seleccionar producto:', ['data' => $this->tallas->toArray()]);
+
 
                 // Reiniciar la selección de tallas
                 $this->tallasSeleccionadas = [];
@@ -311,17 +311,23 @@ class EditPreProject extends Component
                     }
                 }
 
-                Log::debug('Estructura de tallas seleccionadas después de reset:', ['data' => $this->tallasSeleccionadas]);
+
 
                 // Limpiar opciones previas de características
+                // Limpiar opciones previas de características
                 $this->caracteristica_id = null;
-                $this->caracteristicas_sel = Caracteristica::whereHas('productos', function ($query) {
+                $this->caracteristicas_sel = Caracteristica::where('ind_activo', 1)
+                ->whereHas('productos', function ($query) {
                     $query->where('producto_id', $this->producto_id);
-                })->get()->map(function ($caracteristica) {
-                    $opciones = Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
-                        $query->where('caracteristica_id', $caracteristica->id);
-                    })->get();
-
+                })
+                ->get()
+                ->map(function ($caracteristica) {
+                    $opciones = Opcion::where('ind_activo', 1)
+                        ->whereHas('caracteristicas', function ($query) use ($caracteristica) {
+                            $query->where('caracteristica_id', $caracteristica->id);
+                        })
+                        ->get();
+            
                     $opcionesArray = $opciones->map(function ($opcion) {
                         return [
                             'id' => $opcion->id,
@@ -329,14 +335,15 @@ class EditPreProject extends Component
                             'valoru' => $opcion->valoru,
                         ];
                     })->toArray();
-
+            
                     return [
                         'id' => $caracteristica->id,
                         'nombre' => $caracteristica->nombre,
                         'flag_seleccion_multiple' => $caracteristica->flag_seleccion_multiple,
                         'opciones' => count($opcionesArray) === 1 ? $opcionesArray : [],
                     ];
-                })->toArray();
+                })
+                ->toArray();
 
                 $this->opciones_sel = [];
 

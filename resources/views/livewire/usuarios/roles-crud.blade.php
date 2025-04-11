@@ -23,6 +23,7 @@
         <thead>
             <tr class="bg-gray-100">
                 <th class="border border-gray-300 p-2 text-left">Nombre</th>
+                <th class="border border-gray-300 p-2 text-left">Permisos</th>
                 <th class="border border-gray-300 p-2 text-center">Acciones</th>
             </tr>
         </thead>
@@ -30,6 +31,13 @@
             @foreach($rolesList as $rol)
                 <tr>
                     <td class="border border-gray-300 p-2">{{ $rol->name }}</td>
+                    <td class="border border-gray-300 p-2">
+                        @foreach($rol->permissions as $permiso)
+                            <span class="inline-block bg-gray-200 text-gray-800 text-xs font-semibold mr-1 mb-1 px-2 py-1 rounded">
+                                {{ $permiso->name }}
+                            </span>
+                        @endforeach
+                    </td>
                     <td class="border border-gray-300 p-2 flex space-x-2 justify-center">
                         <button wire:click="editar('{{ $rol->id }}')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
                             Editar
@@ -39,6 +47,7 @@
             @endforeach
         </tbody>
     </table>
+
 
     <div class="mt-4">
         {{ $rolesList->links() }}

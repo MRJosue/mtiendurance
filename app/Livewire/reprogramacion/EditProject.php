@@ -231,9 +231,7 @@ class EditProject extends Component
         session()->flash('message', 'Preproyecto actualizado exitosamente.');
         return redirect()->route('preproyectos.index');
     }
-
-
-
+    
    // Funciones
 
     public function render()

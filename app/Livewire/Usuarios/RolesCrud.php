@@ -66,7 +66,8 @@ class RolesCrud extends Component
         $rol->name = $this->nombre;
         $rol->save();
 
-        $rol->syncPermissions($this->permisosSeleccionados);
+        $permisosNombres = \Spatie\Permission\Models\Permission::whereIn('id', $this->permisosSeleccionados)->pluck('name')->toArray();
+        $rol->syncPermissions($permisosNombres);
 
         session()->flash('message', 'Rol guardado correctamente.');
         $this->cerrarModal();
