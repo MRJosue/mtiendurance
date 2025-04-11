@@ -1,5 +1,5 @@
 <nav x-data="{ open: false }" class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
-    
+
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -36,8 +36,8 @@
                     <x-nav-link :href="route('disenio.admin_tarea')" :active="request()->routeIs('disenio.admin_tarea')">
                         {{ __('Tareas') }}
                     </x-nav-link>
-                    
-                    
+
+
                     <x-nav-link :href="route('programacion.index')" :active="request()->routeIs('programacion.index')">
                         {{ __('Programacion') }}
                     </x-nav-link>
@@ -45,11 +45,11 @@
                     {{-- catalogos --}}
                     <div class="hidden sm:flex sm:items-center sm:ms-6">
                         <x-dropdown align="right" width="48">
-                         
+
                             <x-slot name="trigger">
                                 @hasanyrole('admin')
                                 <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
-                                    <div>Catalogos</div>
+                                    <div>Envio</div>
 
                                     <div class="ms-1">
                                         <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -60,12 +60,57 @@
                                 </button>
                                 @endhasanyrole
                             </x-slot>
-                      
+
 
                             <x-slot name="content">
 
                                 @hasanyrole('admin')
-                                
+
+                                <x-dropdown-link :href="route('catalogos.paises.index')">
+                                    {{ __('Paises') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('catalogos.estados.index')">
+                                    {{ __('Estados') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('catalogos.ciudades.index')">
+                                    {{ __('Ciudades') }}
+                                </x-dropdown-link>
+
+                                <x-dropdown-link :href="route('catalogos.tipoenvio.index')">
+                                    {{ __('Tipos de envio') }}
+                                </x-dropdown-link>
+
+                                @endhasanyrole
+
+
+                            </x-slot>
+                        </x-dropdown>
+                    </div>
+
+                    {{-- configuracion de producto --}}
+                    <div class="hidden sm:flex sm:items-center sm:ms-6">
+                        <x-dropdown align="right" width="48">
+
+                            <x-slot name="trigger">
+                                @hasanyrole('admin')
+                                <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
+                                    <div>Productos</div>
+
+                                    <div class="ms-1">
+                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+
+                                </button>
+                                @endhasanyrole
+                            </x-slot>
+
+
+                            <x-slot name="content">
+
+                                @hasanyrole('admin')
+
                                 <x-dropdown-link :href="route('catalogos.categorias.index')">
                                     {{ __('Categorias') }}
                                 </x-dropdown-link>
@@ -90,19 +135,6 @@
                                     {{ __('Grupos') }}
                                 </x-dropdown-link>
 
-                                <x-dropdown-link :href="route('catalogos.paises.index')">
-                                    {{ __('Paises') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('catalogos.estados.index')">
-                                    {{ __('Estados') }}
-                                </x-dropdown-link>
-                                <x-dropdown-link :href="route('catalogos.ciudades.index')">
-                                    {{ __('Ciudades') }}
-                                </x-dropdown-link>
-
-                                <x-dropdown-link :href="route('catalogos.tipoenvio.index')">
-                                    {{ __('Tipos de envio') }}
-                                </x-dropdown-link>
 
                                 @endhasanyrole
 
@@ -110,6 +142,8 @@
                             </x-slot>
                         </x-dropdown>
                     </div>
+
+
                     {{-- usuarios --}}
                     <div class="hidden sm:flex sm:items-center sm:ms-6">
                         <x-dropdown align="right" width="48">
@@ -134,9 +168,11 @@
                                     <x-dropdown-link :href="route('usuarios.index')">
                                         {{ __('Usuarios') }}
                                     </x-dropdown-link>
-                                    {{-- <x-dropdown-link :href="route('permisos.index')">
+
+                                    <x-dropdown-link :href="route('permisos.index')">
                                         {{ __('Permisos') }}
-                                    </x-dropdown-link> --}}
+                                    </x-dropdown-link>
+
                                 @endhasanyrole
                             </x-slot>
                         </x-dropdown>
@@ -149,7 +185,7 @@
             <div class="hidden sm:flex sm:items-center sm:ms-6">
 
                 @livewire('notificaciones.notificaciones')
-                
+
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
@@ -212,7 +248,7 @@
         </x-responsive-nav-link>
 
 
-        
+
         <x-nav-link :href="route('disenio.index')" :active="request()->routeIs('disenio.index')">
             {{ __('Diseño') }}
         </x-nav-link>
@@ -229,7 +265,7 @@
         <div class="space-y-1">
 
             @hasanyrole('admin')
-            
+
 
             <x-responsive-nav-link :href="route('catalogos.categorias.index')">
                 {{ __('Categorias') }}
@@ -263,7 +299,7 @@
 
             @endhasanyrole
 
-   
+
         </div>
     </div>
 
