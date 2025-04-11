@@ -39,7 +39,7 @@ class OpcionCrud extends Component
     protected $rules = [
         'nombre' => 'required|string|max:255',
         'pasos' => 'required|integer|min:0',
-        'minutoPaso' => 'required|integer|min:0',
+        'minutoPaso' => 'required|min:0',
         'valoru' => 'required|numeric|min:0',
     ];
 

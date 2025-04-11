@@ -145,6 +145,8 @@ class PreProyecto extends Model
                         }
                     }
 
+                    $resultado = Pedido::asignaTotalesPasoTiempo($pedido->id);
+
                     // Si la categoría es "playeras", insertar tallas,
                     // isset($categoria['id']) && $categoria['id'] == 1 &&
                     if (isset($totalPiezas['detalle_tallas'])) {

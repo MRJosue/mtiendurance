@@ -23,6 +23,9 @@ class Pedido extends Model
         'cliente_id',
         'fecha_creacion',
         'total',
+        'total_minutos',
+        'total_pasos',
+        'resumen_tiempos',
         'estatus',
         'direccion_fiscal_id',
         'direccion_fiscal',
@@ -163,6 +166,7 @@ class Pedido extends Model
         return $pedido;
     }
     
+    
     public function archivo()
     {
         return $this->belongsTo(ArchivoProyecto::class, 'last_uploaded_file_id');
@@ -246,6 +250,46 @@ class Pedido extends Model
         }
     
         return $pedido;
+    }
+
+    public static function calculaTiemposTotalesPorId($pedidoId)
+    {
+        $pedido = self::with(['pedidoOpciones.opcion'])->findOrFail($pedidoId);
+    
+        $opciones = $pedido->pedidoOpciones
+            ->map(fn($po) => $po->opcion)
+            ->filter(); // elimina nulos si falta la relación
+    
+        $total_pasos = $opciones->sum(fn($op) => $op->pasos) * $pedido->total;
+        $total_minutos = $opciones->sum(fn($op) => $op->minutoPaso) * $pedido->total;
+    
+        return [
+            'total_pasos' => (int) $total_pasos,
+            'total_minutos' => (float) $total_minutos,
+            'opciones' => $opciones->map(fn($op) => [
+                'id' => $op->id,
+                'nombre' => $op->nombre,
+                'pasos' => $op->pasos,
+                'minutoPaso' => $op->minutoPaso,
+            ])->toArray(),
+        ];
+    }
+
+
+    public static function asignaTotalesPasoTiempo($pedidoId)
+    {
+        $pedido = self::findOrFail($pedidoId);
+
+        $resultados = self::calculaTiemposTotalesPorId($pedidoId);
+
+        $pedido->update([
+            'total_pasos' => $resultados['total_pasos'],
+            'total_minutos' => $resultados['total_minutos'],
+            'resumen_tiempos' => json_encode($resultados, JSON_UNESCAPED_UNICODE),
+        ]);
+    
+
+        return $resultados;
     }
 
 }
