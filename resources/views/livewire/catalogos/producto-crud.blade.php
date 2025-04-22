@@ -36,6 +36,7 @@
                 <th class="border border-gray-300 p-2 text-left">Armado</th>
                 <th class="border border-gray-300 p-2 text-left">Categoría</th>
                 <th class="border border-gray-300 p-2 text-left">Características</th>
+                <th class="border border-gray-300 p-2 text-left">Caract. No Armado</th>
                 <th class="border border-gray-300 p-2 text-left">Grupos de Tallas</th>
                 <th class="border border-gray-300 p-2 text-center">Acciones</th>
             </tr>
@@ -48,7 +49,9 @@
                     <td class="border border-gray-300 p-2">{{ $prod->flag_armado ? 'Sí' : 'No' }}</td>
                     <td class="border border-gray-300 p-2">{{ $prod->categoria ? $prod->categoria->nombre : 'Sin categoría' }}</td>
 
-                    <td class="border border-gray-300 p-2">{{ $prod->caracteristicas->pluck('nombre')->join(', ') }}</td>
+                    <td class="border border-gray-300 p-2">{{ $prod->caracteristicasArmado->pluck('nombre')->join(', ') }}</td>
+                    <td class="border border-gray-300 p-2">{{ $prod->caracteristicasNoArmado->pluck('nombre')->join(', ') }}</td>
+
 
                     <td class="border border-gray-300 p-2">
                         {{ implode(', ', $prod->gruposTallas->pluck('nombre')->toArray()) }}
@@ -117,7 +120,7 @@
 
                 <!-- Flag Armado -->
                 <div class="mb-4">
-                    <label class="block text-gray-700 mb-1">¿Requiere Armado?</label>
+                    <label class="block text-gray-700 mb-1">¿Requiere espesificar Armado?</label>
                     <select class="w-full border border-gray-300 rounded p-2" wire:model="flag_armado">
                         <option value="1">Sí</option>
                         <option value="0">No</option>
@@ -129,7 +132,7 @@
                 <!-- Características - Se muestra solo si hay características asociadas -->
                 @if($mostrarCaracteristicas)
                 <div class="mb-4">
-                    <label class="block text-gray-700 mb-1">Características</label>
+                    <label class="block text-gray-700 mb-1">Características cuando el producto es armado</label>
                     <div class="grid grid-cols-2 gap-2">
                         @foreach($caracteristicas as $caracteristica)
                             @if(in_array($caracteristica->id, $caracteristicasDisponibles))
@@ -143,6 +146,25 @@
                     </div>
                 </div>
                 @endif
+
+
+                @if($mostrarCaracteristicas)
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-1">Características cuando el producto NO es armado</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        @foreach($caracteristicas as $caracteristica)
+                            @if(in_array($caracteristica->id, $caracteristicasDisponibles))
+                                <label class="flex items-center">
+                                    <input type="checkbox" wire:model="caracteristicasNoArmado" value="{{ $caracteristica->id }}" class="mr-2"
+                                        {{ in_array($caracteristica->id, $caracteristicasNoArmado) ? 'checked' : '' }}>
+                                    {{ $caracteristica->nombre }}
+                                </label>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
 
                 <!-- Grupos de Tallas - Se muestra solo si la categoría tiene flag_tallas = 1 -->
                 @if($mostrarGruposTallas)

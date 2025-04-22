@@ -28,6 +28,7 @@ use App\Http\Controllers\DisenioController;
 
 use App\Http\Controllers\ProgramacionController;
 use App\Http\Controllers\ReprogramacionProyecto;
+use App\Http\Controllers\tareasproduccion;
 
 use App\Events\TestEvent;
 use App\Events\MessageSent;
@@ -149,6 +150,10 @@ Route::get('/programacion',[ProgramacionController::class, 'index'])->middleware
 
 // Reprogramacion 
 Route::get('/reprogramacion/{proyecto}',[ReprogramacionProyecto::class, 'index'])->middleware(['auth','verified'])->name('reprogramacion.reprogramacionproyectopedido');
+
+// Tareas de produccion 
+Route::get('/produccion/tareas',[tareasproduccion::class, 'index'])->middleware(['auth','verified'])->name('produccion.tareas');
+
 
 //Catalogos
     //Categorias

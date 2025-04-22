@@ -11,5 +11,9 @@ class ProductoCaracteristica extends Model
 
     protected $table = 'producto_caracteristica';
 
-    protected $fillable = ['producto_id', 'caracteristica_id'];
+    protected $fillable = [
+        'producto_id',
+        'caracteristica_id',
+        'flag_armado', // ← añadimos este campo
+    ];
 }

@@ -37,6 +37,21 @@ class Producto extends Model
         return $this->belongsToMany(Caracteristica::class, 'producto_caracteristica', 'producto_id', 'caracteristica_id');
     }
 
+    public function caracteristicasNoArmado()
+    {
+        return $this->belongsToMany(Caracteristica::class, 'producto_caracteristica')
+            ->withPivot('flag_armado')
+            ->wherePivot('flag_armado', 0);
+    }
+
+
+    public function caracteristicasArmado()
+    {
+        return $this->belongsToMany(Caracteristica::class, 'producto_caracteristica')
+            ->withPivot('flag_armado')
+            ->wherePivot('flag_armado', 1);
+    }
+
 
     public function gruposTallas()
     {

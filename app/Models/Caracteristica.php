@@ -19,16 +19,17 @@ class Caracteristica extends Model
     ];
 
 
-    public function categorias()
+    public function productos()
     {
-        return $this->belongsToMany(Categoria::class, 'categoria_caracteristica', 'caracteristica_id', 'categoria_id');
+        return $this->belongsToMany(Producto::class, 'producto_caracteristica', 'caracteristica_id', 'producto_id')
+                    ->withPivot('flag_armado');
     }
     
 
-    public function productos()
-    {
-        return $this->belongsToMany(Producto::class, 'producto_caracteristica', 'caracteristica_id', 'producto_id');
-    }
+    // public function productos()
+    // {
+    //     return $this->belongsToMany(Producto::class, 'producto_caracteristica', 'caracteristica_id', 'producto_id');
+    // }
 
     public function opciones()
     {

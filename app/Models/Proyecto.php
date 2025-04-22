@@ -44,6 +44,7 @@ class Proyecto extends Model
         'fecha_produccion',
         'fecha_embarque',
         'fecha_entrega',
+        'flag_armado',
         'categoria_sel',
         'producto_sel',
         'caracteristicas_sel',

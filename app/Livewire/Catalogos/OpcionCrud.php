@@ -32,7 +32,11 @@ class OpcionCrud extends Component
     public $datosPendientes = [];
     public $caracteristicasSeleccionadas = [];
 
+    public $horas = 0;
+    public $minutos = 0;
+    public $segundos = 0;
 
+    
 
     protected $paginationTheme = 'tailwind';
 
@@ -94,7 +98,8 @@ class OpcionCrud extends Component
     public function guardar()
     {
         $this->validate();
-
+        $this->minutoPaso = sprintf('%02d:%02d:%02d', $this->horas, $this->minutos, $this->segundos);
+        
         if ($this->opcion_id) {
             $opcion = Opcion::findOrFail($this->opcion_id);
 
@@ -104,6 +109,9 @@ class OpcionCrud extends Component
                 $this->mensajeConfirmacion = "La opción que estás desactivando tiene relaciones activas con características. ¿Deseas continuar y eliminar esas relaciones?";
                 $this->mostrarConfirmacion = true;
                 $this->accionPendiente = 'guardar';
+               
+
+
                 $this->datosPendientes = [
                     'id' => $this->opcion_id,
                     'nombre' => $this->nombre,
@@ -151,6 +159,12 @@ class OpcionCrud extends Component
         $this->nombre = $opcion->nombre;
         $this->pasos = $opcion->pasos;
         $this->minutoPaso = $opcion->minutoPaso;
+
+        [$h, $m, $s] = explode(':', $opcion->minutoPaso ?? '00:00:00');
+
+        $this->horas = (int) $h;
+        $this->minutos = (int) $m;
+        $this->segundos = (int) $s;
         $this->valoru = $opcion->valoru;
         $this->ind_activo = (bool) $opcion->ind_activo;
         $this->caracteristicasSeleccionadas = $opcion->caracteristicas()->pluck('caracteristicas.id')->toArray();

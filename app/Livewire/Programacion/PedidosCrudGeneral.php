@@ -13,7 +13,9 @@ use App\Models\Categoria;
 use App\Models\TipoEnvio;
 use App\Models\PedidoTalla;
 use App\Models\GrupoTalla;
+use App\Models\User;
 use App\Models\ProductoGrupoTalla;
+use App\Models\TareaProduccion;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -69,13 +71,21 @@ class PedidosCrudGeneral extends Component
     public $modal_aprobar_sin_fechas = false;
 
 
+    public $modalCrearTarea = false;
+    public $nuevoTareaPedidoId;
+    public $nuevoTareaStaffId;
+    public $nuevoTareaTipo = 'INDEFINIDA';
+
+    public $usuarios = [];
+
+
     public function mount()
     {
         $this->tipos_envio = TipoEnvio::all();
         $this->clientes = Cliente::all();
         $this->direccionesFiscales = DireccionFiscal::with('ciudad.estado')->get();
         $this->direccionesEntrega = DireccionEntrega::with('ciudad.estado')->get();
-    
+        $this->usuarios = User::all();
         $this->productos_activos = Producto::where('ind_activo', 1)->get();
         $this->categorias_activas = Categoria::where('ind_activo', 1)->get();
     }
@@ -92,7 +102,7 @@ class PedidosCrudGeneral extends Component
             },
             'estatus' => 'required|string',
             'tipo' => 'required|in:PEDIDO,MUESTRA',
-            'estado' => 'required|in:POR APROBAR,APROBADO,ENTREGADO,RECHAZADO,ARCHIVADO',
+            'estado' => 'required|in:POR APROBAR,APROBADO,ENTREGADO,RECHAZADO,ARCHIVADO,POR REPROGRAMAR',
             'estado_produccion' => 'required|in:POR APROBAR,POR PROGRAMAR,PROGRAMADO,IMPRESIÓN,CORTE,COSTURA,ENTREGA,FACTURACIÓN,COMPLETADO,RECHAZADO',
             'fecha_produccion' => 'nullable|date',
             'fecha_embarque' => 'nullable|date',
@@ -305,6 +315,7 @@ class PedidosCrudGeneral extends Component
             $this->inputsTallas[$clave] = $pedidoTalla->cantidad;
         }
     }
+
     public function limpiarFiltros()
     {
         $this->reset([
@@ -319,13 +330,17 @@ class PedidosCrudGeneral extends Component
         $this->resetPage();
     }
     
-    
 
     public function render()
     {
-        $query = Pedido::with(['cliente', 'producto.categoria', 'tipoEnvio', 'proyecto.user']);
 
-        $query = Pedido::with(['cliente', 'producto.categoria', 'tipoEnvio', 'proyecto.user']);
+        $query = Pedido::with([
+            'cliente',
+            'producto.categoria',
+            'tipoEnvio',
+            'proyecto.user',
+            'tareasProduccion.staff', 
+        ]);
 
         if ($this->filtro_usuario) {
             $query->whereHas('proyecto.user', function ($q) {
@@ -356,6 +371,7 @@ class PedidosCrudGeneral extends Component
         }
         
         return view('livewire.programacion.pedidos-crud-general', [
+            
             'pedidos' => $query->orderByDesc('created_at')->paginate(10),
         ]);
         // return view('livewire.programacion.pedidos-crud-general', [
@@ -410,6 +426,35 @@ class PedidosCrudGeneral extends Component
     public function aplicarFiltros()
     {
         $this->resetPage();
+    }
+
+
+    public function abrirModalCrearTarea($pedidoId)
+    {
+        $this->nuevoTareaPedidoId = $pedidoId;
+        $this->nuevoTareaTipo = 'INDEFINIDA';
+        $this->nuevoTareaStaffId = null;
+        $this->modalCrearTarea = true;
+    }
+
+    public function guardarTarea()
+    {
+        $this->validate([
+            'nuevoTareaPedidoId' => 'required|exists:pedido,id',
+            'nuevoTareaStaffId' => 'required|exists:users,id',
+            'nuevoTareaTipo' => 'required|in:DISEÑO,PRODUCCION,CORTE,PINTURA,FACTURACION,INDEFINIDA',
+        ]);
+    
+        TareaProduccion::create([
+            'pedido_id' => $this->nuevoTareaPedidoId,
+            'staff_id' => $this->nuevoTareaStaffId,
+            'tipo' => $this->nuevoTareaTipo,
+            'estado' => 'PENDIENTE',
+            'descripcion' => 'Asignada manualmente desde programación',
+        ]);
+    
+        $this->modalCrearTarea = false;
+        session()->flash('message', '✅ Tarea creada correctamente.');
     }
 
 }

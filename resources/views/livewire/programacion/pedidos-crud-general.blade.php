@@ -123,15 +123,16 @@
                             />
                         </th>
                         <th class="px-4 py-3 border">ID</th>
-                        <th class="px-4 py-3 border">Usuario</th>
+                        {{-- <th class="px-4 py-3 border">Usuario</th> --}}
                         <th class="px-4 py-3 border">Producto / Categoría</th>
-                        <th class="px-4 py-3 border">Total</th>
+                        {{-- <th class="px-4 py-3 border">Total</th> --}}
                         <th class="px-4 py-3 border">Tipo</th>
                         <th class="px-4 py-3 border">Estado</th>
                         <th class="px-4 py-3 border">Producción</th>
                         <th class="px-4 py-3 border">Embarque</th>
                         <th class="px-4 py-3 border">Entrega</th>
                         <th class="px-4 py-3 border">Producción</th>
+                        <th class="px-4 py-3 border">Tareas</th>
                         <th class="px-4 py-3 border text-center">Acciones</th>
                     </tr>
                 </thead>
@@ -141,7 +142,7 @@
                             $hoy = \Carbon\Carbon::today();
                             $color = 'bg-white';
                             $fechaEntrega = $pedido->fecha_entrega ? \Carbon\Carbon::parse($pedido->fecha_entrega) : null;
-        
+    
                             if ($pedido->estado_produccion === 'COMPLETADO') {
                                 $color = 'bg-green-100';
                             } elseif ($fechaEntrega) {
@@ -152,7 +153,7 @@
                                 else $color = 'bg-red-100';
                             }
                         @endphp
-        
+    
                         <tr class="{{ $color }} hover:bg-gray-50 transition">
                             <td class="px-4 py-2 border">
                                 <input type="checkbox"
@@ -161,13 +162,13 @@
                                 />
                             </td>
                             <td class="px-4 py-2 border font-semibold">{{ $pedido->id }}-{{ $pedido->proyecto_id }}</td>
-                            <td class="px-4 py-2 border">{{ $pedido->proyecto->user->name ?? 'Sin usuario' }}</td>
+                            {{-- <td class="px-4 py-2 border">{{ $pedido->proyecto->user->name ?? 'Sin usuario' }}</td> --}}
                             <td class="px-4 py-2 border">
                                 <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
                                 <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
                             </td>
                             <td class="px-4 py-2 border">{{ $pedido->total }} piezas</td>
-                            <td class="px-4 py-2 border">{{ $pedido->tipo }}</td>
+                            {{-- <td class="px-4 py-2 border">{{ $pedido->tipo }}</td> --}}
                             <td class="px-4 py-2 border">
                                 <span class="text-xs font-bold px-2 py-1 rounded text-white"
                                     style="background-color:
@@ -189,12 +190,27 @@
                                     {{ $pedido->estado_produccion ?? 'Sin definir' }}
                                 </span>
                             </td>
+                            <td class="px-4 py-2 border text-sm text-gray-700">
+                                @if($pedido->tareasProduccion->isEmpty())
+                                    <span class="text-gray-500">Sin tareas</span>
+                                @else
+                                    <ul class="space-y-1">
+                                        @foreach($pedido->tareasProduccion as $tarea)
+                                            <li class="border-b pb-1">
+                                                <div class="text-xs font-semibold">{{ $tarea->tipo }} - {{ $tarea->estado }}</div>
+                                                <div class="text-xs text-gray-500">{{ $tarea->descripcion }}</div>
+                                                <div class="text-xs italic text-gray-400">Responsable: {{ $tarea->staff->name ?? 'N/A' }}</div>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                            </td>
                             <td class="px-4 py-2 border text-center space-y-1">
                                 <button wire:click="abrirModal({{ $pedido->id }})"
                                         class="w-full px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">
                                     Editar
                                 </button>
-        
+    
                                 @if($pedido->estado === 'POR REPROGRAMAR')
                                     <a href="{{ route('reprogramacion.reprogramacionproyectopedido', ['proyecto' => $pedido->proyecto_id]) }}"
                                     class="w-full block px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600">
@@ -207,11 +223,16 @@
                                         Aprobar sin fechas
                                     </button>
                                 @endif
+
+                                <button wire:click="abrirModalCrearTarea({{ $pedido->id }})"
+                                    class="w-full px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+                                    Crear Tarea
+                                </button>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="12" class="text-center py-4 text-gray-500">
+                            <td colspan="13" class="text-center py-4 text-gray-500">
                                 No hay pedidos disponibles.
                             </td>
                         </tr>
@@ -220,6 +241,7 @@
             </table>
         </div>
     </div>
+    
 
     <div class="mt-4">
         {{ $pedidos->links() }}
@@ -324,6 +346,7 @@
                                 <option value="ENTREGADO">Entregado</option>
                                 <option value="RECHAZADO">Rechazado</option>
                                 <option value="ARCHIVADO">Archivado</option>
+                                <option value="POR REPROGRAMAR">Por Reprogramar</option>
                             </select>
                             @error('estado') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
@@ -342,6 +365,8 @@
                                 <option value="FACTURACIÓN">Facturación</option>
                                 <option value="COMPLETADO">Completado</option>
                                 <option value="RECHAZADO">Rechazado</option>
+                                
+                                
                             </select>
                             @error('estado_produccion') 
                                 <span class="text-red-500 text-sm">{{ $message }}</span> 
@@ -465,5 +490,41 @@
         </div>
     @endif
 
+
+
+    @if($modalCrearTarea)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 w-full max-w-lg shadow-lg">
+                <h2 class="text-xl font-bold mb-4">Asignar Tarea al Pedido #{{ $nuevoTareaPedidoId }}</h2>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Usuario Responsable</label>
+                    <select wire:model="nuevoTareaStaffId" class="w-full border border-gray-300 rounded p-2">
+                        <option value="">-- Selecciona --</option>
+                        @foreach($usuarios as $usuario)
+                            <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Tipo de Tarea</label>
+                    <select wire:model="nuevoTareaTipo" class="w-full border border-gray-300 rounded p-2">
+                        <option value="DISEÑO">DISEÑO</option>
+                        <option value="PRODUCCION">PRODUCCIÓN</option>
+                        <option value="CORTE">CORTE</option>
+                        <option value="PINTURA">PINTURA</option>
+                        <option value="FACTURACION">FACTURACIÓN</option>
+                        <option value="INDEFINIDA">INDEFINIDA</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <button wire:click="$set('modalCrearTarea', false)" class="bg-gray-300 text-gray-800 px-4 py-2 rounded">Cancelar</button>
+                    <button wire:click="guardarTarea" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Guardar</button>
+                </div>
+            </div>
+        </div>
+    @endif
 
 </div>

@@ -52,6 +52,20 @@
             @error('producto_id') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
         
+        
+        {{-- El proyecto es armado ?  --}}
+        @if ($this->mostrar_selector_armado)
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">¿El proyecto será armado?</label>
+                <select wire:model="seleccion_armado" wire:change="despligaformopciones" class="w-full mt-1 border rounded-lg p-2">
+                    <option value="">Seleccionar</option>
+                    <option value="1">Sí</option>
+                    <option value="0">No</option>
+                </select>
+                @error('seleccion_armado') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+            </div>
+        @endif
+        
 
         <!-- Características y Opciones -->
         <div class="mb-4">

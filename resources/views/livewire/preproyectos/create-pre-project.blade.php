@@ -50,6 +50,19 @@
             </select>
             @error('producto_id') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
+
+        {{-- El proyecto es armado ?  --}}
+        @if ($mostrar_selector_armado)
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700">¿El proyecto será armado?</label>
+                <select wire:model="seleccion_armado" wire:change="despligaformopciones" class="w-full mt-1 border rounded-lg p-2">
+                    <option value="">Seleccionar</option>
+                    <option value="1">Sí</option>
+                    <option value="0">No</option>
+                </select>
+                @error('seleccion_armado') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+            </div>
+        @endif
         
         <!-- Características y Opciones -->
         <div class="mb-4">
@@ -246,7 +259,12 @@
         <button type="submit" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
             Crear Preproyecto
         </button>
+
+
+
     </form>
+
+
 
     @if($mostrarModalCliente)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">

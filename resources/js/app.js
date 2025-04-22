@@ -13,10 +13,13 @@ window.Echo = new Echo({
     key: "c2b1b3f693c74aa5f2ccfa3ed043b8a1",
     wsHost: window.location.hostname,
     wsPort: 6001,
-    forceTLS: false,
+    encrypted:false,
     disableStats: true,
     cluster: "mt1",
 });
+
+// quitamos forceTLS: false,
+// y usamos encrypted:false
 
 window.Echo.channel("chat").listen("MessageSent", (e) => {
     console.log("Message received: ", e.message);

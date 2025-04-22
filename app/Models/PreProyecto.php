@@ -25,6 +25,7 @@ class PreProyecto extends Model
         'fecha_produccion', 
         'fecha_embarque',
         'fecha_entrega', 
+        'flag_armado',
         'categoria_sel', 
         'producto_sel', 
         'caracteristicas_sel', 
@@ -64,11 +65,13 @@ class PreProyecto extends Model
                     // 'fecha_produccion' => $this->fecha_produccion,
                     // 'fecha_embarque' => $this->fecha_embarque,
                     // 'fecha_entrega' => $this->fecha_entrega,
+                    'flag_armado' => $this->flag_armado,
                     'categoria_sel' => $this->categoria_sel,
                     'producto_sel' => $this->producto_sel,
                     'caracteristicas_sel' => $this->caracteristicas_sel,
                     'opciones_sel' => $this->opciones_sel,
                     'total_piezas_sel' => $this->total_piezas_sel,
+
                 ]);
 
 

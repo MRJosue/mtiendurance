@@ -114,17 +114,27 @@
 
                                 <div x-show="mostrar" x-transition class="p-4 space-y-4">
                                     <div>
-                                        <label class="block text-gray-700 mb-1">Pasos</label>
+                                        <label class="block text-gray-700 mb-1">Pasos - Costuras</label>
                                         <input type="number" class="w-full border border-gray-300 rounded p-2" wire:model="pasos">
                                         @error('pasos') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                                     </div>
 
-                                    <div>
-                                        <label class="block text-gray-700 mb-1">Minuto/Paso</label>
-                                        <input type="number" class="w-full border border-gray-300 rounded p-2" wire:model="minutoPaso">
-                                        @error('minutoPaso') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Horas</label>
+                                            <input type="number" wire:model="horas" min="0" class="w-full border border-gray-300 rounded p-2" placeholder="0">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Minutos</label>
+                                            <input type="number" wire:model="minutos" min="0" max="59" class="w-full border border-gray-300 rounded p-2" placeholder="0">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Segundos</label>
+                                            <input type="number" wire:model="segundos" min="0" max="59" class="w-full border border-gray-300 rounded p-2" placeholder="0">
+                                        </div>
                                     </div>
 
+                                    
                                     <div>
                                         <label class="block text-gray-700 mb-1">Valor Unitario</label>
                                         <input type="number" step="0.01" class="w-full border border-gray-300 rounded p-2" wire:model="valoru">

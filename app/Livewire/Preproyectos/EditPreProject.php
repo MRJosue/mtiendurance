@@ -72,6 +72,7 @@ class EditPreProject extends Component
 
     public $categoria_id;
     public $producto_id;
+    public $producto_flag_armado;
     public $productos = [];
     public $caracteristicas_sel = [];
     public $opciones_sel = [];
@@ -91,6 +92,9 @@ class EditPreProject extends Component
 
     public $mensaje_produccion;
 
+    public $seleccion_armado = null;
+    public $mostrar_selector_armado = false;
+
     public function mount($preProyectoId)
     {
         $this->preProyectoId = $preProyectoId;
@@ -103,18 +107,18 @@ class EditPreProject extends Component
 
        
         $this->fecha_produccion = Carbon::parse($preProyecto->fecha_produccion)->format('Y-m-d');
-         Log::info('Este es un mensaje de información.'. $this->fecha_produccion);  
 
         $this->fecha_embarque = Carbon::parse($preProyecto->fecha_embarque)->format('Y-m-d');
-         Log::info('Este es un mensaje de información.'. $this->fecha_embarque);  
+
 
         $this->fecha_entrega = Carbon::parse($preProyecto->fecha_entrega)->format('Y-m-d');
-         Log::info('Este es un mensaje de información.'.$this->fecha_entrega);  
-         
 
         $this->categoria_id = json_decode($preProyecto->categoria_sel)->id;
+    
         $this->producto_id = json_decode($preProyecto->producto_sel)->id;
+
         $this->total_piezas = json_decode($preProyecto->total_piezas_sel)->total ?? 0;
+        
         $this->direccion_fiscal = $preProyecto->direccion_fiscal;
         $this->direccion_fiscal_id = $preProyecto->direccion_fiscal_id;
         $this->direccion_entrega = $preProyecto->direccion_entrega;
@@ -127,8 +131,22 @@ class EditPreProject extends Component
 
         // Cargar productos de la categoría seleccionada
         $this->productos = Producto::where('categoria_id', $this->categoria_id)->get();
+        $this->producto_flag_armado = Producto::where('id', $this->producto_id)->value('flag_armado');
+        Log::debug('producto_flag_armado', ['data' => $this->producto_flag_armado]);
+
+        // Evaluamos si el producto seleccionado puede mostrar la pregunta de armado 
+        
+        // si si asignamos el valor del imput
+        if ( $this->producto_flag_armado == 1) {
+            $this->mostrar_selector_armado = true;
+            // asignamos el valor del armado del select 
+            $this->seleccion_armado =  $preProyecto->flag_armado;
+        } else {
+            $this->mostrar_selector_armado = false;
+        }
+
         // Carga lascategorias
-        $this -> onProductoChange();
+        $this -> despligaformopciones();
 
 
         // Selecciona las opciones seleccionadas
@@ -179,7 +197,7 @@ class EditPreProject extends Component
                 'total' => $totalPiezasFinal,
                 'detalle_tallas' => $this->mostrarFormularioTallas ? $this->tallasSeleccionadas : null
             ]),
-
+            'flag_armado'=> $this->seleccion_armado,
             'direccion_fiscal_id' => $this->direccion_fiscal_id,
             'direccion_entrega_id' => $this->direccion_entrega_id,
             'id_tipo_envio' => $this->id_tipo_envio,
@@ -215,6 +233,7 @@ class EditPreProject extends Component
     {
         $preProyecto = PreProyecto::findOrFail($this->preProyectoId);
 
+        Log::debug('preProyecto', ['data' => $preProyecto]);
      
         // Transferir el preproyecto a proyecto
         $proyecto = $preProyecto->transferirAProyecto();
@@ -285,41 +304,69 @@ class EditPreProject extends Component
 
     public function onProductoChange()
             {
-                $this->despliega_form_tallas(); // Obtiene las tallas según el nuevo producto
 
-                // Asegurar que el producto ha sido seleccionado
-                if (!$this->producto_id) {
-                    $this->tallas = collect(); // Vaciar las tallas si no hay producto seleccionado
-                    return;
+                $producto = Producto::find($this->producto_id);
+
+                if ($producto && $producto->flag_armado == 1) {
+                    $this->mostrar_selector_armado = true;
+                } else {
+                    $this->mostrar_selector_armado = false;
+
+                    $this->despligaformopciones();
                 }
+            
+                $this->seleccion_armado = null;
+            
 
-                // Obtener todas las tallas asociadas al producto a través de los grupos de tallas
-                $this->tallas = Talla::with('gruposTallas')
+        }
+
+    public function despligaformopciones(){
+
+            $this->despliega_form_tallas(); // Obtiene las tallas según el nuevo producto
+
+            // Asegurar que el producto ha sido seleccionado
+            if (!$this->producto_id) {
+                $this->tallas = collect(); // Vaciar las tallas si no hay producto seleccionado
+                return;
+            }
+
+            // Obtener todas las tallas asociadas al producto a través de los grupos de tallas
+            $this->tallas = Talla::with('gruposTallas')
                 ->whereHas('gruposTallas.productos', function ($query) {
                     $query->where('producto_id', $this->producto_id);
                 })
                 ->get();
 
+        
 
+            // Reiniciar la selección de tallas
+            $this->tallasSeleccionadas = [];
 
-                // Reiniciar la selección de tallas
-                $this->tallasSeleccionadas = [];
-
-                foreach ($this->tallas as $talla) {
-                    foreach ($talla->gruposTallas as $grupo) {
-                        $this->tallasSeleccionadas[$grupo->id][$talla->id] = 0;
-                    }
+            foreach ($this->tallas as $talla) {
+                foreach ($talla->gruposTallas as $grupo) {
+                    $this->tallasSeleccionadas[$grupo->id][$talla->id] = 0;
                 }
+            }
 
+            Log::debug('Estructura de tallas seleccionadas después de reset:', ['data' => $this->tallasSeleccionadas]);
 
+            // Limpiar opciones previas de características
+            $this->caracteristica_id = null;
 
-                // Limpiar opciones previas de características
-                // Limpiar opciones previas de características
-                $this->caracteristica_id = null;
-                $this->caracteristicas_sel = Caracteristica::where('ind_activo', 1)
+            $caracteristicasQuery = Caracteristica::where('ind_activo', 1)
                 ->whereHas('productos', function ($query) {
                     $query->where('producto_id', $this->producto_id);
-                })
+                });
+            
+            // Si hay selector de armado, filtrar por flag_armado
+            if ($this->mostrar_selector_armado && $this->seleccion_armado !== null) {
+                $caracteristicasQuery->whereHas('productos', function ($q) {
+                    $q->where('producto_id', $this->producto_id)
+                      ->where('producto_caracteristica.flag_armado', $this->seleccion_armado);
+                });
+            }
+            
+            $this->caracteristicas_sel = $caracteristicasQuery
                 ->get()
                 ->map(function ($caracteristica) {
                     $opciones = Opcion::where('ind_activo', 1)
@@ -344,18 +391,91 @@ class EditPreProject extends Component
                     ];
                 })
                 ->toArray();
+            
 
-                $this->opciones_sel = [];
+            $this->opciones_sel = [];
 
-                foreach ($this->caracteristicas_sel as $caracteristica) {
-                    if (isset($caracteristica['opciones']) && count($caracteristica['opciones']) === 1) {
-                        $this->opciones_sel[$caracteristica['id']] = $caracteristica['opciones'][0];
-                    }
+            foreach ($this->caracteristicas_sel as $caracteristica) {
+                if (isset($caracteristica['opciones']) && count($caracteristica['opciones']) === 1) {
+                    $this->opciones_sel[$caracteristica['id']] = $caracteristica['opciones'][0];
                 }
+            }
 
-                // Calcular fechas de entrega
-                $this->on_Calcula_Fechas_Entrega();
-        }
+            // Calcular fechas de entrega
+            $this->on_Calcula_Fechas_Entrega();
+    }
+
+
+    // public function onProductoChange(){
+    //                 $this->despliega_form_tallas(); // Obtiene las tallas según el nuevo producto
+
+    //                 // Asegurar que el producto ha sido seleccionado
+    //                 if (!$this->producto_id) {
+    //                     $this->tallas = collect(); // Vaciar las tallas si no hay producto seleccionado
+    //                     return;
+    //                 }
+
+    //                 // Obtener todas las tallas asociadas al producto a través de los grupos de tallas
+    //                 $this->tallas = Talla::with('gruposTallas')
+    //                 ->whereHas('gruposTallas.productos', function ($query) {
+    //                     $query->where('producto_id', $this->producto_id);
+    //                 })
+    //                 ->get();
+
+
+    //                 // Reiniciar la selección de tallas
+    //                 $this->tallasSeleccionadas = [];
+
+    //                 foreach ($this->tallas as $talla) {
+    //                     foreach ($talla->gruposTallas as $grupo) {
+    //                         $this->tallasSeleccionadas[$grupo->id][$talla->id] = 0;
+    //                     }
+    //                 }
+
+    //                 Log::debug('Estructura de tallas seleccionadas después de reset:', ['data' => $this->tallasSeleccionadas]);
+
+    //                 // Limpiar opciones previas de características
+    //             // Limpiar opciones previas de características
+    //             $this->caracteristica_id = null;
+    //             $this->caracteristicas_sel = Caracteristica::where('ind_activo', 1)
+    //             ->whereHas('productos', function ($query) {
+    //                 $query->where('producto_id', $this->producto_id);
+    //             })
+    //             ->get()
+    //             ->map(function ($caracteristica) {
+    //                 $opciones = Opcion::where('ind_activo', 1)
+    //                     ->whereHas('caracteristicas', function ($query) use ($caracteristica) {
+    //                         $query->where('caracteristica_id', $caracteristica->id);
+    //                     })
+    //                     ->get();
+            
+    //                 $opcionesArray = $opciones->map(function ($opcion) {
+    //                     return [
+    //                         'id' => $opcion->id,
+    //                         'nombre' => $opcion->nombre,
+    //                         'valoru' => $opcion->valoru,
+    //                     ];
+    //                 })->toArray();
+            
+    //                 return [
+    //                     'id' => $caracteristica->id,
+    //                     'nombre' => $caracteristica->nombre,
+    //                     'flag_seleccion_multiple' => $caracteristica->flag_seleccion_multiple,
+    //                     'opciones' => count($opcionesArray) === 1 ? $opcionesArray : [],
+    //                 ];
+    //             })
+    //             ->toArray();
+
+    //             $this->opciones_sel = [];
+
+    //                 foreach ($this->caracteristicas_sel as $caracteristica) {
+    //                     if (isset($caracteristica['opciones']) && count($caracteristica['opciones']) === 1) {
+    //                         $this->opciones_sel[$caracteristica['id']] = $caracteristica['opciones'][0];
+    //                     }
+    //                 }
+
+
+    // }
 
     public function addOpcion($caracteristicaIndex, $opcion_id)
     {

@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use App\Models\ArchivoProyecto;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
+
+use App\Models\TareaProduccion;
 
 
 class Pedido extends Model
@@ -43,6 +46,12 @@ class Pedido extends Model
         'flag_aprobar_sin_fechas'
     ];
 
+
+    public function tareasProduccion()
+    {
+        return $this->belongsToMany(TareaProduccion::class, 'pedido_tarea', 'pedido_id', 'tarea_produccion_id');
+    }
+    
     /**
      * Relación con la tabla de clientes.
      */
@@ -258,14 +267,21 @@ class Pedido extends Model
     
         $opciones = $pedido->pedidoOpciones
             ->map(fn($po) => $po->opcion)
-            ->filter(); // elimina nulos si falta la relación
+            ->filter();
     
         $total_pasos = $opciones->sum(fn($op) => $op->pasos) * $pedido->total;
-        $total_minutos = $opciones->sum(fn($op) => $op->minutoPaso) * $pedido->total;
+    
+        // convertir minutoPaso de HH:MM:SS a minutos
+        $total_minutos = $opciones->sum(function ($op) {
+            if (!$op->minutoPaso) return 0;
+    
+            $tiempo = Carbon::createFromFormat('H:i:s', $op->minutoPaso);
+            return $tiempo->hour * 60 + $tiempo->minute + round($tiempo->second / 60, 2);
+        }) * $pedido->total;
     
         return [
             'total_pasos' => (int) $total_pasos,
-            'total_minutos' => (float) $total_minutos,
+            'total_minutos' => round($total_minutos, 2),
             'opciones' => $opciones->map(fn($op) => [
                 'id' => $op->id,
                 'nombre' => $op->nombre,
