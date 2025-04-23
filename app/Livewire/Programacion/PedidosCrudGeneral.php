@@ -77,7 +77,6 @@ class PedidosCrudGeneral extends Component
     public $nuevoTareaTipo = 'INDEFINIDA';
 
     public $usuarios = [];
-    public $orden_id;
     public $nuevoTareaDescripcion = '';
     public $modalCrearTareaConPedidos = false;
 
@@ -341,7 +340,7 @@ class PedidosCrudGeneral extends Component
             'producto.categoria',
             'tipoEnvio',
             'proyecto.user',
-            'tareasProduccion.staff', 
+            'tareasProduccion.usuario', 
         ]);
 
         if ($this->filtro_usuario) {
@@ -487,7 +486,7 @@ class PedidosCrudGeneral extends Component
         session()->flash('message', '✅ Tarea creada y pedidos asignados correctamente.');
 
         // 4️⃣ Opcional: limpiar selección
-        $this->reset(['selectedPedidos', 'orden_id', 'nuevoTareaTipo', 'nuevoTareaStaffId', 'nuevoTareaDescripcion']);
+        $this->reset(['selectedPedidos',  'nuevoTareaTipo', 'nuevoTareaStaffId', 'nuevoTareaDescripcion']);
         $this->modalCrearTarea = false;
     }
 
@@ -499,7 +498,7 @@ class PedidosCrudGeneral extends Component
             return;
         }
     
-        $this->reset(['orden_id', 'nuevoTareaTipo', 'nuevoTareaStaffId', 'nuevoTareaDescripcion']);
+        $this->reset([ 'nuevoTareaTipo', 'nuevoTareaStaffId', 'nuevoTareaDescripcion']);
         $this->modalCrearTareaConPedidos = true;
     }
 

@@ -23,9 +23,9 @@ class TareaProduccion extends Model
         'fecha_fin',
     ];
 
-    public function orden()
+    public function usuario()
     {
-        return $this->belongsTo(OrdenProduccion::class, 'orden_id');
+        return $this->belongsTo(User::class, 'usuario_id');
     }
 
     public function responsable()
