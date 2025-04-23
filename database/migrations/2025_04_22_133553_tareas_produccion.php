@@ -10,8 +10,7 @@ return new class extends Migration
     {
         Schema::create('tareas_produccion', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('orden_id')->constrained('ordenes_produccion')->onDelete('cascade');
-            
+
             $table->unsignedBigInteger('usuario_id');
             $table->foreign('usuario_id')->references('id')->on('users')->onDelete('cascade');
 

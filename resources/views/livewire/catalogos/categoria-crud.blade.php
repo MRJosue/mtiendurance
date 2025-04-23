@@ -21,7 +21,7 @@
             <input type="text" wire:model="query" placeholder="Buscar por nombre..." class="border border-gray-300 rounded px-4 py-2">
             <select wire:model="filtroActivo" class="border border-gray-300 rounded px-2 py-2">
                 <option value="1">Activas</option>
-                <option value="0">In activas</option>
+                <option value="0">Inactivas</option>
             </select>
             <button wire:click="buscar" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded">
                 Buscar

@@ -544,16 +544,16 @@
             <div class="bg-white rounded-lg p-6 w-full max-w-lg shadow-lg">
                 <h2 class="text-xl font-bold mb-4">Asignar Tarea a los Pedidos Seleccionados</h2>
 
-                <div class="mb-4">
-                    {{-- <label class="block text-sm font-medium text-gray-700">Orden de Producción</label>
+                {{-- <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Orden de Producción</label>
                     <select wire:model="orden_id" class="w-full border border-gray-300 rounded p-2">
                         <option value="">-- Selecciona una orden --</option>
                         @foreach(App\Models\OrdenProduccion::all() as $orden)
                             <option value="{{ $orden->id }}">{{ $orden->nombre ?? 'Orden #' . $orden->id }} ({{ $orden->tipo }})</option>
                         @endforeach
-                    </select> --}}
+                    </select>
                     @error('orden_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                </div>
+                </div> --}}
 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Tipo de Tarea</label>
