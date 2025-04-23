@@ -73,7 +73,7 @@ class TareaProduccionCrud extends Component
     public function render()
     {
         return view('livewire.produccion.tarea-produccion-crud', [
-          'tareas' => TareaProduccion::with(['staff', 'pedido'])->paginate(10),
+            'tareas' => TareaProduccion::with(['usuario', 'pedidos.pedidoTallas'])->paginate(10),
             'usuarios' => User::all(),
             'pedidos' => Pedido::all(),
         ]);

@@ -51,7 +51,7 @@ class Pedido extends Model
     {
         return $this->belongsToMany(TareaProduccion::class, 'pedido_tarea', 'pedido_id', 'tarea_produccion_id');
     }
-    
+
     /**
      * Relación con la tabla de clientes.
      */
@@ -307,5 +307,70 @@ class Pedido extends Model
 
         return $resultados;
     }
+
+
+    // App\Models\Pedido.php
+
+    public function getTallasAgrupadasAttribute()
+    {
+        if (!$this->relationLoaded('pedidoTallas')) {
+            $this->load(['pedidoTallas.talla', 'pedidoTallas.grupoTalla']);
+        }
+
+        return $this->pedidoTallas
+            ->groupBy('grupo_talla_id')
+            ->map(function ($tallas, $grupoTallaId) {
+                return [
+                    'grupo_nombre' => $tallas->first()->grupoTalla->nombre ?? 'Sin Grupo',
+                    'tallas' => $tallas->map(function ($talla) {
+                        return [
+                            'nombre' => $talla->talla->nombre ?? 'N/A',
+                            'cantidad' => $talla->cantidad ?? 0,
+                        ];
+                    }),
+                ];
+            });
+    }
+
+    public static function combinarTallasDePedidos($pedidos)
+    {
+        $tallasCombinadas = collect();
+    
+        foreach ($pedidos as $pedido) {
+            if (!$pedido->relationLoaded('pedidoTallas')) {
+                $pedido->load(['pedidoTallas.talla', 'pedidoTallas.grupoTalla']);
+            }
+    
+            foreach ($pedido->pedidoTallas as $pedidoTalla) {
+                $grupoId = $pedidoTalla->grupo_talla_id;
+                $tallaId = $pedidoTalla->talla_id;
+                $clave = $grupoId . '_' . $tallaId;
+    
+                $tallasCombinadas[$clave] = [
+                    'grupo_talla_id' => $grupoId,
+                    'grupo_nombre' => $pedidoTalla->grupoTalla->nombre ?? 'Sin Grupo',
+                    'talla_id' => $tallaId,
+                    'talla_nombre' => $pedidoTalla->talla->nombre ?? 'N/A',
+                    'cantidad' => ($tallasCombinadas[$clave]['cantidad'] ?? 0) + ($pedidoTalla->cantidad ?? 0),
+                ];
+            }
+        }
+    
+        // Agrupar por grupo_nombre para que sea más fácil mostrarlo en la vista
+        return $tallasCombinadas
+            ->groupBy('grupo_nombre')
+            ->map(function ($tallas, $grupoNombre) {
+                return [
+                    'grupo_nombre' => $grupoNombre,
+                    'tallas' => $tallas->map(fn($item) => [
+                        'nombre' => $item['talla_nombre'],
+                        'cantidad' => $item['cantidad'],
+                    ]),
+                ];
+            });
+    }
+    
+    
+
 
 }

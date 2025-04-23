@@ -28,6 +28,7 @@ class TareaProduccion extends Model
         return $this->belongsTo(User::class, 'usuario_id');
     }
 
+
     public function responsable()
     {
         return $this->belongsTo(User::class, 'usuario_id');
