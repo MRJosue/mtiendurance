@@ -109,6 +109,15 @@
         >
             Eliminar Seleccionados
         </button>
+
+        <button
+            class="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="selectedPedidos.length === 0"
+            wire:click="abrirModalCrearTareaConPedidos"
+        >
+            Crear Tarea con Pedidos Seleccionados
+        </button>
+        
     </div>
         
     <div class="overflow-x-auto">
@@ -228,6 +237,9 @@
                                     class="w-full px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700">
                                     Crear Tarea
                                 </button>
+
+
+
                             </td>
                         </tr>
                     @empty
@@ -526,5 +538,59 @@
             </div>
         </div>
     @endif
+
+    @if($modalCrearTareaConPedidos)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 w-full max-w-lg shadow-lg">
+                <h2 class="text-xl font-bold mb-4">Asignar Tarea a los Pedidos Seleccionados</h2>
+
+                <div class="mb-4">
+                    {{-- <label class="block text-sm font-medium text-gray-700">Orden de Producción</label>
+                    <select wire:model="orden_id" class="w-full border border-gray-300 rounded p-2">
+                        <option value="">-- Selecciona una orden --</option>
+                        @foreach(App\Models\OrdenProduccion::all() as $orden)
+                            <option value="{{ $orden->id }}">{{ $orden->nombre ?? 'Orden #' . $orden->id }} ({{ $orden->tipo }})</option>
+                        @endforeach
+                    </select> --}}
+                    @error('orden_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Tipo de Tarea</label>
+                    <select wire:model="nuevoTareaTipo" class="w-full border border-gray-300 rounded p-2">
+                        <option value="DISEÑO">DISEÑO</option>
+                        <option value="CORTE">CORTE</option>
+                        <option value="BORDADO">BORDADO</option>
+                        <option value="PINTURA">PINTURA</option>
+                        <option value="FACTURACION">FACTURACIÓN</option>
+                        <option value="INDEFINIDA">INDEFINIDA</option>
+                    </select>
+                    @error('nuevoTareaTipo') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Usuario Responsable</label>
+                    <select wire:model="nuevoTareaStaffId" class="w-full border border-gray-300 rounded p-2">
+                        <option value="">-- Selecciona el responsable --</option>
+                        @foreach($usuarios as $usuario)
+                            <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('nuevoTareaStaffId') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Descripción (Opcional)</label>
+                    <textarea wire:model="nuevoTareaDescripcion" class="w-full border border-gray-300 rounded p-2"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <button wire:click="$set('modalCrearTareaConPedidos', false)" class="bg-gray-300 text-gray-800 px-4 py-2 rounded">Cancelar</button>
+                    <button wire:click="crearTareaConPedidos" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Crear Tarea</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
 
 </div>

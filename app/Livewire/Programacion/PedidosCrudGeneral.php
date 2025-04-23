@@ -77,7 +77,9 @@ class PedidosCrudGeneral extends Component
     public $nuevoTareaTipo = 'INDEFINIDA';
 
     public $usuarios = [];
-
+    public $orden_id;
+    public $nuevoTareaDescripcion = '';
+    public $modalCrearTareaConPedidos = false;
 
     public function mount()
     {
@@ -455,6 +457,50 @@ class PedidosCrudGeneral extends Component
     
         $this->modalCrearTarea = false;
         session()->flash('message', '✅ Tarea creada correctamente.');
+    }
+
+
+        public function crearTareaConPedidos()
+    {
+        $this->validate([
+          
+            'nuevoTareaTipo' => 'required|in:DISEÑO,CORTE,BORDADO,PINTURA,FACTURACION,INDEFINIDA',
+            'nuevoTareaStaffId' => 'required|exists:users,id',
+            'selectedPedidos' => 'required|array|min:1',
+        ]);
+
+        // 1️⃣ Crear la tarea
+        $tarea = TareaProduccion::create([
+            
+            'usuario_id' => $this->nuevoTareaStaffId,
+            'crete_user' => auth()->id(),
+            'tipo' => $this->nuevoTareaTipo,
+            'descripcion' => $this->nuevoTareaDescripcion ?? 'Asignada desde programación',
+            'estado' => 'PENDIENTE',
+            'fecha_inicio' => now(),
+        ]);
+
+        // 2️⃣ Relacionar los pedidos con la tarea (pedido_tarea)
+        $tarea->pedidos()->sync($this->selectedPedidos);
+
+        // 3️⃣ Mensaje de confirmación
+        session()->flash('message', '✅ Tarea creada y pedidos asignados correctamente.');
+
+        // 4️⃣ Opcional: limpiar selección
+        $this->reset(['selectedPedidos', 'orden_id', 'nuevoTareaTipo', 'nuevoTareaStaffId', 'nuevoTareaDescripcion']);
+        $this->modalCrearTarea = false;
+    }
+
+
+    public function abrirModalCrearTareaConPedidos()
+    {
+        if (empty($this->selectedPedidos)) {
+            session()->flash('error', 'Debes seleccionar al menos un pedido.');
+            return;
+        }
+    
+        $this->reset(['orden_id', 'nuevoTareaTipo', 'nuevoTareaStaffId', 'nuevoTareaDescripcion']);
+        $this->modalCrearTareaConPedidos = true;
     }
 
 }

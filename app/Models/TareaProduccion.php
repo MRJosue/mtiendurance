@@ -12,7 +12,7 @@ class TareaProduccion extends Model
     protected $table = 'tareas_produccion';
 
     protected $fillable = [
-        'orden_id',
+        
         'usuario_id',
         'crete_user',
         'tipo',
