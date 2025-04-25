@@ -34,10 +34,10 @@ class DatabaseSeeder extends Seeder
             ClientesTableSeeder::class,
             ProveedoresTableSeeder::class,
             
-            CategoriasTableSeeder::class,
-            ProductosTableSeeder::class,
-            CaracteristicasTableSeeder::class,
-            OpcionesTableSeeder::class,
+            // CategoriasTableSeeder::class,
+            // ProductosTableSeeder::class,
+            // CaracteristicasTableSeeder::class,
+            // OpcionesTableSeeder::class,
 
 
            // ProyectosTableSeeder::class,
