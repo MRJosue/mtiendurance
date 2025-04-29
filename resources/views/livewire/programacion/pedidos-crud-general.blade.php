@@ -134,6 +134,7 @@
                         <th class="px-4 py-3 border">ID</th>
                         {{-- <th class="px-4 py-3 border">Usuario</th> --}}
                         <th class="px-4 py-3 border">Producto / Categoría</th>
+                        <th class="px-4 py-3 border">Caracteristicas</th>
                         {{-- <th class="px-4 py-3 border">Total</th> --}}
                         <th class="px-4 py-3 border">Tipo</th>
                         <th class="px-4 py-3 border">Estado</th>
@@ -175,6 +176,34 @@
                             <td class="px-4 py-2 border">
                                 <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
                                 <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
+                            </td>
+                            <td class="px-4 py-2 border">
+                                @if($pedido->pedidoCaracteristicas->isNotEmpty())
+                                    <ul class="list-disc list-inside text-sm text-gray-700">
+                                        @foreach($pedido->pedidoCaracteristicas as $pc)
+                                            <li class="font-semibold">{{ $pc->caracteristica->nombre ?? 'Sin característica' }}
+                                                @php
+                                                    $opcionesRelacionadas = $pedido->pedidoOpciones
+                                                        ->filter(fn($po) =>
+                                                            $po->opcion &&
+                                                            $po->opcion->caracteristicas->pluck('id')->contains($pc->caracteristica_id)
+                                                        );
+                                                @endphp
+                                                @if($opcionesRelacionadas->isNotEmpty())
+                                                    <ul class="list-disc list-inside ml-4 text-xs text-gray-600">
+                                                        @foreach($opcionesRelacionadas as $opcion)
+                                                            <li>{{ $opcion->opcion->nombre ?? 'Sin opción' }} @if($opcion->valor)  @endif</li>
+                                                        @endforeach
+                                                    </ul>
+                                                @else
+                                                    <div class="text-xs text-gray-400 ml-4">Sin opciones</div>
+                                                @endif
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @else
+                                    <span class="text-gray-500 text-sm">Sin características</span>
+                                @endif
                             </td>
                             <td class="px-4 py-2 border">{{ $pedido->total }} piezas</td>
                             {{-- <td class="px-4 py-2 border">{{ $pedido->tipo }}</td> --}}

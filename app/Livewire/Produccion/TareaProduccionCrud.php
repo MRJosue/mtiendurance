@@ -70,12 +70,26 @@ class TareaProduccionCrud extends Component
         TareaProduccion::findOrFail($id)->delete();
     }
 
+    // public function render()
+    // {
+    //     return view('livewire.produccion.tarea-produccion-crud', [
+    //         'tareas' => TareaProduccion::with(['usuario', 'pedidos.pedidoTallas'])->paginate(10),
+    //         'usuarios' => User::all(),
+    //         'pedidos' => Pedido::all(),
+    //     ]);
+    // }
+
     public function render()
-    {
-        return view('livewire.produccion.tarea-produccion-crud', [
-            'tareas' => TareaProduccion::with(['usuario', 'pedidos.pedidoTallas'])->paginate(10),
-            'usuarios' => User::all(),
-            'pedidos' => Pedido::all(),
-        ]);
-    }
+        {
+            return view('livewire.produccion.tarea-produccion-crud', [
+                'tareas' => TareaProduccion::with([
+                    'usuario',
+                    'pedidos.pedidoTallas',
+                    'pedidos.pedidoCaracteristicas.caracteristica',
+                    'pedidos.pedidoOpciones.opcion.caracteristicas'
+                ])->paginate(10),
+                'usuarios' => User::all(),
+                'pedidos' => Pedido::all(),
+            ]);
+        }
 }

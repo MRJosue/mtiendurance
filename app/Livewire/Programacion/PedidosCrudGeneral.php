@@ -340,7 +340,9 @@ class PedidosCrudGeneral extends Component
             'producto.categoria',
             'tipoEnvio',
             'proyecto.user',
-            'tareasProduccion.usuario', 
+            'tareasProduccion.usuario',
+            'pedidoCaracteristicas.caracteristica',
+            'pedidoOpciones.opcion.caracteristicas'
         ]);
 
         if ($this->filtro_usuario) {
@@ -478,6 +480,12 @@ class PedidosCrudGeneral extends Component
             'estado' => 'PENDIENTE',
             'fecha_inicio' => now(),
         ]);
+
+        // Añadimos un campo json para tallas 
+
+        // Añadimos un campo de resumen de tallas 
+
+        
 
         // 2️⃣ Relacionar los pedidos con la tarea (pedido_tarea)
         $tarea->pedidos()->sync($this->selectedPedidos);

@@ -28,6 +28,8 @@ class PedidoOpcion extends Model
         return $this->belongsTo(Pedido::class);
     }
 
+    
+
     public function opcion()
     {
         return $this->belongsTo(Opcion::class);

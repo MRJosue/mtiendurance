@@ -22,4 +22,6 @@ class Opcion extends Model
     {
         return $this->belongsToMany(Caracteristica::class, 'caracteristica_opcion', 'opcion_id', 'caracteristica_id');
     }
+
+    
 }
