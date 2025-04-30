@@ -98,6 +98,12 @@
                                 </x-dropdown-link>
 
 
+                                <x-dropdown-link :href="route('produccion.ordenes_produccion')">
+                                    {{ __('Ordenes de Produccion') }}
+                                </x-dropdown-link>
+
+
+
                                 @endhasanyrole
 
 

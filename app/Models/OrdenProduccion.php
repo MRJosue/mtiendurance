@@ -13,27 +13,24 @@ class OrdenProduccion extends Model
     protected $table = 'ordenes_produccion';
 
     protected $fillable = [
-        'nombre',
-        'tipo',
-        'estado',
-        'usuario_id',
         'crete_user',
-        'fecha_inicio',
-        'fecha_fin',
+        'tipo',
     ];
 
-    public function responsable()
+    // Relación con pedidos (muchos a muchos)
+    public function pedidos()
     {
-        return $this->belongsTo(User::class, 'usuario_id');
+        return $this->belongsToMany(Pedido::class, 'pedido_orden_produccion');
+    }
+
+    // Relación con orden de corte
+    public function ordenCorte()
+    {
+        return $this->hasOne(OrdenCorte::class, 'orden_produccion_id');
     }
 
     public function creador()
     {
         return $this->belongsTo(User::class, 'crete_user');
-    }
-
-    public function tareas()
-    {
-        return $this->hasMany(TareaProduccion::class, 'orden_id');
     }
 }

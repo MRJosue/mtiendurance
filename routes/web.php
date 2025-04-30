@@ -151,9 +151,9 @@ Route::get('/programacion',[ProgramacionController::class, 'index'])->middleware
 // Reprogramacion 
 Route::get('/reprogramacion/{proyecto}',[ReprogramacionProyecto::class, 'index'])->middleware(['auth','verified'])->name('reprogramacion.reprogramacionproyectopedido');
 
-// Tareas de produccion 
+// produccion 
 Route::get('/produccion/tareas',[tareasproduccion::class, 'index'])->middleware(['auth','verified'])->name('produccion.tareas');
-
+Route::get('/produccion/ordenes_produccion',[tareasproduccion::class, 'ordenes_produccion'])->middleware(['auth','verified'])->name('produccion.ordenes_produccion');
 
 //Catalogos
     //Categorias

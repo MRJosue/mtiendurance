@@ -117,6 +117,14 @@
         >
             Crear Tarea con Pedidos Seleccionados
         </button>
+
+        <button
+            class="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="selectedPedidos.length === 0"
+            wire:click="abrirModalCrearOrdenCorte"
+        >
+            Crear Orden de Corte
+        </button>
         
     </div>
         
@@ -621,5 +629,32 @@
         </div>
     @endif
 
+    @if($modalCrearOrdenCorte)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 w-full max-w-lg shadow-lg">
+                <h2 class="text-xl font-bold mb-4">Crear Orden de Corte</h2>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
+                    <input type="date" wire:model="ordenCorte_fecha_inicio" class="w-full border border-gray-300 rounded p-2">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Total de Piezas</label>
+                    <input type="number" min="1" wire:model="ordenCorte_total" class="w-full border border-gray-300 rounded p-2">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Características (opcional)</label>
+                    <textarea wire:model="ordenCorte_caracteristicas" class="w-full border border-gray-300 rounded p-2"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <button wire:click="$set('modalCrearOrdenCorte', false)" class="bg-gray-300 text-gray-800 px-4 py-2 rounded">Cancelar</button>
+                    <button wire:click="guardarOrdenCorte" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Crear Orden</button>
+                </div>
+            </div>
+        </div>
+    @endif
 
 </div>

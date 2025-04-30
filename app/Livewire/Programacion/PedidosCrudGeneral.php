@@ -16,6 +16,10 @@ use App\Models\GrupoTalla;
 use App\Models\User;
 use App\Models\ProductoGrupoTalla;
 use App\Models\TareaProduccion;
+use App\Models\OrdenProduccion;
+use App\Models\OrdenCorte;
+
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -79,6 +83,16 @@ class PedidosCrudGeneral extends Component
     public $usuarios = [];
     public $nuevoTareaDescripcion = '';
     public $modalCrearTareaConPedidos = false;
+
+
+    // Modal para crear Orden de Corte
+    public $modalCrearOrdenCorte = false;
+
+    // Datos de la nueva Orden de Corte
+    public $ordenCorte_fecha_inicio;
+    public $ordenCorte_total;
+    public $ordenCorte_caracteristicas = '';
+    public $ordenCorte_tallas = [];
 
     public function mount()
     {
@@ -499,6 +513,76 @@ class PedidosCrudGeneral extends Component
     }
 
 
+    public function abrirModalCrearOrdenCorte()
+    {
+        if (empty($this->selectedPedidos)) {
+            session()->flash('error', 'Debes seleccionar al menos un pedido para crear una Orden de Corte.');
+            return;
+        }   
+
+        $this->reset([
+            'ordenCorte_fecha_inicio',
+            'ordenCorte_total',
+            'ordenCorte_caracteristicas',
+            'ordenCorte_tallas',
+        ]);
+
+        $this->modalCrearOrdenCorte = true;
+    }
+
+
+    public function guardarOrdenCorte()
+    {
+        $this->validate([
+            'ordenCorte_fecha_inicio' => 'required|date',
+            'ordenCorte_total' => 'required|numeric|min:1',
+        ]);
+    
+        DB::beginTransaction();
+        try {
+            // 1️⃣ Crear la orden de producción general
+            $orden = OrdenProduccion::create([
+                'crete_user' => auth()->id(),
+                'tipo' => 'CORTE',
+            ]);
+    
+            // 2️⃣ Crear la orden de corte específica
+           OrdenCorte::create([
+                'orden_produccion_id' => $orden->id,
+                'fecha_inicio' => $this->ordenCorte_fecha_inicio,
+                'total' => $this->ordenCorte_total,
+                'caracteristicas' => $this->ordenCorte_caracteristicas ? json_encode($this->ordenCorte_caracteristicas) : null,
+                'tallas' => json_encode($this->ordenCorte_tallas ?: [
+                        ['talla' => 'CH', 'cantidad' => 50],
+                        ['talla' => 'M', 'cantidad' => 100],
+                        ['talla' => 'G', 'cantidad' => 83],
+                    ]),
+            ]);
+    
+            // 3️⃣ Relacionar los pedidos seleccionados
+            foreach ($this->selectedPedidos as $pedidoId) {
+                \DB::table('pedido_orden_produccion')->insert([
+                    'pedido_id' => $pedidoId,
+                    'orden_produccion_id' => $orden->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+    
+            DB::commit();
+    
+            session()->flash('message', '✅ Orden de Corte creada exitosamente.');
+            $this->reset(['modalCrearOrdenCorte', 'selectedPedidos']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al crear Orden de Corte', ['error' => $e->getMessage()]);
+            session()->flash('error', 'Error al crear la orden de corte.');
+        }
+    }
+
+
+
+    
     public function abrirModalCrearTareaConPedidos()
     {
         if (empty($this->selectedPedidos)) {
