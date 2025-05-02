@@ -1,4 +1,4 @@
-Table users {
+ Table users {
   id INT [pk, unique, not null]
   nombre VARCHAR
   correo VARCHAR [unique, not null]
@@ -218,22 +218,63 @@ Table producto_grupo_talla {
 }
 
 Table pedido {
-  id INT [pk, unique, not null]
-  proyecto_id INT [not null, unique, ref: > proyectos.id] 
-  producto_id INT [not null, ref: > productos.id]
-  cliente_id  INT [null, ref: > clientes.id]
-  user_id  INT [not null, ref: > users.id]
-  fecha_creacion TIMESTAMP [default: `now()`]
-  tipo  ENUM('POR PROGRAMAR', 'PROGRAMADO',  'IMPRESIÓN', 'PRODUCCIÓN', 
-                'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO', 'RECHAZADO') [default: 'POR PROGRAMAR']
-  estado ENUM('POR DEFINIR','PEDIDO', 'MUESTRA') [default: 'POR DEFINIR']
-  fecha_produccion date
-  fecha_embarque date
-  fecha_entrega date
-  totalpasos INT
-  totalminutoPaso INT
-  totalvalor INT
+  id BIGINT [pk, increment]
+  proyecto_id BIGINT [ref: > proyectos.id]
+  producto_id BIGINT [ref: > productos.id]
+  user_id BIGINT [ref: > users.id]
+  cliente_id BIGINT [ref: > clientes.id]
+  fecha_creacion TIMESTAMP
+  total DECIMAL(10,2)
+  total_minutos DOUBLE(8,2)
+  total_pasos INT
+  resumen_tiempos JSON
+  estatus VARCHAR(255)
+  created_at TIMESTAMP
+  updated_at TIMESTAMP
+  direccion_fiscal_id BIGINT
+  direccion_fiscal VARCHAR(255)
+  direccion_entrega_id BIGINT
+  direccion_entrega VARCHAR(255)
+  id_tipo_envio BIGINT
+  tipo ENUM('POR DEFINIR','PEDIDO','MUESTRA')
+  estado ENUM('POR APROBAR','APROBADO','ENTREGADO','RECHAZADO','ARCHIVADO','POR REPROGRAMAR')
+  estado_produccion ENUM('POR APROBAR','POR PROGRAMAR','PROGRAMADO','IMPRESIÓN','CORTE','COSTURA','ENTREGA','FACTURACIÓN','COMPLETADO','RECHAZADO')
+  flag_aprobar_sin_fechas BOOLEAN
+  fecha_produccion DATE
+  fecha_embarque DATE
+  fecha_entrega DATE
+  url VARCHAR(255)
+  last_uploaded_file_id BIGINT
 }
+
+Table ordenes_produccion {
+  id bigint [pk]
+  crete_user bigint [ref: > users.id]
+  tipo enum('CORTE', 'BORDADO', 'PINTURA', 'ETIQUETADO', 'OTRO')
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table pedido_orden_produccion {
+  id bigint [pk]
+  pedido_id bigint [ref: > pedido.id]
+  orden_produccion_id bigint [ref: > ordenes_produccion.id]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table orden_corte {
+  id bigint [pk]
+  orden_produccion_id bigint [ref: > ordenes_produccion.id]
+  tallas json
+  tallas_entregadas json
+  total decimal(10,2)
+  caracteristicas json
+  fecha_inicio date
+  created_at timestamp
+  updated_at timestamp
+}
+
 
 Table pedido_estados {
   id INT [pk, not null]
@@ -245,6 +286,28 @@ Table pedido_estados {
   updated_at TIMESTAMP
 }
 
+
+Table tareas_produccion {
+  id BIGINT [pk, increment]
+  usuario_id BIGINT [ref: > users.id]
+  crete_user BIGINT [ref: > users.id]
+  tipo ENUM('DISEÑO', 'CORTE', 'BORDADO', 'PINTURA', 'FACTURACION', 'INDEFINIDA')
+  descripcion VARCHAR
+  estado ENUM('PENDIENTE', 'EN PROCESO', 'FINALIZADO', 'CANCELADO')
+  disenio_flag_first_proceso BOOLEAN
+  fecha_inicio TIMESTAMP
+  fecha_fin TIMESTAMP
+  created_at TIMESTAMP
+  updated_at TIMESTAMP
+}
+
+Table pedido_tarea {
+  id BIGINT [pk, increment]
+  pedido_id BIGINT [ref: > pedido.id]
+  tarea_produccion_id BIGINT [ref: > tareas_produccion.id]
+  created_at TIMESTAMP
+  updated_at TIMESTAMP
+}
 
 Table pedido_caracteristicas {
   pedido_id INT [not null, ref: > pedido.id]
@@ -334,3 +397,4 @@ Table proyecto_referencias {
   created_at TIMESTAMP [default: `now()`]
   updated_at TIMESTAMP
 }
+

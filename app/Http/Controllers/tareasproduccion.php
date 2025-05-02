@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\OrdenProduccion;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class tareasproduccion extends Controller
 {
@@ -25,5 +27,13 @@ class tareasproduccion extends Controller
          return view('produccion.ordenes_produccion');
     }
 
+    public function imprimirOrdenProduccion($ordenId)
+    {
+        $orden = OrdenProduccion::with(['pedidos.producto', 'ordenCorte'])->findOrFail($ordenId);
+    
+        return PDF::loadView('pdf.orden_produccion', [
+            'orden' => $orden
+        ])->stream("orden_produccion_{$ordenId}.pdf");
+    }
 
 }

@@ -185,6 +185,18 @@ class Pedido extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+
+    public function ordenesProduccion()
+    {
+        return $this->belongsToMany(
+            \App\Models\OrdenProduccion::class,
+            'pedido_orden_produccion',
+            'pedido_id',
+            'orden_produccion_id'
+        );
+    }
+
     
     public static function crearMuestra($proyectoId, $data)
     {

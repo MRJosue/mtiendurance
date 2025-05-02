@@ -150,7 +150,7 @@
                         <th class="px-4 py-3 border">Embarque</th>
                         <th class="px-4 py-3 border">Entrega</th>
                         <th class="px-4 py-3 border">Producción</th>
-                        <th class="px-4 py-3 border">Tareas</th>
+                        <th class="px-4 py-3 border">Ordenes</th>
                         <th class="px-4 py-3 border text-center">Acciones</th>
                     </tr>
                 </thead>
@@ -236,20 +236,11 @@
                                     {{ $pedido->estado_produccion ?? 'Sin definir' }}
                                 </span>
                             </td>
-                            <td class="px-4 py-2 border text-sm text-gray-700">
-                                @if($pedido->tareasProduccion->isEmpty())
-                                    <span class="text-gray-500">Sin tareas</span>
-                                @else
-                                    <ul class="space-y-1">
-                                        @foreach($pedido->tareasProduccion as $tarea)
-                                            <li class="border-b pb-1">
-                                                <div class="text-xs font-semibold">{{ $tarea->tipo }} - {{ $tarea->estado }}</div>
-                                                <div class="text-xs text-gray-500">{{ $tarea->descripcion }}</div>
-                                                <div class="text-xs italic text-gray-400">Responsable: {{ $tarea->staff->name ?? 'N/A' }}</div>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                @endif
+                            <td class="px-4 py-2 border text-center">
+                                <button wire:click="verOrdenesDePedido({{ $pedido->id }})"
+                                    class="text-blue-600 hover:underline text-sm">
+                                    Ver más
+                                </button>
                             </td>
                             <td class="px-4 py-2 border text-center space-y-1">
                                 <button wire:click="abrirModal({{ $pedido->id }})"
@@ -630,31 +621,181 @@
     @endif
 
     @if($modalCrearOrdenCorte)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-lg p-6 w-full max-w-lg shadow-lg">
-                <h2 class="text-xl font-bold mb-4">Crear Orden de Corte</h2>
-
-                <div class="mb-4">
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-3xl flex flex-col max-h-[90vh]">
+    
+            {{-- Encabezado --}}
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-bold">Crear Orden de Corte</h2>
+            </div>
+    
+            {{-- Cuerpo con scroll --}}
+            <div class="overflow-y-auto p-6 space-y-4">
+                {{-- Sección de pedidos relacionados --}}
+                <div x-data="{ showPedidos: false }" class="border rounded p-4">
+                    <div class="flex justify-between items-center cursor-pointer select-none" @click="showPedidos = !showPedidos">
+                        <h3 class="font-semibold text-gray-700">Pedidos seleccionados (IDs: {{ implode(', ', $selectedPedidos) }})</h3>
+                        <span class="text-sm text-blue-500 hover:underline">
+                            <span x-show="!showPedidos">Mostrar</span>
+                            <span x-show="showPedidos">Ocultar</span>
+                        </span>
+                    </div>
+    
+                    <div x-show="showPedidos" x-transition class="mt-3 space-y-4">
+                        @foreach($selectedPedidos as $pedidoId)
+                            @php
+                                $pedido = \App\Models\Pedido::with(['producto.categoria', 'pedidoCaracteristicas.caracteristica', 'pedidoOpciones.opcion.caracteristicas'])->find($pedidoId);
+                            @endphp
+    
+                            @if($pedido)
+                                <div class="border p-3 rounded bg-gray-50">
+                                    <div class="font-bold text-gray-800 mb-2">Pedido #{{ $pedido->id }} – {{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
+                                        @foreach($pedido->pedidoCaracteristicas as $pc)
+                                            <div>
+                                                <div class="font-semibold">{{ $pc->caracteristica->nombre ?? 'Característica' }}</div>
+                                                @php
+                                                    $opciones = $pedido->pedidoOpciones->filter(function($po) use ($pc) {
+                                                        return $po->opcion && $po->opcion->caracteristicas->pluck('id')->contains($pc->caracteristica_id);
+                                                    });
+                                                @endphp
+                                                @if($opciones->isNotEmpty())
+                                                    <ul class="list-disc list-inside text-xs text-gray-600 ml-2">
+                                                        @foreach($opciones as $op)
+                                                            <li>{{ $op->opcion->nombre }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                @else
+                                                    <p class="text-xs text-gray-500 italic">Sin opciones</p>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+    
+                {{-- Fecha de inicio --}}
+                <div>
                     <label class="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
                     <input type="date" wire:model="ordenCorte_fecha_inicio" class="w-full border border-gray-300 rounded p-2">
                 </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Total de Piezas</label>
-                    <input type="number" min="1" wire:model="ordenCorte_total" class="w-full border border-gray-300 rounded p-2">
+    
+                {{-- Tallas agrupadas --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tallas agrupadas</label>
+                    @if(!empty($ordenCorte_tallas_json))
+                        <div class="space-y-2">
+                            @php $totalCorte = 0; @endphp
+                            @foreach($ordenCorte_tallas_json as $clave => $info)
+                                @php
+                                    $aCortar = max(0, $info['cantidad'] - ($info['stock'] ?? 0));
+                                    $totalCorte += $aCortar;
+                                @endphp
+                                <div class="flex items-center justify-between gap-2 border p-2 rounded">
+                                    <div class="w-1/2 text-sm text-gray-700">
+                                        <strong>{{ $info['grupo'] }} - {{ $info['talla'] }}</strong><br>
+                                        <span>Cantidad: {{ $info['cantidad'] }}</span>
+                                    </div>
+                                    <div class="w-1/2 text-sm">
+                                        <label class="block text-xs text-gray-500">A cortar</label>
+                                        <span class="font-semibold text-blue-600">{{ $aCortar }}</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
-
-                <div class="mb-4">
+    
+                {{-- Total a cortar --}}
+                <div>
+                    <p class="text-sm font-medium text-gray-800">
+                        Total a cortar:
+                        <span class="text-xl font-bold text-green-600">{{ $totalCorte }} piezas</span>
+                    </p>
+                </div>
+    
+                {{-- Características --}}
+                <div>
                     <label class="block text-sm font-medium text-gray-700">Características (opcional)</label>
                     <textarea wire:model="ordenCorte_caracteristicas" class="w-full border border-gray-300 rounded p-2"></textarea>
                 </div>
-
-                <div class="flex justify-end gap-2">
-                    <button wire:click="$set('modalCrearOrdenCorte', false)" class="bg-gray-300 text-gray-800 px-4 py-2 rounded">Cancelar</button>
-                    <button wire:click="guardarOrdenCorte" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Crear Orden</button>
-                </div>
+            </div>
+    
+            {{-- Pie con botones --}}
+            <div class="p-4 border-t flex justify-end gap-2 bg-white sticky bottom-0">
+                <button wire:click="$set('modalCrearOrdenCorte', false)" class="bg-gray-300 text-gray-800 px-4 py-2 rounded">Cancelar</button>
+                <button wire:click="guardarOrdenCorte" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Crear Orden</button>
             </div>
         </div>
+    </div>
     @endif
-
+    
+    @if($modalOrdenes)
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-3xl flex flex-col max-h-[85vh]">
+    
+            {{-- Encabezado con botón X --}}
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-lg font-bold text-gray-800">Órdenes de Producción relacionadas</h2>
+                <button wire:click="$set('modalOrdenes', false)" class="text-gray-500 hover:text-red-600 text-xl font-bold">&times;</button>
+            </div>
+    
+            {{-- Contenido con scroll --}}
+            <div class="overflow-y-auto p-4 space-y-4 text-sm text-gray-700">
+                @forelse($pedidoOrdenes as $orden)
+                    <div class="border rounded p-4 bg-gray-50">
+                        <div class="flex justify-between items-center mb-2">
+                            <div>
+                                <div><strong>ID:</strong> {{ $orden['id'] }}</div>
+                                <div><strong>Tipo:</strong> {{ $orden['tipo'] }}</div>
+                                <div><strong>Creado:</strong> {{ $orden['creado'] }}</div>
+                            </div>
+                            {{-- Botón de impresión --}}
+                            <button
+                                class="text-blue-600 hover:underline text-xs"
+                                onclick="window.open('{{ route('produccion.ordenes_produccion.imprimir', $orden['id']) }}', '_blank')"
+>
+                                🖨️ Imprimir
+                            </button>
+                        </div>
+    
+                        {{-- Pedidos relacionados --}}
+                        <div class="mb-2">
+                            <strong>Pedidos:</strong>
+                            <ul class="list-disc list-inside text-sm text-gray-800 ml-4">
+                                @foreach($orden['pedidos'] as $p)
+                                    <li>Pedido #{{ $p['id'] }} – {{ $p['producto'] }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+    
+                        {{-- Suborden: Corte --}}
+                        @if($orden['orden_corte'])
+                            <div class="bg-white border-t mt-2 pt-2 text-sm text-gray-700">
+                                <strong>Suborden Corte:</strong><br>
+                                Fecha Inicio: {{ $orden['orden_corte']['fecha_inicio'] ?? 'N/A' }}<br>
+                                Total piezas: {{ $orden['orden_corte']['total'] ?? 0 }}
+                            </div>
+                        @endif
+                    </div>
+                @empty
+                    <p class="italic text-gray-500">Este pedido no tiene órdenes asociadas.</p>
+                @endforelse
+            </div>
+    
+            {{-- Pie con botón cerrar --}}
+            <div class="border-t p-4 flex justify-end">
+                <button wire:click="$set('modalOrdenes', false)"
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+    
+    
 </div>

@@ -94,6 +94,13 @@ class PedidosCrudGeneral extends Component
     public $ordenCorte_caracteristicas = '';
     public $ordenCorte_tallas = [];
 
+    public $ordenCorte_tallas_json = [];
+
+
+    public $modalOrdenes = false;
+    public $pedidoOrdenes = [];
+
+
     public function mount()
     {
         $this->tipos_envio = TipoEnvio::all();
@@ -518,45 +525,89 @@ class PedidosCrudGeneral extends Component
         if (empty($this->selectedPedidos)) {
             session()->flash('error', 'Debes seleccionar al menos un pedido para crear una Orden de Corte.');
             return;
-        }   
+        }
 
+
+       
         $this->reset([
             'ordenCorte_fecha_inicio',
-            'ordenCorte_total',
+        
             'ordenCorte_caracteristicas',
             'ordenCorte_tallas',
+            'ordenCorte_tallas_json',
         ]);
+
+        // ✅ Cargar tallas de los pedidos seleccionados
+        $tallasAgrupadas = [];
+
+        foreach ($this->selectedPedidos as $pedidoId) {
+            $pedido = \App\Models\Pedido::with(['pedidoTallas.talla', 'pedidoTallas.grupoTalla'])->find($pedidoId);
+        
+            if (!$pedido) continue;
+        
+            foreach ($pedido->tallas_agrupadas as $grupoId => $grupo) {
+                $grupoNombre = $grupo['grupo_nombre'];
+        
+                foreach ($grupo['tallas'] as $talla) {
+                    $clave = $grupoNombre . '-' . $talla['nombre'];
+        
+                    if (!isset($tallasAgrupadas[$clave])) {
+                        $tallasAgrupadas[$clave] = [
+                            'grupo' => $grupoNombre,
+                            'talla' => $talla['nombre'],
+                            'cantidad' => 0,
+                            'stock' => 0,
+                        ];
+                    }
+        
+                    $tallasAgrupadas[$clave]['cantidad'] += $talla['cantidad'];
+                }
+            }
+        }
+        
+        $this->ordenCorte_tallas_json = $tallasAgrupadas;
 
         $this->modalCrearOrdenCorte = true;
     }
 
-
     public function guardarOrdenCorte()
     {
+
+
+        Log::debug('Pre validacion ');
+
         $this->validate([
             'ordenCorte_fecha_inicio' => 'required|date',
-            'ordenCorte_total' => 'required|numeric|min:1',
+          
         ]);
-    
+        
+        Log::debug('Pasa validacion');
         DB::beginTransaction();
         try {
             // 1️⃣ Crear la orden de producción general
+
+            Log::debug('Crear la orden de producción general');
             $orden = OrdenProduccion::create([
                 'crete_user' => auth()->id(),
                 'tipo' => 'CORTE',
             ]);
+
+
+
+            // calculo del total 
+            $totalCorte = collect($this->ordenCorte_tallas_json)->sum(function ($item) {
+                return isset($item['cantidad']) ? (int) $item['cantidad'] : 0;
+            });
+
+
     
             // 2️⃣ Crear la orden de corte específica
            OrdenCorte::create([
                 'orden_produccion_id' => $orden->id,
                 'fecha_inicio' => $this->ordenCorte_fecha_inicio,
-                'total' => $this->ordenCorte_total,
+                'total' => $totalCorte,
                 'caracteristicas' => $this->ordenCorte_caracteristicas ? json_encode($this->ordenCorte_caracteristicas) : null,
-                'tallas' => json_encode($this->ordenCorte_tallas ?: [
-                        ['talla' => 'CH', 'cantidad' => 50],
-                        ['talla' => 'M', 'cantidad' => 100],
-                        ['talla' => 'G', 'cantidad' => 83],
-                    ]),
+                'tallas' => json_encode($this->ordenCorte_tallas_json),
             ]);
     
             // 3️⃣ Relacionar los pedidos seleccionados
@@ -592,6 +643,32 @@ class PedidosCrudGeneral extends Component
     
         $this->reset([ 'nuevoTareaTipo', 'nuevoTareaStaffId', 'nuevoTareaDescripcion']);
         $this->modalCrearTareaConPedidos = true;
+    }
+
+    public function verOrdenesDePedido($pedidoId)
+    {
+        $pedido = Pedido::find($pedidoId);
+    
+        $this->pedidoOrdenes = \App\Models\OrdenProduccion::with(['pedidos', 'ordenCorte'])
+            ->whereHas('pedidos', fn($q) => $q->where('pedido.id', $pedidoId))
+            ->get()
+            ->map(function ($orden) {
+                return [
+                    'id' => $orden->id,
+                    'tipo' => $orden->tipo,
+                    'creado' => $orden->created_at->format('Y-m-d H:i'),
+                    'pedidos' => $orden->pedidos->map(fn($p) => [
+                        'id' => $p->id,
+                        'producto' => $p->producto->nombre ?? 'Sin producto',
+                    ]),
+                    'orden_corte' => $orden->ordenCorte ? [
+                        'fecha_inicio' => $orden->ordenCorte->fecha_inicio?->format('Y-m-d'),
+                        'total' => $orden->ordenCorte->total,
+                    ] : null,
+                ];
+            })->toArray();
+    
+        $this->modalOrdenes = true;
     }
 
 }
