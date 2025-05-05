@@ -162,8 +162,13 @@ Route::get('/produccion/ordenes_produccion/imprimir/{orden}', [tareasproduccion:
     // Route::get('/catalogos/categorias',[categoriacontroller::class, 'index'])->name('catalogos.categorias.index');
     Route::get('catalogos/categorias', [CategoriaController::class, 'index'])->middleware(['auth', 'verified'])->name('catalogos.categorias.index');
     Route::get('catalogos/producto',   [productocontroller::class, 'index'])->middleware(['auth', 'verified'])->name('catalogos.producto.index');
+    Route::get('catalogos/producto/layout', [productocontroller::class, 'layout'])->middleware(['auth', 'verified'])->name('catalogos.producto.layout');
+    
     Route::get('catalogos/caracteristicas', [caracteristicacontroller::class, 'index'])->middleware(['auth', 'verified'])->name('catalogos.caracteristica.index');
     Route::get('catalogos/opciones', [opcionescontroller::class, 'index'])->middleware(['auth', 'verified'])->name('catalogos.opciones.index');
+
+
+    
     //Paises 
     Route::get('catalogos/paises', [paisescontroller::class, 'index'])->middleware(['auth', 'verified'])->name('catalogos.paises.index');
     //Estados

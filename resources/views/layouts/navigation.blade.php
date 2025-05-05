@@ -196,6 +196,10 @@
                                     {{ __('Opciones de Caracteristicas') }}
                                 </x-dropdown-link>
 
+                                <x-dropdown-link :href="route('catalogos.producto.layout')">
+                                    {{ __('Layout producto') }}
+                                </x-dropdown-link>
+
                                 <x-dropdown-link :href="route('catalogos.tallas.tallas')">
                                     {{ __('Tallas') }}
                                 </x-dropdown-link>

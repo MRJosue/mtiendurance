@@ -309,4 +309,10 @@
         </div>
     @endif
 
+
+    @if ($producto_id)
+        <livewire:visuales.layout-render :producto_id="$producto_id" />
+    @endif
+
+    
 </div>

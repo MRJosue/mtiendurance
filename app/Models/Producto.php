@@ -13,7 +13,7 @@ class Producto extends Model
     protected $table = 'productos';
 
     public    $incrementing = true;
-    protected $keyType = 'string';
+    protected $keyType = 'int';
 
     protected $fillable = [
 
@@ -58,5 +58,10 @@ class Producto extends Model
         return $this->belongsToMany(GrupoTalla::class, 'producto_grupo_talla', 'producto_id', 'grupo_talla_id');
     }
 
+
+    public function layout()
+    {
+        return $this->hasOne(Layout::class, 'producto_id');
+    }
 
 }

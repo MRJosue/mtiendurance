@@ -13,4 +13,12 @@ class productocontroller extends Controller
         }
         return view('catalogos.producto.index');
     }
+
+    public function layout(){
+
+        if (!auth()->user()->hasRole('admin')) {
+            return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
+        }
+        return view('catalogos.producto.layout');
+    }
 }
