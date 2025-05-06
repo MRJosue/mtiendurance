@@ -37,7 +37,7 @@
                 <h3 class="text-lg font-semibold mb-2">Elementos del Layout</h3>
 
                 @foreach ($elementos as $i => $el)
-                    <div class="grid grid-cols-8 gap-2 items-center mb-2">
+                    <div class="grid grid-cols-10 gap-2 items-center mb-2">
                         <button 
                             type="button"
                             x-data
@@ -69,15 +69,34 @@
                             @endforeach
                         </select>
 
-                        <input type="number" placeholder="X" wire:model="elementos.{{ $i }}.posicion_x" class="border rounded p-1">
-                        <input type="number" placeholder="Y" wire:model="elementos.{{ $i }}.posicion_y" class="border rounded p-1">
-                        <input type="number" placeholder="Ancho" wire:model="elementos.{{ $i }}.ancho" class="border rounded p-1">
-                        <input type="number" placeholder="Alto" wire:model="elementos.{{ $i }}.alto" class="border rounded p-1">
-
-
-                        @if($elementos[$i]['tipo'] === 'imagen')
-                            <input type="file" wire:model="imagenesTemp.{{ $i }}" class="border rounded p-1 text-sm">
-                        @endif
+                        <input type="number" placeholder="X" wire:model="elementos.{{ $i }}.posicion_x" class="border rounded p-1" step="1" >
+                        <input type="number" placeholder="Y" wire:model="elementos.{{ $i }}.posicion_y" class="border rounded p-1" step="1" >
+                        <input type="number" placeholder="Ancho" wire:model="elementos.{{ $i }}.ancho" class="border rounded p-1" step="1" >
+                        <input type="number" placeholder="Alto" wire:model="elementos.{{ $i }}.alto" class="border rounded p-1" step="1" >
+                        <input type="number" placeholder="Orden" min="0" wire:model="elementos.{{ $i }}.orden" class="border rounded p-1" step="1" />
+                        <div class="flex space-x-1">
+                            <button type="button"
+                                class="bg-gray-300 px-2 rounded hover:bg-gray-400"
+                                wire:click="cambiarOrden({{ $i }}, -1)">
+                                ↑
+                            </button>
+                            <button type="button"
+                                class="bg-gray-300 px-2 rounded hover:bg-gray-400"
+                                wire:click="cambiarOrden({{ $i }}, 1)">
+                                ↓
+                            </button>
+                        </div>
+                        <div class="flex space-x-1">
+                            @if($el['tipo'] === 'imagen')
+                            
+                            <input
+                                type="file"
+                                wire:model="imagenesTemp.{{ $i }}"
+                                wire:change="$dispatch('imagen-subida')"
+                                class="border rounded p-1 text-sm"
+                            />
+                            @endif
+                        </div>
                     </div>
 
                     <pre x-text="JSON.stringify(el)"></pre>
@@ -197,9 +216,13 @@
                         this.draggingIndex = null;
                     };
 
+
+
                     window.addEventListener('mousemove', move);
                     window.addEventListener('mouseup', stop);
                 },
+
+                
 
                 deleteSelected() {
                     if (this.selectedIndex !== null) {

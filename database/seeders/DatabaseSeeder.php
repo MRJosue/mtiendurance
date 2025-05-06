@@ -41,7 +41,7 @@ class DatabaseSeeder extends Seeder
 
 
            // ProyectosTableSeeder::class,
-            TallasTableSeeder::class,
+           // TallasTableSeeder::class,
           
             PermissionSeeder::class,
 
@@ -56,7 +56,7 @@ class DatabaseSeeder extends Seeder
 
             TareasTableSeeder::class,
 
-
+            DatosInicialesSeeder::class,
 
 
         ]);

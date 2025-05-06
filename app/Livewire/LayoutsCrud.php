@@ -155,6 +155,14 @@ class LayoutsCrud extends Component
         }
     }
 
+    public function cambiarOrden($index, $delta)
+    {
+        $actual = $this->elementos[$index]['orden'] ?? 0;
+        $nuevo = $actual + $delta;
+        $this->elementos[$index]['orden'] = max(0, $nuevo);
+    }
+
+
     public function resetCampos()
     {
         $this->reset(['nombre', 'descripcion', 'producto_id', 'categoria_id', 'modoEdicion', 'layout_id', 'elementos']);

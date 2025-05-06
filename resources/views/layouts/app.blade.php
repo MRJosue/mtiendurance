@@ -41,10 +41,12 @@
             <main>
                 {{ $slot }}
             </main>
+
+            @livewire('cambiar-rol-actual')
         </div>
 
 
-
+  
 
         <livewire:scripts />
         @stack('scripts')

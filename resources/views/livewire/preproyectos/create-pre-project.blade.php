@@ -310,9 +310,9 @@
     @endif
 
 
-    @if ($producto_id)
+    {{-- @if ($producto_id)
         <livewire:visuales.layout-render :producto_id="$producto_id" />
-    @endif
+    @endif --}}
 
     
 </div>
