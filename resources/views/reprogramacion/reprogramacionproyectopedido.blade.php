@@ -11,10 +11,25 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h1 class="text-2xl font-bold mb-4">Reprograma el proyecto</h1>
-                    {{-- @livewire('programacion.calendario-pedidos') --}}
-                    {{-- @livewire('programacion.pedidos-crud-general') --}}
+
+
+                        @php
+                        use Illuminate\Support\Facades\File;
+
+                        $classExists = class_exists(\App\Livewire\Reprogramacion\EditProject::class);
+                        $bladePath = resource_path('views/livewire/reprogramacion/edit-project.blade.php');
+                        $bladeExists = File::exists($bladePath);
+                        @endphp
+
+                        <div class="p-4 mb-4 rounded {{ $classExists && $bladeExists ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                            <strong>Diagnóstico Livewire:</strong><br>
+                            Clase <code>App\Livewire\Reprogramacion\EditProject</code>: 
+                            {{ $classExists ? '✅ Cargada correctamente' : '❌ No encontrada' }}<br>
+                            Vista Blade <code>edit-project.blade.php</code>: 
+                            {{ $bladeExists ? '✅ Existe en /resources/views/livewire/reprogramacion' : '❌ No encontrada' }}
+                        </div>
                     
-                    {{-- @livewire('reprogramacion.edit-project', ['ProyectoId' => $proyecto->id]) --}}
+                    @livewire('reprogramacion.edit-project', ['ProyectoId' => $proyecto->id])
                     {{-- <livewire:reprogramacion.edit-project :ProyectoId="$proyecto->id" /> --}}
 
                 </div>
