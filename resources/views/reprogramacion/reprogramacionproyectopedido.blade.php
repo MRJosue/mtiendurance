@@ -14,7 +14,7 @@
                     {{-- @livewire('programacion.calendario-pedidos') --}}
                     {{-- @livewire('programacion.pedidos-crud-general') --}}
                     
-                    {{-- @livewire('reprogramacion.edit-project', ['ProyectoId' => $proyecto->id]) --}}
+                    {{ $proyecto->id }}
                     <livewire:reprogramacion.edit-project :ProyectoId="$proyecto->id" />
 
                 </div>
