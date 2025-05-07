@@ -12,7 +12,7 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h1 class="text-2xl font-bold mb-4">Reprograma el proyecto</h1>
 
-
+{{-- 
                     @php
                         $className = 'App\\Livewire\\Reprogramacion\\EditProject';
                         $classExists = class_exists($className);
@@ -26,9 +26,9 @@
                         {{ $classExists ? '✅ Cargada correctamente' : '❌ No encontrada' }}<br>
                         Vista Blade <code>edit-project.blade.php</code>: 
                         {{ $bladeExists ? '✅ Existe en /resources/views/livewire/reprogramacion' : '❌ No encontrada' }}
-                    </div>
+                    </div> --}}
                     
-                    {{-- @livewire('reprogramacion.edit-project', ['ProyectoId' => $proyecto->id]) --}}
+                    @livewire('reprogramacion.edit-project', ['ProyectoId' => $proyecto->id])
                     {{-- <livewire:reprogramacion.edit-project :ProyectoId="$proyecto->id" /> --}}
 
                 </div>
