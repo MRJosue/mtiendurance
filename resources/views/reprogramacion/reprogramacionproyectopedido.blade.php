@@ -28,7 +28,7 @@
                         {{ $bladeExists ? '✅ Existe en /resources/views/livewire/reprogramacion' : '❌ No encontrada' }}
                     </div>
                     
-                    @livewire('reprogramacion.edit-project', ['ProyectoId' => $proyecto->id])
+                    {{-- @livewire('reprogramacion.edit-project', ['ProyectoId' => $proyecto->id]) --}}
                     {{-- <livewire:reprogramacion.edit-project :ProyectoId="$proyecto->id" /> --}}
 
                 </div>
