@@ -214,7 +214,7 @@
                             </x-slot>
                         </x-dropdown>
                     </div>
-
+  
 
                     {{-- usuarios --}}
                     <div class="hidden sm:flex sm:items-center sm:ms-6">
