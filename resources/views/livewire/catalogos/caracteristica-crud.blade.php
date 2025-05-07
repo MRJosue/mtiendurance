@@ -72,7 +72,7 @@
                     <h5 class="text-xl font-bold">{{ $caracteristica_id ? 'Editar Característica' : 'Crear Nueva Característica' }}</h5>
                     <button class="text-gray-500 hover:text-gray-700" wire:click="cerrarModal">&times;</button>
                 </div>
-                <div class="p-4">
+                <div class="p-4 max-h-[80vh] overflow-y-auto">
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-1">Nombre</label>
                         <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="nombre">
