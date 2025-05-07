@@ -147,7 +147,7 @@ class ProductoCrud extends Component
         $this->caracteristicasSeleccionadas = [];
         $this->gruposTallasSeleccionados = [];
         $this->caracteristicasNoArmado = [];
-        
+        $this->bloquear_nombre = false;
     }
 
     public function guardar()

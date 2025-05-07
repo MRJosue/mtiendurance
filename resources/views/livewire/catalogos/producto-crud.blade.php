@@ -76,125 +76,125 @@
     </div>
 
     @if ($modal)
-    <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div class="bg-white rounded shadow-lg w-full max-w-md">
-            <div class="flex items-center justify-between border-b border-gray-200 p-4">
-                <h5 class="text-xl font-bold">{{ $producto_id ? 'Editar Producto' : 'Crear Nuevo Producto' }}</h5>
-                <button class="text-gray-500 hover:text-gray-700" wire:click="cerrarModal">&times;</button>
-            </div>
-            <div class="p-4">
-                <!-- Nombre -->
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-1">Nombre</label>
-                    <input type="text"
-                        class="w-full border border-gray-300 rounded p-2 {{ $bloquear_nombre ? 'bg-gray-100 text-gray-500' : '' }}"
-                        wire:model="nombre"
-                        @if($bloquear_nombre) readonly @endif>
-                    @error('nombre') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div class="bg-white rounded shadow-lg w-full max-w-md">
+                <div class="flex items-center justify-between border-b border-gray-200 p-4">
+                    <h5 class="text-xl font-bold">{{ $producto_id ? 'Editar Producto' : 'Crear Nuevo Producto' }}</h5>
+                    <button class="text-gray-500 hover:text-gray-700" wire:click="cerrarModal">&times;</button>
                 </div>
+                <div class="p-4 max-h-[80vh] overflow-y-auto">
+                    <!-- Nombre -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">Nombre</label>
+                        <input type="text"
+                            class="w-full border border-gray-300 rounded p-2 {{ $bloquear_nombre ? 'bg-gray-100 text-gray-500' : '' }}"
+                            wire:model="nombre"
+                            @if($bloquear_nombre) readonly @endif>
+                        @error('nombre') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
 
-                <div class="mb-4 flex items-center space-x-2">
-                    <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" wire:model="ind_activo">
-                    <label class="text-gray-700 font-medium select-none">Producto activo</label>
-                </div>
-                
+                    <div class="mb-4 flex items-center space-x-2">
+                        <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" wire:model="ind_activo">
+                        <label class="text-gray-700 font-medium select-none">Producto activo</label>
+                    </div>
+                    
 
-                <!-- Categoría -->
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-1">Categoría</label>
-                    <select wire:change="onCategoriaChange" class="w-full border border-gray-300 rounded p-2" wire:model="categoria_id">
-                        <option value="">Seleccione una categoría</option>
-                        @foreach ($categorias as $cat)
-                            <option value="{{ $cat->id }}">{{ $cat->nombre }}</option>
-                        @endforeach
-                    </select>
-                    @error('categoria_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                </div>
+                    <!-- Categoría -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">Categoría</label>
+                        <select wire:change="onCategoriaChange" class="w-full border border-gray-300 rounded p-2" wire:model="categoria_id">
+                            <option value="">Seleccione una categoría</option>
+                            @foreach ($categorias as $cat)
+                                <option value="{{ $cat->id }}">{{ $cat->nombre }}</option>
+                            @endforeach
+                        </select>
+                        @error('categoria_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
 
-                <!-- Días de Producción -->
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-1">Días de Producción</label>
-                    <input type="number" class="w-full border border-gray-300 rounded p-2" wire:model="dias_produccion" min="1">
-                    @error('dias_produccion') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                </div>
+                    <!-- Días de Producción -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">Días de Producción</label>
+                        <input type="number" class="w-full border border-gray-300 rounded p-2" wire:model="dias_produccion" min="1">
+                        @error('dias_produccion') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
 
-                <!-- Flag Armado -->
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-1">¿Requiere espesificar Armado?</label>
-                    <select class="w-full border border-gray-300 rounded p-2" wire:model="flag_armado">
-                        <option value="1">Sí</option>
-                        <option value="0">No</option>
-                    </select>
-                    @error('flag_armado') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                </div>
+                    <!-- Flag Armado -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">¿Requiere espesificar Armado?</label>
+                        <select class="w-full border border-gray-300 rounded p-2" wire:model="flag_armado">
+                            <option value="1">Sí</option>
+                            <option value="0">No</option>
+                        </select>
+                        @error('flag_armado') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
 
 
-                <!-- Características - Se muestra solo si hay características asociadas -->
-                @if($mostrarCaracteristicas)
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-1">Características cuando el producto es armado</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        @foreach($caracteristicas as $caracteristica)
-                            @if(in_array($caracteristica->id, $caracteristicasDisponibles))
+                    <!-- Características - Se muestra solo si hay características asociadas -->
+                    @if($mostrarCaracteristicas)
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">Características cuando el producto es armado</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            @foreach($caracteristicas as $caracteristica)
+                                @if(in_array($caracteristica->id, $caracteristicasDisponibles))
+                                    <label class="flex items-center">
+                                        <input type="checkbox" wire:model="caracteristicasSeleccionadas" value="{{ $caracteristica->id }}" class="mr-2"
+                                            {{ in_array($caracteristica->id, $caracteristicasSeleccionadas) ? 'checked' : '' }}>
+                                        {{ $caracteristica->nombre }}
+                                    </label>
+                                @endif
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
+
+                    @if($mostrarCaracteristicas)
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">Características cuando el producto NO es armado</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            @foreach($caracteristicas as $caracteristica)
+                                @if(in_array($caracteristica->id, $caracteristicasDisponibles))
+                                    <label class="flex items-center">
+                                        <input type="checkbox" wire:model="caracteristicasNoArmado" value="{{ $caracteristica->id }}" class="mr-2"
+                                            {{ in_array($caracteristica->id, $caracteristicasNoArmado) ? 'checked' : '' }}>
+                                        {{ $caracteristica->nombre }}
+                                    </label>
+                                @endif
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
+
+                    <!-- Grupos de Tallas - Se muestra solo si la categoría tiene flag_tallas = 1 -->
+                    @if($mostrarGruposTallas)
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">Grupos de Tallas</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            @foreach($gruposTallasDisponibles as $grupoTalla)
                                 <label class="flex items-center">
-                                    <input type="checkbox" wire:model="caracteristicasSeleccionadas" value="{{ $caracteristica->id }}" class="mr-2"
-                                        {{ in_array($caracteristica->id, $caracteristicasSeleccionadas) ? 'checked' : '' }}>
-                                    {{ $caracteristica->nombre }}
+                                    <input type="checkbox" wire:model="gruposTallasSeleccionados" value="{{ $grupoTalla->id }}" class="mr-2">
+                                    {{ $grupoTalla->nombre }}
                                 </label>
-                            @endif
-                        @endforeach
+                            @endforeach
+                        </div>
                     </div>
+                    @endif
                 </div>
-                @endif
 
 
-                @if($mostrarCaracteristicas)
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-1">Características cuando el producto NO es armado</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        @foreach($caracteristicas as $caracteristica)
-                            @if(in_array($caracteristica->id, $caracteristicasDisponibles))
-                                <label class="flex items-center">
-                                    <input type="checkbox" wire:model="caracteristicasNoArmado" value="{{ $caracteristica->id }}" class="mr-2"
-                                        {{ in_array($caracteristica->id, $caracteristicasNoArmado) ? 'checked' : '' }}>
-                                    {{ $caracteristica->nombre }}
-                                </label>
-                            @endif
-                        @endforeach
-                    </div>
+                <div class="flex items-center justify-end border-t border-gray-200 p-4 space-x-2">
+                    <button wire:click="cerrarModal"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">
+                        Cancelar
+                    </button>
+                    <button wire:click="guardar"
+                        class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">
+                        Guardar
+                    </button>
                 </div>
-                @endif
-
-
-                <!-- Grupos de Tallas - Se muestra solo si la categoría tiene flag_tallas = 1 -->
-                @if($mostrarGruposTallas)
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-1">Grupos de Tallas</label>
-                    <div class="grid grid-cols-2 gap-2">
-                        @foreach($gruposTallasDisponibles as $grupoTalla)
-                            <label class="flex items-center">
-                                <input type="checkbox" wire:model="gruposTallasSeleccionados" value="{{ $grupoTalla->id }}" class="mr-2">
-                                {{ $grupoTalla->nombre }}
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-                @endif
-            </div>
-
-
-            <div class="flex items-center justify-end border-t border-gray-200 p-4 space-x-2">
-                <button wire:click="cerrarModal"
-                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">
-                    Cancelar
-                </button>
-                <button wire:click="guardar"
-                    class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">
-                    Guardar
-                </button>
             </div>
         </div>
-    </div>
-@endif
+    @endif
 
 </div>
