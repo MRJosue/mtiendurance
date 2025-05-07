@@ -74,7 +74,9 @@ class EditProject extends Component
     public $direccion_entrega_id;
     public $tipos_envio = [];
 
-    public $mensaje_produccion;
+    public $mensaje_produccion; 
+
+
 
 
     public $seleccion_armado = null;
@@ -109,7 +111,7 @@ class EditProject extends Component
         $this->direccion_fiscal = $preProyecto->direccion_fiscal;
         $this->direccion_fiscal_id = $preProyecto->direccion_fiscal_id;
         $this->direccion_entrega = $preProyecto->direccion_entrega;
-        $this->direccion_entrega_id = $preProyecto->direccion_entrega_id;
+         $this->direccion_entrega_id = $preProyecto->direccion_entrega_id;
 
 
         // cargamos los tipos de envio

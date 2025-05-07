@@ -148,6 +148,7 @@ Route::get('/diseño/admin_tarea',[DisenioController::class, 'admin_tarea'])->mi
 Route::get('/programacion',[ProgramacionController::class, 'index'])->middleware(['auth','verified'])->name('programacion.index');
 
 
+
 // Reprogramacion 
 Route::get('/reprogramacion/{proyecto}',[ReprogramacionProyecto::class, 'index'])->middleware(['auth','verified'])->name('reprogramacion.reprogramacionproyectopedido');
 
