@@ -525,12 +525,12 @@ class CreatePreProject extends Component
            
                // Calcular fechas
             
-               $fecha_embarque = $fecha_entrega->copy()->subDays($dias_envio);
-               $fecha_produccion = $fecha_embarque->copy()->subDays($dias_produccion_producto);
+               $fecha_embarque = $this->restarDiasHabiles($fecha_entrega, $dias_envio);
+               $fecha_produccion = $this->restarDiasHabiles($fecha_embarque, $dias_produccion_producto);
 
                            // Ajustar las fechas para que no caigan en sábado o domingo
-                $fecha_embarque = Carbon::parse($this->ajustarFechaSinFinesDeSemana($fecha_embarque));
-                $fecha_produccion = Carbon::parse($this->ajustarFechaSinFinesDeSemana($fecha_produccion));
+                // $fecha_embarque = Carbon::parse($this->ajustarFechaSinFinesDeSemana($fecha_embarque));
+                // $fecha_produccion = Carbon::parse($this->ajustarFechaSinFinesDeSemana($fecha_produccion));
             
                // Guardar las fechas en el formato adecuado para los inputs de tipo "date"
                $this->fecha_produccion = $fecha_produccion->format('Y-m-d'); // Correcto para input date
@@ -593,7 +593,21 @@ class CreatePreProject extends Component
         return $fecha->format('Y-m-d');
     }
 
-
+    public function restarDiasHabiles($fecha, $dias)
+    {
+        $fecha = Carbon::parse($fecha);
+        $contador = 0;
+    
+        while ($contador < $dias) {
+            $fecha->subDay();
+            // Si el día es lunes a viernes
+            if ($fecha->isWeekday()) {
+                $contador++;
+            }
+        }
+    
+        return $fecha;
+    }
 
     public function actualizarTalla($grupoId, $tallaId, $cantidad)
     {
