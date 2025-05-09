@@ -20,6 +20,9 @@
         @endif
 
         <div class="mb-3">
+        @livewire('user-roles-permissions')
+         </div>
+        <div class="mb-3">
             <label for="rolActual" class="block text-sm font-medium text-gray-700">Rol actual</label>
             <select wire:model="rolActual" id="rolActual" class="mt-1 w-full rounded border-gray-300">
                 <option value="">-- Selecciona un rol --</option>

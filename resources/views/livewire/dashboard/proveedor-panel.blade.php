@@ -1,0 +1,3 @@
+<div>
+  Proveedor panel
+</div>

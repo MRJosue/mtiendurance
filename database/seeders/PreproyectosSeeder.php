@@ -2,14 +2,19 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Carbon;
+use App\Models\PreProyecto;
 use App\Models\User;
+use App\Models\Categoria;
+use App\Models\Producto;
+use App\Models\Caracteristica;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
-class DatabaseSeeder extends Seeder
+class PreproyectosSeeder extends Seeder
 {
     public function run(): void
     {

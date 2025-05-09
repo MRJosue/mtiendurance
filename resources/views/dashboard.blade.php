@@ -6,44 +6,93 @@
     </x-slot>
 
     <div class="py-12">
+
+        
+        @hasanyrole('admin|Cliente')
+            <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                        {{ __("You're logged in!") }}
+
+                        @livewire('dashboard.cliente-panel')
+
+                    </div>
+                </div>
+                
+            </div>
+        @endhasanyrole
+
+
+        @hasanyrole('admin|proveedor')
+            <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
+
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                        {{ __("You're logged in!") }}
+
+                        @livewire('dashboard.proveedor-panel')
+                    </div>
+                </div>
+                    
+            </div>
+        @endhasanyrole
+
+
+        @hasanyrole('admin|estaf')
         <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
-
-
-
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     {{ __("You're logged in!") }}
 
-                    @hasanyrole('admin|Cliente')
-                    <p>Acceso permitido a Administradores  && Cliente</p>
-                    @endhasanyrole
-
-                    @role('admin')
-                        <p>Only Role Bienvenido, administrador</p>
-                    @endrole    
-                            
-        
-                    @hasanyrole('admin')
-                        <p>Acceso permitido a Administradores </p>
-                    @endhasanyrole
-        
-                    @hasanyrole('Cliente')
-                        <p>Acceso permitido a Clientes</p>
-                    @endhasanyrole
-                    
-                    @livewire('user-roles-permissions')
+                    @livewire('dashboard.estaf-panel')
                 </div>
             </div>
         </div>
+        @endhasanyrole
 
 
+        @hasanyrole('admin|jefediseñador')
+        <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+                    {{ __("You're logged in!") }}
+
+                    @livewire('dashboard.jefedisenador-panel')
+                </div>
+            </div>
+        </div>
+        @endhasanyrole
+      
+        @hasanyrole('admin|diseñador')
+        <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+                    {{ __("You're logged in!") }}
+
+                    @livewire('dashboard.disenador-panel')
+                </div>
+            </div>
+        </div>
+        @endhasanyrole
+      
+
+        @hasanyrole('admin|operador')
+        <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+                    {{ __("You're logged in!") }}
+                    @livewire('dashboard.operador-panel')
+                </div>
+            </div>
+        </div>
+        @endhasanyrole
+      
       
 
         <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    {{ __("You're logged in!") }}
-
+            
                     @livewire('client-message')
                 </div>
             </div>
@@ -52,52 +101,6 @@
     </div>
 
 
-
-
-
-
-    <div class="py-12">
-        <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-        
-
-                    @livewire('roles-permissions')
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-    <div class="py-12">
-        <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                    @livewire('assign-user-role')
-
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-
-    
-    <div class="py-12">
-        <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                    {{-- @livewire('dashboard-clientes') --}}
-
-                    @livewire('notificaciones.enviar-notificacion')
-
-                </div>
-            </div>
-        </div>
-    </div>
 
     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
