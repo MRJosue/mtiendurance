@@ -9,8 +9,19 @@
         @endif
     </button>
 
-    <!-- Dropdown de Notificaciones -->
-    <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-lg p-4 z-50">
+    <!-- Dropdown de Notificaciones con transición -->
+    <div
+        x-show="open"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 translate-y-2"
+        @click.away="open = false"
+        x-cloak
+        class="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-lg p-4 z-50"
+    >
         <h3 class="text-lg font-bold text-gray-700">Notificaciones</h3>
 
         @if($notificaciones->isEmpty())
@@ -24,7 +35,7 @@
                         <a href="{{ url($notificacion->data['liga']) }}" class="text-blue-500 underline" target="_blank">
                             Ver más
                         </a>
-                          @endif
+                        @endif
 
                         @if(!$notificacion->read_at)
                             <button wire:click="marcarComoLeida('{{ $notificacion->id }}')" class="text-blue-500 text-sm">
