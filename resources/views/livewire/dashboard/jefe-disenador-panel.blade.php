@@ -1,4 +1,4 @@
 <div>
  
-   @livewire('dashboard.disenio-panel.adminproyectos')
+   {{-- @livewire('dashboard.disenio-panel.adminproyectos') --}}
 </div>
