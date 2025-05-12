@@ -13,7 +13,7 @@
                             @click="toggle()"
                             class="text-2xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
                         >
-                       
+                            Gestión de Diseños
                             <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
                         </h2>
                         <div x-show="abierto" x-transition>
