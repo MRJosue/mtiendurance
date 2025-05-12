@@ -50,7 +50,7 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     {{-- resources\views\livewire\dashboard\jefe-disenador-panel.blade.php --}}
                     {{-- resources/views/livewire/dashboard/jefe-disenador-panel.blade.php --}}
-                    @livewire('dashboard.jefedisenador-panel')
+                    @livewire('dashboard.jefe-disenador-panel')
                 </div>
             </div>
         </div>
