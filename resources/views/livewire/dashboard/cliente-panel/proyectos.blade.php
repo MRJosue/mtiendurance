@@ -12,9 +12,9 @@
         @click="toggle()"
         class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
     >
-        Preproyecto
+        Proyecto
     <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
-
+    </h2>   
 
     <!-- Contenido del panel -->
     <div x-show="abierto" x-transition>
@@ -26,17 +26,18 @@
             <table class="min-w-full border-collapse border border-gray-200 rounded-lg">
                 <thead class="bg-gray-100">
                     <tr>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">
+                        {{-- <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">
                             <input
                                 type="checkbox"
                                 wire:model="selectAll"
                                 @change="selectedProjects = $event.target.checked ? @js($projects->pluck('id')) : []"
                             />
-                        </th>
+                        </th> --}}
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">ID</th>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Nombre del Proyecto</th>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Usuario</th>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Pedidos</th>
+                        {{-- <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Usuario</th> --}}
+                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Producto</th>
+                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Fecha de creacion</th>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Estado</th>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
                     </tr>
@@ -44,32 +45,20 @@
                 <tbody>
                     @foreach($projects as $project)
                         <tr class="hover:bg-gray-50">
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">
+                            {{-- <td class="border-b px-4 py-2 text-gray-700 text-sm">
                                 <input
                                     type="checkbox"
                                     wire:model="selectedProjects"
                                     value="{{ $project->id }}"
                                 />
-                            </td>
+                            </td> --}}
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->id }}</td>
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->nombre }}</td>
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->user->name ?? 'Sin usuario' }}</td>
+                            {{-- <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->user->name ?? 'Sin usuario' }}</td> --}}
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">
-                                @if($project->pedidos->isNotEmpty())
-                                    <ul class="list-disc list-inside">
-                                        @foreach($project->pedidos as $pedido)
-                                            <li class="text-gray-600">
-                                                <span class="font-semibold">Categoría:</span> {{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }},
-                                                <span class="font-semibold">Producto:</span> {{ $pedido->producto->nombre ?? 'Sin producto' }},
-                                                <span class="font-semibold">Total:</span> ${{ number_format($pedido->total, 2) }},
-                                                <span class="font-semibold">Estatus:</span> {{ $pedido->estatus }}
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                @else
-                                    <span class="text-gray-500">Sin pedidos</span>
-                                @endif
+                                {{ collect(json_decode($project->producto_sel, true))->get('nombre', '-') }}
                             </td>
+                            <td class="border-b px-4 py-2 text-gray-700 text-sm">  {{ $project->created_at->format('Y-m-d H:i:s') }} UTC</td>
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->estado ?? 'Sin estado' }}</td>
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">
                                 <a href="{{ route('proyecto.show', $project->id) }}" class="text-blue-500 hover:underline">

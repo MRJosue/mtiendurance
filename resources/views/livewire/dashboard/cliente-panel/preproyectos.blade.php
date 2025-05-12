@@ -18,7 +18,7 @@
         Mis preproyectos
         <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
     </h2> --}}
-
+    </h2>
     <!-- Contenido del panel -->
     <div x-show="abierto" x-transition>
         <!-- Botones de acción -->
@@ -29,16 +29,17 @@
             <table class="min-w-full border-collapse border border-gray-200 rounded-lg">
                 <thead class="bg-gray-100">
                     <tr>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">
+                        {{-- <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">
                             <input
                                 type="checkbox"
                                 wire:model="selectAll"
                                 @change="selectedProjects = $event.target.checked ? @js($projects->pluck('id')) : []"
                             />
-                        </th>
+                        </th> --}}
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">ID</th>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Nombre del Proyecto</th>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Usuario</th>
+                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Nombre del Preoyecto</th>
+                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Producto</th>
+                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Fecha de creacion</th>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Estado</th>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
                     </tr>
@@ -46,16 +47,20 @@
                 <tbody>
                     @foreach($projects as $project)
                         <tr class="hover:bg-gray-50">
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">
+                            {{-- <td class="border-b px-4 py-2 text-gray-700 text-sm">
                                 <input
                                     type="checkbox"
                                     wire:model="selectedProjects"
                                     value="{{ $project->id }}"
                                 />
-                            </td>
+                            </td> --}}
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->id }}</td>
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->nombre }}</td>
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->user->name ?? 'Sin usuario' }}</td>
+                            <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ collect(json_decode($project->producto_sel, true))->get('nombre', '-') }}</td>
+                            <td class="border-b px-4 py-2 text-gray-700 text-sm">
+                                {{ $project->created_at->format('Y-m-d H:i:s') }} UTC
+                            </td>
+                       
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->estado }}</td>
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">
                                 <a href="{{ route('preproyectos.show', $project->id) }}" class="text-blue-500 hover:underline">

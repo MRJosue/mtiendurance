@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="header">
+    <x-slot name="header" class="pl-64">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Dashboard') }}
         </h2>
@@ -8,14 +8,11 @@
     <div class="py-12">
 
         
-        @hasanyrole('admin|Cliente')
+        @hasanyrole('admin|cliente')
             <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
-                        {{ __("You're logged in!") }}
-
                         @livewire('dashboard.cliente-panel')
-
                     </div>
                 </div>
                 
@@ -28,8 +25,6 @@
 
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
-                        {{ __("You're logged in!") }}
-
                         @livewire('dashboard.proveedor-panel')
                     </div>
                 </div>
@@ -42,8 +37,6 @@
         <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    {{ __("You're logged in!") }}
-
                     @livewire('dashboard.estaf-panel')
                 </div>
             </div>
@@ -55,8 +48,6 @@
         <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    {{ __("You're logged in!") }}
-
                     @livewire('dashboard.jefedisenador-panel')
                 </div>
             </div>
@@ -67,8 +58,6 @@
         <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    {{ __("You're logged in!") }}
-
                     @livewire('dashboard.disenador-panel')
                 </div>
             </div>
@@ -80,7 +69,6 @@
         <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    {{ __("You're logged in!") }}
                     @livewire('dashboard.operador-panel')
                 </div>
             </div>
@@ -89,14 +77,14 @@
       
       
 
-        <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
+        {{-- <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
             
                     @livewire('client-message')
                 </div>
             </div>
-        </div>
+        </div> --}}
 
     </div>
 

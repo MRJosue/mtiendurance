@@ -1,3 +1,3 @@
 <div>
-   JEFE Diseñador panel 
+   @livewire('dashboard.disenio-panel.adminproyectos')
 </div>

@@ -14,13 +14,16 @@
     >
         Mis Pedidos
     <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
+    </h2>
+
     <!-- Contenido colapsable -->
     <div x-show="abierto" x-transition>
         <div class="overflow-x-auto bg-white rounded shadow">
             <table class="min-w-full table-auto text-sm text-left text-gray-700">
                 <thead class="bg-gray-100 text-xs uppercase tracking-wider">
                     <tr>
-                        <th class="px-4 py-2">ID</th>
+                        <th class="px-4 py-2">ID Proyecto</th>
+                        <th class="px-4 py-2">ID Pedido</th>
                         <th class="px-4 py-2">Producto / Categoría</th>
                         <th class="px-4 py-2">Características</th>
                         <th class="px-4 py-2">Total</th>
@@ -32,6 +35,7 @@
                 <tbody>
                     @forelse($pedidos as $pedido)
                         <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-2 font-semibold">{{ $pedido->proyecto_id }}</td>
                             <td class="px-4 py-2 font-semibold">{{ $pedido->id }}</td>
                             <td class="px-4 py-2">
                                 <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
