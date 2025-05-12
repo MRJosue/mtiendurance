@@ -63,14 +63,20 @@
                     class="fixed inset-y-0 left-0 z-40 w-64 transform bg-gray-900 text-white overflow-y-auto lg:static lg:translate-x-0 lg:opacity-100"
                     style="will-change: transform"
                 >
-                    @include('layouts.navigation')
+                   
+                    @include('layouts.aside')
                 </div>
 
+    
                 <!-- CONTENIDO PRINCIPAL -->
                 <div
            
                     class="flex-1 transition-all duration-300 ease-in-out min-h-screen"
                 >
+
+                <div>
+                     @include('layouts.navigation')
+                </div>
                     @if (isset($header))
                         <header class="bg-white dark:bg-gray-800 shadow">
                             <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
