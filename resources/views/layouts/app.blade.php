@@ -60,23 +60,29 @@
                     x-transition:leave-start="translate-x-0 opacity-100"
                     x-transition:leave-end="-translate-x-full opacity-0"
                     x-cloak
-                    class="fixed inset-y-0 left-0 z-40 w-64 transform bg-gray-900 text-white overflow-y-auto lg:static lg:translate-x-0 lg:opacity-100"
+                    class="fixed inset-y-0 left-0 z-50 w-56 bg-gray-900 text-white transform transition-transform duration-300 ease-in-out"
                     style="will-change: transform"
                 >
                    
-                    @include('layouts.aside')
+                        <div class="h-full overflow-y-auto">
+                            @include('layouts.aside')
+                        </div>
+                </div>
+
+                <div class="fixed top-4 right-4 bg-white shadow-lg rounded-lg z-50 sm:flex sm:items-center">
+                    @livewire('notificaciones.notificaciones')
                 </div>
 
     
                 <!-- CONTENIDO PRINCIPAL -->
+                {{-- <div class="flex-1 transition-all duration-300 ease-in-out min-h-screen"> --}}
                 <div
-           
-                    class="flex-1 transition-all duration-300 ease-in-out min-h-screen"
+                    class="flex-1 transition-transform duration-300 ease-in-out min-h-screen"
+                    :class="{ 'translate-x-28': sidebarOpen }"
+                    style="will-change: transform"
                 >
 
-                <div>
-                     @include('layouts.navigation')
-                </div>
+ 
                     @if (isset($header))
                         <header class="bg-white dark:bg-gray-800 shadow">
                             <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
