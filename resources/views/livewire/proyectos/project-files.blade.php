@@ -9,6 +9,7 @@
     @endif
 
     <!-- Formulario para subir archivos -->
+     @hasanyrole('admin|estaf')
     <form wire:submit.prevent="uploadFile" class="mb-6 flex flex-wrap items-center gap-4">
         <input type="file" wire:model="archivo" class="block w-full md:w-auto border rounded px-4 py-2">
         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
@@ -18,6 +19,7 @@
             <span class="text-red-500 text-sm block w-full">{{ $message }}</span>
         @enderror
     </form>
+    @endhasanyrole
 
     <!-- Lista de archivos -->
     <div class="overflow-x-auto">
@@ -42,10 +44,13 @@
                             <a href="{{ Storage::disk('public')->url($archivo->ruta_archivo) }}" 
                                class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-center" 
                                target="_blank">Descargar</a>
+
+                             @hasanyrole('admin|estaf')
                             <button wire:click="deleteFile({{ $archivo->id }})" 
                                     class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-center">
                                 Eliminar
                             </button>
+                            @endhasanyrole
                         </td>
                     </tr>
                 @empty

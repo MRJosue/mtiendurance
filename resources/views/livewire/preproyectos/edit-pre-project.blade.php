@@ -1,8 +1,8 @@
 <div class="container mx-auto p-6">
 
-    <button type="button" wire:click="setReadOnlyMode" class="mt-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
+    {{-- <button type="button" wire:click="setReadOnlyMode" class="mt-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600">
         Modo Solo Lectura
-    </button>
+    </button> --}}
 
 
     <h2 class="text-2xl font-semibold mb-4">Editar Preproyecto</h2>
@@ -17,13 +17,13 @@
         <!-- Nombre y Descripción -->
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Nombre</label>
-            <input type="text" wire:model="nombre" class="w-full mt-1 border rounded-lg p-2">
+            <input type="text" wire:model="nombre" class="w-full mt-1 border rounded-lg p-2" @if($modoLectura) readonly @endif>
             @error('nombre') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
 
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Descripción</label>
-            <textarea wire:model="descripcion" class="w-full mt-1 border rounded-lg p-2"></textarea>
+            <textarea wire:model="descripcion" class="w-full mt-1 border rounded-lg p-2"@if($modoLectura) readonly @endif></textarea>
             @error('descripcion') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
 
@@ -31,7 +31,7 @@
         <!-- Selección de Categoría -->
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Categoría</label>
-            <select wire:change="onCategoriaChange" wire:model="categoria_id" class="w-full mt-1 border rounded-lg p-2">
+            <select wire:change="onCategoriaChange" wire:model="categoria_id" class="w-full mt-1 border rounded-lg p-2"  @if($modoLectura) disabled @endif>
                 <option value="">Seleccionar Categoría</option>
                 @foreach ($categorias as $categoria)
                     <option value="{{ $categoria->id }}">{{ $categoria->nombre }}</option>
@@ -43,7 +43,7 @@
         <!-- Selección de Producto -->
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Producto</label>
-            <select wire:change="onProductoChange" wire:model="producto_id" class="w-full mt-1 border rounded-lg p-2">
+            <select wire:change="onProductoChange" wire:model="producto_id" class="w-full mt-1 border rounded-lg p-2"  @if($modoLectura) disabled @endif>
                 <option value="">Seleccionar Producto</option>
                 @foreach ($productos as $producto)
                     <option value="{{ $producto->id }}">{{ $producto->nombre }}</option>
@@ -57,7 +57,7 @@
         @if ($this->mostrar_selector_armado)
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700">¿El proyecto será armado?</label>
-                <select wire:model="seleccion_armado" wire:change="despligaformopciones" class="w-full mt-1 border rounded-lg p-2">
+                <select wire:model="seleccion_armado" wire:change="despligaformopciones" class="w-full mt-1 border rounded-lg p-2"  @if($modoLectura) disabled @endif>
                     <option value="">Seleccionar</option>
                     <option value="1">Sí</option>
                     <option value="0">No</option>
@@ -83,11 +83,11 @@
                     @if ($opciones->count() === 1)
                         <!-- Si solo hay una opción, seleccionarla automáticamente -->
                         <p class="text-gray-700">{{ $opciones->first()->nombre }} ({{ $opciones->first()->valoru }})</p>
-                        <input type="hidden" wire:model="caracteristicas_sel.{{ $index }}.opciones.0.id" value="{{ $opciones->first()->id }}">
+                        <input type="hidden" wire:model="caracteristicas_sel.{{ $index }}.opciones.0.id" value="{{ $opciones->first()->id }}" @if($modoLectura) readonly @endif>
                     @else
                             <!-- Si hay múltiples opciones, mantener el select siempre visible -->
                             <!-- Selección de Opciones -->
-                            <select wire:change="addOpcion({{ $index }}, $event.target.value)" class="w-full mt-1 border rounded-lg p-2">
+                            <select wire:change="addOpcion({{ $index }}, $event.target.value)" class="w-full mt-1 border rounded-lg p-2"  @if($modoLectura) disabled @endif>
                                 <option value="">Seleccionar Opción</option>
                                 @foreach (\App\Models\Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
                                     $query->where('caracteristica_id', $caracteristica['id']);
@@ -101,7 +101,10 @@
                                 @foreach ($caracteristica['opciones'] as $opcionIndex => $opcion)
                                     <li class="flex justify-between items-center mb-2">
                                         <span>{{ $opcion['nombre'] }} ({{ $opcion['valoru'] }})</span>
-                                        <button type="button" wire:click="removeOpcion({{ $index }}, {{ $opcionIndex }})" class="text-red-500 hover:underline">Eliminar</button>
+
+                                          @hasanyrole('admin|cliente')
+                                            <button type="button" wire:click="removeOpcion({{ $index }}, {{ $opcionIndex }})" class="text-red-500 hover:underline">Eliminar</button>
+                                          @endhasanyrole
                                     </li>
                                 @endforeach
                             </ul>
@@ -133,7 +136,7 @@
                                         wire:model.defer="tallasSeleccionadas.{{ $grupoTalla->id }}.{{ $talla->id }}"
                                         class="w-2/3 border rounded-lg p-2"
                                         min="0"
-                                        value="{{ $tallasSeleccionadas[$grupoTalla->id][$talla->id] ?? 0 }}">
+                                        value="{{ $tallasSeleccionadas[$grupoTalla->id][$talla->id] ?? 0 }}" @if($modoLectura) readonly @endif>
                                 </div>
                             @endforeach
                         </div>
@@ -148,7 +151,7 @@
                     type="number" 
                     wire:model="total_piezas" 
                     class="w-full mt-1 border rounded-lg p-2" 
-                    min="1" >
+                    min="1"  @if($modoLectura) readonly @endif>
                 @error('total_piezas') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
             </div>
 
@@ -159,7 +162,7 @@
         <!-- Subir Nuevos Archivos -->
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Subir Nuevos Archivos</label>
-            <input type="file" wire:model="files" multiple class="w-full mt-1 border rounded-lg p-2">
+            <input type="file" wire:model="files" multiple class="w-full mt-1 border rounded-lg p-2"     @if($modoLectura) disabled @endif>
         </div>
 
         <!-- Vista previa de archivos nuevos -->
@@ -188,6 +191,7 @@
                     <a href="{{ Storage::url($file->ruta_archivo) }}" target="_blank" class="text-blue-500 underline">
                         {{ $file->nombre_archivo }}
                     </a>
+                    
                     <button type="button" wire:click="deleteFile({{ $file->id }})" class="text-red-500 hover:underline">
                         Eliminar
                     </button>
@@ -199,7 +203,7 @@
         <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Dirección Fiscal</label>
-                <select wire:model="direccion_fiscal_id" class="w-full mt-1 border rounded-lg p-2">
+                <select wire:model="direccion_fiscal_id" class="w-full mt-1 border rounded-lg p-2"  @if($modoLectura) disabled @endif>
                     <option value="">Seleccionar Dirección Fiscal</option>
                     @foreach ($direccionesFiscales as $direccion)
                         <option value="{{ $direccion->id }}">{{ $direccion->nombre_contacto }} - {{ $direccion->calle }}</option>
@@ -210,7 +214,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Dirección de Entrega</label>
-                <select wire:change='cargarTiposEnvio'  wire:model="direccion_entrega_id" class="w-full mt-1 border rounded-lg p-2">
+                <select wire:change='cargarTiposEnvio'  wire:model="direccion_entrega_id" class="w-full mt-1 border rounded-lg p-2"  @if($modoLectura) disabled @endif>
                     <option value="">Selecciona una dirección</option>
                     @foreach ($direccionesEntrega as $direccion)
                         <option value="{{ $direccion->id }}">{{ $direccion->calle }}</option>
@@ -222,7 +226,7 @@
         <div class="grid grid-cols-1 gap-4 mb-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Tipo de Envío</label>
-                <select  wire:change="on_Calcula_Fechas_Entrega" wire:model="id_tipo_envio" class="w-full mt-1 border rounded-lg p-2">
+                <select  wire:change="on_Calcula_Fechas_Entrega" wire:model="id_tipo_envio" class="w-full mt-1 border rounded-lg p-2"  @if($modoLectura) disabled @endif>
                     <option value="">Selecciona un tipo de envío</option>
                     @foreach ($tiposEnvio as $tipo)
                         <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
@@ -233,6 +237,8 @@
 
         <!-- Fechas -->
         <div class="grid grid-cols-3 gap-4 mb-4">
+            @hasanyrole('admin')
+
             <div>
                 <label class="block text-sm font-medium text-gray-700">Fecha Producción</label>
                 <input type="date" wire:model="fecha_produccion" class="w-full mt-1 border rounded-lg p-2" readonly>
@@ -241,7 +247,7 @@
                 <label class="block text-sm font-medium text-gray-700">Fecha Embarque</label>
                 <input type="date" wire:model="fecha_embarque" class="w-full mt-1 border rounded-lg p-2" readonly>
             </div>
-
+             @endhasanyrole
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Fecha Entrega</label>
@@ -252,22 +258,30 @@
                 type="date" 
                 class="w-full mt-1 border rounded-lg p-2"
                 min="{{ date('Y-m-d') }}"
-                id="fechaEntrega">
+                id="fechaEntrega"  @if($modoLectura) readonly @endif>
 
             </div>
 
             @error('error') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
+         
+         @hasanyrole('admin')
+            <p>Hola admin si estas editando este proyecto debes guardar despues de editar y luego aprobar</p>
+         @endhasanyrole
+
+        @hasanyrole('admin|cliente')
         <!-- Botón de Guardar Cambios -->
         <button type="submit" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
             Guardar Cambios
         </button>
-
+        @endhasanyrole
+       @hasanyrole('admin|estaf')
         <button type="button" 
             wire:click="preAprobarProyecto" 
             class="mt-4 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
             Pre aprobar proyecto
         </button>
+       @endhasanyrole
     </form>
 
     @push('scripts')

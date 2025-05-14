@@ -10,15 +10,15 @@
     x-transition:leave-start="translate-x-0 opacity-100"
     x-transition:leave-end="-translate-x-full opacity-0"
     x-cloak
-    class="fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col"
+    class="fixed inset-y-0 left-0 z-40 w-64 bg-gray-900 text-white h-screen overflow-y-auto"
 >
     <!-- BOTÓN CERRAR (siempre visible mientras sidebarOpen sea true) -->
     <div class="absolute top-2 right-2 z-50">
-        <button
-            @click="sidebarOpen = false"
-            class="p-1 rounded-md text-white bg-gray-800 hover:bg-gray-700 focus:outline-none transition"
-            aria-label="Cerrar menú"
-        >
+            <button
+                @click="sidebarOpen = false; sidebarForced = true"
+                class="p-1 rounded-md text-white bg-gray-800 hover:bg-gray-700"
+                aria-label="Cerrar menú"
+            >
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M6 18L18 6M6 6l12 12"/>

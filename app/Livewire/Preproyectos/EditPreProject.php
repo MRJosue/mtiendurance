@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\On;
+use Spatie\Permission\Models\Role;
 
 class EditPreProject extends Component
 {
@@ -95,6 +96,9 @@ class EditPreProject extends Component
     public $seleccion_armado = null;
     public $mostrar_selector_armado = false;
 
+    public $modoLectura = false;
+    
+
     public function mount($preProyectoId)
     {
         $this->preProyectoId = $preProyectoId;
@@ -164,6 +168,12 @@ class EditPreProject extends Component
 
         // Cargar archivos existentes
         $this->existingFiles = ArchivoProyecto::where('pre_proyecto_id', $this->preProyectoId)->get();
+
+
+            // Bloquear modo edición si el usuario tiene rol "estaf"
+            if (Auth::user()->hasRole('estaf')) {
+                $this->modoLectura = true;
+            }
     }
 
     public function update()
@@ -727,6 +737,7 @@ class EditPreProject extends Component
 
     public function setReadOnlyMode()
     {
+        Log::debug('setReadOnlyMode');
         $this->dispatch('setReadOnlyMode');
     }
 }
