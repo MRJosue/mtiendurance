@@ -38,23 +38,30 @@
         <!-- Navigation -->
         <nav class="flex-1 overflow-y-auto p-4 space-y-2 text-sm">
             <!-- Dashboard -->
+            @can('asidedashboard')
             <a href="{{ route('dashboard') }}"
             class="block px-4 py-2 rounded hover:bg-gray-800 {{ request()->routeIs('dashboard') ? 'bg-gray-800' : '' }}">
                 Dashboard
             </a>
+            @endcan
+
 
             <!-- Pre-Proyectos -->
+            @can('asidepreproyectos')
             <a href="{{ route('preproyectos.index') }}"
             class="block px-4 py-2 rounded hover:bg-gray-800 {{ request()->routeIs('preproyectos.index') ? 'bg-gray-800' : '' }}">
                 Pre Proyectos
             </a>
-
+            @endcan
             <!-- Proyectos -->
+            @can('asideproyectos')
             <a href="{{ route('proyectos.index') }}"
             class="block px-4 py-2 rounded hover:bg-gray-800 {{ request()->routeIs('proyectos.index') ? 'bg-gray-800' : '' }}">
                 Proyectos
             </a>
+            @endcan
 
+            @can('asidediseniodesplegable')
             <!-- Diseño -->
                 <div>
                     <button
@@ -82,29 +89,30 @@
                         <a href="{{ route('disenio.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Diseño</a>
                     </div>
                 </div>
-
+            @endcan
+            @can('asideproducciondesplegable')
             <!-- Producción -->
-            <div>
-                <button
-                    @click="openSections['produccion'] = !openSections['produccion']"
-                    class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
-                    :class="openSections['produccion'] ? 'underline text-blue-400' : ''"
-                >
-                    <span>Producción</span>
-                    <svg :class="openSections['produccion'] ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
-                        class="w-4 h-4 transition-transform duration-200"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 5l7 7-7 7"/>
-                    </svg>
-                </button>
-                <div x-show="openSections['produccion']" x-transition class="pl-6 mt-1 space-y-1">
-                    <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Tareas Producción</a>
-                    <a href="{{ route('programacion.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Programación</a>
-                    <a href="{{ route('produccion.ordenes_produccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Órdenes de Producción</a>
+                <div>
+                    <button
+                        @click="openSections['produccion'] = !openSections['produccion']"
+                        class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
+                        :class="openSections['produccion'] ? 'underline text-blue-400' : ''"
+                    >
+                        <span>Producción</span>
+                        <svg :class="openSections['produccion'] ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
+                            class="w-4 h-4 transition-transform duration-200"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                    <div x-show="openSections['produccion']" x-transition class="pl-6 mt-1 space-y-1">
+                        <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Tareas Producción</a>
+                        <a href="{{ route('programacion.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Programación</a>
+                        <a href="{{ route('produccion.ordenes_produccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Órdenes de Producción</a>
+                    </div>
                 </div>
-            </div>
-
+            @endcan 
             <!-- Catálogos -->
             @hasanyrole('admin')
             <div>
@@ -131,33 +139,34 @@
             @endhasanyrole
 
             <!-- Productos -->
-        @hasanyrole('admin')    
-            <div>
-                <button
-                    @click="openSections['productos'] = !openSections['productos']"
-                    class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
-                    :class="openSections['productos'] ? 'underline text-blue-400' : ''"
-                >
-                    <span>Productos</span>
-                    <svg :class="openSections['productos'] ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
-                        class="w-4 h-4 transition-transform duration-200"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 5l7 7-7 7"/>
-                    </svg>
-                </button>
-                <div x-show="openSections['productos']" x-transition class="pl-6 mt-1 space-y-1">
-                    <a href="{{ route('catalogos.categorias.index') }}" class="block px-2 py-1 hover:bg-gray-800">Categorías</a>
-                    <a href="{{ route('catalogos.producto.index') }}" class="block px-2 py-1 hover:bg-gray-800">Producto</a>
-                    <a href="{{ route('catalogos.caracteristica.index') }}" class="block px-2 py-1 hover:bg-gray-800">Características</a>
-                    <a href="{{ route('catalogos.opciones.index') }}" class="block px-2 py-1 hover:bg-gray-800">Opciones</a>
-                    <a href="{{ route('catalogos.producto.layout') }}" class="block px-2 py-1 hover:bg-gray-800">Layout</a>
-                    <a href="{{ route('catalogos.tallas.tallas') }}" class="block px-2 py-1 hover:bg-gray-800">Tallas</a>
-                    <a href="{{ route('catalogos.tallas.grupos') }}" class="block px-2 py-1 hover:bg-gray-800">Grupos</a>
+            @hasanyrole('admin')    
+                <div>
+                    <button
+                        @click="openSections['productos'] = !openSections['productos']"
+                        class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
+                        :class="openSections['productos'] ? 'underline text-blue-400' : ''"
+                    >
+                        <span>Productos</span>
+                        <svg :class="openSections['productos'] ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
+                            class="w-4 h-4 transition-transform duration-200"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                    <div x-show="openSections['productos']" x-transition class="pl-6 mt-1 space-y-1">
+                        <a href="{{ route('catalogos.categorias.index') }}" class="block px-2 py-1 hover:bg-gray-800">Categorías</a>
+                        <a href="{{ route('catalogos.producto.index') }}" class="block px-2 py-1 hover:bg-gray-800">Producto</a>
+                        <a href="{{ route('catalogos.caracteristica.index') }}" class="block px-2 py-1 hover:bg-gray-800">Características</a>
+                        <a href="{{ route('catalogos.opciones.index') }}" class="block px-2 py-1 hover:bg-gray-800">Opciones</a>
+                        <a href="{{ route('catalogos.producto.layout') }}" class="block px-2 py-1 hover:bg-gray-800">Layout</a>
+                        <a href="{{ route('catalogos.tallas.tallas') }}" class="block px-2 py-1 hover:bg-gray-800">Tallas</a>
+                        <a href="{{ route('catalogos.tallas.grupos') }}" class="block px-2 py-1 hover:bg-gray-800">Grupos</a>
+                    </div>
                 </div>
-            </div>
             @endhasanyrole
 
+            @can('asideusuariosdesplegable')
             <!-- Usuarios -->
             <div>
                 <button
@@ -178,7 +187,7 @@
                     <a href="{{ route('permisos.index') }}" class="block px-2 py-1 hover:bg-gray-800">Permisos</a>
                 </div>
             </div>
-
+            @endcan
             <!-- Perfil -->
             <div class="mt-6 border-t border-gray-700 pt-4 px-4">
                 <div class="text-sm">{{ Auth::user()->name }}</div>

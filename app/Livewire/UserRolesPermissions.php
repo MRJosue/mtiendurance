@@ -10,6 +10,8 @@ class UserRolesPermissions extends Component
     public $roles = [];
     public $permissions = [];
 
+    
+
     public function mount()
     {
         $user = Auth::user();
