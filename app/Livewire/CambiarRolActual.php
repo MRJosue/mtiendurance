@@ -12,6 +12,12 @@ class CambiarRolActual extends Component
     public $rolesDisponibles = [];
     public $rolActual;
 
+    public $modalAsignarPermisos = false;
+    public $modalCrearPermiso = false;
+    public $modalCrearGrupoOrden = false;
+
+
+ protected $listeners = ['permisosActualizados' => '$refresh'];
     public function mount()
     {
         $user = Auth::user();
