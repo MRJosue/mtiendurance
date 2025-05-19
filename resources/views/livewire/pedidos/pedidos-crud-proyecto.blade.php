@@ -25,9 +25,15 @@
                     <th class="border border-gray-300 p-2 w-32">Tipo Envío</th>
              
                     <th class="border border-gray-300 p-2 w-32">Estado</th>
+                    @can('proyectopedidoscolumnafechaproduccion')
                     <th class="border border-gray-300 p-2 w-36">Producción</th>
+                    @endcan
+                    @can('proyectopedidoscolumnafechaenbarque')
                     <th class="border border-gray-300 p-2 w-36">Embarque</th>
+                    @endcan
+                    @can('proyectopedidoscolumnafechaEntrega')
                     <th class="border border-gray-300 p-2 w-36">Entrega</th>
+                    @endcan
                     <th class="border border-gray-300 p-2 w-32">Acciones</th>
                 </tr>
             </thead>
@@ -89,10 +95,15 @@
                                 {{ strtoupper($pedido->estado) }}
                             </span>
                         </td>
-            
+                        @can('proyectopedidoscolumnafechaproduccion')
                         <td class="border border-gray-300 p-2">{{ $pedido->fecha_produccion ?? 'No definida' }}</td>
+                        @endcan
+                        @can('proyectopedidoscolumnafechaenbarque')
                         <td class="border border-gray-300 p-2">{{ $pedido->fecha_embarque ?? 'No definida' }}</td>
+                        @endcan
+                        @can('proyectopedidoscolumnafechaEntrega')
                         <td class="border border-gray-300 p-2">{{ $pedido->fecha_entrega ?? 'No definida' }}</td>
+                        @endcan
                         <td class="border  flex space-x-2 justify-center">
                             <button wire:click="abrirModal({{ $pedido->id }})" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
                                 Editar
