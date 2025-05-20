@@ -1,50 +1,53 @@
 <div>
+<!-- Botones por estado -->
+<!-- Botones por estado -->
+<div class="flex flex-wrap gap-2 mb-4">
     @if($estado === 'PENDIENTE' || $estado === 'ASIGNADO' || $estado === 'EN PROCESO')
-        <button wire:click="$set('modalSubirArchivoDiseno', true)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">
+        <button wire:click="$set('modalSubirArchivoDiseno', true)"
+            class="px-4 py-2 rounded-md bg-amber-300 text-amber-900 hover:bg-amber-400 transition font-semibold shadow-sm">
             Subir arte
         </button>
     @endif
 
     @if($estado === 'EN PROCESO')
-        <!-- Botón para subir diseño -->
-        <button wire:click="$set('modalOpen', true)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">
+        <button wire:click="$set('modalOpen', true)"
+            class="px-4 py-2 rounded-md bg-yellow-300 text-yellow-900 hover:bg-yellow-400 transition font-semibold shadow-sm">
             Subir Archivo de Diseño
         </button>
     @endif
 
     @if($estado === 'REVISION')
-        <!-- Botón Aprobar Diseño -->
-        <button wire:click="$set('modalAprobar', true)" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4 ml-2">
+        <button wire:click="$set('modalAprobar', true)"
+            class="px-4 py-2 rounded-md bg-green-300 text-green-900 hover:bg-green-400 transition font-semibold shadow-sm">
             Aprobar Diseño
         </button>
 
-        <!-- Botón Rechazar Diseño -->
-        <button wire:click="$set('modalRechazar', true)" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mb-4 ml-2">
+        <button wire:click="$set('modalRechazar', true)"
+            class="px-4 py-2 rounded-md bg-rose-300 text-rose-900 hover:bg-rose-400 transition font-semibold shadow-sm">
             Rechazar Diseño
         </button>
 
-        <button
-            wire:click="$set('modalConfirmarMuestra', true)"
-            class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded mb-4 ml-2"
-        >
+        <button wire:click="$set('modalConfirmarMuestra', true)"
+            class="px-4 py-2 rounded-md bg-orange-300 text-orange-900 hover:bg-orange-400 transition font-semibold shadow-sm">
             Crear Muestra
         </button>
     @endif
+</div>
 
-
-    @if (session()->has('error'))
-    <div class="bg-red-100 border border-red-400 text-red-800 px-4 py-3 rounded relative mb-4" role="alert">
-        <strong class="font-bold">Error:</strong>
-        <span class="block sm:inline">{{ session('error') }}</span>
+<!-- Alertas -->
+@if (session()->has('error'))
+    <div class="bg-rose-100 border border-rose-300 text-rose-800 px-4 py-3 rounded-md mb-4 text-sm shadow-sm">
+        <strong class="font-semibold">Error:</strong>
+        <span class="ml-1">{{ session('error') }}</span>
     </div>
-    @endif
+@endif
 
-    @if (session()->has('message'))
-        <div class="bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded relative mb-4" role="alert">
-            <strong class="font-bold">Éxito:</strong>
-            <span class="block sm:inline">{{ session('message') }}</span>
-        </div>
-    @endif
+@if (session()->has('message'))
+    <div class="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-md mb-4 text-sm shadow-sm">
+        <strong class="font-semibold">Éxito:</strong>
+        <span class="ml-1">{{ session('message') }}</span>
+    </div>
+@endif
 
     <!-- Modal de subir archivo -->
     @if($modalOpen)

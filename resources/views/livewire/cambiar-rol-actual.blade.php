@@ -83,15 +83,19 @@
 
     @if($modalAsignarPermisos)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
-                <h2 class="text-xl font-bold mb-4">Permisos del Rol: {{ $rolActual }}</h2>
+            <div class="bg-white p-6 rounded shadow-lg w-full max-w-7xl h-[90vh] overflow-y-auto">
+                <h2 class="text-2xl font-bold mb-6">Permisos del Rol: {{ $rolActual }}</h2>
 
                 @livewire('permisos-por-rol', ['rol' => $rolActual], key('permisos-' . $rolActual))
 
-                <div class="flex justify-end mt-4">
-                    <button wire:click="$set('modalAsignarPermisos', false)" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">Cerrar</button>
+                <div class="flex justify-end mt-6 sticky bottom-0 bg-white py-4">
+                    <button wire:click="$set('modalAsignarPermisos', false)"
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                        Cerrar
+                    </button>
 
-                    <button wire:click="$set('modalCrearPermiso', true)" class="ml-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center gap-1">
+                    <button wire:click="$set('modalCrearPermiso', true)"
+                        class="ml-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center gap-1">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>

@@ -105,15 +105,24 @@
                         <td class="border border-gray-300 p-2">{{ $pedido->fecha_entrega ?? 'No definida' }}</td>
                         @endcan
                         <td class="border  flex space-x-2 justify-center">
+
+                            @hasanyrole('admin')
                             <button wire:click="abrirModal({{ $pedido->id }})" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
                                 Editar
                             </button>
+                            @endhasanyrole
+
+                            @if ($pedido->estado == 'POR APROBAR')
+                            <button wire:click="abrirModal({{ $pedido->id }})" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
+                                Editar
+                            </button>
+                            @endif
+
                             @if ($pedido->proyecto && $pedido->proyecto->estado === 'DISEÑO APROBADO' && $pedido->estado == 'POR APROBAR')
                             <button wire:click="confirmarAprobacion({{ $pedido->id }})"
                                     class="bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-1 rounded">
                                 Aprobar
                             </button>
-                        
                             @endif
 
                         </td>
@@ -177,26 +186,31 @@
 
                 <!-- SECCIÓN: Tipo y Estado -->
                 <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Tipo</label>
-                        <select wire:model="tipo" class="w-full border border-gray-300 rounded p-2">
-                            <option value="PEDIDO">Pedido</option>
-                            <option value="MUESTRA">Muestra</option>
-                        </select>
-                        @error('tipo') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Estado</label>
-                        <select wire:model="estado" class="w-full border border-gray-300 rounded p-2">
-                            <option value="POR APROBAR">Por aprobar</option>
-                            <option value="APROBADO">Aprobado</option>
-                            <option value="ENTREGADO">Entrega</option>
-                            <option value="RECHAZADO">Rechazado</option>
-                            <option value="ARCHIVADO">Archivado</option>
+                     @can('proyectopedidosEditarinputTipo')
 
-                        </select>
-                        @error('estado') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Tipo</label>
+                            <select wire:model="tipo" class="w-full border border-gray-300 rounded p-2">
+                                <option value="PEDIDO">Pedido</option>
+                                <option value="MUESTRA">Muestra</option>
+                            </select>
+                            @error('tipo') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                     @endcan
+                     @can('proyectopedidosEditarInputEstado')
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Estado</label>
+                            <select wire:model="estado" class="w-full border border-gray-300 rounded p-2">
+                                <option value="POR APROBAR">Por aprobar</option>
+                                <option value="APROBADO">Aprobado</option>
+                                <option value="ENTREGADO">Entrega</option>
+                                <option value="RECHAZADO">Rechazado</option>
+                                <option value="ARCHIVADO">Archivado</option>
+
+                            </select>
+                            @error('estado') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                        </div>
+                     @endcan
                 </div>
 
                 <!-- SECCIÓN: Direcciones -->
@@ -257,22 +271,27 @@
                 @endif
 
                 <div class="grid grid-cols-3 gap-4 mb-4">
+                     @can('proyectopedidosEditarinputFechaproduccion')
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Producción</label>
+                            <input type="date" class="w-full border border-gray-300 rounded p-2" wire:model="fecha_produccion">
+                        </div>
+                    @endcan
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Producción</label>
-                        <input type="date" class="w-full border border-gray-300 rounded p-2" wire:model="fecha_produccion">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Embarque</label>
-                        <input type="date" class="w-full border border-gray-300 rounded p-2" wire:model="fecha_embarque">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Entrega</label>
-                        <input wire:change="validarFechaEntrega" wire:model="fecha_entrega"
-                               type="date" class="w-full mt-1 border rounded-lg p-2"
-                               min="{{ date('Y-m-d') }}" id="fechaEntrega">
-                    </div>
-
+                    @can('proyectopedidosEditarinputFechaEmbarque')
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Embarque</label>
+                            <input type="date" class="w-full border border-gray-300 rounded p-2" wire:model="fecha_embarque">
+                        </div>
+                    @endcan
+                    @can('proyectopedidosEditarinputFechaEntrega')
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Entrega</label>
+                            <input wire:change="validarFechaEntrega" wire:model="fecha_entrega"
+                                type="date" class="w-full mt-1 border rounded-lg p-2"
+                                min="{{ date('Y-m-d') }}" id="fechaEntrega">
+                        </div>
+                    @endcan
                 </div>
             </div>
 
@@ -288,7 +307,6 @@
         </div>
     </div>
     @endif
-
     @if ($modal_confirmar_aprobacion)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div class="bg-white rounded shadow-lg w-full max-w-md p-6">
@@ -323,8 +341,6 @@
             </div>
         </div>
     @endif
-
-
     @if ($modal_reconfigurar_proyecto)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div class="bg-white rounded shadow-lg w-full max-w-lg p-6">
@@ -352,6 +368,4 @@
             </div>
         </div>
     @endif
-
-
 </div>

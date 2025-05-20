@@ -149,7 +149,12 @@ class EditPreProject extends Component
             $this->mostrar_selector_armado = false;
         }
 
+        Log::debug('In mount producto_id:', ['data' => $this->producto_id]);
+        // Cargar tallas si es "Playeras"
+        $categoria = Categoria::find($this->categoria_id);
+
         // Carga lascategorias
+        Log::debug('Mount despligaformopciones');
         $this -> despligaformopciones();
 
 
@@ -158,9 +163,7 @@ class EditPreProject extends Component
 
 
 
-        // Cargar tallas si es "Playeras"
-        $categoria = Categoria::find($this->categoria_id);
-        $this->mostrarFormularioTallas = $categoria && strtolower($categoria->nombre) === 'playeras';
+       //$this->mostrarFormularioTallas = $categoria && strtolower($categoria->nombre) === 'playeras';
         $this->tallas = Talla::all();
         //$this->tallasSeleccionadas = json_decode($preProyecto->total_piezas_sel)->detalle_tallas ?? [];
         $this->tallasSeleccionadas = json_decode($preProyecto->total_piezas_sel, true)['detalle_tallas'] ?? [];
@@ -292,6 +295,7 @@ class EditPreProject extends Component
         $categoria = Categoria::find($this->categoria_id);
         $this->mostrarFormularioTallas = $categoria && $categoria->flag_tallas == 1;
 
+        Log::debug('IN despliega_form_tallas mostrarFormularioTallas', ['data' =>  $this->mostrarFormularioTallas]);
         // Reinicializar las tallas y las cantidades seleccionadas
         $this->tallas = collect(); // Vaciar antes de asignar nuevas tallas
         $this->tallasSeleccionadas = [];
@@ -331,11 +335,16 @@ class EditPreProject extends Component
         }
 
     public function despligaformopciones(){
+        
+        
+            Log::debug('Inicio despligaformopciones');
 
             $this->despliega_form_tallas(); // Obtiene las tallas según el nuevo producto
 
             // Asegurar que el producto ha sido seleccionado
+            Log::debug('producto_id:', ['data' => $this->producto_id]);
             if (!$this->producto_id) {
+                Log::debug('Producto seleccionado');
                 $this->tallas = collect(); // Vaciar las tallas si no hay producto seleccionado
                 return;
             }

@@ -114,9 +114,12 @@
                             <!-- Contenido Chat -->
                             <div x-show="tab === 'chat'" x-cloak>
                                 <h2 class="text-2xl font-bold mb-4">Chat del Proyecto</h2>
-                                <div wire:poll.2s>
-                                    <livewire:chat-component :proyecto-id="$proyecto->id" />
-                                </div>
+                                    <div
+                                        class="h-[500px] max-h-[80vh] w-full bg-white dark:bg-gray-700 rounded-lg shadow-md p-4 flex justify-center items-center overflow-hidden"
+                                        wire:poll.2s
+                                    >
+                                        <livewire:chat-component :proyecto-id="$proyecto->id" />
+                                    </div>
                             </div>
 
 
@@ -127,7 +130,7 @@
                 </div>
             </div>
 
-            
+            @can('vistaproyectoSeccionPedidos')
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <div x-data="{ tab: 'pedidos' }">
@@ -162,15 +165,8 @@
                     </div>
                 </div>
             </div>
+            @endcan
         </div>
     </div>
-
-    
-
-        
-
-
-
-
 
 </x-app-layout>

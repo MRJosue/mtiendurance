@@ -11,8 +11,8 @@
         </button>
     </div>
 
-    <!-- Listado de grupos (en grid de 2 columnas con scroll interno) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Listado de grupos (en grid de 5 columnas con scroll interno) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         @foreach($grupos as $grupo)
             <div class="border rounded-lg shadow bg-white">
                 <div class="flex justify-between items-center bg-gray-100 px-4 py-2 font-semibold">
@@ -52,26 +52,29 @@
         @endforeach
     </div>
 
+
     <!-- Modal crear/editar grupo -->
     @if($modalCrearGrupo)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div class="bg-white p-6 rounded shadow-lg w-full max-w-3xl">
+            <div class="bg-white p-6 rounded shadow-lg w-full max-w-7xl h-[90vh] overflow-y-auto">
                 <h2 class="text-2xl font-bold mb-4">{{ $grupoEditarId ? 'Editar Grupo' : 'Nuevo Grupo' }}</h2>
 
                 <input type="text" wire:model.defer="grupoNombre" placeholder="Nombre del grupo" class="w-full mb-4 border p-2 rounded">
                 @error('grupoNombre') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
 
                 <h3 class="font-semibold mb-2">Selecciona permisos:</h3>
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-[400px] overflow-y-auto">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-[400px] overflow-y-auto">
                     @foreach($permisosTodos as $permiso)
-                        <label class="flex items-center space-x-2 text-sm">
-                            <input type="checkbox" value="{{ $permiso->id }}" wire:model="permisosSeleccionados">
-                            <span>{{ $permiso->name }}</span>
-                        </label>
+                        <div class="overflow-x-auto">
+                            <label class="flex items-center space-x-2 text-sm whitespace-nowrap min-w-full pr-2">
+                                <input type="checkbox" value="{{ $permiso->id }}" wire:model="permisosSeleccionados">
+                                <span>{{ $permiso->name }}</span>
+                            </label>
+                        </div>
                     @endforeach
                 </div>
 
-                <div class="flex justify-end mt-4 space-x-2">
+                <div class="flex justify-end mt-6 space-x-2">
                     <button wire:click="$set('modalCrearGrupo', false)" class="bg-gray-300 px-4 py-2 rounded">Cancelar</button>
                     <button wire:click="guardarGrupo" class="bg-blue-600 text-white px-4 py-2 rounded">
                         Guardar
@@ -80,6 +83,7 @@
             </div>
         </div>
     @endif
+
 
     <!-- Modal crear permiso -->
     @if($modalCrearPermiso)
