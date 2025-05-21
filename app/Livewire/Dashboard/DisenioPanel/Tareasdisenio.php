@@ -121,8 +121,15 @@ class Tareasdisenio extends Component
 
     public function render()
     {
-        return view('livewire.dashboard.disenio-panel.tareasdisenio', [
-            'tasks' => Tarea::with(['proyecto', 'staff'])->paginate(10),
+        $tasks = Tarea::with(['proyecto', 'staff']);
+        if (!auth()->user()->hasRole('admin')) {
+            $tasks->where('staff_id', auth()->id());
+        }
+
+
+        return view('livewire.disenio.administrar-tareas', [
+            'tasks' => $tasks->paginate(10),
         ]);
     }
+
 }

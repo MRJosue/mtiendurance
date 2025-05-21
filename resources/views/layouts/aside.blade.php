@@ -85,10 +85,10 @@
                     </button>
 
                     <div x-show="openSections['disenio']" x-transition class="pl-6 mt-1 space-y-1">
-                        @can('asidediseniodesplegableAdminTareas')
+                        @can('asidediseniodesplegableTareas')
                         <a href="{{ route('disenio.admin_tarea') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Tareas Diseño</a>
                         @endcan
-                         @can('asidediseniodesplegableTareas')
+                         @can('asidediseniodesplegableAdminTareas ')
                         <a href="{{ route('disenio.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Diseño</a>
                         @endcan
                     </div>
