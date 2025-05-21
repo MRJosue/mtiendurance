@@ -15,18 +15,18 @@
     @enderror
 
     <div class="flex items-center justify-between mb-3">
-        <button wire:click="exportSelected" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">
+        {{-- <button wire:click="exportSelected" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">
             Exportar Seleccionados
-        </button>
+        </button> --}}
     </div>
 
     <div class="overflow-x-auto bg-white rounded-lg shadow border">
         <table class="min-w-full text-sm text-left table-auto border-collapse">
             <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
                 <tr>
-                    <th class="px-4 py-3 border">
+                    {{-- <th class="px-4 py-3 border">
                         <input type="checkbox" wire:model="selectAll">
-                    </th>
+                    </th> --}}
                     <th class="px-4 py-3 border">ID</th>
                     <th class="px-4 py-3 border">Proyecto</th>
                     <th class="px-4 py-3 border">Usuario</th>
@@ -39,9 +39,9 @@
             <tbody class="text-gray-700">
                 @foreach($projects as $project)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-2 border">
+                        {{-- <td class="px-4 py-2 border">
                             <input type="checkbox" wire:model="selectedProjects" value="{{ $project->id }}">
-                        </td>
+                        </td> --}}
                         <td class="px-4 py-2 border font-semibold">{{ $project->id }}</td>
                         <td class="px-4 py-2 border">{{ $project->nombre }}</td>
                         <td class="px-4 py-2 border">{{ $project->user->name ?? 'Sin usuario' }}</td>
@@ -91,7 +91,7 @@
                                     Asignar Tarea
                                 </button>
                             @endif
-                            <a href="{{ route('disenio.disenio_detalle', $project->id) }}"
+                            <a href="{{ route('proyecto.show', $project->id) }}"
                                 class="bg-green-500 hover:bg-green-600 text-white text-xs font-semibold px-3 py-1 rounded inline-block mt-1">
                                 Ver detalles
                             </a>
@@ -136,10 +136,23 @@
         </div>
     @endif
 
-    @if($modalVerMas && $proyectoSeleccionado)
+@if($modalVerMas && $proyectoSeleccionado)
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl max-h-[80vh] overflow-y-auto">
-            <h3 class="text-xl font-bold mb-4">Historial de Estatus - Proyecto #{{ $proyectoSeleccionado->id }}</h3>
+        <div class="relative bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl max-h-[80vh] overflow-y-auto">
+
+            <!-- Botón X flotante -->
+            <button
+                wire:click="cerrarModalVerMas"
+                class="absolute top-3 right-3 text-gray-600 hover:text-red-600 text-2xl font-bold focus:outline-none"
+                aria-label="Cerrar"
+            >
+                &times;
+            </button>
+
+            <h3 class="text-xl font-bold mb-4">
+                Historial de Estatus - Proyecto #{{ $proyectoSeleccionado->id }}
+            </h3>
+
             <table class="table-auto w-full text-sm border">
                 <thead>
                     <tr class="bg-gray-100">
@@ -170,6 +183,8 @@
                     @endforeach
                 </tbody>
             </table>
+
+            <!-- Botón de cerrar al pie -->
             <div class="mt-4 text-right">
                 <button wire:click="cerrarModalVerMas" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
                     Cerrar
@@ -177,5 +192,6 @@
             </div>
         </div>
     </div>
-    @endif
+@endif
+
 </div>

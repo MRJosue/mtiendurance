@@ -2,20 +2,28 @@
     x-data
     class="flex flex-wrap gap-2 justify-end"
 >
+    <!-- Botón Regresar -->
     <button
         id="btn-atras"
         @click="window.history.back()"
-        class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="flex items-center gap-2 px-4 py-2 bg-stone-100 text-stone-800 border border-stone-300 rounded-lg hover:bg-stone-200 disabled:opacity-50 disabled:cursor-not-allowed"
     >
-        ⬅ Regresar
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-stone-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Regresar
     </button>
 
+    <!-- Botón Avanzar -->
     <button
         id="btn-adelante"
         @click="window.history.forward()"
-        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="flex items-center gap-2 px-4 py-2 bg-stone-100 text-stone-800 border border-stone-300 rounded-lg hover:bg-stone-200 disabled:opacity-50 disabled:cursor-not-allowed"
     >
-        Avanzar ➡
+        Avanzar
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-stone-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
     </button>
 </div>
 
@@ -24,8 +32,6 @@
         const backBtn = document.getElementById('btn-atras');
         const forwardBtn = document.getElementById('btn-adelante');
 
-        // Opcional: desactivar si no hay historial
         backBtn.disabled = window.history.length <= 1;
-        // No hay forma fiable de saber si hay adelante, así que lo dejamos activo
     });
 </script>

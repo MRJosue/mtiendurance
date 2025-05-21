@@ -114,7 +114,7 @@ class AdministrarTareas extends Component
             $this->mostrarModalConfirmacion = true;
             $this->proyectoPendienteConfirmacion = $tarea->proyecto;
         } else {
-            return redirect()->route('disenio.disenio_detalle', $proyectoId);
+            return redirect()->route('proyecto.show', $proyectoId);
         }
     }
 
@@ -150,8 +150,17 @@ class AdministrarTareas extends Component
 
     public function render()
     {
+
+        $tasks = Tarea::with(['proyecto', 'staff']);
+
+        if (!auth()->user()->hasRole('admin')) {
+            $tasks->where('staff_id', auth()->id());
+        }
+
+
+
         return view('livewire.disenio.administrar-tareas', [
-            'tasks' => Tarea::with(['proyecto', 'staff'])->paginate(10),
+            'tasks' => $tasks->paginate(10),
         ]);
     }
 }

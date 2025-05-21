@@ -29,11 +29,12 @@
                         <td class="border p-2">{{ $task->estado }}</td>
                         <td class="border p-2 text-center">
 
-
+                            @hasanyrole('admin')
                             <button wire:click="abrirModal({{ $task->id }})" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
                                 Cambiar Estado
                             </button>
-
+                            @endhasanyrole
+                            
                             <button wire:click="verificarProceso({{ $task->proyecto->id }})"
                                 class="bg-green-500 hover:bg-green-600 text-white font-semibold px-3 py-1 rounded">
                                 Ver detalles

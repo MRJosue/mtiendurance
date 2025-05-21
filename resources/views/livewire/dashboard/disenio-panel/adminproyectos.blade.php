@@ -99,7 +99,8 @@
                                                             Asignar Tarea
                                                         </button>
                                                     @endif
-                                                    <a href="{{ route('disenio.disenio_detalle', $project->id) }}"
+                                                    {{-- disenio.disenio_detalle --}}
+                                                    <a href="{{ route('proyecto.show', $project->id) }}"
                                                         class="bg-green-500 hover:bg-green-600 text-white text-xs font-semibold px-3 py-1 rounded inline-block mt-1">
                                                         Ver detalles
                                                     </a>
