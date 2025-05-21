@@ -91,6 +91,9 @@
             <main class="flex-1">
                 {{ $slot }}
             </main>
+            <div class="p-4">
+                <x-boton-navegacion />
+            </div>
 
             @livewire('cambiar-rol-actual')
         </div>
@@ -100,6 +103,7 @@
     @stack('scripts')
     <x-notify::notify />
     @notifyJs
+
 </body>
 
 </html>
