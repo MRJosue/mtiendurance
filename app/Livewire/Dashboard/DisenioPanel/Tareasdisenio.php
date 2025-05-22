@@ -127,9 +127,10 @@ class Tareasdisenio extends Component
         }
 
 
-        return view('livewire.disenio.administrar-tareas', [
+        return view('livewire.dashboard.disenio-panel.tareasdisenio', [
             'tasks' => $tasks->paginate(10),
         ]);
+
     }
 
 }

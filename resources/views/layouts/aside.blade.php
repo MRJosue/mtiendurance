@@ -50,14 +50,16 @@
             @can('asidepreproyectos')
             <a href="{{ route('preproyectos.index') }}"
             class="block px-4 py-2 rounded hover:bg-gray-800 {{ request()->routeIs('preproyectos.index') ? 'bg-gray-800' : '' }}">
-                Pre Proyectos
+                Solicitudes de Proyectos
             </a>
             @endcan
+
+
             <!-- Proyectos -->
             @can('asideproyectos')
             <a href="{{ route('proyectos.index') }}"
             class="block px-4 py-2 rounded hover:bg-gray-800 {{ request()->routeIs('proyectos.index') ? 'bg-gray-800' : '' }}">
-                Proyectos
+                Diseños
             </a>
             @endcan
 

@@ -6,6 +6,7 @@ namespace App\Livewire\Preproyectos;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\PreProyecto;
+use Illuminate\Support\Facades\Log;
 
 class ManagePreprojects extends Component
 {
@@ -50,11 +51,16 @@ class ManagePreprojects extends Component
 
     public function render()
     {
+        $query = PreProyecto::with(['user'])->where('estado', 'PENDIENTE');
+
+        if (!auth()->user()->can('tablaPreproyectos-ver-todos-los-preproyectos')) {
+
+            Log::debug('Query ');
+                  $query->where('usuario_id', auth()->id());
+        
+        }
         return view('livewire.preproyectos.manage-preprojects', [
-            'projects' => PreProyecto::with(['user'])
-                                  ->where('estado', 'PENDIENTE')
-                                  ->where('usuario_id', auth()->id())
-                                  ->paginate($this->perPage)
+            'projects' => $query->paginate($this->perPage)
         ]);
     }
 }

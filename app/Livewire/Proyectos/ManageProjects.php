@@ -48,8 +48,14 @@ class ManageProjects extends Component
     
     public function render()
     {
+        $query = Proyecto::with(['user', 'pedidos.producto.categoria']);
+
+        if (!auth()->user()->can('tablaProyectos-ver-todos-los-proyectos')) {
+            $query->where('usuario_id', auth()->id());
+        }
+
         return view('livewire.proyectos.manage-projects', [
-          'projects' => Proyecto::with(['user', 'pedidos.producto.categoria'])->paginate($this->perPage)
+            'projects' => $query->paginate($this->perPage)
         ]);
     }
 }

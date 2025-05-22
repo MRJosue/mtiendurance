@@ -12,15 +12,18 @@ class Pedidos extends Component
 
     public function render()
     {
-        $pedidos = Pedido::with([
-                'producto.categoria',
-                'proyecto.user',
-                'pedidoCaracteristicas.caracteristica',
-                'pedidoOpciones.opcion.caracteristicas',
-            ])
-            ->whereHas('proyecto', fn($q) => $q->where('usuario_id', auth()->id()))
-            ->orderByDesc('created_at')
-            ->paginate(10);
+        $query = Pedido::with([
+            'producto.categoria',
+            'proyecto.user',
+            'pedidoCaracteristicas.caracteristica',
+            'pedidoOpciones.opcion.caracteristicas',
+        ]);
+
+        if (!auth()->user()->can('tablaPedidos-ver-todos-los-pedidos')) {
+            $query->whereHas('proyecto', fn($q) => $q->where('usuario_id', auth()->id()));
+        }
+
+        $pedidos = $query->orderByDesc('created_at')->paginate(10);
 
         return view('livewire.dashboard.cliente-panel.pedidos', compact('pedidos'));
     }

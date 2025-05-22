@@ -1,11 +1,12 @@
 <div>
     
     @can('dashboardclientepreproyectos')
-    @livewire('dashboard.cliente-panel.preproyectos')
+        @livewire('preproyectos.manage-preprojects')
     @endcan
     @can('dashboardclienteproyectos')
-    @livewire('dashboard.cliente-panel.proyectos')
+       @livewire('proyectos.manage-projects')
     @endcan
+
     @can('dashboardclientepedidos')
     @livewire('dashboard.cliente-panel.pedidos')
     @endcan
