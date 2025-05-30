@@ -14,7 +14,20 @@ class ManageProjects extends Component
     public $perPage = 20;
     public $selectedProjects = [];
     public $selectAll = false;
+    public $mostrarFiltros = false;
+    
+    public $estadosSeleccionados = ['PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION'];
 
+        public $estados = [
+        'PENDIENTE', 'ASIGNADO', 'EN PROCESO','REVISION', 'DISEÑO APROBADO'
+    ];
+
+        public function buscarPorFiltros()
+        {
+            $this->resetPage();
+        }
+
+        
     public function updating($field)
     {
         if ($field === 'perPage') {
@@ -52,6 +65,10 @@ class ManageProjects extends Component
 
         if (!auth()->user()->can('tablaProyectos-ver-todos-los-proyectos')) {
             $query->where('usuario_id', auth()->id());
+        }
+
+        if (!empty($this->estadosSeleccionados)) {
+            $query->whereIn('estado', $this->estadosSeleccionados);
         }
 
         return view('livewire.proyectos.manage-projects', [

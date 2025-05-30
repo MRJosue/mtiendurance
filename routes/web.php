@@ -30,6 +30,9 @@ use App\Http\Controllers\ProgramacionController;
 use App\Http\Controllers\ReprogramacionProyecto;
 use App\Http\Controllers\tareasproduccion;
 
+use App\Http\Controllers\PreproyectoUploadController;
+
+
 use App\Events\TestEvent;
 use App\Events\MessageSent;
 use App\Events\NewChatMessage;
@@ -126,6 +129,8 @@ Route::get('/preproyectos',[PreproyectosController::class, 'index'])->middleware
 Route::get('/preproyectos/show/{preproyecto}', [PreproyectosController::class, 'show'])->name('preproyectos.show');
 Route::get('/preproyectos/create',[PreproyectosController::class, 'create'])->middleware(['auth','verified'])->name('preproyectos.create');
 
+Route::post('/preproyecto/upload-temporal', [PreproyectoUploadController::class, 'upload'])->name('preproyecto.upload-temporal');
+
 
 //Administracion de usuarios
 Route::get('/usuarios',[UserController::class, 'index'])->middleware(['auth','verified'])->name('usuarios.index');
@@ -135,6 +140,11 @@ Route::get('/usuarios/modal',[UserController::class, 'actions'])->middleware(['a
 
 // permisos
 Route::get('/usuarios/permisos',[permisoscontroller::class, 'index'])->middleware(['auth','verified'])->name('permisos.index');
+
+
+Route::get('/users/appi', [UserController::class, 'getusersselect'])->name('api.users.index');
+Route::get('/users/appi/preproyecto', [UserController::class, 'getusersselectpreproyecto'])->name('api.users.preproyecto.index');
+
 
 //Rutas Panel de diseño
 Route::get('/diseño',[DisenioController::class, 'index'])->middleware(['auth','verified'])->name('disenio.index');
@@ -146,7 +156,7 @@ Route::get('/diseño/admin_tarea',[DisenioController::class, 'admin_tarea'])->mi
 
 // Rutas de programacion 
 Route::get('/programacion',[ProgramacionController::class, 'index'])->middleware(['auth','verified'])->name('programacion.index');
-
+            
 
 
 // Reprogramacion 

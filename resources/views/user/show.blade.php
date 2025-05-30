@@ -5,11 +5,13 @@
             <a href="{{route('usuarios.index')}}">{{ __('Usuarios') }}</a>   /
                {{ __('Detalles') }}
            </h2>
+
+           
     </x-slot>
 
     <div class="py-2">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-white dark:bg-gray-800   shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h1 class="text-2xl font-bold mb-4">Detalles del Usuario</h1>
 
@@ -28,6 +30,14 @@
                     </div>
 
                 </div>
+
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+                    <div >
+                           @livewire('configuraciones-usuario', ['userId' => $user->id])
+        
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
@@ -35,7 +45,7 @@
 
     <div class="py-2">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-white dark:bg-gray-800   shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h1 class="text-2xl font-bold mb-4">Direccion fiscal</h1>
 
@@ -53,7 +63,7 @@
 
     <div class="py-2">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-white dark:bg-gray-800   shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h1 class="text-2xl font-bold mb-4">Direccion de entrega</h1>
 
@@ -71,7 +81,7 @@
 
         <div class="py-2">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="bg-white dark:bg-gray-800   shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         <h1 class="text-2xl font-bold mb-4">Permisos y roles del usuario</h1>
                         @livewire('usuarios.user-roles-permissions', ['userId' => $user->id])
@@ -85,7 +95,7 @@
 {{--
     <div class="py-2">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-white dark:bg-gray-800   shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h1 class="text-2xl font-bold mb-4">Creacion de Permisos</h1>
 

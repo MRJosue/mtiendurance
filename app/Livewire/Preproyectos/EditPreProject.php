@@ -195,6 +195,16 @@ class EditPreProject extends Component
             
         ]);
 
+            $archivosPendientes = ArchivoProyecto::where('pre_proyecto_id', $this->preProyectoId)
+                ->where('flag_descarga', 0)
+                ->count();
+
+            if ($archivosPendientes > 0) {
+                session()->flash('error', 'Debes descargar todos los archivos antes de guardar los cambios.');
+                return;
+            }
+
+
       //  $totalPiezasFinal = $this->mostrarFormularioTallas ? array_sum($this->tallasSeleccionadas) : $this->total_piezas;
         $totalPiezasFinal = $this->mostrarFormularioTallas ? array_sum((array) $this->tallasSeleccionadas) : $this->total_piezas;
         // Actualizar el preproyecto
@@ -562,9 +572,13 @@ class EditPreProject extends Component
         $this->uploadedFiles = [];
 
         foreach ($this->files as $file) {
+            $mimeType = $file->getMimeType();
+
+            $canPreview = str_starts_with($mimeType, 'image/');
+
             $this->uploadedFiles[] = [
                 'name' => $file->getClientOriginalName(),
-                'preview' => $file->temporaryUrl(),
+                'preview' => $canPreview ? $file->temporaryUrl() : null,
             ];
         }
     }
@@ -743,6 +757,21 @@ class EditPreProject extends Component
 
     }
     
+
+    public function descargarArchivo($fileId)
+    {
+        $archivo = ArchivoProyecto::where('id', $fileId)
+            ->where('pre_proyecto_id', $this->preProyectoId)
+            ->firstOrFail();
+
+        $archivo->update(['flag_descarga' => 1]);
+
+        // Recargar archivos para reflejar el estado actualizado
+        $this->existingFiles = ArchivoProyecto::where('pre_proyecto_id', $this->preProyectoId)->get();
+
+        // Emitir evento JS para forzar la descarga
+        $this->dispatch('archivoListoParaDescargar', url(Storage::url($archivo->ruta_archivo)));
+    }
 
     public function setReadOnlyMode()
     {

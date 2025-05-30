@@ -4,6 +4,7 @@ namespace App\Livewire\Preproyectos;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use App\Models\user;
 use App\Models\PreProyecto;
 use App\Models\DireccionEntrega;
 use App\Models\DireccionFiscal;
@@ -32,6 +33,8 @@ class CreatePreProject extends Component
 {
     use WithFileUploads;
 
+    public $UsuarioSeleccionado;
+
     public $nombre;
     public $descripcion;
     public $fecha_produccion;
@@ -42,6 +45,8 @@ class CreatePreProject extends Component
     public $files = [];
     public $fileDescriptions = [];
     public $uploadedFiles = [];
+
+    public $usuariosSeleccionados= [];
 
     public $categoria_id;
     public $producto_id;
@@ -72,6 +77,10 @@ class CreatePreProject extends Component
     public $seleccion_armado = null;
     public $mostrar_selector_armado = false;
 
+
+    public $direccionesFiscales = [];
+    public $direccionesEntrega = [];
+
     // Propiedades para crear un nuevo cliente
     public $nuevoCliente = [
         'nombre_empresa' => '',
@@ -82,10 +91,13 @@ class CreatePreProject extends Component
 
 
 
+
+
     public function create()
     {
 
         Log::debug('Pre Pruebas');
+
 
         $this->validate([
             'nombre' => 'required|string|max:255',
@@ -103,6 +115,12 @@ class CreatePreProject extends Component
             'tallasSeleccionadas' => $this->mostrarFormularioTallas ? 'required|array|min:1' : 'nullable',
             'files.*' => 'nullable|file|max:10240',
         ]);
+
+        
+        if (count($this->files) > 4) {
+            $this->addError('files', 'Solo puedes subir hasta 4 archivos.');
+            return;
+        }
 
 
         if ($this->mostrar_selector_armado) {
@@ -190,7 +208,7 @@ class CreatePreProject extends Component
             }
 
         $preProyecto = PreProyecto::create([
-            'usuario_id' => Auth::id(),
+            'usuario_id' => $this->UsuarioSeleccionado,
             'nombre' => $this->nombre,
             'descripcion' => $this->descripcion,
             'tipo' => 'PROYECTO',
@@ -231,6 +249,7 @@ class CreatePreProject extends Component
                 'ruta_archivo' => $path,
                 'tipo_archivo' => $file->getClientMimeType(),
                 'descripcion' => $this->fileDescriptions[$index] ?? '',
+                'tipo_carga' => 2
             ]);
         }
 
@@ -240,9 +259,20 @@ class CreatePreProject extends Component
 
     public function mount()
     {
+
+    $user = Auth::user();
+    $config = $user->config ?? [];
+    $puedeSeleccionar = $config['flag-can-user-sel-preproyectos'] ?? false;
+
+    $this->UsuarioSeleccionado = $puedeSeleccionar ? null : $user->id;
+    $this->direccionesFiscales = collect();
+    $this->direccionesEntrega = collect();
+
+
         $this->tallasSeleccionadas = [];
 
         $this->cargarClientes();
+        $this->cargarDirecciones();
     
         // Verificar si la relación existe antes de acceder a ella
         foreach (Talla::with('gruposTallas')->get() as $talla) {
@@ -256,17 +286,21 @@ class CreatePreProject extends Component
         Log::debug('Estructura de tallasSeleccionadas después de mount()', ['data' => $this->tallasSeleccionadas]);
     }
 
-    public function render()
-    {
-        return view('livewire.preproyectos.create-pre-project', [
-            'categorias' => Categoria::where('ind_activo', 1)->get(),
-            'productos' => $this->productos,
-            'tiposEnvio' => $this->tipos_envio,
-            'mostrarFormularioTallas'=> $this->mostrarFormularioTallas,
-            'direccionesFiscales' => DireccionFiscal::where('usuario_id', Auth::id())->get(),
-            'direccionesEntrega' => DireccionEntrega::where('usuario_id', Auth::id())->get(),
-        ]);
-    }
+        public function render()
+        {
+            return view('livewire.preproyectos.create-pre-project', [
+                'categorias' => Categoria::where('ind_activo', 1)->get(),
+                'productos' => $this->productos,
+                'tiposEnvio' => $this->tipos_envio,
+                'mostrarFormularioTallas'=> $this->mostrarFormularioTallas,
+                'direccionesFiscales' => $this->direccionesFiscales,
+                'direccionesEntrega' => $this->direccionesEntrega,
+                'todosLosUsuarios' => User::query()
+                    ->whereIn('id', auth()->user()->user_can_sel_preproyectos ?? [])
+                    ->whereJsonContains('config->flag-user-sel-preproyectos', true)
+                    ->get(),
+            ]);
+        }
 
 
 
@@ -277,6 +311,14 @@ class CreatePreProject extends Component
         $this->producto_id = null;
         $this->productos = Producto::where('categoria_id', $this->categoria_id)->where('ind_activo', 1)->get();
 
+            //Limpiasmos las ociones y caracteristicas 
+            $this->tallas = collect(); // Vaciar antes de asignar nuevas tallas
+            $this->tallasSeleccionadas = [];
+
+
+            $this->mostrarFormularioTallas = 0;
+            $this->caracteristicas_sel = [];
+            $this->opciones_sel = [];
     }
 
     public function despliega_form_tallas()
@@ -451,10 +493,7 @@ class CreatePreProject extends Component
     }
 
 
-    public function updatedDireccionEntregaId()
-    {
-        $this->cargarTiposEnvio();
-    }
+  
 
     public function cargarTiposEnvio()
     {
@@ -476,12 +515,17 @@ class CreatePreProject extends Component
         $this->uploadedFiles = [];
 
         foreach ($this->files as $file) {
+            $mimeType = $file->getMimeType();
+
+            $canPreview = str_starts_with($mimeType, 'image/');
+
             $this->uploadedFiles[] = [
                 'name' => $file->getClientOriginalName(),
-                'preview' => $file->temporaryUrl(),
+                'preview' => $canPreview ? $file->temporaryUrl() : null,
             ];
         }
     }
+
 
     public function on_Calcula_Fechas_Entrega()
     {
@@ -632,7 +676,9 @@ class CreatePreProject extends Component
     // Función para cargar clientes del usuario autenticado
     public function cargarClientes()
     {
-        $this->clientes = Cliente::where('usuario_id', Auth::id())->get();
+    Log::debug('Carga Clientes');
+
+        $this->clientes = Cliente::where('usuario_id', $this->UsuarioSeleccionado)->get();
     }
 
         // Función para guardar un nuevo cliente
@@ -647,7 +693,7 @@ class CreatePreProject extends Component
 
         // Crear el cliente y asociarlo al usuario autenticado
         $cliente = Cliente::create([
-            'usuario_id' => Auth::id(),
+            'usuario_id' => $this->UsuarioSeleccionado,
             'nombre_empresa' => $this->nuevoCliente['nombre_empresa'],
             'contacto_principal' => $this->nuevoCliente['contacto_principal'],
             'telefono' => $this->nuevoCliente['telefono'],
@@ -668,5 +714,47 @@ class CreatePreProject extends Component
 
         session()->flash('message', 'Cliente agregado correctamente.');
     }
+
+
+public function usuarioSeleccionadoCambio($usuarioId)
+{
+    $this->UsuarioSeleccionado = $usuarioId;
+    $this->cargarClientes();
+    $this->cargarDirecciones();
+}
+
+public function cargarDirecciones()
+{
+    Log::debug('Carga Direcciones');
+
+    if ($this->UsuarioSeleccionado) {
+        $this->direccionesFiscales = DireccionFiscal::where('usuario_id', $this->UsuarioSeleccionado)->get();
+        $this->direccionesEntrega = DireccionEntrega::where('usuario_id', $this->UsuarioSeleccionado)->get();
+
+        // Opcional: asignar automáticamente la primera dirección si no hay una seleccionada
+        if (!$this->direccion_fiscal_id && $this->direccionesFiscales->isNotEmpty()) {
+            $this->direccion_fiscal_id = $this->direccionesFiscales->first()->id;
+        }
+
+        if (!$this->direccion_entrega_id && $this->direccionesEntrega->isNotEmpty()) {
+            $this->direccion_entrega_id = $this->direccionesEntrega->first()->id;
+        }
+
+    } else {
+        $this->direccionesFiscales = collect();
+        $this->direccionesEntrega = collect();
+    }
+}
+
+public function updatedDireccionFiscalId($value)
+{
+    $this->direccion_fiscal_id = (int) $value;
+}
+
+public function updatedDireccionEntregaId($value)
+{
+    $this->direccion_entrega_id = (int) $value;
+    $this->cargarTiposEnvio();
+}
 
 }

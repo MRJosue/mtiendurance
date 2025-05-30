@@ -1,5 +1,4 @@
-<div >
-
+<div>
     <!-- Activador -->
     <p class="text-blue-600 underline cursor-pointer" wire:click="$set('modalVerArchivosProyecto', true)">
         Ver archivos del proyecto
@@ -23,10 +22,25 @@
                     </div>
                 @endif
 
+                <!-- Pestañas -->
+                <div class="flex border-b mb-4 space-x-4">
+                    <button wire:click="$set('tab', 'disenos')"
+                        class="px-4 py-2 font-medium border-b-4 transition duration-200"
+                        :class="{ 'border-blue-600 text-blue-600': @js($tab) === 'disenos', 'border-transparent text-gray-500 hover:text-blue-600': @js($tab) !== 'disenos' }">
+                        Diseños
+                    </button>
+                    <button wire:click="$set('tab', 'iniciales')"
+                        class="px-4 py-2 font-medium border-b-4 transition duration-200"
+                        :class="{ 'border-blue-600 text-blue-600': @js($tab) === 'iniciales', 'border-transparent text-gray-500 hover:text-blue-600': @js($tab) !== 'iniciales' }">
+                        Archivos Iniciales
+                    </button>
+                </div>
+
                 <!-- Formulario de carga -->
                 @hasanyrole('admin|estaf')
                     <form wire:submit.prevent="uploadFile" class="mb-6 flex flex-wrap items-center gap-4">
                         <input type="file" wire:model="archivo" class="block w-full md:w-auto border rounded px-4 py-2">
+
                         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                             Subir
                         </button>
@@ -67,8 +81,8 @@
                                     </td>
                                     <td class="px-4 py-2 border flex flex-col md:flex-row gap-2">
                                         <a href="{{ Storage::disk('public')->url($archivo->ruta_archivo) }}" 
-                                        class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-center"
-                                        target="_blank">Descargar</a>
+                                           class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-center"
+                                           target="_blank">Descargar</a>
 
                                         @hasanyrole('admin|estaf')
                                             <button wire:click="deleteFile({{ $archivo->id }})"
@@ -94,5 +108,4 @@
             </div>
         </div>
     @endif
-
 </div>

@@ -18,6 +18,68 @@
 
     <!-- Contenido colapsable -->
     <div x-show="abierto" x-transition>
+
+                
+                        @if($mostrarFiltros)
+                            <div 
+                                x-data="{ abierto: @entangle('mostrarFiltros') }" 
+                                class="mb-6"
+                            >
+                            <template x-if="abierto">
+                                <div 
+                                  
+                                    class="w-full bg-white border border-gray-200 shadow-md rounded-lg"
+                                >
+                                    <div class="flex justify-between items-center p-4 border-b">
+                                        <h2 class="text-lg font-bold text-gray-700">Filtros</h2>
+                                        <div class="flex items-center gap-2">
+                                            <button 
+                                                wire:click="buscarPorFiltros"
+                                                class="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-100 text-sm"
+                                            >
+                                                Filtrar
+                                            </button>
+                                            <button 
+                                                @click="abierto = false" 
+                                                class="text-gray-500 hover:text-gray-700 text-xl leading-none"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                               <div class="flex items-center space-x-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="no-aprobados"
+                                                        wire:model.defer="mostrarSoloNoAprobados"
+                                                        class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                                    />
+                                                    <label for="no-aprobados" class="text-sm text-gray-700">
+                                                        Mostrar pedidos de diseños No aprobados
+                                                    </label>
+                                                </div>
+                                    </div>
+                                </div>
+                            </template>
+                                <template x-if="!abierto">
+                                    <div class="mb-4">
+                                        <button @click="abierto = true" class="text-sm text-blue-600 hover:underline">
+                                            Mostrar Filtros
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                        @else
+                            <div class="mb-4">
+                                <button wire:click="$set('mostrarFiltros', true)" class="text-sm text-blue-600 hover:underline">
+                                    Mostrar Filtros
+                                </button>
+                            </div>
+                        @endif
+
+        
         <div class="overflow-x-auto bg-white rounded shadow">
             <table class="min-w-full table-auto text-sm text-left text-gray-700">
                 <thead class="bg-gray-100 text-xs uppercase tracking-wider">

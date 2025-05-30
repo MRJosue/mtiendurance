@@ -12,6 +12,26 @@
     @endif
 
     <form wire:submit.prevent="create">
+
+        @php
+            $config = auth()->user()->config ?? [];
+            $puedeSeleccionarUsuarios = $config['flag-can-user-sel-preproyectos'] ?? false;
+        @endphp
+
+        @if ($puedeSeleccionarUsuarios)
+
+
+            <x-select-usuario
+                label="Usuario que crea el proyecto"
+                :opciones="$todosLosUsuarios->toArray()"
+                entangle="UsuarioSeleccionado"
+                wire:model="UsuarioSeleccionado"
+                :seleccionado="$UsuarioSeleccionado"
+                onchange="usuarioSeleccionadoCambio"
+            />
+         
+        @endif
+
         <!-- Nombre y Descripción -->
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Nombre</label>
@@ -151,10 +171,57 @@
             
         </div>
 
-         <!-- Selección de Archivo -->
-         <div class="mb-4">
+        <!-- Selección de Archivo -->
+        <div class="mb-4" x-data="{ cargando: false }" x-init="
+            Livewire.on('upload:started', () => cargando = true);
+            Livewire.on('upload:finished', () => cargando = false);
+        ">
             <label class="block text-sm font-medium text-gray-700">Subir Archivos</label>
-            <input type="file" wire:model="files" multiple class="w-full mt-1 border rounded-lg p-2">
+            
+                    <div class="mb-4" 
+                        x-data="{
+                            archivos: @entangle('files'),
+                            maximos: 4,
+                            get limiteAlcanzado() { return this.archivos.length >= this.maximos }
+                        }" 
+                        x-init="Livewire.on('upload:finished', () => { archivos = @entangle('files') })"
+                    >
+                        
+
+                        <template x-if="!limiteAlcanzado">
+                            <input 
+                                type="file" 
+                                wire:model="files" 
+                                multiple 
+                                accept=".zip,.jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx" 
+                                class="w-full mt-1 border rounded-lg p-2"
+                            >
+                        </template>
+
+                        <template x-if="limiteAlcanzado">
+                            <div class="mt-2 text-yellow-700 text-sm">
+                                Límite de 4 archivos alcanzado. Elimina alguno para subir más.
+                            </div>
+                        </template>
+
+                        <div x-show="cargando" class="mt-2 text-sm text-blue-600">
+                            Cargando archivos...
+                            <svg class="inline w-4 h-4 animate-spin ml-1" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+
+            <!-- Indicador visual de carga -->
+            <div x-show="cargando" class="mt-2 text-sm text-blue-600">
+                Cargando archivos...
+                <svg class="inline w-4 h-4 animate-spin ml-1" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+            </div>
         </div>
 
         <!-- Descripciones de Archivos -->
@@ -172,17 +239,24 @@
                 <h3 class="text-lg font-semibold mb-2">Vista Previa de Archivos</h3>
                 @foreach ($uploadedFiles as $file)
                     <div class="mb-2">
-                        @if (str_starts_with($file['preview'], 'data:image'))
-                            <img src="{{ $file['preview'] }}" class="w-32 h-32 object-cover rounded-lg">
+                        @if ($file['preview'])
+                            @if (str_starts_with($file['preview'], 'data:image'))
+                                <img src="{{ $file['preview'] }}" class="w-32 h-32 object-cover rounded-lg">
+                            @else
+                                <a href="{{ $file['preview'] }}" target="_blank" class="text-blue-500 underline">
+                                    {{ $file['name'] }}
+                                </a>
+                            @endif
                         @else
-                            <a href="{{ $file['preview'] }}" target="_blank" class="text-blue-500 underline">
-                                {{ $file['name'] }}
-                            </a>
+                            <p class="text-sm text-gray-500">
+                                {{ $file['name'] }} - <span class="italic">Previsualización no disponible</span>
+                            </p>
                         @endif
                     </div>
                 @endforeach
             </div>
         @endif
+
 
         <!-- Selección de Direcciones -->
         <div class="grid grid-cols-2 gap-4 mb-4">

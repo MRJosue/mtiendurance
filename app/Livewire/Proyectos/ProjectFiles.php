@@ -23,6 +23,8 @@ class ProjectFiles extends Component
     public $archivo;
     public $modalVerArchivosProyecto = false;
     public $search = '';
+    public $tab = 'disenos';
+
 
     protected $updatesQueryString = ['search'];
 
@@ -49,7 +51,7 @@ class ProjectFiles extends Component
             'usuario_id' => Auth::id(),
             'nombre_archivo' => $this->archivo->getClientOriginalName(),
             'ruta_archivo' => $path,
-            'tipo_archivo' => $this->archivo->getMimeType(),
+            'tipo_archivo' => 1,
         ]);
 
         $this->archivo = null;
@@ -74,14 +76,18 @@ class ProjectFiles extends Component
 
     public function render()
     {
-        $archivos = ArchivoProyecto::where('proyecto_id', $this->proyectoId)
-            ->where('nombre_archivo', 'like', '%' . $this->search . '%')
-            ->orderByDesc('created_at')
-            ->paginate(10);
+        $query = ArchivoProyecto::where('proyecto_id', $this->proyectoId)
+            ->where('nombre_archivo', 'like', '%' . $this->search . '%');
 
-        return view('livewire.proyectos.project-files', [
-            'archivos' => $archivos,
-        ]);
+        if ($this->tab === 'disenos') {
+            $query->where('tipo_carga', 1);
+        } elseif ($this->tab === 'iniciales') {
+            $query->where('tipo_carga', 2);
+        }
+
+        $archivos = $query->orderByDesc('created_at')->paginate(10);
+
+        return view('livewire.proyectos.project-files', compact('archivos'));
     }
 }
 

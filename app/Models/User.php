@@ -34,7 +34,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'config',
+        'user_can_sel_preproyectos',
     ];
+
 
     /**
      * The attributes that should be hidden for serialization.
@@ -54,6 +57,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'config' => 'array',
+        'user_can_sel_preproyectos' => 'array',
     ];
 
 
@@ -91,6 +96,18 @@ class User extends Authenticatable
     public function cliente()
     {
         return $this->hasOne(Cliente::class, 'usuario_id'); // Ajusta el campo si es necesario
+    }
+
+
+    public function getFlag(string $key, $default = false): bool
+    {
+        return boolval($this->config[$key] ?? $default);
+    }
+
+    public function setFlag(string $key, bool $value): void
+    {
+        $this->config = array_merge($this->config ?? [], [$key => $value]);
+        $this->save();
     }
 
 }

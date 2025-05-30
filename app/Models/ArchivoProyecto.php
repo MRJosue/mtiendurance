@@ -16,6 +16,8 @@ class ArchivoProyecto extends Model
         'nombre_archivo',
         'ruta_archivo',
         'tipo_archivo',
+        'tipo_carga',
+        'flag_descarga',
         'usuario_id',
         'descripcion',
 

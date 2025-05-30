@@ -1,7 +1,12 @@
 import './bootstrap';
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
-//import '../../vendor/rappasoft/laravel-livewire-tables/resources/imports/laravel-livewire-tables-all.js';
+
+import Dropzone from 'dropzone';
+import 'dropzone/dist/dropzone.css';
+
+
+
 
 
 console.log('Hola soy app js');
@@ -17,6 +22,8 @@ window.Echo = new Echo({
     disableStats: true,
     cluster: "mt1",
 });
+
+
 
 // quitamos forceTLS: false,
 // y usamos encrypted:false

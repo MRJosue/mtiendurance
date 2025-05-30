@@ -187,15 +187,26 @@
         <h3 class="text-lg font-semibold mt-4">Archivos Cargados</h3>
         <ul class="mb-4">
             @foreach ($existingFiles as $file)
-                <li class="flex justify-between items-center bg-gray-100 p-2 rounded-lg mb-2">
-                    <a href="{{ Storage::url($file->ruta_archivo) }}" target="_blank" class="text-blue-500 underline">
-                        {{ $file->nombre_archivo }}
-                    </a>
-                    
-                    <button type="button" wire:click="deleteFile({{ $file->id }})" class="text-red-500 hover:underline">
-                        Eliminar
-                    </button>
-                </li>
+                    <li class="flex justify-between items-center bg-gray-100 p-2 rounded-lg mb-2">
+                        <div>
+                            <a href="{{ Storage::url($file->ruta_archivo) }}" target="_blank" class="text-blue-500 underline">
+                                {{ $file->nombre_archivo }}
+                            </a>
+                            @if (!$file->flag_descarga)
+                            
+                                <a  href="{{ Storage::url($file->ruta_archivo) }}" type="button"
+                                        wire:click="descargarArchivo({{ $file->id }})"
+                                        class="ml-4 text-green-600 hover:underline">
+                                    Descargar Archivo
+                                </a >
+                            @else
+                                <span class="ml-4 text-sm text-gray-500">(Descargado)</span>
+                            @endif
+                        </div>
+                        <button type="button" wire:click="deleteFile({{ $file->id }})" class="text-red-500 hover:underline">
+                            Eliminar
+                        </button>
+                    </li>
             @endforeach
         </ul>
 
