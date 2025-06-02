@@ -640,7 +640,8 @@ class PedidosCrudProyecto extends Component
                     'pedidoTallas.talla' => function ($query) {
                         $query->with('gruposTallas'); // Cargar los grupos de talla correctamente
                     },
-                    'tipoEnvio'
+                    'tipoEnvio',
+                    'usuario'
                 ])
                 ->paginate(6),
         ]);

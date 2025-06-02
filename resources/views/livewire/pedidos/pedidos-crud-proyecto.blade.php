@@ -41,7 +41,7 @@
                 @foreach($pedidos as $pedido)
                     <tr class="text-sm">
                         <td class="border border-gray-300 p-2 font-semibold">{{ $pedido->id.'-'.$pedido->proyecto_id }}</td>
-                        <td class="border border-gray-300 p-2">{{ $pedido->cliente->nombre_empresa ?? 'Sin cliente' }}</td>
+                        <td class="border border-gray-300 p-2">{{ $pedido->usuario->name ?? 'Sin usuario' }}</td>
                         
                         <!-- Piezas Totales -->
                         <td class="border border-gray-300 p-2 font-semibold w-56">
@@ -250,7 +250,7 @@
                 </div>
                 
                 <!-- SECCIÓN: Cliente -->
-                <h6 class="text-lg font-semibold mb-2">Cliente</h6>
+                {{-- <h6 class="text-lg font-semibold mb-2">Cliente</h6>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Selecciona un Cliente</label>
                     <select wire:model="cliente_id" class="w-full border border-gray-300 rounded p-2">
@@ -260,7 +260,7 @@
                         @endforeach
                     </select>
                     @error('cliente_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                </div>
+                </div> --}}
 
                 <!-- SECCIÓN: Fechas -->
                 <h6 class="text-lg font-semibold mb-2">Fechas</h6>
