@@ -28,6 +28,7 @@ class UltimoArchivo extends Component
     {
         $this->ultimoArchivo = ArchivoProyecto::where('proyecto_id', $this->proyectoId)
             ->latest('id')
+            ->where('tipo_carga', 1)
             ->first();
 
         if (!$this->ultimoArchivo) {
