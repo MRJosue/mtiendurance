@@ -17,7 +17,7 @@ return new class extends Migration
         // Establece los valores iniciales para usuarios existentes
         DB::table('users')->update([
             'config' => json_encode([
-                'flag-user-sel-preproyectos' => false,
+                'flag-user-sel-preproyectos' => true,
                 'flag-can-user-sel-preproyectos' => false,
             ])
         ]);
