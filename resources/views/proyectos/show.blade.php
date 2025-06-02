@@ -93,7 +93,7 @@
                                         <p>{{ $producto['id'] ?? '' }} {{ $producto['nombre'] ?? 'Sin producto' }}</p>
                                     </div>
 
-                                    <div class="grid grid-cols-1 gap-4">
+                                    <div class="grid grid-cols-3 gap-4">
                                         @foreach($caracteristicas as $caracteristica)
                                             <div class="p-4 border rounded-lg shadow">
                                                 <h3 class="text-lg font-semibold">{{ $caracteristica['nombre'] }}</h3>
@@ -105,7 +105,6 @@
                                             </div>
                                         @endforeach
                                     </div>
-
 
 
 
