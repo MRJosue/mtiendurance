@@ -94,39 +94,46 @@
         </div>
     @endif
 
-    <div class="mb-4 flex flex-wrap space-y-2 sm:space-y-0 sm:space-x-4">
-        <button
-            class="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="selectedPedidos.length === 0"
-            wire:click="exportSelected"
-        >
-            Exportar Seleccionados
-        </button>
-        <button
-            class="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="selectedPedidos.length === 0"
-            wire:click="deleteSelected"
-        >
-            Eliminar Seleccionados
-        </button>
+<div class="mb-4 flex flex-wrap gap-2">
+    <!-- Exportar -->
+    <button
+        class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        :disabled="selectedPedidos.length === 0"
+        wire:click="exportSelected"
+    >
+        Exportar
+    </button>
 
-        <button
-            class="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="selectedPedidos.length === 0"
-            wire:click="abrirModalCrearTareaConPedidos"
-        >
-            Crear Tarea con Pedidos Seleccionados
-        </button>
+    <!-- Eliminar -->
+    <button
+        class="px-3 py-1.5 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        :disabled="selectedPedidos.length === 0"
+        wire:click="deleteSelected"
+    >
+        Eliminar
+    </button>
 
-        <button
-            class="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="selectedPedidos.length === 0"
-            wire:click="abrirModalCrearOrdenCorte"
-        >
-            Crear Orden de Corte
-        </button>
-        
-    </div>
+    <!-- Crear Tarea -->
+    <button
+        class="px-3 py-1.5 text-sm bg-gray-500 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        :disabled="selectedPedidos.length === 0"
+        wire:click="abrirModalCrearTareaConPedidos"
+    >
+        Crear Tarea
+    </button>
+
+    <!-- Crear Orden de Corte -->
+    <button
+        class="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        :disabled="selectedPedidos.length === 0"
+        wire:click="abrirModalCrearOrdenCorte"
+    >
+        Crear Orden de Corte
+    </button>
+</div>
+
+
+
         
     <div class="overflow-x-auto">
         <div class="inline-block min-w-full align-middle">

@@ -1,10 +1,11 @@
 import './bootstrap';
+import '../css/app.css';
+
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
 
 import Dropzone from 'dropzone';
 import 'dropzone/dist/dropzone.css';
-
 
 
 

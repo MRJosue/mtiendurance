@@ -24,23 +24,23 @@
                 <div x-data="{ selectedProjects: @entangle('selectedProjects') }" class="container mx-auto p-6">
                     <!-- Botones de acción -->
                     @hasanyrole('admin|estaf')
-                        <div class="mb-4 flex flex-wrap gap-2">
-                            <button
-                                class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                :disabled="selectedProjects.length === 0"
-                                wire:click="exportSelected"
-                            >
-                                Exportar
-                            </button>
+                            <div class="mb-4 flex flex-wrap gap-2">
+                                <button
+                                    class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    :disabled="selectedProjects.length === 0"
+                                    wire:click="exportSelected"
+                                >
+                                    Exportar
+                                </button>
 
-                            <button
-                                class="px-3 py-1.5 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                :disabled="selectedProjects.length === 0"
-                                wire:click="deleteSelected"
-                            >
-                                Eliminar
-                            </button>
-                        </div>
+                                <button
+                                    class="px-3 py-1.5 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    :disabled="selectedProjects.length === 0"
+                                    wire:click="deleteSelected"
+                                >
+                                    Eliminar
+                                </button>
+                            </div>
                     @endhasanyrole
 
 

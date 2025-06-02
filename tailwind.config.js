@@ -12,16 +12,35 @@ export default {
     './resources/**/*.js',
     './resources/**/*.vue',
     './app/Livewire/**/*.php', // 👈 Para componentes Livewire
+    
   ],
-    safelist: [
-    'bg-blue-600',
-    'hover:bg-blue-700',
-    'text-white',
-    'rounded',
-    'px-4',
-    'py-2',
-    'w-full'
-    ],
+safelist: [
+  'bg-blue-600',
+  'hover:bg-blue-700',
+  'bg-red-500',
+  'hover:bg-red-600',
+  'bg-gray-500',
+  'hover:bg-gray-600',
+  'bg-green-600',
+  'hover:bg-green-700',
+  'bg-yellow-500',
+  'hover:bg-yellow-600',
+  'bg-amber-500',
+  'hover:bg-amber-600',
+  'bg-sky-700',
+  'hover:bg-sky-800',
+  'bg-emerald-600',
+  'hover:bg-emerald-700',
+  'text-white',
+  'text-black',
+  'rounded',
+  'px-4',
+  'py-2',
+  'px-3',
+  'py-1.5',
+  'w-full',
+  'sm:w-auto'
+],
   theme: {
     extend: {
       fontFamily: {
