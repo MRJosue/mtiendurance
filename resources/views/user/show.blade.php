@@ -53,7 +53,8 @@
 
                     {{-- @livewire('usuarios.tabla-usuarios') --}}
 
-                    @livewire('usuarios.direcciones-fiscales-crud',['userId'=>$user->id])
+                    {{-- @livewire('usuarios.direcciones-fiscales-crud',['userId'=>$user->id]) --}}
+                    
 
                 </div>
             </div>

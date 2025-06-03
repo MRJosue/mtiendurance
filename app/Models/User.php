@@ -13,6 +13,10 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
 
 /**
  * @method \Illuminate\Database\Eloquent\Collection getRoleNames()
@@ -110,4 +114,22 @@ class User extends Authenticatable
         $this->save();
     }
 
+
+    // Para cliente principal
+    public function empresa(): BelongsTo
+    {
+        return $this->belongsTo(Empresa::class);
+    }
+
+    // Para cliente subordinado
+    public function sucursal(): BelongsTo
+    {
+        return $this->belongsTo(Sucursal::class);
+    }
+
+    // Si usas la tabla pivote sucursal_user
+    public function sucursales(): BelongsToMany
+    {
+        return $this->belongsToMany(Sucursal::class, 'sucursal_user');
+    }
 }
