@@ -3,7 +3,7 @@
     <x-slot name="header">
         <div class="flex items-center gap-4">
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight flex-1">
-                {{ __('Proyecto/Detalles/') }}{{ $proyecto->nombre }}
+                {{ __('Proyecto/Detalles/') }}{{ $proyecto->nombre }} ID:{{ $proyecto->id }}
             </h2>
             <div class="shrink-0">
                 <livewire:proyectos.project-timeline :proyecto-id="$proyecto->id" />
@@ -37,7 +37,7 @@
                                     :class="tab === 'detalles' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'" 
                                     class="py-2 px-4 font-medium focus:outline-none"
                                 >
-                                    Detalles del Proyecto
+                                    Detalles del Proyecto 
                                 </button>
                                 <button 
                                     @click="tab = 'chat'" 
@@ -50,7 +50,11 @@
 
                             <!-- Contenido Detalles -->
                             <div x-show="tab === 'detalles'" x-cloak class="space-y-4">
-                                <h2 class="text-2xl font-bold">Detalles del Proyecto</h2>
+                                <div class="grid grid-cols-2 items-center text-justify">
+                                    <h2 class="text-2xl font-bold">Detalles del Proyecto </h2>
+                                    <h3 class="text-sm  font-bold">ID:{{ $proyecto->id }}</h3>
+                                </div>
+                                
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
