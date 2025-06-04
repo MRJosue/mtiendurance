@@ -11,6 +11,9 @@ use App\Models\User;
 
 class DatabaseSeeder extends Seeder
 {
+
+
+
     public function run(): void
     {
         // $usuarios = User::where('email', '!=', 'admin@mtiendurance.com')->take(5)->get();
@@ -74,5 +77,55 @@ class DatabaseSeeder extends Seeder
         //         ]);
         //     }
         // }
+
+        $this->call([
+
+            RolePermissionSeeder::class,
+            UserSeeder::class,
+            PaisesEstadosCiudadesSeeder::class,
+            DireccionesSeeder::class,
+            TipoEnvioSeeder::class,
+            CiudadesTipoEnvioSeeder::class,
+            ClientesTableSeeder::class,
+            ProveedoresTableSeeder::class,
+            
+            // CategoriasTableSeeder::class,
+            // ProductosTableSeeder::class,
+            // CaracteristicasTableSeeder::class,
+            // OpcionesTableSeeder::class,
+
+
+           // ProyectosTableSeeder::class,
+           // TallasTableSeeder::class,
+          
+            PermissionSeeder::class,
+
+           // ProyectoDefinidoSeeder::class,
+           // PedidosTableSeeder::class,
+           // PedidoTallasTableSeeder::class,
+           // PedidoOpcionesTableSeeder::class,
+           // PedidoCaracteristicasTableSeeder::class,
+
+            //PedidoCaracteristicasTableSeeder::class,
+            ChatSeeder::class,
+
+            TareasTableSeeder::class,
+
+            DatosInicialesSeeder::class,
+
+
+        ]);
+
+        // 1. Sembrar empresas
+        $this->call(EmpresaSeeder::class);
+
+        // 2. Sembrar sucursales (necesita que existan empresas)
+        $this->call(SucursalSeeder::class);
+
+        // 3. Sembrar usuarios: clientes principales y subordinados
+        $this->call(UsuarioSeeder::class);
+
+        // Si tienes otros seeders, agrégalos aquí debajo en el orden apropiado
+
     }
 }
