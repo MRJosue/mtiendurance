@@ -10,6 +10,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Sucursal extends Model
 {
+
+    use HasFactory; 
+
+    protected $table = 'sucursales';
+
     protected $fillable = [
         'empresa_id',
         'nombre',

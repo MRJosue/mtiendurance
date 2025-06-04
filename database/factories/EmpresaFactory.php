@@ -2,15 +2,19 @@
 
 namespace Database\Factories;
 
+use App\Models\Empresa;       // ← Debe apuntar a App\Models\Empresa
 use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\Empresa;
 
 class EmpresaFactory extends Factory
 {
-    protected $model = Empresa::class;
+
+
+    protected $model = Empresa::class;  // ← Debe apuntar a la clase correcta
 
     public function definition(): array
     {
+
+        
         return [
             'nombre'    => $this->faker->company,
             'rfc'       => strtoupper($this->faker->bothify('????######')),

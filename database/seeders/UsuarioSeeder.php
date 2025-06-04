@@ -25,7 +25,7 @@ class UsuarioSeeder extends Seeder
                 'name'          => $empresa->nombre . ' Principal',
                 'email'         => strtolower(str_replace(' ', '', $empresa->nombre)) . '@ejemplo.com',
                 'password'      => Hash::make('password123'),
-                'rol'           => 'cliente_principal',
+                // 'rol'           => 'cliente_principal',
                 'empresa_id'    => $empresa->id,
                 'sucursal_id'   => null, // No tiene sucursal directa
                 'email_verified_at' => now(),
@@ -49,7 +49,7 @@ class UsuarioSeeder extends Seeder
                     'name'          => $empresa->nombre . " Subordinado {$i}",
                     'email'         => strtolower($empresa->nombre) . "_sub{$i}@ejemplo.com",
                     'password'      => Hash::make('password123'),
-                    'rol'           => 'cliente_subordinado',
+                    // 'rol'           => 'cliente_subordinado',
                     // Lo vinculamos directamente por la clave foránea (si usas campo sucursal_id en users)
                     'sucursal_id'   => $unaSucursal->id,
                     // Como es subordinado, su empresa_id puede ser null o heredarse:

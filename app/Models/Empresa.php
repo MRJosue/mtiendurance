@@ -10,23 +10,26 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 
+
 class Empresa extends Model
 {
-      protected $fillable = [
+    use HasFactory;  // ← Debe existir este “use”
+
+    protected $fillable = [
         'nombre',
         'rfc',
         'telefono',
         'direccion',
     ];
 
-    public function sucursales(): HasMany
+    public function sucursales()
     {
         return $this->hasMany(Sucursal::class);
     }
 
-    public function clientesPrincipales(): HasMany
+    public function clientesPrincipales()
     {
         return $this->hasMany(User::class, 'empresa_id')
-            ->where('rol', 'cliente_principal');
+                    ->where('rol', 'cliente_principal');
     }
 }
