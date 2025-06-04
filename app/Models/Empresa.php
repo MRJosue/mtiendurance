@@ -30,6 +30,8 @@ class Empresa extends Model
     public function clientesPrincipales()
     {
         return $this->hasMany(User::class, 'empresa_id')
-                    ->where('rol', 'cliente_principal');
+            ->whereHas('roles', function($q) {
+                $q->where('name', 'cliente_principal');
+            });
     }
 }

@@ -15,7 +15,7 @@ class UserSeeder extends Seeder
     public function run()
     {
         // Usuarios de prueba con contraseñas simples
-        User::create([
+        $adminUser = User::create([
             'name' => 'Admin User',
             'email' => 'admin@example.com',
             'password' => Hash::make('password123'), // Contraseña simple
@@ -23,8 +23,10 @@ class UserSeeder extends Seeder
            
         ]);
 
+        $adminUser->assignRole('admin');
+
                 // Usuarios de prueba con contraseñas simples
-        User::create([
+        $adminUser = User::create([
             'name' => 'Admin User',
             'email' => 'ingjosue.cardona@gmail.com',
             'password' => Hash::make('password123'), // Contraseña simple
@@ -32,44 +34,37 @@ class UserSeeder extends Seeder
            
         ]);
 
+        $adminUser->assignRole('admin');
         // Usuarios de prueba con contraseñas simples
-        User::create([
+        $adminUser = User::create([
             'name' => 'Carlos Prueba',
             'email' => 'carlos@mtiendurance.com',
             'password' => Hash::make('password123'), // Contraseña simple
            
            
         ]);
+        $adminUser->assignRole('admin');
+        // ------------------------------------------------------------------------------------
+        // 2. Recuperar TODOS los roles que ya existen en la tabla `roles` de Spatie
+        // ------------------------------------------------------------------------------------
+        $roles = Role::all(); // esto traerá todos los registros de la tabla `roles`
 
-        User::create([
-            'name' => 'Staff User',
-            'email' => 'staff@example.com',
-            'password' => Hash::make('password123'), // Contraseña simple
-           
-          
-        ]);
-
-        // Definir los roles disponibles
-        $roles = ['admin', 'cliente', 'proveedor', 'estaf', 'diseñador', 'jefediseñador', 'operador'];
-
-        foreach ($roles as $roleName) {
-            // Buscar o crear el rol
-            $role = Role::where('name', $roleName)->first();
-
-            // Crear dos usuarios por cada rol
+        // ------------------------------------------------------------------------------------
+        // 3. Por cada rol en la BD, crear dos usuarios de prueba y asignarles ese rol
+        // ------------------------------------------------------------------------------------
+        foreach ($roles as $rol) {
             for ($i = 1; $i <= 2; $i++) {
                 $user = User::create([
-                    'name' => ucfirst($roleName) . " User $i",
-                    'email' => strtolower($roleName) . "$i@example.com",
+                    'name' => ucfirst($rol->name) . " User $i",
+                    'email' => strtolower($rol->name) . "$i@example.com",
                     'password' => Hash::make('password123'),
                 ]);
 
-                // Asignar el rol al usuario
-                $user->assignRole($role);
+                // Asignar el rol recuperado
+                $user->assignRole($rol);
             }
         }
 
-        // Usuarios adicionales generados automáticamente
-        User::factory(10)->create();
+
     }
 }

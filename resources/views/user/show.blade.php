@@ -29,6 +29,9 @@
                         @livewire('usuarios.cliente-management', ['userId' => $user->id])
                     </div>
 
+                    <div>
+                        @livewire('usuarios.configuraciones-usuario-empresa',  ['userId' => $user->id])
+                    </div>
                 </div>
 
                 <div class="p-6 text-gray-900 dark:text-gray-100">
