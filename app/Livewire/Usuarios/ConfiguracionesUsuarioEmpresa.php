@@ -56,18 +56,43 @@ class ConfiguracionesUsuarioEmpresa extends Component
         $this->resetPage();
     }
 
+    // public function render()
+    // {
+    //     $empresas = Empresa::withCount(['clientesPrincipales'])
+    //         ->when($this->search, fn($q) =>
+    //             $q->where('nombre', 'like', '%'.$this->search.'%')
+    //         )
+    //         ->orderBy('nombre')
+    //         ->paginate($this->perPage);
+
+    //         $usuariosClientePrincipal = User::query()
+    //             ->role('cliente_principal')
+    //             ->get();
+    //     return view('livewire.usuarios.configuraciones-usuario-empresa', [
+    //         'empresas' => $empresas,
+    //         'usuariosClientePrincipal' => $usuariosClientePrincipal,
+    //     ]);
+    // }
+
     public function render()
     {
-        $empresas = Empresa::withCount(['clientesPrincipales'])
+        $user = User::find($this->userId);
+
+        $empresasQuery = Empresa::withCount(['clientesPrincipales'])
             ->when($this->search, fn($q) =>
                 $q->where('nombre', 'like', '%'.$this->search.'%')
             )
-            ->orderBy('nombre')
-            ->paginate($this->perPage);
+            ->orderBy('nombre');
 
-            $usuariosClientePrincipal = User::query()
-                ->role('cliente_principal')
-                ->get();
+        if (!$user->hasRole('admin')) {
+            // Solo la empresa relacionada con el usuario (si tiene)
+            $empresasQuery->where('id', $user->empresa_id);
+        }
+
+        $empresas = $empresasQuery->paginate($this->perPage);
+
+        // $usuariosClientePrincipal = User::role('cliente_principal')->get();
+        $usuariosClientePrincipal = User::query()->role('cliente_principal')->get();
         return view('livewire.usuarios.configuraciones-usuario-empresa', [
             'empresas' => $empresas,
             'usuariosClientePrincipal' => $usuariosClientePrincipal,

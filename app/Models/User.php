@@ -63,6 +63,7 @@ class User extends Authenticatable
         'password' => 'hashed',
         'config' => 'array',
         'user_can_sel_preproyectos' => 'array',
+        'subordinados' => 'array',
     ];
 
 

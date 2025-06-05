@@ -25,12 +25,23 @@
                     <br class="text-m font-bold mb-4"">
                     <h2 class="text-m font-bold mb-4"">tipo de usuario: {{$user->tipo_usuario}}</h2>
 
-                    <div>
+                    {{-- <div>
                         @livewire('usuarios.cliente-management', ['userId' => $user->id])
-                    </div>
+                    </div> --}}
 
                     <div>
                         @livewire('usuarios.configuraciones-usuario-empresa',  ['userId' => $user->id])
+                    </div>
+
+                    <div>
+                        @livewire('usuarios.configuraciones-usuario-sucursal', ['userId' => $user->id])
+
+                    </div>
+
+
+                    <div>
+                        @livewire('usuarios.configuraciones-usuario-makeuser', ['userId' => $user->id])
+
                     </div>
                 </div>
 

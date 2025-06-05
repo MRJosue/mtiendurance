@@ -12,19 +12,20 @@ class UserController extends Controller
 
     public function index(){
 
-                if (!auth()->user()->hasRole('admin')) {
-                    return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
-                }
+                // if (!auth()->user()->hasRole('admin')) {
+                //     return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
+                // }
 
         return view('user.index');
     }
 
     public function show(User $user){
 
-               if (!auth()->user()->hasRole('admin')) {
-                    return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
-                }
-        return view('user.show',['user' => $user]);
+                //    if (!auth()->user()->hasRole('admin')) {
+                //         return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
+                //     }
+
+         return view('user.show',['user' => $user]);
     }
 
     public function create(){
