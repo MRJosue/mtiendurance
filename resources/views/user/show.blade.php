@@ -19,11 +19,10 @@
 
                     {{-- @livewire('usuarios.tabla-usuarios') --}}
                  
-                    <h2 class="text-m font-bold mb-4"">name:  {{$user->name}}</h2>
+                    <h2 class="text-m font-bold mb-4">name:  {{$user->name}}</h2>
                         <br>
-                    <h2 class="text-m font-bold mb-4"">email: {{$user->email}}</h2>
-                    <br class="text-m font-bold mb-4"">
-                    <h2 class="text-m font-bold mb-4"">tipo de usuario: {{$user->tipo_usuario}}</h2>
+                    <h2 class="text-m font-bold mb-4">email: {{$user->email}}</h2>
+      
 
                     {{-- <div>
                         @livewire('usuarios.cliente-management', ['userId' => $user->id])
