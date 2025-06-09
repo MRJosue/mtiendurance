@@ -83,7 +83,7 @@ class Configuracionesusuariosucursal extends Component
         $sucursales = $sucursalesQuery->paginate(10);
         $empresas = $empresasQuery->get();
 
-        return view('livewire.usuarios.configuracionesusuariosucursal', [
+        return view('livewire.usuarios.configuraciones-usuario-sucursal', [
             'sucursales' => $sucursales,
             'empresas' => $empresas,
         ]);
