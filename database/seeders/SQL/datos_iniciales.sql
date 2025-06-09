@@ -323,7 +323,7 @@ INSERT INTO `productos` (`id`, `categoria_id`, `nombre`, `dias_produccion`, `fla
 (13, 1, 'Playera Manga Corta', 12, 0, '2025-05-06 16:43:13', '2025-05-06 16:43:13', 1),
 (14, 9, 'Portagafete Doble Capa Broche de Seguridad y Herraje Extra', 10, 0, '2025-05-06 17:20:13', '2025-05-06 17:20:13', 1);
 
-
+ 
 
 INSERT INTO `producto_caracteristica` (`id`, `producto_id`, `caracteristica_id`, `flag_armado`, `created_at`, `updated_at`) VALUES
 (9, 1, 2, 1, NULL, NULL),
