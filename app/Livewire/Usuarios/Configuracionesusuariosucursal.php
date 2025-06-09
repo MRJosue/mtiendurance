@@ -9,7 +9,7 @@ use App\Models\Sucursal;
 use App\Models\User;
 use App\Models\Empresa;
 
-class Configuracionesusuariosucursal extends Component
+class ConfiguracionesUsuarioSucursal  extends Component
 {
     use WithPagination;
 

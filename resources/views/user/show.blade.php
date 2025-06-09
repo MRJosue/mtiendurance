@@ -34,7 +34,6 @@
 
                     <div>
                         @livewire('usuarios.configuraciones-usuario-sucursal', ['userId' => $user->id])
-
                     </div>
 
 
