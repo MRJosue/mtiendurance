@@ -16,7 +16,9 @@ class DatosInicialesSeeder extends Seeder
     {
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
-        DB::unprepared(file_get_contents(database_path('seeders/sql/datos_iniciales.sql')));
+        file_get_contents('/home/mtiadmin/public_html/portal.mti/mtiendurance/database/seeders/sql/datos_iniciales.sql');
+
+        // DB::unprepared(file_get_contents(database_path('seeders/sql/datos_iniciales.sql')));
         DB::unprepared(file_get_contents(database_path('seeders/sql/nuevopermisos.sql')));
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
