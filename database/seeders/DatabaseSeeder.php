@@ -83,7 +83,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             UserSeeder::class,
             PaisesEstadosCiudadesSeeder::class,
-            DireccionesSeeder::class,
+          
             TipoEnvioSeeder::class,
             CiudadesTipoEnvioSeeder::class,
             ClientesTableSeeder::class,
@@ -126,6 +126,6 @@ class DatabaseSeeder extends Seeder
         $this->call(UsuarioSeeder::class);
 
         // Si tienes otros seeders, agrégalos aquí debajo en el orden apropiado
-
+        $this->call(DireccionesSeeder::class);
     }
 }
