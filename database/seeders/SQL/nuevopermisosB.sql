@@ -1,8 +1,8 @@
 -- --------------------------------------------------------
 -- Host:                         127.0.0.1
--- Versión del servidor:         8.0.30 - MySQL Community Server - GPL
+-- Versión del servidor:         8.4.3 - MySQL Community Server - GPL
 -- SO del servidor:              Win64
--- HeidiSQL Versión:             12.1.0.6537
+-- HeidiSQL Versión:             12.8.0.6908
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -14,23 +14,7 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
-
-
 -- Volcando datos para la tabla mtiadmin_portal.grupos_orden: ~10 rows (aproximadamente)
-DELETE FROM `roles`;
-INSERT INTO `roles` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VALUES
-	(1, 'admin', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06'),
-	(2, 'cliente', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06'),
-	(3, 'proveedor', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06'),
-	(4, 'estaf', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06'),
-	(5, 'diseñador', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06'),
-	(6, 'jefediseñador', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06'),
-	(7, 'operador', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06'),
-	(8, 'cliente_principal', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06'),
-	(9, 'cliente_subordinado', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06');
-
-
-DELETE FROM `grupos_orden`;
 INSERT INTO `grupos_orden` (`id`, `nombre`, `created_at`, `updated_at`) VALUES
 	(1, 'Preproyecto', '2025-05-15 18:36:50', '2025-05-15 18:36:50'),
 	(2, 'Test', '2025-05-15 19:36:36', '2025-05-15 19:36:36'),
@@ -43,8 +27,7 @@ INSERT INTO `grupos_orden` (`id`, `nombre`, `created_at`, `updated_at`) VALUES
 	(9, 'JefeDiseñador', '2025-05-20 23:13:55', '2025-05-20 23:13:55'),
 	(10, 'Diseñador', '2025-05-21 21:41:15', '2025-05-21 21:41:15');
 
--- Volcando datos para la tabla mtiadmin_portal.grupo_orden_permission: ~53 rows (aproximadamente)
-DELETE FROM `grupo_orden_permission`;
+-- Volcando datos para la tabla mtiadmin_portal.grupo_orden_permission: ~65 rows (aproximadamente)
 INSERT INTO `grupo_orden_permission` (`id`, `grupo_orden_id`, `permission_id`, `orden`, `created_at`, `updated_at`) VALUES
 	(12, 3, 14, 1, '2025-05-15 22:59:33', '2025-05-22 22:27:45'),
 	(13, 3, 13, 2, '2025-05-15 22:59:33', '2025-05-22 22:27:45'),
@@ -112,8 +95,7 @@ INSERT INTO `grupo_orden_permission` (`id`, `grupo_orden_id`, `permission_id`, `
 	(87, 3, 29, 9, '2025-05-22 22:27:28', '2025-05-22 22:27:45'),
 	(88, 3, 23, 10, '2025-05-22 22:27:45', '2025-05-22 22:27:45');
 
--- Volcando datos para la tabla mtiadmin_portal.permissions: ~33 rows (aproximadamente)
-DELETE FROM `permissions`;
+-- Volcando datos para la tabla mtiadmin_portal.permissions: ~38 rows (aproximadamente)
 INSERT INTO `permissions` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VALUES
 	(1, 'manage users', 'web', '2025-05-06 22:49:09', '2025-05-06 22:49:09'),
 	(2, 'edit profile', 'web', '2025-05-06 22:49:09', '2025-05-06 22:49:09'),
@@ -154,8 +136,19 @@ INSERT INTO `permissions` (`id`, `name`, `guard_name`, `created_at`, `updated_at
 	(37, 'tablaPedidos-ver-todos-los-pedidos', 'web', '2025-05-22 22:04:57', '2025-05-22 22:04:57'),
 	(38, 'ver-todas-notificaciones-del-sistema', 'web', '2025-05-22 22:15:13', '2025-05-22 22:15:13');
 
--- Volcando datos para la tabla mtiadmin_portal.role_has_permissions: ~50 rows (aproximadamente)
-DELETE FROM `role_has_permissions`;
+-- Volcando datos para la tabla mtiadmin_portal.roles: ~9 rows (aproximadamente)
+INSERT INTO `roles` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VALUES
+	(1, 'admin', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06'),
+	(2, 'cliente', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06'),
+	(3, 'proveedor', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06'),
+	(4, 'estaf', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06'),
+	(5, 'diseñador', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06'),
+	(6, 'jefediseñador', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06'),
+	(7, 'operador', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06'),
+	(8, 'cliente_principal', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06'),
+	(9, 'cliente_subordinado', 'web', '2025-06-09 17:36:06', '2025-06-09 17:36:06');
+
+-- Volcando datos para la tabla mtiadmin_portal.role_has_permissions: ~55 rows (aproximadamente)
 INSERT INTO `role_has_permissions` (`permission_id`, `role_id`) VALUES
 	(1, 1),
 	(2, 1),
