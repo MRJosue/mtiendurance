@@ -122,11 +122,11 @@
                     <h2 class="text-lg font-bold mb-2 text-gray-700">Asignar usuarios a la sucursal</h2>
                     <div class="mb-4">
                         <label class="block mb-1 text-gray-700">Selecciona usuarios:</label>
-                        <select multiple wire:model="selectedUsers" class="w-full border rounded-lg px-3 py-2 h-40">
-                            @foreach(\App\Models\User::orderBy('name')->get() as $user)
-                                <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
-                            @endforeach
-                        </select>
+                            <select multiple wire:model="selectedUsers" class="w-full border rounded-lg px-3 py-2 h-40">
+                                @foreach($usuariosDisponibles as $user)
+                                    <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                                @endforeach
+                            </select>
                     </div>
                     <div class="flex gap-2 mt-4">
                         <button wire:click="saveUsersToSucursal"

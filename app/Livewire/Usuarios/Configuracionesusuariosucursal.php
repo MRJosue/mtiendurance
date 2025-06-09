@@ -20,6 +20,9 @@ class Configuracionesusuariosucursal extends Component
     public $search = '';
     public $userId;
 
+    public $usuariosDisponibles = [];
+
+
     protected $rules = [
         'empresa_id' => 'required|exists:empresas,id',
         'nombre' => 'required|string|max:255',
@@ -32,6 +35,11 @@ class Configuracionesusuariosucursal extends Component
     public function mount($userId)
     {
         $this->userId = $userId;
+
+        $user = User::find($userId);
+        $ids = $user->subordinados ?? [];
+
+        $this->usuariosDisponibles = User::whereIn('id', $ids)->orderBy('name')->get();
     }
 
     // public function render()
@@ -144,6 +152,10 @@ class Configuracionesusuariosucursal extends Component
 
     public function openUserModal($sucursalId)
     {
+        $user = User::find($this->userId);
+        $ids = $user->subordinados ?? [];
+        $this->usuariosDisponibles = User::whereIn('id', $ids)->orderBy('name')->get();
+
         $this->selectedSucursal = Sucursal::with('usuarios')->findOrFail($sucursalId);
         $this->selectedUsers = $this->selectedSucursal->usuarios()->pluck('users.id')->toArray();
         $this->showUserModal = true;
