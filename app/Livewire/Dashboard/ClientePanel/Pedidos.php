@@ -10,7 +10,7 @@ class Pedidos extends Component
 {
     use WithPagination;
     public $mostrarFiltros = false;
-    public $mostrarSoloNoAprobados = false;
+    public $mostrarSoloNoAprobados = true;
 
 
     

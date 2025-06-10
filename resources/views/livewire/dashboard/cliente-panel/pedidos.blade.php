@@ -92,6 +92,7 @@
                         <th class="px-4 py-2">Estado</th>
                         <th class="px-4 py-2">Producción</th>
                         <th class="px-4 py-2">Entrega</th>
+                        <th class="px-4 py-2">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -143,6 +144,11 @@
                             </td>
                             <td class="px-4 py-2">{{ $pedido->fecha_produccion ?? 'No definida' }}</td>
                             <td class="px-4 py-2">{{ $pedido->fecha_entrega ?? 'No definida' }}</td>
+                            <td>
+                                            <a href="{{ route('proyecto.show', $pedido->proyecto_id) }}" class="text-blue-500 hover:underline">
+                                                Ver detalles
+                                            </a>
+                            </td>
                         </tr>
                     @empty
                         <tr>

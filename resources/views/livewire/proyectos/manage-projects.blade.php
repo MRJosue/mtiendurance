@@ -19,10 +19,27 @@
             <!-- Contenido del panel -->
             <div x-show="abierto" x-transition>
 
-                
+                <ul class="flex flex-wrap border-b border-gray-200 mb-4 gap-1">
+                    @foreach ($this->tabs as $tab)
+                        <li>
+                            <button
+                                wire:click="setTab('{{ $tab }}')"
+                                @class([
+                                    'px-4 py-2 rounded-t-lg text-sm whitespace-nowrap',
+                                    'border-b-2 font-semibold bg-white'           => $activeTab === $tab,
+                                    'text-gray-600 hover:text-blue-500'           => $activeTab !== $tab,
+                                    'border-blue-500 text-blue-600'               => $activeTab === $tab,
+                                    'border-transparent'                          => $activeTab !== $tab,
+                                ])
+                            >
+                                {{ $tab }}
+                            </button>
+                        </li>
+                    @endforeach
+                </ul>
 
                 <div x-data="{ selectedProjects: @entangle('selectedProjects') }" class="container mx-auto p-6">
-                    <!-- Botones de acción -->
+                    {{-- <!-- Botones de acción -->
                     @hasanyrole('admin|estaf')
                             <div class="mb-4 flex flex-wrap gap-2">
                                 <button
@@ -42,11 +59,11 @@
                                 </button>
                             </div>
                     @endhasanyrole
-
+ --}}
 
 
                         @if($mostrarFiltros)
-                            <div 
+                            {{-- <div 
                                 x-data="{ abierto: @entangle('mostrarFiltros') }" 
                                 class="mb-6"
                             >
@@ -100,13 +117,13 @@
                                         </button>
                                     </div>
                                 </template>
-                            </div>
+                            </div> --}}
                         @else
-                            <div class="mb-4">
+                            {{-- <div class="mb-4">
                                 <button wire:click="$set('mostrarFiltros', true)" class="text-sm text-blue-600 hover:underline">
                                     Mostrar Filtros
                                 </button>
-                            </div>
+                            </div> --}}
                         @endif
 
                     <!-- Tabla -->
