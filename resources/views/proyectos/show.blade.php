@@ -46,6 +46,14 @@
                                 >
                                     Chat del Proyecto
                                 </button>
+
+                                <button 
+                                    @click="tab = 'tareas'" 
+                                    :class="tab === 'tareas' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'" 
+                                    class="py-2 px-4 font-medium focus:outline-none"
+                                >
+                                   Tareas del Diseño
+                                </button>
                             </div>
 
                             <!-- Contenido Detalles -->
@@ -113,6 +121,7 @@
                             </div>
 
 
+
            
 
                             <!-- Contenido Chat -->
@@ -126,7 +135,23 @@
                                     </div>
                             </div>
 
+                            <!-- Contenido Tareas -->
+                            <div x-show="tab === 'tareas'" x-cloak>
+                                <h2 class="text-2xl font-bold mb-4">Tareas del Diseño</h2>
 
+                                <!-- Ejemplo de listado/gestor de tareas -->
+                                {{-- Puedes cambiar el componente o el contenido según tu implementación --}}
+                                    <P>SECCION DE LA TAREAS DEL DISEÑO</P>
+                                    <P>Se necesita u componente de livie wire que evalue si existen tareas de diseño </P>
+                                    <P>En caso de que no exista permitir crear y asignar tarea</P>
+                                    <p>En caso de que el </p>
+                                {{-- Si aún no tienes un componente, deja un placeholder
+                                <div class="p-4 rounded-lg bg-gray-100 dark:bg-gray-800 text-center">
+                                    <p class="text-gray-500 dark:text-gray-400">
+                                        ¡Próximamente módulo de tareas!
+                                    </p>
+                                </div> --}}
+                            </div>
 
                         </div> <!-- Fin columna derecha -->
 

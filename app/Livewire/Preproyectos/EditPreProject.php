@@ -204,6 +204,9 @@ class EditPreProject extends Component
                 return;
             }
 
+            if ($this->seleccion_armado === null || $this->seleccion_armado === '') {
+                $this->seleccion_armado = 1;
+            }
 
       //  $totalPiezasFinal = $this->mostrarFormularioTallas ? array_sum($this->tallasSeleccionadas) : $this->total_piezas;
         $totalPiezasFinal = $this->mostrarFormularioTallas ? array_sum((array) $this->tallasSeleccionadas) : $this->total_piezas;
@@ -239,8 +242,7 @@ class EditPreProject extends Component
             ]);
         }
 
-        session()->flash('message', 'Preproyecto actualizado exitosamente.');
-        return redirect()->route('preproyectos.index');
+
     }
 
     public function deleteFile($fileId)
@@ -252,8 +254,20 @@ class EditPreProject extends Component
         $this->existingFiles = ArchivoProyecto::where('pre_proyecto_id', $this->preProyectoId)->get();
     }
 
+      public function preguardado(){
+
+        $this ->  update();
+        
+        session()->flash('message', 'Preproyecto actualizado exitosamente.');
+        return redirect()->route('preproyectos.index');
+    }
+
     public function preAprobarProyecto()
     {
+
+        $this->update();
+
+
         $preProyecto = PreProyecto::findOrFail($this->preProyectoId);
 
         Log::debug('preProyecto', ['data' => $preProyecto]);

@@ -13,7 +13,7 @@
         </div>
     @endif
 
-    <form wire:submit.prevent="update">
+    <form wire:submit.prevent="preguardado">
         <!-- Nombre y Descripción -->
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700">Nombre</label>
@@ -275,10 +275,7 @@
 
             @error('error') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
-         
-         @hasanyrole('admin')
-            <p>Hola admin si estas editando este proyecto debes guardar despues de editar y luego aprobar</p>
-         @endhasanyrole
+
 
         @hasanyrole('admin|cliente')
         <!-- Botón de Guardar Cambios -->
