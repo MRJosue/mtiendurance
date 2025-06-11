@@ -7,7 +7,7 @@ import Pusher from "pusher-js";
 import Dropzone from 'dropzone';
 import 'dropzone/dist/dropzone.css';
 
-
+ 
 
 
 console.log('Hola soy app js');
