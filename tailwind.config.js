@@ -6,12 +6,13 @@ export default {
   content: [
     './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
     './vendor/rappasoft/laravel-livewire-tables/resources/views/**/*.blade.php',
-    './vendor/wireui/wireui/resources/**/*.blade.php',
+    './vendor/wireui/wireui/resources/**/*.blade.php', // 👈 Si usas WireUI
     './storage/framework/views/*.php',
     './resources/views/**/*.blade.php',
     './resources/**/*.js',
     './resources/**/*.vue',
-    './app/Livewire/**/*.php',
+    './app/Livewire/**/*.php', // 👈 Para componentes Livewire
+    
   ],
 safelist: [
   'bg-blue-600',
