@@ -466,7 +466,7 @@ class SubirDiseno extends Component
         ]);
 
         $this->reset(['archivo', 'comentario', 'modalSubirArchivoDiseno']);
-        $this->emit('archivoSubido');
+        $this->dispatch('archivoSubido');
         session()->flash('message', 'Archivo de diseño subido correctamente.');
     }
 
