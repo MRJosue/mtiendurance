@@ -25,6 +25,8 @@
                                 x-data="{ abierto: @entangle('mostrarFiltros') }" 
                                 class="mb-6"
                             >
+
+                            
                             <template x-if="abierto">
                                 <div 
                                   
@@ -79,7 +81,25 @@
                             </div>
                         @endif
 
-        
+                <!-- PESTAÑAS PEDIDOS | MUESTRAS -->
+            <ul class="flex flex-wrap border-b border-gray-200 mb-4 gap-1">
+                @foreach ($this->tabs as $tab)
+                    <li>
+                        <button
+                            wire:click="setTab('{{ $tab }}')"
+                            @class([
+                                'px-4 py-2 rounded-t-lg text-sm whitespace-nowrap',
+                                'border-b-2 font-semibold bg-white' => $activeTab === $tab,
+                                'text-gray-600 hover:text-blue-500' => $activeTab !== $tab,
+                                'border-blue-500 text-blue-600'     => $activeTab === $tab,
+                                'border-transparent'                => $activeTab !== $tab,
+                            ])
+                        >
+                            {{ $tab }}
+                        </button>
+                    </li>
+                @endforeach
+            </ul>
         <div class="overflow-x-auto bg-white rounded shadow">
             <table class="min-w-full table-auto text-sm text-left text-gray-700">
                 <thead class="bg-gray-100 text-xs uppercase tracking-wider">

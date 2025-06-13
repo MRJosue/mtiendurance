@@ -216,8 +216,8 @@ class EditPreProject extends Component
             'nombre' => $this->nombre,
             'descripcion' => $this->descripcion,
             'fecha_entrega' => $this->fecha_entrega,
-            'categoria_sel' => json_encode(['id' => $this->categoria_id]),
-            'producto_sel' => json_encode(['id' => $this->producto_id]),
+            'categoria_sel' => json_encode(['id' => $this->categoria_id, 'nombre' => Categoria::find($this->categoria_id)->nombre]),
+            'producto_sel' => json_encode(['id' => $this->producto_id, 'nombre' => Producto::find($this->producto_id)->nombre]),
             'caracteristicas_sel' => json_encode($this->caracteristicas_sel),
             'total_piezas_sel' => json_encode([
                 'total' => $totalPiezasFinal,

@@ -2,35 +2,57 @@
 <!-- Botones por estado -->
 <!-- Botones por estado -->
 <div class="flex flex-wrap gap-2 mb-4">
-    @if($estado === 'PENDIENTE' || $estado === 'ASIGNADO' || $estado === 'EN PROCESO')
-        <button wire:click="$set('modalSubirArchivoDiseno', true)"
-            class="px-4 py-2 rounded-md bg-amber-300 text-amber-900 hover:bg-amber-400 transition font-semibold shadow-sm">
-            Subir arte
-        </button>
-    @endif
 
-    @if($estado === 'EN PROCESO')
-        <button wire:click="$set('modalOpen', true)"
-            class="px-4 py-2 rounded-md bg-yellow-300 text-yellow-900 hover:bg-yellow-400 transition font-semibold shadow-sm">
-            Subir Archivo de Diseño
-        </button>
-    @endif
+    {{-- Añadir la validacion si el proyecto no tiene archivos iniciales permitir subir arte al usuario  cliente--}}
+    @can('proyectodiseñoSubirArte')
+           @if($estado === 'PENDIENTE' || $estado === 'ASIGNADO' || $estado === 'EN PROCESO')
+                <button wire:click="$set('modalSubirArchivoDiseno', true)"
+                    class="px-4 py-2 rounded-md bg-amber-300 text-amber-900 hover:bg-amber-400 transition font-semibold shadow-sm">
+                    Subir arte
+                </button>
+            @endif 
+    @endcan
 
+
+    {{-- si esta en proceso y aparte eres diseñador --}}
+    @can('proyectodiseñoSubirArchivoDiseño')
+        @if($estado === 'EN PROCESO')
+            <button wire:click="$set('modalOpen', true)"
+                class="px-4 py-2 rounded-md bg-yellow-300 text-yellow-900 hover:bg-yellow-400 transition font-semibold shadow-sm">
+                Subir Archivo de Diseño
+            </button>
+        @endif 
+    @endcan
+
+
+
+    {{-- si eres cliente o admin --}}
     @if($estado === 'REVISION')
-        <button wire:click="$set('modalAprobar', true)"
-            class="px-4 py-2 rounded-md bg-green-300 text-green-900 hover:bg-green-400 transition font-semibold shadow-sm">
-            Aprobar Diseño
-        </button>
+        
+        @can('proyectodiseñoAprobarDiseño')
+            <button wire:click="$set('modalAprobar', true)"
+                class="px-4 py-2 rounded-md bg-green-300 text-green-900 hover:bg-green-400 transition font-semibold shadow-sm">
+                Aprobar Diseño
+            </button>        
+        @endcan
 
-        <button wire:click="$set('modalRechazar', true)"
-            class="px-4 py-2 rounded-md bg-rose-300 text-rose-900 hover:bg-rose-400 transition font-semibold shadow-sm">
-            Rechazar Diseño
-        </button>
 
-        <button wire:click="$set('modalConfirmarMuestra', true)"
-            class="px-4 py-2 rounded-md bg-orange-300 text-orange-900 hover:bg-orange-400 transition font-semibold shadow-sm">
-            Crear Muestra
-        </button>
+        @can('proyectodiseñoRechazarDiseño')
+            <button wire:click="$set('modalRechazar', true)"
+                class="px-4 py-2 rounded-md bg-rose-300 text-rose-900 hover:bg-rose-400 transition font-semibold shadow-sm">
+                Rechazar Diseño
+            </button>            
+        @endcan
+
+        @can('proyectodiseñoCrearMuestra')
+                <button wire:click="$set('modalConfirmarMuestra', true)"
+                    class="px-4 py-2 rounded-md bg-orange-300 text-orange-900 hover:bg-orange-400 transition font-semibold shadow-sm">
+                    Crear Muestra
+                </button>
+        @endcan
+
+
+
     @endif
 </div>
 

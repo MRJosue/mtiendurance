@@ -13,9 +13,9 @@
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <div class="grid grid-cols-2 gap-4">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg h-full min-h-0">
+                <div class="p-6 text-gray-900 dark:text-gray-100 h-full min-h-0">
+                    <div class="grid grid-cols-2 gap-4 h-full min-h-0">
                         
                         <!-- Lado izquierdo: Último archivo -->
                         <div>
@@ -52,12 +52,12 @@
                                     :class="tab === 'tareas' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'" 
                                     class="py-2 px-4 font-medium focus:outline-none"
                                 >
-                                   Tareas del Diseño
+                                    Tareas del Proyecto
                                 </button>
                             </div>
 
                             <!-- Contenido Detalles -->
-                            <div x-show="tab === 'detalles'" x-cloak class="space-y-4">
+                            <div x-show="tab === 'detalles'" x-cloak class="flex flex-col h-full min-h-0 overflow-hidden">
                                 <div class="grid grid-cols-2 items-center text-justify">
                                     <h2 class="text-2xl font-bold">Detalles del Proyecto </h2>
                                     <h3 class="text-sm  font-bold">ID:{{ $proyecto->id }}</h3>
@@ -120,37 +120,21 @@
 
                             </div>
 
-
-
-           
-
                             <!-- Contenido Chat -->
-                            <div x-show="tab === 'chat'" x-cloak>
+                            <div x-show="tab === 'chat'" x-cloak
+                                class="flex flex-col flex-1 min-h-0 p-5"><!-- ★ -->
                                 <h2 class="text-2xl font-bold mb-4">Chat del Proyecto</h2>
-                                    <div
-                                        class="h-[500px] max-h-[80vh] w-full bg-white dark:bg-gray-700 rounded-lg shadow-md p-4 flex justify-center items-center overflow-hidden"
-                                        wire:poll.2s
-                                    >
-                                        <livewire:chat-component :proyecto-id="$proyecto->id" />
-                                    </div>
+
+                                <div wire:poll.2s
+                                    class="flex-1 min-h-0 flex flex-col overflow-hidden
+                                            bg-white dark:bg-gray-700 rounded-lg shadow-md p-4"><!-- ★ -->
+                                    <livewire:chat-component :proyecto-id="$proyecto->id" />
+                                </div>
                             </div>
-
                             <!-- Contenido Tareas -->
-                            <div x-show="tab === 'tareas'" x-cloak>
+                            <div x-show="tab === 'tareas'" x-cloak class="flex flex-col h-full min-h-0 overflow-hidden">
                                 <h2 class="text-2xl font-bold mb-4">Tareas del Diseño</h2>
-
-                                <!-- Ejemplo de listado/gestor de tareas -->
-                                {{-- Puedes cambiar el componente o el contenido según tu implementación --}}
-                                    <P>SECCION DE LA TAREAS DEL DISEÑO</P>
-                                    <P>Se necesita u componente de livie wire que evalue si existen tareas de diseño </P>
-                                    <P>En caso de que no exista permitir crear y asignar tarea</P>
-                                    <p>En caso de que el </p>
-                                {{-- Si aún no tienes un componente, deja un placeholder
-                                <div class="p-4 rounded-lg bg-gray-100 dark:bg-gray-800 text-center">
-                                    <p class="text-gray-500 dark:text-gray-400">
-                                        ¡Próximamente módulo de tareas!
-                                    </p>
-                                </div> --}}
+                                    <livewire:proyectos.tareas-diseno :proyecto-id="$proyecto->id" />
                             </div>
 
                         </div> <!-- Fin columna derecha -->

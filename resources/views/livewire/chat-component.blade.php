@@ -1,4 +1,6 @@
-<div class="chat-container flex flex-col h-full">
+
+<div class="chat-container flex flex-col h-full w-full min-h-0">
+   
     <!-- Lista de mensajes -->
     <div id="messages" class="flex-grow overflow-y-auto bg-gray-100 p-4">
         @foreach ($mensajes as $mensaje)
@@ -13,11 +15,11 @@
     </div>
 
     <!-- Entrada de texto -->
-    <div class="chat-input mt-2 border-t pt-2 bg-white dark:bg-gray-800">
+    <div class="border-t pt-2 bg-white dark:bg-gray-800 flex-none">
         <form wire:submit.prevent="enviarMensaje" class="flex">
             <input type="text" wire:model="mensaje"
                    class="flex-grow border rounded-l px-4 py-2"
-                   placeholder="Escribe tu mensaje...">
+                   placeholder="Escribe tu mensaje…">
             <button type="submit"
                     class="bg-blue-500 text-white px-4 py-2 rounded-r">
                 Enviar
@@ -30,23 +32,16 @@
 
     @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', () => {
             const scrollToBottom = () => {
-                const messagesContainer = document.getElementById('messages');
-                if (messagesContainer) {
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                }
+                const box = document.getElementById('messages');
+                if (box) box.scrollTop = box.scrollHeight;
             };
 
             window.Echo.channel('public-chat')
-                .listen('NewChatMessage', (e) => {
-                    Livewire.dispatch('actualizarMensajes');
-                    setTimeout(scrollToBottom, 500);
-                });
+                .listen('NewChatMessage', () => Livewire.dispatch('actualizarMensajes'));
 
-            Livewire.on('actualizarMensajes', () => {
-                setTimeout(scrollToBottom, 500);
-            });
+            Livewire.on('actualizarMensajes', () => setTimeout(scrollToBottom, 100));
 
             scrollToBottom();
         });

@@ -85,7 +85,7 @@ class Tareasdisenio extends Component
             $this->mostrarModalConfirmacion = true;
             $this->proyectoPendienteConfirmacion = $tarea->proyecto;
         } else {
-            return redirect()->route('disenio.disenio_detalle', $proyectoId);
+            return redirect()->route('proyecto.show', $proyectoId);
         }
     }
 
