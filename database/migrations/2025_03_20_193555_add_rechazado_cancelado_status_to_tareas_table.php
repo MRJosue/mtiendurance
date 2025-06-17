@@ -9,34 +9,37 @@ return new class extends Migration
 {
     public function up()
     {
-        // Asegurar que todos los valores en 'estado' sean válidos antes de cambiar la estructura
+        // Asegura que no haya valores inválidos antes del cambio
         DB::statement("
             UPDATE tareas 
             SET estado = 'PENDIENTE' 
             WHERE estado NOT IN ('PENDIENTE', 'EN PROCESO', 'COMPLETADA', 'RECHAZADO', 'CANCELADO')
         ");
 
-        Schema::table('tareas', function (Blueprint $table) {
-            // Modificar la columna estado para incluir "RECHAZADO" y "CANCELADO"
-            $table->enum('estado', [
+        // Modifica el tipo ENUM directamente en SQL
+        DB::statement("
+            ALTER TABLE tareas 
+            MODIFY estado ENUM(
                 'PENDIENTE', 'EN PROCESO', 'COMPLETADA', 'RECHAZADO', 'CANCELADO'
-            ])->default('PENDIENTE')->change();
-        });
+            ) DEFAULT 'PENDIENTE'
+        ");
     }
 
     public function down()
     {
-        // Restaurar los valores anteriores, eliminando "RECHAZADO" y "CANCELADO"
+        // Normaliza los datos antes de revertir el enum
         DB::statement("
             UPDATE tareas 
             SET estado = 'PENDIENTE' 
             WHERE estado NOT IN ('PENDIENTE', 'EN PROCESO', 'COMPLETADA')
         ");
 
-        Schema::table('tareas', function (Blueprint $table) {
-            $table->enum('estado', [
+        // Revertir el ENUM al estado anterior
+        DB::statement("
+            ALTER TABLE tareas 
+            MODIFY estado ENUM(
                 'PENDIENTE', 'EN PROCESO', 'COMPLETADA'
-            ])->default('PENDIENTE')->change();
-        });
+            ) DEFAULT 'PENDIENTE'
+        ");
     }
 };

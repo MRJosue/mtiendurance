@@ -116,16 +116,16 @@ class DatabaseSeeder extends Seeder
 
         ]);
 
-        // 1. Sembrar empresas
-        $this->call(EmpresaSeeder::class);
+        // // 1. Sembrar empresas
+        // $this->call(EmpresaSeeder::class);
 
-        // 2. Sembrar sucursales (necesita que existan empresas)
-        $this->call(SucursalSeeder::class);
+        // // 2. Sembrar sucursales (necesita que existan empresas)
+        // $this->call(SucursalSeeder::class);
 
-        // 3. Sembrar usuarios: clientes principales y subordinados
-        $this->call(UsuarioSeeder::class);
+        // // 3. Sembrar usuarios: clientes principales y subordinados
+        // $this->call(UsuarioSeeder::class);
 
-        // Si tienes otros seeders, agrégalos aquí debajo en el orden apropiado
-        $this->call(DireccionesSeeder::class);
+        // // Si tienes otros seeders, agrégalos aquí debajo en el orden apropiado
+        // $this->call(DireccionesSeeder::class);
     }
 }

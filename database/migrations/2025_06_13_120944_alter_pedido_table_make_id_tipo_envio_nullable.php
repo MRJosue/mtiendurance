@@ -3,6 +3,8 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+
 
 return new class extends Migration
 {
@@ -26,11 +28,14 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('pedido', function (Blueprint $table) {
-            // Si planeas dejarlo siempre nullable,
-            // puedes dejar este método vacío o restaurar el NOT NULL:
-            $table->unsignedBigInteger('id_tipo_envio')
-                  ->nullable(false)
-                  ->change();
+                // Asigna un valor por defecto a las filas con NULL
+                DB::statement("UPDATE pedido SET id_tipo_envio = 1 WHERE id_tipo_envio IS NULL");
+
+                Schema::table('pedido', function (Blueprint $table) {
+                    $table->unsignedBigInteger('id_tipo_envio')
+                        ->nullable(false)
+                        ->change();
+                });
         });
     }
 };

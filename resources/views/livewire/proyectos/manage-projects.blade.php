@@ -146,7 +146,8 @@
                                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Usuario</th>
                                     @endcan
                                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Pedidos</th>
-                                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Estado</th>
+                                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Estado del Disño</th>
+                         
                                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
                                 </tr>
                             </thead>
@@ -186,6 +187,7 @@
                                             @endif
                                         </td>
                                         <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->estado ?? 'Sin estado' }}</td>
+                                     
                                         <td class="border-b px-4 py-2 text-gray-700 text-sm">
                                             <a href="{{ route('proyecto.show', $project->id) }}" class="text-blue-500 hover:underline">
                                                 Ver detalles

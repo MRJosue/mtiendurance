@@ -22,9 +22,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('tareas', function (Blueprint $table) {
-            // Eliminar la columna si se revierte la migración
-            $table->dropColumn('disenio_flag_first_proceso');
-        });
+        if (Schema::hasColumn('tareas', 'disenio_flag_first_proceso')) {
+            Schema::table('tareas', function (Blueprint $table) {
+                // Eliminar la columna si se revierte la migración
+                $table->dropColumn('disenio_flag_first_proceso');
+            });
+        }
     }
 };

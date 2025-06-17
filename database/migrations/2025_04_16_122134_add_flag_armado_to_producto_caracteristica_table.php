@@ -24,8 +24,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('producto_caracteristica', function (Blueprint $table) {
-            $table->dropColumn('flag_armado');
-        });
+
+        if (Schema::hasColumn('producto_caracteristica', 'flag_armado')) {
+            Schema::table('producto_caracteristica', function (Blueprint $table) {
+                $table->dropColumn('flag_armado');
+            });
+        }
     }
 };

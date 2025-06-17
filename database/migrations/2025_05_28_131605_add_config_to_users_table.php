@@ -26,7 +26,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('config');
+            if (Schema::hasColumn('users', 'user_can_sel_preproyectos')) {
+                $table->dropColumn('user_can_sel_preproyectos');
+            }
         });
     }
 };

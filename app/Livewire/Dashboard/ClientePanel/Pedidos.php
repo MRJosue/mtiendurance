@@ -47,13 +47,13 @@ class Pedidos extends Component
             $query->whereHas('proyecto', fn($q) => $q->where('usuario_id', auth()->id()));
         }
 
-        if ($this->mostrarSoloNoAprobados) {
-            // Proyectos cuyo diseño NO esté aprobado
-            $query->whereHas('proyecto', fn($q) => $q->where('estado', '!=', 'DISEÑO APROBADO'));
-        } else {
-            // Solo los aprobados
-            $query->whereHas('proyecto', fn($q) => $q->where('estado', 'DISEÑO APROBADO'));
-        }
+        // if ($this->mostrarSoloNoAprobados) {
+        //     // Proyectos cuyo diseño NO esté aprobado
+        //     $query->whereHas('proyecto', fn($q) => $q->where('estado', '!=', 'DISEÑO APROBADO'));
+        // } else {
+        //     // Solo los aprobados
+        //     $query->whereHas('proyecto', fn($q) => $q->where('estado', 'DISEÑO APROBADO'));
+        // }
 
         return view('livewire.dashboard.cliente-panel.pedidos', [
             'pedidos' => $query->orderByDesc('created_at')->paginate(10),

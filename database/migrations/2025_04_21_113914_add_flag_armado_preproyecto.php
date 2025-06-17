@@ -24,8 +24,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('pre_proyectos', function (Blueprint $table) {
-            $table->dropColumn('flag_armado');
-        });
+        if (Schema::hasColumn('pre_proyectos', 'flag_armado')) {
+            Schema::table('pre_proyectos', function (Blueprint $table) {
+                $table->dropColumn('flag_armado');
+            });
+        }
     }
 };

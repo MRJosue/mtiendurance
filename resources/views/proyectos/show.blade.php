@@ -92,12 +92,12 @@
                                         : json_decode($proyecto->caracteristicas_sel, true);
                                 @endphp
 
-                                <div>
+                                <div class="p-3" >
                                     <p class="text-lg font-semibold">Categoría:</p>
                                     <p>{{ $categoria['nombre'] ?? 'Sin categoría' }}</p>
                                 </div>
 
-                                <div>
+                                <div class="p-3">
                                     <p class="text-lg font-semibold">Producto:</p>
                                     <p>{{ $producto['id'] ?? '' }} {{ $producto['nombre'] ?? 'Sin producto' }}</p>
                                 </div>

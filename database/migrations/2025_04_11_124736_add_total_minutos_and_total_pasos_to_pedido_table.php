@@ -18,7 +18,19 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('pedido', function (Blueprint $table) {
-            $table->dropColumn(['total_minutos', 'total_pasos', 'resumen_tiempos']);
+            $columns = Schema::getColumnListing('pedido');
+
+            if (in_array('total_minutos', $columns)) {
+                $table->dropColumn('total_minutos');
+            }
+
+            if (in_array('total_pasos', $columns)) {
+                $table->dropColumn('total_pasos');
+            }
+
+            if (in_array('resumen_tiempos', $columns)) {
+                $table->dropColumn('resumen_tiempos');
+            }
         });
     }
 };

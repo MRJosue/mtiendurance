@@ -106,10 +106,14 @@
                     <tr>
                         <th class="px-4 py-2">ID Proyecto</th>
                         <th class="px-4 py-2">ID Pedido</th>
+                        <th class="px-4 py-2">Nombre del proyecto</th>
+                        <th class="px-4 py-2">Cliente</th>
                         <th class="px-4 py-2">Producto / Categoría</th>
                         <th class="px-4 py-2">Características</th>
                         <th class="px-4 py-2">Total</th>
-                        <th class="px-4 py-2">Estado</th>
+                        <th class="px-4 py-2">Estado del Diseño</th>
+                        <th class="px-4 py-2">Estado del Pedido</th>
+                        
                         <th class="px-4 py-2">Producción</th>
                         <th class="px-4 py-2">Entrega</th>
                         <th class="px-4 py-2">Acciones</th>
@@ -120,24 +124,36 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-2 font-semibold">{{ $pedido->proyecto_id }}</td>
                             <td class="px-4 py-2 font-semibold">{{ $pedido->id }}</td>
+                            <td class="px-4 py-2 font-bold">{{$pedido->proyecto->nombre}}</td>
+                            <td class="px-4 py-2 font-bold">{{$pedido->usuario->name ?? 'Sin cliente'}}</td>
                             <td class="px-4 py-2">
                                 <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
                                 <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
                             </td>
-                            <td class="px-4 py-2">
+                            <td class="px-4 py-2 align-top">
                                 @if($pedido->pedidoCaracteristicas->isNotEmpty())
-                                    <ul class="list-disc list-inside text-xs">
-                                        @foreach($pedido->pedidoCaracteristicas as $caracteristica)
-                                            <li>
-                                                {{ $caracteristica->caracteristica->nombre ?? 'Sin nombre' }}
+                                    <ul class="list-none space-y-1 text-xs">
+                                        @foreach($pedido->pedidoCaracteristicas as $index => $caracteristica)
+                                            <li x-data="{ abierto_{{ $index }}: false }">
+                                                <button 
+                                                    @click="abierto_{{ $index }} = !abierto_{{ $index }}" 
+                                                    class="flex items-center gap-1 text-left w-full text-gray-700 hover:text-blue-600 transition"
+                                                >
+                                                    <svg :class="{ 'rotate-90': abierto_{{ $index }} }" class="w-4 h-4 transform transition-transform duration-200 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                                    </svg>
+                                                    <span>{{ $caracteristica->caracteristica->nombre ?? 'Sin nombre' }}</span>
+                                                </button>
+
                                                 @php
                                                     $opciones = $pedido->pedidoOpciones->filter(fn($op) =>
                                                         $op->opcion &&
                                                         $op->opcion->caracteristicas->pluck('id')->contains($caracteristica->caracteristica_id)
                                                     );
                                                 @endphp
+
                                                 @if($opciones->isNotEmpty())
-                                                    <ul class="list-inside text-gray-500 ml-3">
+                                                    <ul x-show="abierto_{{ $index }}" x-transition class="ml-6 mt-1 list-disc text-gray-500">
                                                         @foreach($opciones as $opcion)
                                                             <li>{{ $opcion->opcion->nombre ?? 'Sin opción' }}</li>
                                                         @endforeach
@@ -151,6 +167,27 @@
                                 @endif
                             </td>
                             <td class="px-4 py-2">{{ $pedido->total }} piezas</td>
+
+                            <td class="px-4 py-2">
+                                @php
+                                    $estado = strtoupper($pedido->proyecto->estado);
+                                    $colores = [
+                                        'PENDIENTE'         => 'bg-yellow-400 text-black',     // 🟡 En espera de atención
+                                        'ASIGNADO'          => 'bg-blue-500 text-white',       // 🔵 Ya hay responsable
+                                        'EN PROCESO'        => 'bg-orange-500 text-white',     // 🟠 En ejecución
+                                        'REVISION'          => 'bg-purple-600 text-white',     // 🟣 Validación en curso
+                                        'DISEÑO APROBADO'   => 'bg-emerald-600 text-white',    // ✅ Diseño final listo
+                                        'RECHAZADO'         => 'bg-red-600 text-white',        // ❌ Cambio o corrección
+                                        'CANCELADO'         => 'bg-gray-500 text-white',       // ⚫ Terminado sin continuar
+                                    ];
+                                    $claseColor = $colores[$estado] ?? 'bg-yellow-400';
+                                @endphp
+
+                                <span class="px-2 py-1 rounded text-xs text-white font-semibold {{ $claseColor }}">
+                                    {{ $estado }}
+                                </span>
+                            </td>
+
                             <td class="px-4 py-2">
                                 <span class="px-2 py-1 rounded text-xs text-white"
                                       style="background-color:
@@ -162,6 +199,11 @@
                                       {{ strtoupper($pedido->estado) }}
                                 </span>
                             </td>
+
+
+
+
+
                             <td class="px-4 py-2">{{ $pedido->fecha_produccion ?? 'No definida' }}</td>
                             <td class="px-4 py-2">{{ $pedido->fecha_entrega ?? 'No definida' }}</td>
                             <td>

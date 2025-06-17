@@ -24,8 +24,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('pedido', function (Blueprint $table) {
-            $table->dropColumn('flag_aprobar_sin_fechas');
-        });
+        if (Schema::hasColumn('pedido', 'flag_aprobar_sin_fechas')) {
+            Schema::table('pedido', function (Blueprint $table) {
+                $table->dropColumn('flag_aprobar_sin_fechas');
+            });
+        }
     }
 };

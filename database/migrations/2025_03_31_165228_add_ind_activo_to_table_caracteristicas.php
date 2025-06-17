@@ -23,9 +23,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('caracteristicas', function (Blueprint $table) {
-            //
-            $table->dropColumn('ind_activo');
-        });
+
+         if (Schema::hasColumn('caracteristicas', 'ind_activo')) {
+            Schema::table('caracteristicas', function (Blueprint $table) {
+                //
+                $table->dropColumn('ind_activo');
+            });
+         }
     }
 };

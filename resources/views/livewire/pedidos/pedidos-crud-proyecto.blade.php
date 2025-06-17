@@ -319,7 +319,8 @@
 
                 @if($pedido)
                     <ul class="text-sm text-gray-600 space-y-1 mb-4">
-                        <li><strong>Cliente:</strong> {{ $pedido->cliente->nombre_empresa ?? 'Sin cliente' }}</li>
+                        {{-- $pedido->cliente->nombre_empresa --}}
+                        <li><strong>Cliente:</strong> {{ $pedido->usuario->name ?? 'Sin cliente' }}</li>
                         <li><strong>Total:</strong> {{ $pedido->total }}</li>
                         <li><strong>Producción:</strong> {{ $pedido->fecha_produccion ?? 'No definida' }}</li>
                         <li><strong>Embarque:</strong> {{ $pedido->fecha_embarque ?? 'No definida' }}</li>

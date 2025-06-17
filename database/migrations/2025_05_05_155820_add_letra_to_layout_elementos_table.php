@@ -13,8 +13,10 @@ return new class extends Migration
     }
 
     public function down(): void {
+    if (Schema::hasColumn('layout_elementos', 'letra')) {
         Schema::table('layout_elementos', function (Blueprint $table) {
             $table->dropColumn('letra');
         });
+    }
     }
 };

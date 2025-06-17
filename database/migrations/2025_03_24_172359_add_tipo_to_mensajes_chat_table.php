@@ -24,8 +24,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (Schema::hasColumn('mensajes_chat', 'tipo')) {
         Schema::table('mensajes_chat', function (Blueprint $table) {
             $table->dropColumn('tipo');
         });
+        }
     }
 };

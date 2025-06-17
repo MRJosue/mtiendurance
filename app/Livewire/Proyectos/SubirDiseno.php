@@ -105,6 +105,7 @@ class SubirDiseno extends Component
         $this->registrarEventoEnChat("Se subió un nuevo archivo de diseño y se cambió el estado a REVISION.");
 
         $this->dispatch('estadoActualizado');
+        $this->dispatch('archivoSubido');
         $this->cargarEstado();
 
         $this->reset(['archivo', 'comentario', 'modalOpen']);
@@ -326,10 +327,10 @@ class SubirDiseno extends Component
     
     protected function rulesArchivo()
     {
-        return [
-            'archivo' => 'required|file|max:10240',
-            'comentario' => 'nullable|string|max:500',
-        ];
+            return [
+                'archivo' => 'required|file|max:10240|mimes:jpg,jpeg,png,webp,svg,ai,psd,pdf,zip',
+                'comentario' => 'nullable|string|max:500',
+            ];
     }
 
     protected function rulesPedido()

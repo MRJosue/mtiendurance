@@ -29,13 +29,21 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('proyecto_estados', function (Blueprint $table) {
-            // Eliminar las columnas agregadas si se revierte la migración
-            $table->dropColumn('comentario');
-            $table->dropColumn('url');
-            $table->dropColumn('last_uploaded_file_id');
+        $columns = Schema::getColumnListing('proyecto_estados');
 
-            
+        Schema::table('proyecto_estados', function (Blueprint $table) use ($columns) {
+            if (in_array('comentario', $columns)) {
+                $table->dropColumn('comentario');
+            }
+
+            if (in_array('url', $columns)) {
+                $table->dropColumn('url');
+            }
+
+            if (in_array('last_uploaded_file_id', $columns)) {
+                $table->dropColumn('last_uploaded_file_id');
+            }
         });
     }
+
 };

@@ -40,21 +40,47 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('pedido', function (Blueprint $table) {
-            // Eliminando las columnas agregadas en up()
-            $table->dropColumn([
-                'direccion_fiscal_id',
-                'direccion_fiscal',
-                'direccion_entrega_id',
-                'direccion_entrega',
-                'fecha_produccion',
-                'fecha_embarque',
-                'fecha_entrega',
-                'tipo',
-                'estado',
-                'estado_produccion'
-            ]);
 
+            if (Schema::hasColumn('pedido', 'direccion_fiscal_id')) {
+                $table->dropColumn('direccion_fiscal_id');
+            }
 
+            if (Schema::hasColumn('pedido', 'direccion_fiscal')) {
+                $table->dropColumn('direccion_fiscal');
+            }
+
+            if (Schema::hasColumn('pedido', 'direccion_entrega_id')) {
+                $table->dropColumn('direccion_entrega_id');
+            }
+
+            if (Schema::hasColumn('pedido', 'direccion_entrega')) {
+                $table->dropColumn('direccion_entrega');
+            }
+
+            if (Schema::hasColumn('pedido', 'fecha_produccion')) {
+                $table->dropColumn('fecha_produccion');
+            }
+
+            if (Schema::hasColumn('pedido', 'fecha_embarque')) {
+                $table->dropColumn('fecha_embarque');
+            }
+
+            if (Schema::hasColumn('pedido', 'fecha_entrega')) {
+                $table->dropColumn('fecha_entrega');
+            }
+
+            if (Schema::hasColumn('pedido', 'tipo')) {
+                $table->dropColumn('tipo');
+            }
+
+            if (Schema::hasColumn('pedido', 'estado')) {
+                $table->dropColumn('estado');
+            }
+
+            if (Schema::hasColumn('pedido', 'estado_produccion')) {
+                $table->dropColumn('estado_produccion');
+            }
         });
     }
+
 };

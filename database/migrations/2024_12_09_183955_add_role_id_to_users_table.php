@@ -27,11 +27,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-                        // Eliminar la relación y la columna role_id
-                        $table->dropForeign(['role_id']);
-                        $table->dropColumn('role_id');
+        if (Schema::hasColumn('users', 'role_id')) {
+                Schema::table('users', function (Blueprint $table) {
+                                // Eliminar la relación y la columna role_id
+                                $table->dropForeign(['role_id']);
+                                $table->dropColumn('role_id');
 
-        });
+                });
+        }
     }
 };

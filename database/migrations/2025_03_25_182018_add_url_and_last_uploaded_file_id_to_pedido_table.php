@@ -26,8 +26,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+     if (Schema::hasColumn('pedido', 'url')) {
         Schema::table('pedido', function (Blueprint $table) {
             $table->dropColumn(['url', 'last_uploaded_file_id']);
         });
+      }
     }
 };

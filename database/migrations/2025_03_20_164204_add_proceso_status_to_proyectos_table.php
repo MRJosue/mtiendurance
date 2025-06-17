@@ -14,31 +14,33 @@ return new class extends Migration
         DB::statement("
             UPDATE proyectos 
             SET estado = 'PENDIENTE' 
-            WHERE estado NOT IN ('PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION', 'DISEÑO APROBADO', 'RECHAZADO')
+            WHERE estado NOT IN ('PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION', 'DISEÑO APROBADO', 'DISEÑO RECHAZADO', 'CANCELADO')
         ");
 
-        Schema::table('proyectos', function (Blueprint $table) {
-            // Modificar la columna estado para aceptar el nuevo valor 'PROCESO'
-            $table->enum('estado', [
-                'PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION', 'DISEÑO APROBADO', 'RECHAZADO'
-            ])->default('PENDIENTE')->change();
-        });
+        // Usar SQL para modificar el ENUM directamente
+        DB::statement("
+            ALTER TABLE proyectos 
+            MODIFY estado ENUM(
+                'PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION', 'DISEÑO APROBADO', 'DISEÑO RECHAZADO', 'CANCELADO'
+            ) DEFAULT 'PENDIENTE'
+        ");
     }
 
     public function down()
     {
-        // Restaurar los valores anteriores
+        // Asegurar valores válidos para revertir
         DB::statement("
             UPDATE proyectos 
             SET estado = 'PENDIENTE' 
             WHERE estado NOT IN ('PENDIENTE', 'ASIGNADO', 'REVISION', 'DISEÑO APROBADO')
         ");
 
-        Schema::table('proyectos', function (Blueprint $table) {
-            // Restaurar los valores anteriores en la columna estado (sin "PROCESO")
-            $table->enum('estado', [
+        // Revertir ENUM al estado anterior (sin 'EN PROCESO' ni 'RECHAZADO')
+        DB::statement("
+            ALTER TABLE proyectos 
+            MODIFY estado ENUM(
                 'PENDIENTE', 'ASIGNADO', 'REVISION', 'DISEÑO APROBADO'
-            ])->default('PENDIENTE')->change();
-        });
+            ) DEFAULT 'PENDIENTE'
+        ");
     }
 };

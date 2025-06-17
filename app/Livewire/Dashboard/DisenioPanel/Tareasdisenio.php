@@ -110,7 +110,7 @@ class Tareasdisenio extends Component
         ]);
 
         $this->mostrarModalConfirmacion = false;
-        return redirect()->route('disenio.disenio_detalle', $proyecto->id);
+        return redirect()->route('proyecto.show', $proyecto->id);
     }
 
     public function cancelarConfirmacion()
