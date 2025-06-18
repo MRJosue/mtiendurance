@@ -109,7 +109,7 @@ class SubirDiseno extends Component
         $this->cargarEstado();
 
         $this->reset(['archivo', 'comentario', 'modalOpen']);
-        session()->flash('message', 'Archivo subido correctamente.');
+        session()->flash('message', 'Archivo cargado correctamente.');
     }
 
     public function aprobarDiseno()
