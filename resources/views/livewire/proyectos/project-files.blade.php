@@ -41,7 +41,7 @@
                     <form wire:submit.prevent="uploadFile" class="mb-6 flex flex-wrap items-center gap-4">
                         <input type="file" wire:model="archivo" class="block w-full md:w-auto border rounded px-4 py-2">
 
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                        <button type="submit" class=" hover:bg-blue-700  px-4 py-2 rounded">
                             Subir
                         </button>
                         @error('archivo')
