@@ -31,7 +31,7 @@
     </div>
 
     @push('scripts')
-    <script>
+    {{-- <script>
         document.addEventListener('DOMContentLoaded', () => {
             const scrollToBottom = () => {
                 const box = document.getElementById('messages');
@@ -45,6 +45,6 @@
 
             scrollToBottom();
         });
-    </script>
+    </script> --}}
     @endpush
 </div>
