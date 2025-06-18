@@ -6,7 +6,6 @@
     <livewire:proyectos.project-files :proyecto-id="$this->proyectoId" />
   </div>
 
-
   <div class="mb-6">
     @if ($ultimoArchivo)
       @php
@@ -53,8 +52,8 @@
       <p class="text-gray-500">No se encontraron archivos para este proyecto.</p>
     @endif
   </div>
+</div>
 
-  <!-- 👇 Este script ahora está fuera del @if -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     window.expandirImagen = () => {
@@ -140,4 +139,6 @@
     }
   }
 </script>
-</div>
+
+
+
