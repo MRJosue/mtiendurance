@@ -296,7 +296,7 @@
         </div>
 
 
-        @hasanyrole('admin|cliente')
+        @hasanyrole('admin|cliente|cliente_principal|cliente_subordinado')
         <!-- Botón de Guardar Cambios -->
         <button type="submit" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
             Guardar Cambios
