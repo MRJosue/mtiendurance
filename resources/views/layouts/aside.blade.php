@@ -91,7 +91,7 @@
                         <a href="{{ route('disenio.admin_tarea') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Tareas Diseño</a>
                         {{-- @endcan --}}
                          {{-- @can('asidediseniodesplegableAdminTareas ') --}}
-                        <a href="{{ route('disenio.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Diseño</a>
+                        <a href="{{ route('disenio.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Administrador de Diseño</a>
                         {{-- @endcan --}}
                     </div>
                 </div>
