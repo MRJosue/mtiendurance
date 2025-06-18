@@ -60,16 +60,25 @@
                             <div x-show="tab === 'detalles'" x-cloak class="flex flex-col h-full min-h-0 overflow-hidden">
                                 <div class="grid grid-cols-2 items-center text-justify">
                                     <h2 class="text-2xl font-bold">Detalles del Proyecto </h2>
-                                    <h3 class="text-sm  font-bold">ID:{{ $proyecto->id }}</h3>
+                                   
                                 </div>
                                 
 
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3">
                                     <div>
                                         <p class="text-lg">
-                                            <span class="font-semibold">Nombre:</span> {{ $proyecto->nombre }}
+                                            <span class="font-semibold">Cliente:</span> {{ $proyecto->user->name }}
                                         </p>
                                     </div>
+                                    <div>
+                                        <p class="text-lg">
+                                            <span class="font-semibold">Proyecto:</span> {{ $proyecto->nombre }} <span class="text-sm  font-bold">ID:{{ $proyecto->id }}</span> 
+                                        </p>
+                                    </div>
+
+
+
+
 
                                     <div class="sm:col-span-2">
                                         <p class="text-lg">

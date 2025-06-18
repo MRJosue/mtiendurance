@@ -89,6 +89,13 @@ class CreatePreProject extends Component
         'email' => '',
     ];
 
+    public $isUploading = false;
+
+    protected $listeners = [
+        'livewire-upload-start' => 'uploadStarted',
+        'livewire-upload-finish' => 'uploadFinished',
+        'livewire-upload-error' => 'uploadFinished',
+    ];
 
 
 
@@ -755,6 +762,17 @@ public function updatedDireccionEntregaId($value)
 {
     $this->direccion_entrega_id = (int) $value;
     $this->cargarTiposEnvio();
+}
+
+
+public function uploadStarted()
+{
+    $this->isUploading = true;
+}
+
+public function uploadFinished()
+{
+    $this->isUploading = false;
 }
 
 }
