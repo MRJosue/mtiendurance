@@ -157,7 +157,8 @@ class SubirDiseno extends Component
 
         $archivo = ArchivoProyecto::where('proyecto_id', $proyecto->id)->latest()->first();
 
-        $proyecto->estado = 'EN PROCESO';
+        // $proyecto->estado = 'EN PROCESO';
+        $proyecto->estado = 'DISEÑO RECHAZADO';
         $proyecto->save();
 
         Tarea::where('proyecto_id', $proyecto->id)->update(['estado' => 'RECHAZADO']);

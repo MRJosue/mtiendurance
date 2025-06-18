@@ -35,6 +35,14 @@ class ProjectTimeline extends Component
 
         if ($proyecto) {
             $this->estadoActual = $proyecto->estado;
+
+            if ($this->estadoActual === 'DISEÑO RECHAZADO') {
+                // Reemplazar 'EN PROCESO' por 'DISEÑO RECHAZADO'
+                $index = array_search('EN PROCESO', $this->estados);
+                if ($index !== false) {
+                    $this->estados[$index] = 'DISEÑO RECHAZADO';
+                }
+            }
         }
     }
 
