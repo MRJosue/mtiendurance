@@ -66,7 +66,7 @@ class ChatComponent extends Component
         ]);
 
         // Emitir el evento de nuevo mensaje
-        event(new NewChatMessage($mensaje));
+        //event(new NewChatMessage($mensaje));
 
         // Limpiar el campo de entrada después de enviar
         $this->mensaje = '';
