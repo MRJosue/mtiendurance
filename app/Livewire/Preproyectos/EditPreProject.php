@@ -99,6 +99,16 @@ class EditPreProject extends Component
     public $modoLectura = false;
     
 
+    public $isUploading = false;
+
+    protected $listeners = [
+        'livewire-upload-start' => 'uploadStarted',
+        'livewire-upload-finish' => 'uploadFinished',
+        'livewire-upload-error' => 'uploadFinished',
+    ];
+
+
+
     public function mount($preProyectoId)
     {
         $this->preProyectoId = $preProyectoId;
@@ -791,6 +801,17 @@ class EditPreProject extends Component
     {
         Log::debug('setReadOnlyMode');
         $this->dispatch('setReadOnlyMode');
+    }
+
+        
+    public function uploadStarted()
+    {
+        $this->isUploading = true;
+    }
+
+    public function uploadFinished()
+    {
+        $this->isUploading = false;
     }
 }
 

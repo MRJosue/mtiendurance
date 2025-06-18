@@ -159,10 +159,29 @@
         </div>
 
 
-        <!-- Subir Nuevos Archivos -->
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">Subir Nuevos Archivos</label>
-            <input type="file" wire:model="files" multiple class="w-full mt-1 border rounded-lg p-2"     @if($modoLectura) disabled @endif>
+        <div x-data="{ isUploading: @entangle('isUploading') }">
+            <!-- Spinner de carga -->
+            <template x-if="isUploading">
+                <div class="flex items-center justify-center my-4">
+                    <svg class="animate-spin h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+                        </path>
+                    </svg>
+                    <span class="ml-2 text-sm text-gray-600">Subiendo archivo...</span>
+                </div>
+            </template>
+
+            <!-- Descripciones de Archivos -->
+            @foreach ($files as $index => $file)
+                <div class="mb-2 p-2 border rounded-lg bg-gray-100">
+                    <p class="text-sm font-semibold">{{ $file->getClientOriginalName() }}</p>
+                    <label class="block text-xs text-gray-600">Descripción</label>
+                    <input type="text" wire:model="fileDescriptions.{{ $index }}" class="w-full border rounded-lg p-1 text-sm">
+                </div>
+            @endforeach
         </div>
 
         <!-- Vista previa de archivos nuevos -->
