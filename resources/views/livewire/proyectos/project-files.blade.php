@@ -43,7 +43,7 @@
 
                         <button
                             type="submit"
-                            class="w-full sm:w-auto px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                            class="w-full sm:w-auto px-4 py-2 text-white bg-blue-500 hover:bg-blue-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
                         >
                             Subir
                         </button>
