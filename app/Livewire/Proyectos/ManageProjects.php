@@ -18,8 +18,8 @@ class ManageProjects extends Component
 
 
         /* ---------- Props UI ---------- */
-    public array  $tabs      = ['PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION', 'DISEÑO APROBADO'];
-    public string $activeTab = 'PENDIENTE';              // tab inicial
+    public array  $tabs      = ['TODOS','PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION','DISEÑO RECHAZADO', 'DISEÑO APROBADO', 'CANCELADO'];
+    public string $activeTab = 'TODOS';              // tab inicial
  
 
     
@@ -27,7 +27,7 @@ class ManageProjects extends Component
     public $estadosSeleccionados =[];
 
         public $estados = [
-        'PENDIENTE', 'ASIGNADO', 'EN PROCESO','REVISION', 'DISEÑO APROBADO'
+        'PENDIENTE', 'ASIGNADO', 'EN PROCESO','REVISION', 'DISEÑO APROBADO','DISEÑO RECHAZADO', 'CANCELADO'
     ];
 
         public function buscarPorFiltros()
@@ -51,11 +51,17 @@ class ManageProjects extends Component
     }
 
 
-        public function updatedSelectAll(bool $value): void
+    public function updatedSelectAll(bool $value): void
     {
-        $this->selectedProjects = $value
-            ? Proyecto::where('estado', $this->activeTab)->pluck('id')->toArray()
-            : [];
+        if ($this->activeTab === 'TODOS') {
+            $this->selectedProjects = $value
+                ? Proyecto::pluck('id')->toArray()
+                : [];
+        } else {
+            $this->selectedProjects = $value
+                ? Proyecto::where('estado', $this->activeTab)->pluck('id')->toArray()
+                : [];
+        }
     }
 
     public function deleteSelected(): void
@@ -96,8 +102,11 @@ class ManageProjects extends Component
 
     public function render()
     {
-        $query = Proyecto::with(['user', 'pedidos.producto.categoria'])
-                  ->where('estado', $this->activeTab);
+        $query = Proyecto::with(['user', 'pedidos.producto.categoria']);
+
+        if ($this->activeTab !== 'TODOS') {
+            $query->where('estado', $this->activeTab);
+        }
 
         if (!auth()->user()->can('tablaProyectos-ver-todos-los-proyectos')) {
             $query->where('usuario_id', auth()->id());

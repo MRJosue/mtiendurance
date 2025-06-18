@@ -177,7 +177,7 @@
                                         'EN PROCESO'        => 'bg-orange-500 text-white',     // 🟠 En ejecución
                                         'REVISION'          => 'bg-purple-600 text-white',     // 🟣 Validación en curso
                                         'DISEÑO APROBADO'   => 'bg-emerald-600 text-white',    // ✅ Diseño final listo
-                                        'RECHAZADO'         => 'bg-red-600 text-white',        // ❌ Cambio o corrección
+                                        'DISEÑO RECHAZADO'  => 'bg-red-600 text-white',        // ❌ Cambio o corrección
                                         'CANCELADO'         => 'bg-gray-500 text-white',       // ⚫ Terminado sin continuar
                                     ];
                                     $claseColor = $colores[$estado] ?? 'bg-yellow-400';
