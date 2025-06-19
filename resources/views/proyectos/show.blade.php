@@ -17,13 +17,16 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100 h-full min-h-0">
                     <div class="grid grid-cols-2 gap-4 h-full min-h-0">
                         
-                        <!-- Lado izquierdo: Último archivo -->
-                        <div>
+                        <!-- Lado izquierdo: Último archivo y Subir Diseño centrados -->
+                        <div class="flex flex-col items-center justify-center  p-1 space-y-2">
+                            <!-- Componente que muestra el último archivo -->
                             <livewire:proyectos.ultimo-archivo :proyecto-id="$proyecto->id" />
 
-                            <div class="p-6 text-gray-900 dark:text-gray-100">
-                                    <livewire:proyectos.subir-diseno :proyecto-id="$proyecto->id" />
-                            </div>
+                            <!-- Componente para subir diseño -->
+                            <livewire:proyectos.subir-diseno :proyecto-id="$proyecto->id" />
+
+                            <livewire:proyectos.resume-estado :proyecto-id="$proyecto->id" />
+
 
                         </div>
 
@@ -152,6 +155,8 @@
 
 
                         </div> <!-- Fin columna derecha -->
+
+
 
                     </div> <!-- Fin grid -->
                 </div>
