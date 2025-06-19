@@ -142,6 +142,7 @@ class SubirDiseno extends Component
 
         $this->modalAprobar = false;
         $this->modalAprobarPedido = true; 
+        $this->dispatch('resumen_aprobacion');
 
         session()->flash('message', 'Diseño aprobado correctamente.');
     }

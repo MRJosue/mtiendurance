@@ -12,14 +12,25 @@ class ResumeEstado extends Component
     public bool $tieneAprobado = false;
     public ?proyecto_estados $registro = null;
 
+
+    protected $listeners = ['resumen_aprobacion' => 'cargarAprobacion'];
+    
+
     public function mount(int $proyectoId): void
     {
         $this->proyectoId = $proyectoId;
 
-        // Revisar si el proyecto está en estado "DISEÑO APROBADO"
+        $this->cargarAprobacion();
+
+    }
+
+    public function cargarAprobacion(): void
+    {
+        $this->tieneAprobado = false;
+        $this->registro = null;
+
         $proyecto = Proyecto::findOrFail($this->proyectoId);
         if ($proyecto->estado === 'DISEÑO APROBADO') {
-            // Obtener el registro de aprobación más reciente
             $this->registro = proyecto_estados::where('proyecto_id', $this->proyectoId)
                 ->where('estado', 'DISEÑO APROBADO')
                 ->with('usuario')
@@ -29,6 +40,7 @@ class ResumeEstado extends Component
             $this->tieneAprobado = (bool) $this->registro;
         }
     }
+
 
     public function render()
     {
