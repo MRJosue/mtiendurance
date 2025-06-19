@@ -5,7 +5,7 @@
         El proyecto aún no ha sido aprobado.
     </div>
 @else
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 m-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-2 m-2">
         <h3 class="text-xl font-semibold mb-4 text-center">Resumen de Aprobación de Diseño</h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
