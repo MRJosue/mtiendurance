@@ -46,14 +46,16 @@
                                 >
                                     Chat del Proyecto
                                 </button>
-
-                                <button 
-                                    @click="tab = 'tareas'" 
-                                    :class="tab === 'tareas' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'" 
-                                    class="py-2 px-4 font-medium focus:outline-none"
-                                >
-                                    Tareas del Proyecto
-                                </button>
+                                @can('proyectodiseñopestañaTareasDelProyecto')
+                                    <button 
+                                        @click="tab = 'tareas'" 
+                                        :class="tab === 'tareas' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'" 
+                                        class="py-2 px-4 font-medium focus:outline-none"
+                                    >
+                                        Tareas del Diseño
+                                    </button>
+                                @endcan
+ 
                             </div>
 
                             <!-- Contenido Detalles -->
@@ -140,11 +142,14 @@
                                     <livewire:chat-component :proyecto-id="$proyecto->id" />
                                 </div>
                             </div>
-                            <!-- Contenido Tareas -->
-                            <div x-show="tab === 'tareas'" x-cloak class="flex flex-col h-full min-h-0 overflow-hidden">
-                                <h2 class="text-2xl font-bold mb-4">Tareas del Diseño</h2>
-                                    <livewire:proyectos.tareas-diseno :proyecto-id="$proyecto->id" />
-                            </div>
+                            @can('proyectodiseñopestañaTareasDelProyecto')
+                                <!-- Contenido Tareas -->
+                                <div x-show="tab === 'tareas'" x-cloak class="flex flex-col h-full min-h-0 overflow-hidden">
+                                    <h2 class="text-2xl font-bold mb-4">Tareas del Diseño</h2>
+                                        <livewire:proyectos.tareas-diseno :proyecto-id="$proyecto->id" />
+                                </div> 
+                            @endcan
+
 
                         </div> <!-- Fin columna derecha -->
 
