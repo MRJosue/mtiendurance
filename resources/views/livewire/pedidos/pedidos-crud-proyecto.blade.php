@@ -40,7 +40,12 @@
             <tbody>
                 @foreach($pedidos as $pedido)
                     <tr class="text-sm">
-                        <td class="border border-gray-300 p-2 font-semibold">{{ $pedido->id.'-'.$pedido->proyecto_id }}</td>
+                        
+                        <td class="border border-gray-300 px-4 py-2 font-semibold"
+                            title="Proyecto {{ $pedido->proyecto_id }} – Pedido #{{ $pedido->id }}: {{ $pedido->descripcion_corta }}"
+                            >
+                            {{ $pedido->proyecto_id }}-{{ $pedido->id }}
+                        </td>
                         <td class="border border-gray-300 p-2">{{ $pedido->usuario->name ?? 'Sin usuario' }}</td>
                         
                         <!-- Piezas Totales -->

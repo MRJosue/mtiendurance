@@ -101,11 +101,11 @@
                 @endforeach
             </ul>
         <div class="overflow-x-auto bg-white rounded shadow">
-            <table class="min-w-full table-auto text-sm text-left text-gray-700">
+            <table class="min-w-full table-fixed text-sm text-left text-gray-700">
                 <thead class="bg-gray-100 text-xs uppercase tracking-wider">
                     <tr>
-                        <th class="px-4 py-2">ID Proyecto</th>
-                        <th class="px-4 py-2">ID Pedido</th>
+                        <th class="px-4 py-2 w-24">ID </th>
+                       
                         <th class="px-4 py-2">Nombre del proyecto</th>
                         <th class="px-4 py-2">Cliente</th>
                         <th class="px-4 py-2">Producto / Categoría</th>
@@ -122,8 +122,11 @@
                 <tbody>
                     @forelse($pedidos as $pedido)
                         <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-2 font-semibold">{{ $pedido->proyecto_id }}</td>
-                            <td class="px-4 py-2 font-semibold">{{ $pedido->id }}</td>
+                            <td class="px-4 py-2 font-semibold"
+                            title="Proyecto {{ $pedido->proyecto_id }} – Pedido #{{ $pedido->id }}: {{ $pedido->descripcion_corta }}"
+                            >
+                            {{ $pedido->proyecto_id }}-{{ $pedido->id }}
+                            </td>
                             <td class="px-4 py-2 font-bold">{{$pedido->proyecto->nombre}}</td>
                             <td class="px-4 py-2 font-bold">{{$pedido->usuario->name ?? 'Sin cliente'}}</td>
                             <td class="px-4 py-2">
@@ -168,7 +171,7 @@
                             </td>
                             <td class="px-4 py-2">{{ $pedido->total }} piezas</td>
 
-                            <td class="px-4 py-2">
+                            <td class="px-4 py-2 ">
                                 @php
                                     $estado = strtoupper($pedido->proyecto->estado);
                                     $colores = [

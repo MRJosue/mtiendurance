@@ -104,12 +104,16 @@
                     @else
                             <!-- Si hay múltiples opciones, mantener el select siempre visible -->
                             <!-- Selección de Opciones -->
-                            <select wire:change="addOpcion({{ $index }}, $event.target.value)" class="w-full mt-1 border rounded-lg p-2">
+                            <select
+                                wire:key="prod-{{ $producto_id }}-car-{{ $index }}"
+                                wire:change="addOpcion({{ $index }}, $event.target.value)"
+                                class="w-full mt-1 border rounded-lg p-2"
+                            >
                                 <option value="">Seleccionar Opción</option>
-                                @foreach (\App\Models\Opcion::whereHas('caracteristicas', function ($query) use ($caracteristica) {
-                                    $query->where('caracteristica_id', $caracteristica['id']);
-                                })->get() as $opcion)
-                                    <option value="{{ $opcion->id }}">{{ $opcion->nombre }} ({{ $opcion->valoru }})</option>
+                                @foreach(\App\Models\Opcion::whereHas('caracteristicas', fn($q) => $q->where('caracteristica_id', $caracteristica['id']))->get() as $opcion)
+                                    <option value="{{ $opcion->id }}">
+                                        {{ $opcion->nombre }} ({{ $opcion->valoru }})
+                                    </option>
                                 @endforeach
                             </select>
 
@@ -128,6 +132,10 @@
                 <!-- 🚨 Mensaje de error si no se seleccionó una opción por característica -->
                 @error('opciones_sel') 
                 <span class="text-red-600 text-sm">{{ $message }}</span> 
+            @enderror
+
+            @error('caracteristicas_sel')
+                 <span class="text-red-600 text-sm">{{ $message }}</span> 
             @enderror
         </div>
 

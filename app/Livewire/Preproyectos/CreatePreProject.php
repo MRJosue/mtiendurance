@@ -54,6 +54,8 @@ class CreatePreProject extends Component
     public $caracteristicas_sel = [];
     public $opciones_sel = [];
 
+    
+
     public $total_piezas;
     public $tallas = [];
     public $tallasSeleccionadas = [];
@@ -739,13 +741,13 @@ public function cargarDirecciones()
         $this->direccionesEntrega = DireccionEntrega::where('usuario_id', $this->UsuarioSeleccionado)->get();
 
         // Opcional: asignar automáticamente la primera dirección si no hay una seleccionada
-        if (!$this->direccion_fiscal_id && $this->direccionesFiscales->isNotEmpty()) {
-            $this->direccion_fiscal_id = $this->direccionesFiscales->first()->id;
-        }
+        // if (!$this->direccion_fiscal_id && $this->direccionesFiscales->isNotEmpty()) {
+        //     $this->direccion_fiscal_id = $this->direccionesFiscales->first()->id;
+        // }
 
-        if (!$this->direccion_entrega_id && $this->direccionesEntrega->isNotEmpty()) {
-            $this->direccion_entrega_id = $this->direccionesEntrega->first()->id;
-        }
+        // if (!$this->direccion_entrega_id && $this->direccionesEntrega->isNotEmpty()) {
+        //     $this->direccion_entrega_id = $this->direccionesEntrega->first()->id;
+        // }
 
     } else {
         $this->direccionesFiscales = collect();
