@@ -1,12 +1,14 @@
-<div class="container mx-auto p-6">
-  <div class="flex items-center justify-between mb-4">
-    <h2 class="text-lg sm:text-xl font-semibold text-gray-800 flex items-center gap-2">
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <!-- Encabezado: flex-col en móvil, flex-row en desktop -->
+  <div class="flex flex-col sm:flex-row items-center justify-between mb-6">
+    <h2 class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 sm:mb-0 flex items-center gap-2">
       Diseño Actual
     </h2>
-    <livewire:proyectos.project-files :proyecto-id="$this->proyectoId" />
+    <livewire:proyectos.project-files :proyecto-id="$this->proyectoId" class="w-full sm:w-auto" />
   </div>
 
-  <div class="mb-6">
+  <!-- Contenido principal: centrado y tamaño adaptable -->
+  <div class="mb-6 flex flex-col items-center">
     @if ($ultimoArchivo)
       @php
         $rutaArchivo = Storage::disk('public')->exists($ultimoArchivo->ruta_archivo)
@@ -14,32 +16,38 @@
           : $ultimoArchivo->ruta_archivo;
       @endphp
 
-      <div class="relative group transition-all duration-300 ease-in-out">
+      <div class="relative group transition-all duration-300 ease-in-out w-full max-w-xs sm:max-w-md md:max-w-lg">
         <img id="archivoImagen"
              src="{{ $rutaArchivo }}"
-             class="w-full max-w-md mx-auto rounded-lg shadow-lg cursor-pointer"
+             class="w-full h-auto rounded-lg shadow-lg cursor-pointer object-contain"
              alt="{{ $ultimoArchivo->nombre_archivo }}"
              onclick="expandirImagen()">
-        <p class="mt-2 text-gray-700 text-sm text-center">
-          {{ $ultimoArchivo->descripcion }}
-        </p>
+        <!-- Descripción y metadatos -->
+        <div class="mt-4 text-center w-full px-2">
+          <p class="text-gray-700 text-base sm:text-lg">{{ $ultimoArchivo->descripcion }}</p>
+          <p class="mt-2 text-gray-600 text-sm sm:text-base">
+            <span class="font-semibold">Nombre:</span> {{ $ultimoArchivo->nombre_archivo }}
+            <span class="ml-4 font-semibold">Versión:</span> {{ $ultimoArchivo->version }}
+          </p>
+        </div>
       </div>
 
-      <!-- Modal con AlpineJS -->
+      <!-- Modal con AlpineJS: padding adaptativo -->
       <div id="modalImagen"
            x-data="imageZoom()"
            x-show="open"
            @open-image.window="openModal($event.detail)"
            x-cloak
-           class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4">
-        <div class="relative">
+           class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 sm:p-8">
+        <div class="relative w-full max-w-full">
           <div class="overflow-hidden">
             <img x-ref="img"
                  :src="src"
-                 class="max-w-full max-h-[80vh] cursor-grab select-none"
+                 class="max-w-full max-h-[80vh] cursor-grab select-none mx-auto"
                  @wheel.prevent="onWheel($event)"
                  @mousedown.prevent="onMouseDown($event)">
-            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 bg-white bg-opacity-80 rounded-md p-2 shadow">
+            <!-- Controles: flex-col en móvil, flex-row en desktop -->
+            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 bg-white bg-opacity-80 rounded-md p-2 shadow">
               <button @click="close()" class="w-8 h-8 flex items-center justify-center text-xl font-bold rounded-full bg-red-500 text-white hover:bg-red-600" title="Cerrar">&times;</button>
               <button @click="zoomIn()" class="px-3 py-1 text-lg font-bold">＋</button>
               <button @click="zoomOut()" class="px-3 py-1 text-lg font-bold">－</button>
@@ -53,6 +61,7 @@
     @endif
   </div>
 
+  <!-- Scripts: envueltos en DOMContentLoaded -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       window.expandirImagen = () => {
@@ -138,9 +147,4 @@
       }
     }
   </script>
-
 </div>
-
-
-
-

@@ -777,4 +777,5 @@ public function uploadFinished()
     $this->isUploading = false;
 }
 
+
 }

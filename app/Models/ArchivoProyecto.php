@@ -20,7 +20,7 @@ class ArchivoProyecto extends Model
         'flag_descarga',
         'usuario_id',
         'descripcion',
-
+        'version',
     ];
 
 
@@ -37,5 +37,34 @@ class ArchivoProyecto extends Model
     public function usuario()
     {
         return $this->belongsTo(User::class, 'usuario_id');
+    }
+
+        /**
+     * Calcula la siguiente versión para un nuevo archivo
+     * basado en archivos previos del mismo proyecto con tipo_carga = 1.
+     *
+     * @param  int  $proyectoId
+     * @return int
+     */
+    public static function calcularVersion(int $proyectoId): int
+    {
+        $conteo = self::where('proyecto_id', $proyectoId)
+            ->where('tipo_carga', 1)
+            ->count();
+
+        return $conteo + 1;
+    }
+
+    /**
+     * Al crear un nuevo registro, asigna automáticamente
+     * la versión siguiente si no se ha proporcionado.
+     */
+    protected static function booted()
+    {
+        static::creating(function (self $archivo) {
+            if (is_null($archivo->version)) {
+                $archivo->version = self::calcularVersion($archivo->proyecto_id);
+            }
+        });
     }
 }

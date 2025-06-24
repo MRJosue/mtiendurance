@@ -63,14 +63,17 @@
                     />
                 </div>
 
-                <!-- Tabla -->
+               <!-- Tabla -->
                 <div class="overflow-x-auto">
                     <table class="table-auto w-full border-collapse border border-gray-300">
                         <thead>
                             <tr class="bg-gray-100">
                                 <th class="px-4 py-2 border">Nombre del Archivo</th>
-                                <th class="px-4 py-2 border">Subido Por</th>
+                                <th class="px-4 py-2 border">Cargado Por</th>
                                 <th class="px-4 py-2 border">Hora de Subida</th>
+                                @if($tab === 'disenos')
+                                    <th class="px-4 py-2 border">Versión</th>
+                                @endif
                                 <th class="px-4 py-2 border">Acciones</th>
                             </tr>
                         </thead>
@@ -82,6 +85,11 @@
                                     <td class="px-4 py-2 border text-sm text-gray-500">
                                         {{ $archivo->created_at->format('d/m/Y H:i') }}
                                     </td>
+                                    @if($tab === 'disenos')
+                                        <td class="px-4 py-2 border text-center text-sm">
+                                            {{ $archivo->version }}
+                                        </td>
+                                    @endif
                                     <td class="px-4 py-2 border flex flex-col md:flex-row gap-2">
                                         <a href="{{ Storage::disk('public')->url($archivo->ruta_archivo) }}" 
                                            class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-center"
@@ -97,7 +105,10 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-4 py-2 text-center text-gray-500">No hay archivos subidos.</td>
+                                    {{-- Ajustamos el colspan según pestaña --}}
+                                    <td colspan="{{ $tab === 'disenos' ? 5 : 4 }}" class="px-4 py-2 text-center text-gray-500">
+                                        No hay archivos Cargados.
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>

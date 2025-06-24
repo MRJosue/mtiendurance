@@ -44,6 +44,8 @@ class MuestrasCrudProyecto extends Component
 
     public $producto_id;
 
+
+        protected $listeners = ['ActualizarTablaMuestra' => 'actualizarTabla',];
     protected function rules()
     {
         return [
@@ -376,6 +378,11 @@ class MuestrasCrudProyecto extends Component
                 ->with(['archivo', 'usuario']) // relación para archivo y usuario
                 ->paginate(6),
         ]);
+    }
+
+        public function actualizarTabla()
+    {
+        $this->resetPage(); // Reinicia a la primera página si estás paginando
     }
 }
 

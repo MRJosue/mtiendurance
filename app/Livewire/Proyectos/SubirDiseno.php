@@ -214,7 +214,7 @@ class SubirDiseno extends Component
         $archivo = ArchivoProyecto::where('proyecto_id', $proyecto->id)->latest()->first();
     
         if (!$archivo) {
-            session()->flash('error', 'No puedes crear una muestra sin haber subido al menos un archivo de diseño.');
+            session()->flash('error', 'No puedes crear una muestra sin haber cargado al menos un archivo de diseño.');
             return;
         }
     
@@ -245,7 +245,9 @@ class SubirDiseno extends Component
     
         $this->modalConfirmarMuestra = false;
         session()->flash('message', 'Muestra creada correctamente.');
-        $this->dispatch('muestraCreada');
+        // $this->dispatch('muestraCreada');
+        $this->dispatch('ActualizarTablaMuestra');
+        
     }
 
     public function aprobarUltimoPedido()
@@ -470,7 +472,7 @@ class SubirDiseno extends Component
 
         $this->reset(['archivo', 'comentario', 'modalSubirArchivoDiseno']);
         $this->dispatch('archivoSubido');
-        session()->flash('message', 'Archivo de diseño subido correctamente.');
+        session()->flash('message', 'Archivo de diseño cargado correctamente.');
     }
 
 

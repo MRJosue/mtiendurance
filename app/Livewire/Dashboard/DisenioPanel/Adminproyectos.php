@@ -123,8 +123,8 @@ class Adminproyectos extends Component
     {
         return view('livewire.dashboard.disenio-panel.adminproyectos', [
             'projects' => Proyecto::with(['user', 'tareas.staff', 'estados.usuario'])->paginate($this->perPage),
-            'users' => User::whereHas('roles', function ($query) {
-                $query->where('name', 'diseñador');
+            'users' => User::whereHas('roles', function ($q) {
+                $q->where('name', 'diseñador');
             })->get()
         ]);
     }

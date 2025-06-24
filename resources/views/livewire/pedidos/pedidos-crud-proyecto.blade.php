@@ -7,129 +7,136 @@
         </div>
     @endif
 
-    <div class="flex items-center justify-between mb-3">
-        <button wire:click="abrirModal" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">
+    {{-- Botón Nuevo Pedido --}}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
+        <button
+            wire:click="abrirModal"
+            class="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded"
+        >
             Nuevo Pedido
         </button>
     </div>
 
-    <div class="overflow-x-auto">
-        <table class="table-auto w-full border-collapse border border-gray-300 text-sm">
-            <thead>
-                <tr class="bg-gray-100 text-gray-700 text-sm">
-                    <th class="border border-gray-300 p-2 w-32">ID</th>
-                    <th class="border border-gray-300 p-2 w-40">Cliente</th>
-                    <th class="border border-gray-300 p-2 w-56">Piezas Totales</th>
-                    <th class="border border-gray-300 p-2 w-40">Dirección Fiscal</th>
-                    <th class="border border-gray-300 p-2 w-40">Dirección Entrega</th>
-                    <th class="border border-gray-300 p-2 w-32">Tipo Envío</th>
-             
-                    <th class="border border-gray-300 p-2 w-32">Estado</th>
+    {{-- VISTA MÓVIL: Tarjetas --}}
+    <div class="block sm:hidden space-y-4">
+        @foreach($pedidos as $pedido)
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-semibold">#{{ $pedido->proyecto_id }}-{{ $pedido->id }}</span>
+                    <span
+                        class="px-2 py-1 rounded-lg text-white text-xs font-semibold"
+                        style="background-color:
+                            @if    ($pedido->estado == 'POR APROBAR') #FFDD57
+                            @elseif($pedido->estado == 'APROBADO')    #F39C12
+                            @elseif($pedido->estado == 'ENTREGADO')   #3498DB
+                            @elseif($pedido->estado == 'RECHAZADO')   #9B59B6
+                            @elseif($pedido->estado == 'ARCHIVADO')   #E67E22
+                            @elseif($pedido->estado == 'POR REPROGRAMAR') #E74C3C
+                            @else #BDC3C7 @endif;"
+                    >
+                        {{ strtoupper($pedido->estado) }}
+                    </span>
+                </div>
+                <div class="text-sm text-gray-700 space-y-1">
+                    <p><strong>Cliente:</strong> {{ $pedido->usuario->name ?? 'Sin usuario' }}</p>
+                    <p><strong>Total piezas:</strong> {{ $pedido->total }}</p>
+                    <p><strong>Producción:</strong> {{ $pedido->fecha_produccion ?? 'No definida' }}</p>
+                    <p><strong>Entrega:</strong> {{ $pedido->fecha_entrega ?? 'No definida' }}</p>
+                </div>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    @hasanyrole('admin')
+                        <button
+                            wire:click="abrirModal({{ $pedido->id }})"
+                            class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded text-xs"
+                        >Editar</button>
+                    @endhasanyrole
+
+                    @if ($pedido->estado == 'POR APROBAR' && $pedido->proyecto?->estado === 'DISEÑO APROBADO')
+                        <button
+                            wire:click="confirmarAprobacion({{ $pedido->id }})"
+                            class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-1 rounded text-xs"
+                        >Aprobar</button>
+                    @endif
+                </div>
+            </div>
+        @endforeach
+    </div>
+
+    {{-- VISTA DESKTOP: Tabla --}}
+    <div class="hidden sm:block overflow-x-auto">
+        <table class="min-w-full table-auto divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-100 text-gray-700">
+                <tr>
+                    <th class="p-2 text-left">ID</th>
+                    <th class="p-2 text-left">Cliente</th>
+                    <th class="p-2 text-left">Piezas Totales</th>
+                    <th class="p-2 hidden md:table-cell text-left">Dirección Fiscal</th>
+                    <th class="p-2 hidden md:table-cell text-left">Dirección Entrega</th>
+                    <th class="p-2 hidden lg:table-cell text-left">Tipo Envío</th>
+                    <th class="p-2 text-center">Estado</th>
                     @can('proyectopedidoscolumnafechaproduccion')
-                    <th class="border border-gray-300 p-2 w-36">Producción</th>
+                        <th class="p-2 hidden lg:table-cell text-left">Producción</th>
                     @endcan
                     @can('proyectopedidoscolumnafechaenbarque')
-                    <th class="border border-gray-300 p-2 w-36">Embarque</th>
+                        <th class="p-2 hidden lg:table-cell text-left">Embarque</th>
                     @endcan
                     @can('proyectopedidoscolumnafechaEntrega')
-                    <th class="border border-gray-300 p-2 w-36">Entrega</th>
+                        <th class="p-2 hidden lg:table-cell text-left">Entrega</th>
                     @endcan
-                    <th class="border border-gray-300 p-2 w-32">Acciones</th>
+                    <th class="p-2 text-center">Acciones</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="bg-white divide-y divide-gray-200">
                 @foreach($pedidos as $pedido)
-                    <tr class="text-sm">
-                        
-                        <td class="border border-gray-300 px-4 py-2 font-semibold"
-                            title="Proyecto {{ $pedido->proyecto_id }} – Pedido #{{ $pedido->id }}: {{ $pedido->descripcion_corta }}"
+                    <tr class="hover:bg-gray-50">
+                        <td class="p-2 px-4 py-2 font-semibold min-w-[4rem]"
+                            title="Proyecto {{ $pedido->proyecto_id }} - Pedido #{{ $pedido->id }}: {{ $pedido->descripcion_corta }}"
                             >
                             {{ $pedido->proyecto_id }}-{{ $pedido->id }}
                         </td>
-                        <td class="border border-gray-300 p-2">{{ $pedido->usuario->name ?? 'Sin usuario' }}</td>
-                        
-                        <!-- Piezas Totales -->
-                        <td class="border border-gray-300 p-2 font-semibold w-56">
-                            @if($pedido->pedidoTallas->isNotEmpty())
-                                @php
-                                    // Agrupar por el grupo de tallas (no solo por el nombre de la talla)
-                                    $tallasAgrupadas = $pedido->pedidoTallas->groupBy('grupo_talla_id');
-                                @endphp
-                                <ul class="list-none">
-                                    @foreach($tallasAgrupadas as $grupoTallaId => $tallas)
-                                        <li class="font-semibold text-gray-700 border-b pb-1 mt-2">
-                                            {{ $tallas->first()->grupoTalla->nombre ?? 'Sin Grupo' }}
-                                        </li>
-                                        <ul class="list-disc list-inside text-gray-600">
-                                            @foreach($tallas as $talla)
-                                                <li>{{ $talla->talla->nombre ?? 'N/A' }}: {{ $talla->cantidad ?? '0' }}</li>
-                                            @endforeach
-                                        </ul>
-                                    @endforeach
-                                </ul>
-                            
-                            @endif
-                            <ul class="list-none">
-                                <li class="font-semibold text-gray-700 border-b pb-1 mt-2">
-                                    Total
-                                </li>
-                                <ul>
-                                    {{ $pedido->total }}
-                                </ul>
-                            </ul>
-
-                            
-                        </td>
-            
-                        <td class="border border-gray-300 p-2">{{ $pedido->direccion_fiscal ?? 'No definida' }}</td>
-                        <td class="border border-gray-300 p-2">{{ $pedido->direccion_entrega ?? 'No definida' }}</td>
-                        <td class="border border-gray-300 p-2">{{ $pedido->tipoEnvio->nombre ?? 'No definido' }}</td>
-                       
-                        
-                        <!-- Estado con Colores -->
-                        <td class="border border-gray-300 p-2 font-bold text-center">
-                            <span class="px-2 py-1 rounded-lg text-white text-xs"
-                                  style="background-color: 
-                                      @if    ($pedido->estado == 'POR APROBAR') #FFDD57 
-                                      @elseif($pedido->estado == 'APROBADO') #F39C12
-                                      @elseif($pedido->estado == 'ENTREGADO') #3498DB
-                                      @elseif($pedido->estado == 'RECHAZADO') #9B59B6
-                                      @elseif($pedido->estado == 'ARCHIVADO') #E67E22
-                                      @elseif($pedido->estado == 'POR REPROGRAMAR') #E74C3C
-                                      @else #BDC3C7 @endif;">
+                        <td class="p-2">{{ $pedido->usuario->name ?? 'Sin usuario' }}</td>
+                        <td class="p-2">{{ $pedido->total }}</td>
+                        <td class="p-2 hidden md:table-cell">{{ $pedido->direccion_fiscal ?? 'No definida' }}</td>
+                        <td class="p-2 hidden md:table-cell">{{ $pedido->direccion_entrega ?? 'No definida' }}</td>
+                        <td class="p-2 hidden lg:table-cell">{{ $pedido->tipoEnvio->nombre ?? 'No definido' }}</td>
+                        <td class="p-2 text-center">
+                            <span
+                                class="px-2 py-1 rounded-lg text-white text-xs font-semibold"
+                                style="background-color:
+                                    @if    ($pedido->estado == 'POR APROBAR') #FFDD57
+                                    @elseif($pedido->estado == 'APROBADO')    #F39C12
+                                    @elseif($pedido->estado == 'ENTREGADO')   #3498DB
+                                    @elseif($pedido->estado == 'RECHAZADO')   #9B59B6
+                                    @elseif($pedido->estado == 'ARCHIVADO')   #E67E22
+                                    @elseif($pedido->estado == 'POR REPROGRAMAR') #E74C3C
+                                    @else #BDC3C7 @endif;"
+                            >
                                 {{ strtoupper($pedido->estado) }}
                             </span>
                         </td>
                         @can('proyectopedidoscolumnafechaproduccion')
-                        <td class="border border-gray-300 p-2">{{ $pedido->fecha_produccion ?? 'No definida' }}</td>
+                            <td class="p-2 hidden lg:table-cell">{{ $pedido->fecha_produccion ?? 'No definida' }}</td>
                         @endcan
                         @can('proyectopedidoscolumnafechaenbarque')
-                        <td class="border border-gray-300 p-2">{{ $pedido->fecha_embarque ?? 'No definida' }}</td>
+                            <td class="p-2 hidden lg:table-cell">{{ $pedido->fecha_embarque ?? 'No definida' }}</td>
                         @endcan
                         @can('proyectopedidoscolumnafechaEntrega')
-                        <td class="border border-gray-300 p-2">{{ $pedido->fecha_entrega ?? 'No definida' }}</td>
+                            <td class="p-2 hidden lg:table-cell">{{ $pedido->fecha_entrega ?? 'No definida' }}</td>
                         @endcan
-                        <td class="border  flex space-x-2 justify-center">
-
+                        <td class="p-2 flex justify-center space-x-2">
                             @hasanyrole('admin')
-                            <button wire:click="abrirModal({{ $pedido->id }})" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
-                                Editar
-                            </button>
+                                <button
+                                    wire:click="abrirModal({{ $pedido->id }})"
+                                    class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded text-xs"
+                                >Editar</button>
                             @endhasanyrole
 
-                            @if ($pedido->estado == 'POR APROBAR')
-                            <button wire:click="abrirModal({{ $pedido->id }})" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
-                                Editar
-                            </button>
+                            @if ($pedido->estado == 'POR APROBAR' && $pedido->proyecto?->estado === 'DISEÑO APROBADO')
+                                <button
+                                    wire:click="confirmarAprobacion({{ $pedido->id }})"
+                                    class="bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-1 rounded text-xs"
+                                >Aprobar</button>
                             @endif
-
-                            @if ($pedido->proyecto && $pedido->proyecto->estado === 'DISEÑO APROBADO' && $pedido->estado == 'POR APROBAR')
-                            <button wire:click="confirmarAprobacion({{ $pedido->id }})"
-                                    class="bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-1 rounded">
-                                Aprobar
-                            </button>
-                            @endif
-
                         </td>
                     </tr>
                 @endforeach
@@ -137,9 +144,11 @@
         </table>
     </div>
 
+    {{-- Paginación --}}
     <div class="mt-4">
         {{ $pedidos->links() }}
     </div>
+    
     @if($modal)
     <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
         <div class="bg-white rounded shadow-lg w-full max-w-lg flex flex-col">
