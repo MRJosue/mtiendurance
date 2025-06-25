@@ -58,12 +58,10 @@
                 @if(!empty($registro->url))
                     <div class="md:col-span-2 space-y-1">
                         <p class="text-sm font-medium text-gray-600 uppercase">Archivo adjunto</p>
-                        <a href="{{ asset('storage/' . $registro->url) }}"
-                           target="_blank"
-                           class="inline-block font-medium text-blue-600 hover:underline">
-                            Ver archivo
-                        </a>
+                        <livewire:proyectos.pdf-aprobacion :proyecto-id="$proyectoId" />
                     </div>
+
+
                 @endif
             </div>
         </div>
