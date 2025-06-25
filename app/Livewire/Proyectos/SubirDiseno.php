@@ -119,13 +119,15 @@ class SubirDiseno extends Component
 
         $archivo = ArchivoProyecto::where('proyecto_id', $proyecto->id)->latest()->first();
 
+        $nombre = auth()->user()->name;
+        
         $proyecto->estado = 'DISEÑO APROBADO';
         $proyecto->save();
 
         proyecto_estados::create([
             'proyecto_id' => $proyecto->id,
             'estado' => 'DISEÑO APROBADO',
-            'comentario' => 'Aprobado por el cliente',
+            'comentario' => 'Aprobado por el cliente. '. $nombre,
             'url' => $archivo?->ruta_archivo,
             'fecha_inicio' => now(),
             'usuario_id' => Auth::id(),
@@ -134,7 +136,7 @@ class SubirDiseno extends Component
 
         Tarea::where('proyecto_id', $proyecto->id)->update(['estado' => 'COMPLETADA']);
 
-        $this->registrarEventoEnChat('El cliente aprobó el diseño. Estado actualizado a DISEÑO APROBADO.');
+        $this->registrarEventoEnChat('El cliente'. $nombre .' aprobó el diseño. Estado actualizado a DISEÑO APROBADO.');
 
         $this->dispatch('estadoActualizado');
         $this->dispatch('ActualizarTablaPedido');
