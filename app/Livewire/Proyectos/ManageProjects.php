@@ -29,6 +29,9 @@ class ManageProjects extends Component
         public $modalVerMas = false;
         public $proyectoSeleccionado = null;
 
+        // Cargamos los diseñadores UNA sola vez
+        public $designers;
+
 
             /* ---------- Props UI ---------- */
         public array  $tabs      = ['TODOS','PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION','DISEÑO RECHAZADO', 'DISEÑO APROBADO', 'CANCELADO'];
@@ -80,16 +83,12 @@ class ManageProjects extends Component
 
         public function updatedSelectAll(bool $value): void
         {
-            if ($this->activeTab === 'TODOS') {
-                $this->selectedProjects = $value
-                    ? Proyecto::pluck('id')->toArray()
-                    : [];
-            } else {
-                $this->selectedProjects = $value
-                    ? Proyecto::where('estado', $this->activeTab)->pluck('id')->toArray()
-                    : [];
-            }
+            $this->selectedProjects = $value
+                ? Proyecto::when($this->activeTab!=='TODOS', fn($q)=>$q->where('estado',$this->activeTab))
+                        ->pluck('id')->toArray()
+                : [];
         }
+
 
         public function deleteSelected(): void
         {
@@ -102,21 +101,23 @@ class ManageProjects extends Component
 
         public function mount(): void
         {
-            // Por si algún rol arranca en otra pestaña
+            // validación de pestaña
             if (!in_array($this->activeTab, $this->tabs, true)) {
                 $this->activeTab = $this->tabs[0];
             }
+
+            // Leemos los diseñadores solo 1 vez
+            $this->designers = User::whereHas('roles', fn($q) => $q->where('name','diseñador'))->get();
         }
+
         
         /* ---------- UI handlers ---------- */
         public function setTab(string $tab): void
         {
-            if ($this->activeTab !== $tab) {
-                $this->activeTab     = $tab;
-                $this->selectAll     = false;
-                $this->selectedProjects = [];
-                $this->resetPage();
-            }
+            $this->activeTab = $tab;
+            $this->selectAll = false;
+            $this->selectedProjects = [];
+            $this->resetPage();
         }
 
             public function updatingPerPage(): void
@@ -197,21 +198,32 @@ class ManageProjects extends Component
 
         public function render()
         {
-            $query = Proyecto::with(['user', 'pedidos.producto.categoria']);
+            $query = Proyecto::query()
+                ->with([
+                    // evita 20 consultas a users → 1
+                    'user:id,name',
+                    // evita 20 consultas a pedidos, productos y categorías → 1 cada una
+                    // 'pedidos:id,proyecto_id,producto_id',
+                    'pedidos:id,proyecto_id,producto_id,total,estatus',
+                    'pedidos.producto:id,nombre,categoria_id',
+                    'pedidos.producto.categoria:id,nombre',
+                   // si muestras tareas en la tabla
+                    'tareas:id,proyecto_id,descripcion',
+                    'tareas:id,proyecto_id,staff_id,descripcion,estado',
+     
+                ]);
 
             if ($this->activeTab !== 'TODOS') {
                 $query->where('estado', $this->activeTab);
             }
 
-            if (!auth()->user()->can('tablaProyectos-ver-todos-los-proyectos')) {
-                $query->where('usuario_id', auth()->id());
+            if (!Auth::user()->can('tablaProyectos-ver-todos-los-proyectos')) {
+                $query->where('usuario_id', Auth::id());
             }
 
-            return view('livewire.proyectos.manage-projects', [
-                'projects' => $query->paginate($this->perPage),
-                'users' => User::whereHas('roles', function ($q) {
-                $q->where('name', 'diseñador');
-                })->get()
-            ]);
+            $projects = $query->paginate($this->perPage);
+
+            return view('livewire.proyectos.manage-projects', compact('projects'));
         }
+
 }

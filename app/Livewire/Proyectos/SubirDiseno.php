@@ -104,6 +104,8 @@ class SubirDiseno extends Component
 
         $this->registrarEventoEnChat("Se subió un nuevo archivo de diseño y se cambió el estado a REVISION.");
 
+
+        $this->dispatch('actualizarMensajes');
         $this->dispatch('estadoActualizado');
         $this->dispatch('archivoSubido');
         $this->cargarEstado();
@@ -138,6 +140,7 @@ class SubirDiseno extends Component
 
         $this->registrarEventoEnChat('El cliente'. $nombre .' aprobó el diseño. Estado actualizado a DISEÑO APROBADO.');
 
+        $this->dispatch('actualizarMensajes');
         $this->dispatch('estadoActualizado');
         $this->dispatch('ActualizarTablaPedido');
         $this->cargarEstado();
@@ -179,6 +182,7 @@ class SubirDiseno extends Component
         $this->registrarEventoEnChat('El cliente rechazó el diseño. Comentario: ' . $this->comentarioRechazo);
 
         $this->dispatch('estadoActualizado');
+        $this->dispatch('actualizarMensajes');
         $this->cargarEstado();
 
         $this->modalRechazar = false;

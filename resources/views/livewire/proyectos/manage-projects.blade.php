@@ -151,7 +151,12 @@
                                     @can('tablaProyectos-ver-todos-los-proyectos')
                                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Cliente</th>
                                     @endcan
-                                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Pedidos</th>
+                                    
+                                    @can('tablaProyectos-ver-columna-pedidos')
+                                            <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Pedidos</th>
+                                    @endcan
+                                
+
                                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Estado del Disño</th>
                                     @can('dashboardjefediseñadorproyectos')
                                         <th class="px-4 py-3 border">Tareas</th>
@@ -181,22 +186,26 @@
                                         @can('tablaProyectos-ver-todos-los-proyectos')
                                         <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->user->name ?? 'Sin Cliente' }}</td>
                                         @endcan
-                                        <td class="border-b px-4 py-2 text-gray-700 text-sm">
-                                            @if($project->pedidos->isNotEmpty())
-                                                <ul class="list-disc list-inside">
-                                                    @foreach($project->pedidos as $pedido)
-                                                        <li class="text-gray-600">
-                                                            <span class="font-semibold">Categoría:</span> {{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }},
-                                                            <span class="font-semibold">Producto:</span> {{ $pedido->producto->nombre ?? 'Sin producto' }},
-                                                            <span class="font-semibold">Total:</span> {{ number_format($pedido->total) }},
-                                                            <span class="font-semibold">Estatus:</span> {{ $pedido->estatus }}
-                                                        </li>
-                                                    @endforeach
-                                                </ul>
-                                            @else
-                                                <span class="text-gray-500">Sin pedidos</span>
-                                            @endif
-                                        </td>
+
+                                        @can('tablaProyectos-ver-columna-pedidos')
+                                            <td class="border-b px-4 py-2 text-gray-700 text-sm">
+                                                @if($project->pedidos->isNotEmpty())
+                                                    <ul class="list-disc list-inside">
+                                                        @foreach($project->pedidos as $pedido)
+                                                            <li class="text-gray-600">
+                                                                <span class="font-semibold">Categoría:</span> {{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }},
+                                                                <span class="font-semibold">Producto:</span> {{ $pedido->producto->nombre ?? 'Sin producto' }},
+                                                                <span class="font-semibold">Total:</span> {{ $pedido->total}},
+                                                                <span class="font-semibold">Estatus:</span> {{ $pedido->estatus }}
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                @else
+                                                    <span class="text-gray-500">Sin pedidos</span>
+                                                @endif
+                                            </td> 
+                                        @endcan
+
                                         @php
                                             $estado = $project->estado ?? 'Sin estado';
                                             $colores = [
