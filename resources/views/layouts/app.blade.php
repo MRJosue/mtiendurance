@@ -16,9 +16,11 @@
     <!-- Vite Assets -->
     {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
     {{-- @vite('resources/js/app.js') --}}
+
+         <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     @vite(['resources/css/app.css','resources/js/app.js'])
     @livewireStyles
-    
+
 
      @wireUiStyles
     {{-- <script src="https://cdn.jsdelivr.net/npm/@wireui/scripts@1.0.0/dist/index.umd.js"></script> --}}
