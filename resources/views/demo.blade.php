@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{{-- <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -27,4 +27,17 @@
 </script>
 
 </body>
+</html> --}}
+
+<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  </head>
+  <body>
+    <div class="bg-red-500 md:bg-green-500 p-8">
+      Resize el navegador: debería cambiar de rojo (mobile) a verde (desktop).
+    </div>
+  </body>
 </html>
