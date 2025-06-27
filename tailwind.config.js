@@ -12,7 +12,9 @@ export default {
     './resources/**/*.js',
     './resources/**/*.vue',
     './app/Livewire/**/*.php', // 👈 Para componentes Livewire
-    
+    './resources/views/**/*.blade.php',
+    './resources/js/**/*.js',
+    './app/Http/Livewire/**/*.php',
   ],
 safelist: [
   'bg-blue-600',
