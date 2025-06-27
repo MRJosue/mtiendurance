@@ -1,8 +1,8 @@
 <div class="w-full py-6 overflow-x-auto">
-    <div class="flex flex-col ">
+    <div class=" md:flex-row items-center justify-between md:gap-x-12 gap-y-4 md:gap-y-0">
         @foreach ($estados as $estado)
             <div class="flex flex-col items-center relative min-w-[80px] md:min-w-[100px] p-2">
-                <!-- Icono o Indicador md:flex-row items-center justify-between md:gap-x-12 gap-y-4 md:gap-y-0 -->
+                <!-- Icono o Indicador flex flex-col-->
                 <div class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full shadow-lg transition-all duration-300 
                     {{ $estado == $estadoActual ? 'bg-blue-600 text-white scale-110 md:scale-100 font-bold' : ($loop->index < array_search($estadoActual, $estados) ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700') }}">
                     {{ $loop->iteration }}
