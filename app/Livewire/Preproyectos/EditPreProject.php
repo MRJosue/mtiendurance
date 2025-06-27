@@ -305,6 +305,18 @@ class EditPreProject extends Component
 
         if($from == 2 ){
 
+            // logica de la aprbacion se coloco de este lado para hacer validas las validaciones implementadas 
+            $preProyecto = PreProyecto::findOrFail($this->preProyectoId);
+
+                Log::debug('preProyecto', ['data' => $preProyecto]);
+            
+                // Transferir el preproyecto a proyecto
+                $proyecto = $preProyecto->transferirAProyecto();
+
+                // Mensaje de éxito y redirección
+                session()->flash('message', 'El proyecto ha sido aprobado y transferido correctamente.');
+
+        return redirect()->route('preproyectos.index');
         }else{
              session()->flash('message', 'Preproyecto actualizado exitosamente.');
 
@@ -337,17 +349,7 @@ class EditPreProject extends Component
         $this->update(2);
 
 
-        $preProyecto = PreProyecto::findOrFail($this->preProyectoId);
-
-        Log::debug('preProyecto', ['data' => $preProyecto]);
-     
-        // Transferir el preproyecto a proyecto
-        $proyecto = $preProyecto->transferirAProyecto();
-
-        // Mensaje de éxito y redirección
-        session()->flash('message', 'El proyecto ha sido aprobado y transferido correctamente.');
-
-        return redirect()->route('preproyectos.index');
+  
     }
 
 
