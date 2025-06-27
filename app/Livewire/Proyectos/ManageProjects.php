@@ -16,7 +16,7 @@ class ManageProjects extends Component
 {
         use WithPagination;
 
-        public $perPage = 20;
+        public $perPage = 8;
         public $selectedProjects = [];
         public $selectedProject;
         public $selectAll = false;

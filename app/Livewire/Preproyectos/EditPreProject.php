@@ -189,8 +189,12 @@ class EditPreProject extends Component
             }
     }
 
-    public function update()
+    public function update( $from )
     {
+
+        // 1 preguardado
+        // 2 preAprobarProyecto
+
         $this->validate([
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string',
@@ -205,18 +209,65 @@ class EditPreProject extends Component
             
         ]);
 
-            $archivosPendientes = ArchivoProyecto::where('pre_proyecto_id', $this->preProyectoId)
+
+
+        
+        Log::debug('PRE error mostrarFormularioTallas');
+        // **Si hay tallas, la suma de tallas debe ser igual a total_piezas**
+        if ($this->mostrarFormularioTallas) {
+            // Filtrar solo los grupos que realmente contienen tallas
+            $gruposValidos = array_filter($this->tallasSeleccionadas, 'is_array');
+        
+            // Sumar todas las cantidades de tallas correctamente
+            $sumaTallas = collect($gruposValidos)->flatMap(function ($grupo) {
+                return array_values($grupo);
+            })->sum();
+        
+            Log::debug('Suma calculada de tallas', ['data' => $sumaTallas]);
+            Log::debug('Total de piezas ingresado', ['data' => $this->total_piezas]);
+        
+            if ($sumaTallas != $this->total_piezas) {
+                $this->addError('total_piezas', 'La suma de las cantidades de tallas debe ser igual al total de piezas.');
+                return;
+            }
+        }
+
+
+
+        Log::debug('No error mostrarFormularioTallas');
+
+        // 🚨 Validación: Cada característica debe tener al menos una opción en `opciones`
+        foreach ($this->caracteristicas_sel as $caracteristica) {
+            if (empty($caracteristica['opciones']) || count($caracteristica['opciones']) == 0) {
+                $this->addError('caracteristicas_sel', "Debe seleccionar al menos una opción para '{$caracteristica['nombre']}'.");
+                return;
+            }
+        }
+
+
+        Log::debug('validacion',);
+        $archivosPendientes = ArchivoProyecto::where('pre_proyecto_id', $this->preProyectoId)
                 ->where('flag_descarga', 0)
                 ->count();
 
-            if ($archivosPendientes > 0) {
-                session()->flash('error', 'Debes descargar todos los archivos antes de guardar los cambios.');
+        Log::debug('Rchivos pendientes ', ['data' => $archivosPendientes]);
+
+        if( $from == 2){
+            if ($archivosPendientes > 0  ) {
+                // añade un error bajo la “clave” archivosPendientes
+                    Log::debug('Despliega el error ');
+                $this->addError('archivosPendientes', 'Debes descargar todos los archivos antes de Aprobar.');
                 return;
             }
+        }
 
-            if ($this->seleccion_armado === null || $this->seleccion_armado === '') {
-                $this->seleccion_armado = 1;
-            }
+
+
+
+
+        if ($this->seleccion_armado === null || $this->seleccion_armado === '') {
+            $this->seleccion_armado = 1;
+        }
 
       //  $totalPiezasFinal = $this->mostrarFormularioTallas ? array_sum($this->tallasSeleccionadas) : $this->total_piezas;
         $totalPiezasFinal = $this->mostrarFormularioTallas ? array_sum((array) $this->tallasSeleccionadas) : $this->total_piezas;
@@ -252,6 +303,14 @@ class EditPreProject extends Component
             ]);
         }
 
+        if($from == 2 ){
+
+        }else{
+             session()->flash('message', 'Preproyecto actualizado exitosamente.');
+
+             return redirect()->route('preproyectos.index');
+        }
+
 
     }
 
@@ -264,18 +323,18 @@ class EditPreProject extends Component
         $this->existingFiles = ArchivoProyecto::where('pre_proyecto_id', $this->preProyectoId)->get();
     }
 
-      public function preguardado(){
+    public function preguardado(){
 
-        $this ->  update();
+        $this ->  update( 1);
         
-        session()->flash('message', 'Preproyecto actualizado exitosamente.');
-        return redirect()->route('preproyectos.index');
+       
+        // return redirect()->route('preproyectos.index');
     }
 
     public function preAprobarProyecto()
     {
 
-        $this->update();
+        $this->update(2);
 
 
         $preProyecto = PreProyecto::findOrFail($this->preProyectoId);
@@ -287,7 +346,8 @@ class EditPreProject extends Component
 
         // Mensaje de éxito y redirección
         session()->flash('message', 'El proyecto ha sido aprobado y transferido correctamente.');
-        return redirect()->route('proyectos.index');
+
+        return redirect()->route('preproyectos.index');
     }
 
 

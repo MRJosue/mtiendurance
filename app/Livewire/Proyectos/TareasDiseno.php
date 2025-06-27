@@ -54,16 +54,9 @@ class TareasDiseno extends Component
     {
         $this->validate();
 
-        Tarea::create([
-            'proyecto_id' => $this->proyecto->id,
-            'staff_id'    => $this->selectedUser,
-            'descripcion' => $this->taskDescription,
-            'estado'      => 'PENDIENTE',
-        ]);
-
         // 1. Validación extra: que no exista ya una tarea activa para este proyecto y diseñador
         $existe = Tarea::where('proyecto_id', $this->proyecto->id)
-                    ->where('staff_id',    $this->selectedUser)
+         
                     ->whereIn('estado',    ['PENDIENTE', 'EN PROCESO'])
                     ->exists();
 
@@ -74,6 +67,14 @@ class TareasDiseno extends Component
             );
             return;
         }
+
+        Tarea::create([
+            'proyecto_id' => $this->proyecto->id,
+            'staff_id'    => $this->selectedUser,
+            'descripcion' => $this->taskDescription,
+            'estado'      => 'PENDIENTE',
+        ]);
+
 
         $this->proyecto->update(['estado' => 'ASIGNADO']);
 

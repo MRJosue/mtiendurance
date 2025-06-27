@@ -179,107 +179,63 @@
             
         </div>
 
-        <!-- Selección de Archivo -->
-        <div class="mb-4" x-data="{ cargando: false }" x-init="
-            Livewire.on('upload:started', () => cargando = true);
-            Livewire.on('upload:finished', () => cargando = false);
-        ">
-            <label class="block text-sm font-medium text-gray-700">Subir Archivos</label>
-            
-                    <div class="mb-4" 
-                        x-data="{
-                            archivos: @entangle('files'),
-                            maximos: 4,
-                            get limiteAlcanzado() { return this.archivos.length >= this.maximos }
-                        }" 
-                        x-init="Livewire.on('upload:finished', () => { archivos = @entangle('files') })"
-                    >
-                        
-
-                        <template x-if="!limiteAlcanzado">
-                            <input 
-                                type="file" 
-                                wire:model="files" 
-                                multiple 
-                                accept=".zip,.jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx" 
-                                class="w-full mt-1 border rounded-lg p-2"
-                            >
-                        </template>
-
-                        <template x-if="limiteAlcanzado">
-                            <div class="mt-2 text-yellow-700 text-sm">
-                                Límite de 4 archivos alcanzado. Elimina alguno para subir más.
-                            </div>
-                        </template>
-
-                        <div x-show="cargando" class="mt-2 text-sm text-blue-600">
-                            Cargando archivos...
-                            <svg class="inline w-4 h-4 animate-spin ml-1" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                            </svg>
-                        </div>
-                    </div>
-
-
-            <!-- Indicador visual de carga -->
-            <div x-show="cargando" class="mt-2 text-sm text-blue-600">
-                Cargando archivos...
-                <svg class="inline w-4 h-4 animate-spin ml-1" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                </svg>
-            </div>
+        {{-- 1) Input siempre visible para seleccionar --}}
+        <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700">Seleccionar Archivos</label>
+        <input 
+            type="file" 
+            wire:model="files" 
+            multiple 
+            accept=".zip,.jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx"
+            class="w-full mt-1 border rounded-lg p-2"
+        >
+        @error('files.*') 
+            <span class="text-red-600 text-sm">{{ $message }}</span> 
+        @enderror
         </div>
 
-        <div x-data="{ isUploading: @entangle('isUploading') }">
-            <!-- Spinner de carga -->
-            <template x-if="isUploading">
-                <div class="flex items-center justify-center my-4">
-                    <svg class="animate-spin h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none"
-                        viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor"
-                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
-                        </path>
-                    </svg>
-                    <span class="ml-2 text-sm text-gray-600">Subiendo archivo...</span>
-                </div>
-            </template>
+        {{-- 2) Botón para iniciar la carga y procesar previews --}}
+        <div class="mb-4">
+        <button 
+            type="button" 
+            wire:click="procesarArchivos"
+            wire:loading.attr="disabled" 
+            class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+        >
+            Cargar Archivos
+        </button>
+        {{-- Spinner integrado con Livewire --}}
+        <span wire:loading wire:target="procesarArchivos" class="ml-2 text-blue-600 text-sm">
+            Subiendo…
+            <svg class="inline w-4 h-4 animate-spin ml-1" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+            </svg>
+        </span>
+        </div>
 
-            <!-- Descripciones de Archivos -->
-            @foreach ($files as $index => $file)
-                <div class="mb-2 p-2 border rounded-lg bg-gray-100">
-                    <p class="text-sm font-semibold">{{ $file->getClientOriginalName() }}</p>
-                    <label class="block text-xs text-gray-600">Descripción</label>
-                    <input type="text" wire:model="fileDescriptions.{{ $index }}" class="w-full border rounded-lg p-1 text-sm">
-                </div>
+        {{-- 3) Post-procesamiento (preview) sólo después de click --}}
+        @if ($uploadedFiles)
+        <div class="mb-4 p-4 border rounded-lg bg-gray-50">
+            <h3 class="text-lg font-semibold mb-2">Vista Previa de Archivos</h3>
+            @foreach ($uploadedFiles as $file)
+            <div class="mb-2 flex items-center space-x-2">
+                @if ($file['preview'])
+                <img src="{{ $file['preview'] }}" class="w-16 h-16 object-cover rounded-lg">
+                @else
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                <a href="{{ $file['preview'] }}" target="_blank" class="text-blue-500 underline">
+                    {{ $file['name'] }}
+                </a>
+                @endif
+                <span class="text-sm text-gray-700">{{ $file['name'] }}</span>
+            </div>
             @endforeach
         </div>
-
-        <!-- Vista previa de archivos -->
-        @if ($uploadedFiles)
-            <div class="mb-4 p-4 border rounded-lg bg-gray-50">
-                <h3 class="text-lg font-semibold mb-2">Vista Previa de Archivos</h3>
-                @foreach ($uploadedFiles as $file)
-                    <div class="mb-2">
-                        @if ($file['preview'])
-                            @if (str_starts_with($file['preview'], 'data:image'))
-                                <img src="{{ $file['preview'] }}" class="w-32 h-32 object-cover rounded-lg">
-                            @else
-                                <a href="{{ $file['preview'] }}" target="_blank" class="text-blue-500 underline">
-                                    {{ $file['name'] }}
-                                </a>
-                            @endif
-                        @else
-                            <p class="text-sm text-gray-500">
-                                {{ $file['name'] }} - <span class="italic">Previsualización no disponible</span>
-                            </p>
-                        @endif
-                    </div>
-                @endforeach
-            </div>
         @endif
+
 
 
         <!-- Selección de Direcciones -->

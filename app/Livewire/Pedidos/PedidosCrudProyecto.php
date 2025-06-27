@@ -54,6 +54,8 @@ class PedidosCrudProyecto extends Component
     public $producto_id;
     public $error_total;
 
+    public bool $mostrarFiltros  = false;
+
 
     public $clientes = []; // Lista de clientes relacionados con el usuario
     public $cliente_id; // Cliente seleccionado en el formulario
@@ -82,7 +84,7 @@ class PedidosCrudProyecto extends Component
     }
 
 
-        public function abrirModal($pedidoId = null)
+    public function abrirModal($pedidoId = null)
     {
         if ($pedidoId) {
 
@@ -625,7 +627,6 @@ class PedidosCrudProyecto extends Component
         $this->modal_reconfigurar_proyecto = false;
     }
     
-
     public function render()
     {
         $proyecto = Proyecto::find($this->proyectoId);

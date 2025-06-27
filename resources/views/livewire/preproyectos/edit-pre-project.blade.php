@@ -115,6 +115,10 @@
                 @error('opciones_sel') 
                 <span class="text-red-600 text-sm">{{ $message }}</span> 
             @enderror
+
+            @error('caracteristicas_sel')
+                 <span class="text-red-600 text-sm">{{ $message }}</span> 
+            @enderror
         </div>
 
        
@@ -227,7 +231,11 @@
                         </button>
                     </li>
             @endforeach
+
+            @error('archivosPendientes') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+
         </ul>
+
 
         <!-- Selección de Direcciones -->
         <div class="grid grid-cols-2 gap-4 mb-4">

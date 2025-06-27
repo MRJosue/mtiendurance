@@ -1,4 +1,4 @@
-<div class="max-w-6xl mx-auto p-4">
+<div class="container mx-auto p-6">
     <h2 class="text-2xl font-bold mb-4">Gestión de Pedidos</h2>
 
     @if (session()->has('message'))
@@ -16,6 +16,60 @@
             Nuevo Pedido
         </button>
     </div>
+
+    {{-- Sección de Filtros --}}
+    @if($mostrarFiltros)
+        <div x-data="{ abierto: @entangle('mostrarFiltros') }" class="mb-6">
+            <template x-if="abierto">
+                <div class="w-full bg-white border border-gray-200 shadow-md rounded-lg">
+                    <div class="flex justify-between items-center p-4 border-b">
+                        <h2 class="text-lg font-bold text-gray-700">Filtros</h2>
+                        <div class="flex items-center gap-2">
+                            <button 
+                                wire:click="buscarPorFiltros"
+                                class="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-100 text-sm"
+                            >
+                                Filtrar
+                            </button>
+                            <button 
+                                @click="abierto = false" 
+                                class="text-gray-500 hover:text-gray-700 text-xl leading-none"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <div class="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                id="no-aprobados"
+                                wire:model.defer="mostrarSoloNoAprobados"
+                                class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                            />
+                            <label for="no-aprobados" class="text-sm text-gray-700">
+                                Mostrar pedidos de diseños No aprobados
+                            </label>
+                        </div>
+                        <!-- Agrega más filtros aquí -->
+                    </div>
+                </div>
+            </template>
+            <template x-if="!abierto">
+                <div class="mb-4">
+                    <button @click="abierto = true" class="text-sm text-blue-600 hover:underline">
+                        Mostrar Filtros
+                    </button>
+                </div>
+            </template>
+        </div>
+    @else
+        <div class="mb-4">
+            <button wire:click="$set('mostrarFiltros', true)" class="text-sm text-blue-600 hover:underline">
+                Mostrar Filtros
+            </button>
+        </div>
+    @endif
 
     {{-- VISTA MÓVIL: Tarjetas --}}
     <div class="block sm:hidden space-y-4">
@@ -38,8 +92,19 @@
                     </span>
                 </div>
                 <div class="text-sm text-gray-700 space-y-1">
+                    <p><strong>Proyecto:</strong> {{ $pedido->proyecto->nombre }}</p>
+                    <p><strong>Producto:</strong> {{ $pedido->producto->nombre ?? 'Sin producto' }} / {{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</p>
+                    <p><strong>Características:</strong> 
+                        @if($pedido->pedidoCaracteristicas->isNotEmpty())
+                            {{ $pedido->pedidoCaracteristicas->pluck('caracteristica.nombre')->join(', ') }}
+                        @else
+                            Sin características
+                        @endif
+                    </p>
                     <p><strong>Cliente:</strong> {{ $pedido->usuario->name ?? 'Sin usuario' }}</p>
                     <p><strong>Total piezas:</strong> {{ $pedido->total }}</p>
+                    <p><strong>Estado Diseño:</strong> {{ strtoupper($pedido->proyecto->estado) }}</p>
+                    <p><strong>Estado Pedido:</strong> {{ strtoupper($pedido->estado) }}</p>
                     <p><strong>Producción:</strong> {{ $pedido->fecha_produccion ?? 'No definida' }}</p>
                     <p><strong>Entrega:</strong> {{ $pedido->fecha_entrega ?? 'No definida' }}</p>
                 </div>
@@ -63,25 +128,26 @@
     </div>
 
     {{-- VISTA DESKTOP: Tabla --}}
-    <div class="hidden sm:block overflow-x-auto">
+    <div class="hidden sm:block overflow-x-auto bg-white rounded shadow">
         <table class="min-w-full table-auto divide-y divide-gray-200 text-sm">
             <thead class="bg-gray-100 text-gray-700">
                 <tr>
                     <th class="p-2 text-left">ID</th>
+                    <th class="p-2 text-left">Proyecto</th>
+                    <th class="p-2 text-left">Producto / Categoría</th>
+                    <th class="p-2 text-left">Características</th>
                     <th class="p-2 text-left">Cliente</th>
                     <th class="p-2 text-left">Piezas Totales</th>
-                    <th class="p-2 hidden md:table-cell text-left">Dirección Fiscal</th>
-                    <th class="p-2 hidden md:table-cell text-left">Dirección Entrega</th>
-                    <th class="p-2 hidden lg:table-cell text-left">Tipo Envío</th>
-                    <th class="p-2 text-center">Estado</th>
+                    <th class="p-2 text-left">Estado Diseño</th>
+                    <th class="p-2 text-center">Estado Pedido</th>
                     @can('proyectopedidoscolumnafechaproduccion')
-                        <th class="p-2 hidden lg:table-cell text-left">Producción</th>
+                        <th class="p-2 text-left">Producción</th>
                     @endcan
                     @can('proyectopedidoscolumnafechaenbarque')
-                        <th class="p-2 hidden lg:table-cell text-left">Embarque</th>
+                        <th class="p-2 text-left">Embarque</th>
                     @endcan
                     @can('proyectopedidoscolumnafechaEntrega')
-                        <th class="p-2 hidden lg:table-cell text-left">Entrega</th>
+                        <th class="p-2 text-left">Entrega</th>
                     @endcan
                     <th class="p-2 text-center">Acciones</th>
                 </tr>
@@ -91,37 +157,60 @@
                     <tr class="hover:bg-gray-50">
                         <td class="p-2 px-4 py-2 font-semibold min-w-[4rem]"
                             title="Proyecto {{ $pedido->proyecto_id }} - Pedido #{{ $pedido->id }}: {{ $pedido->descripcion_corta }}"
-                            >
+                        >
                             {{ $pedido->proyecto_id }}-{{ $pedido->id }}
                         </td>
+                        <td class="p-2">{{ $pedido->proyecto->nombre }}</td>
+                        <td class="p-2">
+                            <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
+                            <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
+                        </td>
+                        <td class="p-2 align-top text-xs text-gray-700">
+                            @if($pedido->pedidoCaracteristicas->isNotEmpty())
+                                <ul class="list-disc list-inside space-y-1">
+                                    @foreach($pedido->pedidoCaracteristicas as $car)
+                                        <li>{{ $car->caracteristica->nombre ?? 'Sin nombre' }}</li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                <span class="text-gray-400">Sin características</span>
+                            @endif
+                        </td>
                         <td class="p-2">{{ $pedido->usuario->name ?? 'Sin usuario' }}</td>
-                        <td class="p-2">{{ $pedido->total }}</td>
-                        <td class="p-2 hidden md:table-cell">{{ $pedido->direccion_fiscal ?? 'No definida' }}</td>
-                        <td class="p-2 hidden md:table-cell">{{ $pedido->direccion_entrega ?? 'No definida' }}</td>
-                        <td class="p-2 hidden lg:table-cell">{{ $pedido->tipoEnvio->nombre ?? 'No definido' }}</td>
+                        <td class="p-2">{{ $pedido->total }} piezas</td>
+                        <td class="p-2">
+                            <span class="px-2 py-1 rounded text-xs text-white font-semibold {{
+                                collect([
+                                    'PENDIENTE' => 'bg-yellow-400 text-black',
+                                    'ASIGNADO' => 'bg-blue-500',
+                                    'EN PROCESO' => 'bg-orange-500',
+                                    'REVISION' => 'bg-purple-600',
+                                    'DISEÑO APROBADO' => 'bg-emerald-600',
+                                    'DISEÑO RECHAZADO' => 'bg-red-600',
+                                    'CANCELADO' => 'bg-gray-500',
+                                ])->get(strtoupper($pedido->proyecto->estado), 'bg-yellow-400 text-black')
+                            }}">
+                                {{ strtoupper($pedido->proyecto->estado) }}
+                            </span>
+                        </td>
                         <td class="p-2 text-center">
-                            <span
-                                class="px-2 py-1 rounded-lg text-white text-xs font-semibold"
-                                style="background-color:
-                                    @if    ($pedido->estado == 'POR APROBAR') #FFDD57
-                                    @elseif($pedido->estado == 'APROBADO')    #F39C12
-                                    @elseif($pedido->estado == 'ENTREGADO')   #3498DB
-                                    @elseif($pedido->estado == 'RECHAZADO')   #9B59B6
-                                    @elseif($pedido->estado == 'ARCHIVADO')   #E67E22
-                                    @elseif($pedido->estado == 'POR REPROGRAMAR') #E74C3C
-                                    @else #BDC3C7 @endif;"
-                            >
+                            <span class="px-2 py-1 rounded text-xs text-white font-semibold" style="background-color:
+                                @if($pedido->estado==='APROBADO') #10B981
+                                @elseif($pedido->estado==='ENTREGADO') #3B82F6
+                                @elseif($pedido->estado==='RECHAZADO') #EF4444
+                                @elseif($pedido->estado==='ARCHIVADO') #6B7280
+                                @else #FBBF24 @endif;">
                                 {{ strtoupper($pedido->estado) }}
                             </span>
                         </td>
                         @can('proyectopedidoscolumnafechaproduccion')
-                            <td class="p-2 hidden lg:table-cell">{{ $pedido->fecha_produccion ?? 'No definida' }}</td>
+                            <td class="p-2">{{ $pedido->fecha_produccion ?? 'No definida' }}</td>
                         @endcan
                         @can('proyectopedidoscolumnafechaenbarque')
-                            <td class="p-2 hidden lg:table-cell">{{ $pedido->fecha_embarque ?? 'No definida' }}</td>
+                            <td class="p-2">{{ $pedido->fecha_embarque ?? 'No definida' }}</td>
                         @endcan
                         @can('proyectopedidoscolumnafechaEntrega')
-                            <td class="p-2 hidden lg:table-cell">{{ $pedido->fecha_entrega ?? 'No definida' }}</td>
+                            <td class="p-2">{{ $pedido->fecha_entrega ?? 'No definida' }}</td>
                         @endcan
                         <td class="p-2 flex justify-center space-x-2">
                             @hasanyrole('admin')
@@ -148,7 +237,6 @@
     <div class="mt-4">
         {{ $pedidos->links() }}
     </div>
-    
     @if($modal)
     <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
         <div class="bg-white rounded shadow-lg w-full max-w-lg flex flex-col">

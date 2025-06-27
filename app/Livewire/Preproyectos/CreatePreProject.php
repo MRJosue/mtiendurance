@@ -4,6 +4,7 @@ namespace App\Livewire\Preproyectos;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\TemporaryUploadedFile; 
 use App\Models\user;
 use App\Models\PreProyecto;
 use App\Models\DireccionEntrega;
@@ -524,12 +525,32 @@ class CreatePreProject extends Component
         $this->uploadedFiles = [];
 
         foreach ($this->files as $file) {
-            $mimeType = $file->getMimeType();
+            // Solo procesamos objetos de tipo TemporaryUploadedFile
+            if ($file instanceof TemporaryUploadedFile) {
+                $mimeType   = $file->getMimeType();
+                $canPreview = str_starts_with($mimeType, 'image/');
+                
+                $this->uploadedFiles[] = [
+                    'name'    => $file->getClientOriginalName(),
+                    'preview' => $canPreview 
+                        ? $file->temporaryUrl() 
+                        : null,
+                ];
+            }
+            // Si $file no es un objeto de subida, lo ignoramos
+        }
+    }
 
+    public function procesarArchivos()
+    {
+        $this->uploadedFiles = [];
+
+        foreach ($this->files as $file) {
+            $mimeType = $file->getClientMimeType();
             $canPreview = str_starts_with($mimeType, 'image/');
 
             $this->uploadedFiles[] = [
-                'name' => $file->getClientOriginalName(),
+                'name'    => $file->getClientOriginalName(),
                 'preview' => $canPreview ? $file->temporaryUrl() : null,
             ];
         }
