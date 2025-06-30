@@ -63,15 +63,14 @@ class ArchivoProyecto extends Model
      */
     protected static function booted()
     {
-        static::creating(function (ArchivoProyecto $model) {
-            if ($model->tipo_carga === 1) {
-                // Solo calculamos versión para tipo_carga = 1
-                $model->version = self::calcularVersion($model->proyecto_id);
-            } else {
-                // Para cualquier otro tipo de carga (p.ej. 2), la versión es 0
-                $model->version = 0;
-            }
-        });
+            static::creating(function (ArchivoProyecto $model) {
+                if ($model->tipo_carga === 1) {
+                    // Le pasamos el proyecto actual para que calcule bien la versión
+                    $model->version = self::calcularVersion($model->proyecto_id);
+                } else {
+                    $model->version = 0;
+                }
+            });
     }
 
 

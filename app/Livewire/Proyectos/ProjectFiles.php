@@ -44,7 +44,16 @@ class ProjectFiles extends Component
             'archivo' => 'required|file|max:10240',
         ]);
 
+
+
+         Log::debug('TEst ');
+
+
         $path = $this->archivo->store('proyectos/' . $this->proyectoId, 'public');
+
+        $version = ArchivoProyecto::calcularVersion($this->proyectoId);
+
+         Log::debug('Version ', ['data' =>   $version]);
 
         ArchivoProyecto::create([
             'proyecto_id' => $this->proyectoId,
@@ -52,11 +61,13 @@ class ProjectFiles extends Component
             'nombre_archivo' => $this->archivo->getClientOriginalName(),
             'ruta_archivo' => $path,
             'tipo_archivo' => 1,
+            'tipo_carga' => 1,
         ]);
 
         $this->archivo = null;
 
-        $this->dispatch('archivoSubido');
+         $this->dispatch('archivoSubido');
+        //  $this->dispatchBrowserEvent('archivoSubido');
 
         session()->flash('message', 'Archivo subido exitosamente.');
     }
