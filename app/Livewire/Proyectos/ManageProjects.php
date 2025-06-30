@@ -29,8 +29,6 @@ class ManageProjects extends Component
         public $modalVerMas = false;
         public $proyectoSeleccionado = null;
 
-        public $users;
-
         // Cargamos los diseñadores UNA sola vez
         public $designers;
 

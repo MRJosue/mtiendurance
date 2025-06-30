@@ -91,9 +91,12 @@
                                         </td>
                                     @endif
                                     <td class="px-4 py-2 border flex flex-col md:flex-row gap-2">
-                                        <a href="{{ Storage::disk('public')->url($archivo->ruta_archivo) }}" 
-                                           class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-center"
-                                           target="_blank">Descargar</a>
+                                        <button
+                                            wire:click="downloadFile({{ $archivo->id }})"
+                                            class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-center"
+                                        >
+                                            Descargar
+                                        </button>
 
                                         @hasanyrole('admin|estaf')
                                             <button wire:click="deleteFile({{ $archivo->id }})"

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Response;
 
 class ArchivoProyecto extends Model
 {
@@ -71,4 +73,25 @@ class ArchivoProyecto extends Model
             }
         });
     }
+
+
+        /**
+     * Genera la respuesta de descarga del archivo.
+     *
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     * @throws \Exception
+     */
+    public function descargar()
+    {
+        // Verificar que el archivo exista en el disco público
+        if (! Storage::disk('public')->exists($this->ruta_archivo)) {
+            throw new \Exception('El archivo no existe en el servidor.');
+        }
+
+        // Devolver la descarga con el nombre original
+        return Storage::disk('public')
+            ->download($this->ruta_archivo, $this->nombre_archivo);
+    }
+
+
 }

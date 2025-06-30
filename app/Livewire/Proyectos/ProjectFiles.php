@@ -61,6 +61,20 @@ class ProjectFiles extends Component
         session()->flash('message', 'Archivo subido exitosamente.');
     }
 
+    /**
+     * Acción Livewire para disparar la descarga de un archivo.
+     *
+     * @param  int  $id
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     */
+    public function downloadFile(int $id)
+    {
+        // Recupera el modelo y delega en su método descargar()
+        $archivo = ArchivoProyecto::findOrFail($id);
+
+        return $archivo->descargar();
+    }
+
     public function deleteFile($id)
     {
         $archivo = ArchivoProyecto::findOrFail($id);
