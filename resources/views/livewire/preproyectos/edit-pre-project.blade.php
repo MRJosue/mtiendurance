@@ -216,12 +216,13 @@
                                 {{ $file->nombre_archivo }}
                             </a>
                             @if (!$file->flag_descarga)
-                            
-                                <a  href="{{ Storage::url($file->ruta_archivo) }}" type="button"
-                                        wire:click="descargarArchivo({{ $file->id }})"
-                                        class="ml-4 text-green-600 hover:underline">
+                                <button
+                                    type="button"
+                                    wire:click.prevent="downloadFile({{ $file->id }})"
+                                    class="ml-4 text-green-600 hover:underline"
+                                >
                                     Descargar Archivo
-                                </a >
+                                </button>
                             @else
                                 <span class="ml-4 text-sm text-gray-500">(Descargado)</span>
                             @endif

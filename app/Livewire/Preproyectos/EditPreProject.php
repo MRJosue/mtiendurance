@@ -316,7 +316,7 @@ class EditPreProject extends Component
                 // Mensaje de éxito y redirección
                 session()->flash('message', 'El proyecto ha sido aprobado y transferido correctamente.');
 
-        return redirect()->route('preproyectos.index');
+              return redirect()->route('preproyectos.index');
         }else{
              session()->flash('message', 'Preproyecto actualizado exitosamente.');
 
@@ -844,19 +844,35 @@ class EditPreProject extends Component
     }
     
 
-    public function descargarArchivo($fileId)
+    // public function descargarArchivo($fileId)
+    // {
+    //     $archivo = ArchivoProyecto::where('id', $fileId)
+    //         ->where('pre_proyecto_id', $this->preProyectoId)
+    //         ->firstOrFail();
+
+    //     $archivo->update(['flag_descarga' => 1]);
+
+    //     // Recargar archivos para reflejar el estado actualizado
+    //     $this->existingFiles = ArchivoProyecto::where('pre_proyecto_id', $this->preProyectoId)->get();
+
+    //     // Emitir evento JS para forzar la descarga
+    //     $this->dispatch('archivoListoParaDescargar', url(Storage::url($archivo->ruta_archivo)));
+    // }
+
+    public function downloadFile(int $fileId)
     {
+        // 1) Recupera y marca
         $archivo = ArchivoProyecto::where('id', $fileId)
             ->where('pre_proyecto_id', $this->preProyectoId)
             ->firstOrFail();
 
-        $archivo->update(['flag_descarga' => 1]);
+        $archivo->update(attributes: ['flag_descarga' => 1]);
 
-        // Recargar archivos para reflejar el estado actualizado
+        // Refresca la lista para actualizar el badge “(Descargado)”
         $this->existingFiles = ArchivoProyecto::where('pre_proyecto_id', $this->preProyectoId)->get();
 
-        // Emitir evento JS para forzar la descarga
-        $this->dispatch('archivoListoParaDescargar', url(Storage::url($archivo->ruta_archivo)));
+        // 2) Delegar en el modelo la descarga real
+        return $archivo->descargar();
     }
 
     public function setReadOnlyMode()
