@@ -94,200 +94,113 @@
         </div>
     @endif
 
-<div class="mb-4 flex flex-wrap gap-2">
-    <!-- Exportar -->
-    <button
-        class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-        :disabled="selectedPedidos.length === 0"
-        wire:click="exportSelected"
-    >
-        Exportar
-    </button>
+    <div class="mb-4 flex flex-wrap gap-2">
+        <!-- Exportar -->
+        <button
+            class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="selectedPedidos.length === 0"
+            wire:click="exportSelected"
+        >
+            Exportar
+        </button>
 
-    <!-- Eliminar -->
-    <button
-        class="px-3 py-1.5 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-        :disabled="selectedPedidos.length === 0"
-        wire:click="deleteSelected"
-    >
-        Eliminar
-    </button>
+        <!-- Eliminar -->
+        <button
+            class="px-3 py-1.5 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="selectedPedidos.length === 0"
+            wire:click="deleteSelected"
+        >
+            Eliminar
+        </button>
 
-    <!-- Crear Tarea -->
-    <button
-        class="px-3 py-1.5 text-sm bg-gray-500 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        :disabled="selectedPedidos.length === 0"
-        wire:click="abrirModalCrearTareaConPedidos"
-    >
-        Crear Tarea
-    </button>
+        <!-- Crear Tarea -->
+        <button
+            class="px-3 py-1.5 text-sm bg-gray-500 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="selectedPedidos.length === 0"
+            wire:click="abrirModalCrearTareaConPedidos"
+        >
+            Crear Tarea
+        </button>
 
-    <!-- Crear Orden de Corte -->
-    <button
-        class="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        :disabled="selectedPedidos.length === 0"
-        wire:click="abrirModalCrearOrdenCorte"
-    >
-        Crear Orden de Corte
-    </button>
-</div>
+        <!-- Crear Orden de Corte -->
+        <button
+            class="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="selectedPedidos.length === 0"
+            wire:click="abrirModalCrearOrdenCorte"
+        >
+            Crear Orden de Corte
+        </button>
+    </div>
 
 
 
         
-    <div class="overflow-x-auto">
-        <div class="inline-block min-w-full align-middle">
-            <table class="min-w-full text-sm text-left text-gray-700">
-                <thead class="bg-gray-100 text-xs uppercase tracking-wider">
+ <div class="overflow-x-auto bg-white rounded-lg shadow">
+            <table class="min-w-full border-collapse rounded-lg">
+                <thead class="bg-gray-100">
                     <tr>
-                        <th class="px-4 py-3 border">
-                            <input type="checkbox"
-                                wire:model="selectAll"
-                                @change="selectedPedidos = $event.target.checked ? @js($pedidos->pluck('id')) : []"
-                            />
+                        <th class="px-4 py-2 border">
+                            <input type="checkbox" wire:model="selectAll" @change="selectedPedidos = $event.target.checked ? @js($pedidos->pluck('id')) : []" />
                         </th>
-                        <th class="px-4 py-3 border">ID</th>
-                        {{-- <th class="px-4 py-3 border">Usuario</th> --}}
-                        <th class="px-4 py-3 border">Producto / Categoría</th>
-                        <th class="px-4 py-3 border">Caracteristicas</th>
-                        {{-- <th class="px-4 py-3 border">Total</th> --}}
-                        <th class="px-4 py-3 border">Tipo</th>
-                        <th class="px-4 py-3 border">Estado</th>
-                        <th class="px-4 py-3 border">Producción</th>
-                        <th class="px-4 py-3 border">Embarque</th>
-                        <th class="px-4 py-3 border">Entrega</th>
-                        <th class="px-4 py-3 border">Producción</th>
-                        <th class="px-4 py-3 border">Ordenes</th>
-                        <th class="px-4 py-3 border text-center">Acciones</th>
+                        <th class="px-4 py-2 border">ID</th>
+                        <th class="px-4 py-2 border">Producto / Categoría</th>
+                        <th class="px-4 py-2 border">Características</th>
+                        <th class="px-4 py-2 border">Total</th>
+                        <th class="px-4 py-2 border">Estado</th>
+                        <th class="px-4 py-2 border">Producción</th>
+                        <th class="px-4 py-2 border">Embarque</th>
+                        <th class="px-4 py-2 border">Entrega</th>
+                        <th class="px-4 py-2 border">Estatus Prod.</th>
+                        <th class="px-4 py-2 border">Órdenes</th>
+                        <th class="px-4 py-2 border text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($pedidos as $pedido)
-                        @php
-                            $hoy = \Carbon\Carbon::today();
-                            $color = 'bg-white';
-                            $fechaEntrega = $pedido->fecha_entrega ? \Carbon\Carbon::parse($pedido->fecha_entrega) : null;
-    
-                            if ($pedido->estado_produccion === 'COMPLETADO') {
-                                $color = 'bg-green-100';
-                            } elseif ($fechaEntrega) {
-                                $diff = $hoy->diffInDays($fechaEntrega, false);
-                                if ($diff > 7) $color = 'bg-white';
-                                elseif ($diff >= 4) $color = 'bg-yellow-100';
-                                elseif ($diff >= 1) $color = 'bg-orange-100';
-                                else $color = 'bg-red-100';
-                            }
-                        @endphp
-    
-                        <tr class="{{ $color }} hover:bg-gray-50 transition">
+                        <tr class="hover:bg-gray-50 transition {{ $pedido->estado_produccion === 'COMPLETADO' ? 'bg-green-100' : '' }}">
                             <td class="px-4 py-2 border">
-                                <input type="checkbox"
-                                    wire:model="selectedPedidos"
-                                    value="{{ $pedido->id }}"
-                                />
+                                <input type="checkbox" wire:model="selectedPedidos" value="{{ $pedido->id }}" />
                             </td>
                             <td class="px-4 py-2 border font-semibold">{{ $pedido->id }}-{{ $pedido->proyecto_id }}</td>
-                            {{-- <td class="px-4 py-2 border">{{ $pedido->proyecto->user->name ?? 'Sin usuario' }}</td> --}}
                             <td class="px-4 py-2 border">
                                 <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
                                 <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
                             </td>
-                            <td class="px-4 py-2 border">
+                            <td class="px-4 py-2 border text-sm text-gray-700">
                                 @if($pedido->pedidoCaracteristicas->isNotEmpty())
-                                    <ul class="list-disc list-inside text-sm text-gray-700">
+                                    <ul class="list-disc list-inside">
                                         @foreach($pedido->pedidoCaracteristicas as $pc)
-                                            <li class="font-semibold">{{ $pc->caracteristica->nombre ?? 'Sin característica' }}
-                                                @php
-                                                    $opcionesRelacionadas = $pedido->pedidoOpciones
-                                                        ->filter(fn($po) =>
-                                                            $po->opcion &&
-                                                            $po->opcion->caracteristicas->pluck('id')->contains($pc->caracteristica_id)
-                                                        );
-                                                @endphp
-                                                @if($opcionesRelacionadas->isNotEmpty())
-                                                    <ul class="list-disc list-inside ml-4 text-xs text-gray-600">
-                                                        @foreach($opcionesRelacionadas as $opcion)
-                                                            <li>{{ $opcion->opcion->nombre ?? 'Sin opción' }} @if($opcion->valor)  @endif</li>
-                                                        @endforeach
-                                                    </ul>
-                                                @else
-                                                    <div class="text-xs text-gray-400 ml-4">Sin opciones</div>
-                                                @endif
-                                            </li>
+                                            <li>{{ $pc->caracteristica->nombre }}</li>
                                         @endforeach
                                     </ul>
                                 @else
-                                    <span class="text-gray-500 text-sm">Sin características</span>
+                                    <span class="text-gray-500">Sin características</span>
                                 @endif
                             </td>
                             <td class="px-4 py-2 border">{{ $pedido->total }} piezas</td>
-                            {{-- <td class="px-4 py-2 border">{{ $pedido->tipo }}</td> --}}
                             <td class="px-4 py-2 border">
-                                <span class="text-xs font-bold px-2 py-1 rounded text-white"
-                                    style="background-color:
-                                        @if($pedido->estado === 'POR APROBAR') #FBBF24
-                                        @elseif($pedido->estado === 'APROBADO') #10B981
-                                        @elseif($pedido->estado === 'ENTREGADO') #3B82F6
-                                        @elseif($pedido->estado === 'RECHAZADO') #EF4444
-                                        @elseif($pedido->estado === 'ARCHIVADO') #6B7280
-                                        @elseif($pedido->estado === 'POR REPROGRAMAR') #E74C3C
-                                        @else #D1D5DB @endif;">
-                                    {{ strtoupper($pedido->estado) }}
+                                <span class="px-2 py-1 rounded-full text-xs font-semibold {{ $pedido->estado === 'POR APROBAR' ? 'bg-yellow-400 text-black' : ($pedido->estado === 'APROBADO' ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700') }}">
+                                    {{ $pedido->estado }}
                                 </span>
                             </td>
-                            <td class="px-4 py-2 border">{{ $pedido->fecha_produccion ?? 'No definida' }}</td>
-                            <td class="px-4 py-2 border">{{ $pedido->fecha_embarque ?? 'No definida' }}</td>
-                            <td class="px-4 py-2 border">{{ $pedido->fecha_entrega ?? 'No definida' }}</td>
-                            <td class="px-4 py-2 border">
-                                <span class="text-xs bg-gray-100 px-2 py-1 rounded text-gray-800">
-                                    {{ $pedido->estado_produccion ?? 'Sin definir' }}
-                                </span>
-                            </td>
+                            <td class="px-4 py-2 border">{{ $pedido->fecha_produccion ?? 'N/D' }}</td>
+                            <td class="px-4 py-2 border">{{ $pedido->fecha_embarque ?? 'N/D' }}</td>
+                            <td class="px-4 py-2 border">{{ $pedido->fecha_entrega ?? 'N/D' }}</td>
+                            <td class="px-4 py-2 border text-xs bg-gray-100 rounded text-gray-800">{{ $pedido->estado_produccion }}</td>
                             <td class="px-4 py-2 border text-center">
-                                <button wire:click="verOrdenesDePedido({{ $pedido->id }})"
-                                    class="text-blue-600 hover:underline text-sm">
-                                    Ver más
-                                </button>
+                                <button wire:click="verOrdenesDePedido({{ $pedido->id }})" class="text-blue-500 hover:underline text-sm">Ver más</button>
                             </td>
-                            <td class="px-4 py-2 border text-center space-y-1">
-                                <button wire:click="abrirModal({{ $pedido->id }})"
-                                        class="w-full px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">
-                                    Editar
-                                </button>
-    
-                                @if($pedido->estado === 'POR REPROGRAMAR')
-                                    <a href="{{ route('reprogramacion.reprogramacionproyectopedido', ['proyecto' => $pedido->proyecto_id]) }}"
-                                    class="w-full block px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600">
-                                        Reprogramar
-                                    </a>
-                                @endif
-                                @if($pedido->flag_aprobar_sin_fechas == 0 && $pedido->estado == 'POR APROBAR')
-                                    <button wire:click="confirmarAprobarSinFechas({{ $pedido->id }})"
-                                            class="w-full px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-                                        Aprobar sin fechas
-                                    </button>
-                                @endif
-
-                                <button wire:click="abrirModalCrearTarea({{ $pedido->id }})"
-                                    class="w-full px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                                    Crear Tarea
-                                </button>
-
-
-
+                            <td class="px-4 py-2 border space-y-1 text-center">
+                                <button wire:click="abrirModal({{ $pedido->id }})" class="w-full px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs">Editar</button>
+                                <button wire:click="abrirModalCrearTarea({{ $pedido->id }})" class="w-full px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-xs">Tarea</button>
                             </td>
                         </tr>
                     @empty
-                        <tr>
-                            <td colspan="13" class="text-center py-4 text-gray-500">
-                                No hay pedidos disponibles.
-                            </td>
-                        </tr>
+                        <tr><td colspan="12" class="py-4 text-center text-gray-500">No hay pedidos disponibles.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </div>
     
 
     <div class="mt-4">

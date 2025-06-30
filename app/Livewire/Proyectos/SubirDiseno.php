@@ -85,6 +85,7 @@ class SubirDiseno extends Component
             'tipo_archivo' => $this->archivo->getClientMimeType(),
             'usuario_id' => Auth::id(),
             'descripcion' => $this->comentario,
+            'tipo_carga' => 1,
         ]);
 
         $proyecto->estado = 'REVISION';
@@ -453,6 +454,7 @@ class SubirDiseno extends Component
             'tipo_archivo' => $this->archivo->getClientMimeType(),
             'usuario_id' => Auth::id(),
             'descripcion' => $this->comentario,
+            'tipo_carga' => 1,
         ]);
 
         $archivo = ArchivoProyecto::where('proyecto_id', $proyecto->id)->latest('id')->first();
