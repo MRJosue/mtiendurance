@@ -300,8 +300,8 @@
                 <label class="block text-sm font-medium text-gray-700">Usuario</label>
                 <select wire:model="selectedUser" class="w-full p-2 border rounded mb-3">
                     <option value="">Seleccione un usuario</option>
-                    @foreach($users as $user)
-                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                    @foreach($designers as $designer)
+                        <option value="{{ $designer->id }}">{{ $designer->name }}</option>
                     @endforeach
                 </select>
                 @error('selectedUser')
