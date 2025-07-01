@@ -17,6 +17,8 @@ use App\Http\Controllers\ciudadescontroller;
 use App\Http\Controllers\tipoenviocontroller;
 use App\Http\Controllers\estadoscontroller;
 use App\Http\Controllers\paisescontroller;
+use App\Http\Controllers\PedidosController;
+
 
 use App\Http\Controllers\ProyectosController;
 use App\Http\Controllers\PreproyectosController;
@@ -123,6 +125,10 @@ Route::middleware('auth')->group(function () {
 // proyectos
 Route::get('/proyectos',[ProyectosController::class, 'index'])->middleware(['auth','verified'])->name('proyectos.index');
 Route::get('/proyectos/{proyecto}', [ProyectosController::class, 'show'])->middleware(['auth', 'verified'])->name('proyecto.show');
+
+
+// Pedidos
+Route::get('/pedidos',[PedidosController::class, 'index'])->middleware(['auth','verified'])->name('pedidos.index');
 
 //preproyectos
 Route::get('/preproyectos',[PreproyectosController::class, 'index'])->middleware(['auth','verified'])->name('preproyectos.index');
