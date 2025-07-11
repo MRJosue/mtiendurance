@@ -29,6 +29,7 @@ use App\Http\Controllers\TallasController;
 use App\Http\Controllers\DisenioController;
 
 use App\Http\Controllers\ProgramacionController;
+use App\Http\Controllers\ProduccionController;
 use App\Http\Controllers\ReprogramacionProyecto;
 use App\Http\Controllers\tareasproduccion;
 
@@ -160,8 +161,11 @@ Route::get('/diseño/disenio_detalle/{proyecto}',[DisenioController::class, 'dis
 Route::get('/diseño/admin_tarea',[DisenioController::class, 'admin_tarea'])->middleware(['auth','verified'])->name('disenio.admin_tarea');
 
 
-// Rutas de programacion 
+// Rutas de programacion - Produccion
 Route::get('/programacion',[ProgramacionController::class, 'index'])->middleware(['auth','verified'])->name('programacion.index');
+Route::get('/produccion/Administraciondepedidos',[ProduccionController::class, 'adminpedidos'])->middleware(['auth','verified'])->name('produccion.adminpedidos');
+Route::get('/produccion/Administraciondemuestras',[ProduccionController::class, 'adminmuestras'])->middleware(['auth','verified'])->name('produccion.adminmuestras');
+// Route::get('/produccion/{estatus}',[ProduccionController::class, 'estatus'])->middleware(['auth','verified'])->name('programacion.index');
             
 
 
@@ -170,6 +174,7 @@ Route::get('/reprogramacion/{proyecto}',[ReprogramacionProyecto::class, 'index']
 
 // produccion 
 Route::get('/produccion/tareas',[tareasproduccion::class, 'index'])->middleware(['auth','verified'])->name('produccion.tareas');
+Route::get('/produccion/aprobacion_especial',[tareasproduccion::class, 'aprobacion_especial'])->middleware(['auth','verified'])->name('produccion.aprobacion_especial');
 Route::get('/produccion/ordenes_produccion',[tareasproduccion::class, 'ordenes_produccion'])->middleware(['auth','verified'])->name('produccion.ordenes_produccion');
 Route::get('/produccion/ordenes_produccion/imprimir/{orden}', [tareasproduccion::class, 'imprimirOrdenProduccion']) ->middleware(['auth', 'verified'])->name('produccion.ordenes_produccion.imprimir');
 
@@ -198,6 +203,9 @@ Route::get('/produccion/ordenes_produccion/imprimir/{orden}', [tareasproduccion:
     Route::get('catalogos/tallas', [TallasController::class, 'tallas'])->middleware(['auth', 'verified'])->name('catalogos.tallas.tallas');
     // Grupos
     Route::get('catalogos/grupos', [TallasController::class, 'grupos'])->middleware(['auth', 'verified'])->name('catalogos.tallas.grupos');
+
+
+    Route::get('catalogos/flujoProduccion', [TallasController::class, 'flujoProduccion'])->middleware(['auth', 'verified'])->name('catalogos.flujoProduccion');
 
 // Prueba data tables
 

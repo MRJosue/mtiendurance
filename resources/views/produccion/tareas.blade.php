@@ -14,7 +14,8 @@
                    
                    
                    
-                    @livewire('produccion.tarea-produccion-crud')
+                    {{-- @livewire('produccion.tarea-produccion-crud') --}}
+                    @livewire('produccion.ordenes-produccion-crud')
 
 
 

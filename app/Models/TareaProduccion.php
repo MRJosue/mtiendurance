@@ -11,14 +11,12 @@ class TareaProduccion extends Model
 
     protected $table = 'tareas_produccion';
 
-    protected $fillable = [
-        
+   protected $fillable = [
+        'orden_paso_id',
         'usuario_id',
-        'crete_user',
-        'tipo',
+        'crete_user',      // <— aquí
         'descripcion',
         'estado',
-        'disenio_flag_first_proceso',
         'fecha_inicio',
         'fecha_fin',
     ];

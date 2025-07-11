@@ -20,4 +20,13 @@ class TallasController extends Controller
         }
         return view('catalogos.tallas.grupos');
     }
+
+
+
+    public function flujoProduccion(){
+        if (!auth()->user()->hasRole('admin')) {
+            return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
+        }
+        return view('catalogos.tallas.flujoproduccion');
+    }
 }

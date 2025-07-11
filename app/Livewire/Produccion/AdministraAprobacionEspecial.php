@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Livewire\Programacion;
+
+namespace App\Livewire\Produccion;
 
 use Livewire\Component;
+
 use Livewire\WithPagination;
 use App\Models\Pedido;
 use App\Models\DireccionEntrega;
@@ -23,13 +25,9 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
-
-
-class PedidosCrudGeneral extends Component
+class AdministraAprobacionEspecial extends Component
 {
     use WithPagination;
-
-
     public $modal = false;
     public $pedidoId, $total, $estatus, $tipo, $estado;
     public $fecha_produccion, $fecha_embarque, $fecha_entrega;
@@ -50,7 +48,6 @@ class PedidosCrudGeneral extends Component
     public $producto_nombre;
     public $categoria_nombre;
     public $proyecto_id_pedido;
-    // Filtros
     public $filtro_usuario = '';
     public $filtro_producto = '';
     public $filtro_categoria = '';
@@ -66,13 +63,10 @@ class PedidosCrudGeneral extends Component
     public $nuevoTareaPedidoId;
     public $nuevoTareaStaffId;
     public $nuevoTareaTipo = 'INDEFINIDA';
-
     public $usuarios = [];
     public $nuevoTareaDescripcion = '';
     public $modalCrearTareaConPedidos = false;
-    // Modal para crear Orden de Corte
     public $modalCrearOrdenCorte = false;
-    // Datos de la nueva Orden de Corte
     public $ordenCorte_fecha_inicio;
     public $ordenCorte_total;
     public $ordenCorte_caracteristicas = '';
@@ -80,6 +74,9 @@ class PedidosCrudGeneral extends Component
     public $ordenCorte_tallas_json = [];
     public $modalOrdenes = false;
     public $pedidoOrdenes = [];
+    public $modalCrearOrdenProduccion = false;
+    public $ordenProd_fecha_inicio;
+    public $ordenProd_tipo = 'CORTE';
 
 
     public function mount()
@@ -368,17 +365,22 @@ class PedidosCrudGeneral extends Component
         }
         
         if ($this->filtro_estado) {
-            $query->where('estado', $this->filtro_estado);
+            $query->where('estado', 'APROBADO');
         }
         
         if ($this->filtro_estado_produccion) {
             $query->where('estado_produccion', $this->filtro_estado_produccion);
         }
-        
-        return view('livewire.programacion.pedidos-crud-general', [
+
+
+        $query->where('tipo', 'PEDIDO');
+
+        return view('livewire.produccion.administra-pedidos-crud', [
             
-            'pedidos' => $query->orderByDesc('created_at')->paginate(10),
+            'pedidos' => $query->orderByDesc(column: 'created_at')->paginate(10),
         ]);
+
+
         // return view('livewire.programacion.pedidos-crud-general', [
         //     'pedidos' => $query->orderByDesc('created_at')->paginate(10),
         //     'productos_activos' => Producto::where('ind_activo', 1)->get(),
@@ -399,7 +401,6 @@ class PedidosCrudGeneral extends Component
         // Implementa la lógica de exportación aquí
         session()->flash('message', 'Exportación completada.');
     }
-
 
     public function confirmarAprobarSinFechas($pedidoId)
     {
@@ -515,7 +516,6 @@ class PedidosCrudGeneral extends Component
        
         $this->reset([
             'ordenCorte_fecha_inicio',
-        
             'ordenCorte_caracteristicas',
             'ordenCorte_tallas',
             'ordenCorte_tallas_json',
@@ -630,7 +630,7 @@ class PedidosCrudGeneral extends Component
     {
         $pedido = Pedido::find($pedidoId);
     
-        $this->pedidoOrdenes = \App\Models\OrdenProduccion::with(['pedidos', 'ordenCorte'])
+        $this->pedidoOrdenes = OrdenProduccion::with(['pedidos', 'ordenCorte'])
             ->whereHas('pedidos', fn($q) => $q->where('pedido.id', $pedidoId))
             ->get()
             ->map(function ($orden) {
@@ -651,9 +651,87 @@ class PedidosCrudGeneral extends Component
     
         $this->modalOrdenes = true;
     }
+    /**
+     * Abre el modal para crear órdenes de producción (varios o uno a uno).
+     */
+    public function abrirModalCrearOrdenProduccion()
+    {
+        if (empty($this->selectedPedidos)) {
+            session()->flash('error', 'Debes seleccionar al menos un pedido para crear una Orden de Producción.');
+            return;
+        }
 
+        $this->reset(['ordenProd_fecha_inicio', 'ordenProd_tipo']);
+        $this->modalCrearOrdenProduccion = true;
+    }
+    /**
+     * Guarda la nueva Orden de Producción (sin sub-orden de corte).
+    */
+    public function guardarOrdenProduccion()
+    {
+        $this->validate([
+            'ordenProd_fecha_inicio' => 'required|date',
+            'ordenProd_tipo'         => 'required|in:CORTE,PINTURA,ETIQUETADO,BORDADO,OTRO',
+            // eliminamos validación de flujo dinámico; usaremos id fijo
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // 1️⃣ Crear la orden de producción general, con flujo_id = 1
+            $orden = OrdenProduccion::create([
+                'crete_user' => auth()->id(),
+                'tipo'       => $this->ordenProd_tipo,
+                'flujo_id'   => 1, // uso fijo del flujo 1
+            ]);
+
+            // 2️⃣ Relacionar los pedidos seleccionados
+            foreach ($this->selectedPedidos as $pedidoId) {
+                DB::table('pedido_orden_produccion')->insert([
+                    'pedido_id'            => $pedidoId,
+                    'orden_produccion_id'  => $orden->id,
+                    'created_at'           => now(),
+                    'updated_at'           => now(),
+                ]);
+            }
+
+            // 3️⃣ Inyección de pasos según el JSON del flujo #1
+            $steps = data_get($orden->flujo->config, 'steps', []);
+            foreach ($steps as $step) {
+                $paso = $orden->ordenPasos()->create([
+                    'nombre'         => $step['name'],
+                    'grupo_paralelo' => $step['grupo'],
+                    'estado'         => $step['grupo'] === 1 ? 'EN_PROCESO' : 'PENDIENTE',
+                    'fecha_inicio'   => $step['grupo'] === 1 ? now() : null,
+                ]);
+
+                // 4️⃣ Crear tarea inicial sólo para el primer grupo
+                if ($step['grupo'] === 1) {
+                    $paso->tareasProduccion()->create([
+                        'usuario_id'  => auth()->id(),
+                        'crete_user'  => auth()->id(),   
+                        'descripcion' => "Tarea inicial: {$step['name']}",
+                        // estado por defecto PENDIENTE
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            session()->flash('message', '✅ Orden de Producción creada exitosamente.');
+            $this->dispatch('ActualizarTablaPedido');
+            $this->reset(['modalCrearOrdenProduccion', 'selectedPedidos', 'ordenProd_tipo']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al crear Orden de Producción', ['error' => $e->getMessage()]);
+            session()->flash('error', 'Error al crear la orden de producción.');
+        }
+    }
+
+
+    // public function render()
+    // {
+    //     return view('livewire.produccion.administra-aprobacion-especial');
+    // }
 }
 
-
-
-//  return view('livewire.programacion.pedidos-crud-general');

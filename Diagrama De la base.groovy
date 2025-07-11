@@ -249,8 +249,9 @@ Table pedido {
 
 Table ordenes_produccion {
   id bigint [pk]
-  crete_user bigint [ref: > users.id]
-  tipo enum('CORTE', 'BORDADO', 'PINTURA', 'ETIQUETADO', 'OTRO')
+  create_user bigint [ref: > users.id]
+  flujo_id int      [ref: > flujos_produccion.id]
+  tipo enum('CORTE','BORDADO','PINTURA','ETIQUETADO','OTRO')
   created_at timestamp
   updated_at timestamp
 }
@@ -276,6 +277,27 @@ Table orden_corte {
 }
 
 
+Table flujos_produccion {
+  id int [pk, increment]
+  nombre varchar
+  descripcion text
+  config json        [note: 'Definición dinámica de pasos, grupos y dependencias']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table orden_paso {
+  id bigint [pk, increment]
+  orden_produccion_id bigint [ref: > ordenes_produccion.id]
+  nombre varchar       [note: 'Nombre del paso, e.g. CORTE, IMPRESIÓN…']
+  grupo_paralelo int   [note: 'Mismos valores = se ejecutan juntos']
+  estado enum('PENDIENTE','EN_PROCESO','COMPLETADO') [default:'PENDIENTE']
+  fecha_inicio timestamp
+  fecha_fin timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
 Table pedido_estados {
   id INT [pk, not null]
   pedido_id INT [not null, ref: > pedido.id]
@@ -288,17 +310,15 @@ Table pedido_estados {
 
 
 Table tareas_produccion {
-  id BIGINT [pk, increment]
-  usuario_id BIGINT [ref: > users.id]
-  crete_user BIGINT [ref: > users.id]
-  tipo ENUM('DISEÑO', 'CORTE', 'BORDADO', 'PINTURA', 'FACTURACION', 'INDEFINIDA')
-  descripcion VARCHAR
-  estado ENUM('PENDIENTE', 'EN PROCESO', 'FINALIZADO', 'CANCELADO')
-  disenio_flag_first_proceso BOOLEAN
-  fecha_inicio TIMESTAMP
-  fecha_fin TIMESTAMP
-  created_at TIMESTAMP
-  updated_at TIMESTAMP
+  id bigint [pk, increment]
+  orden_paso_id bigint [ref: > orden_paso.id]
+  usuario_id bigint   [ref: > users.id]
+  descripcion text
+  estado enum('PENDIENTE','EN_PROCESO','FINALIZADO','CANCELADO') [default:'PENDIENTE']
+  fecha_inicio timestamp
+  fecha_fin timestamp
+  created_at timestamp
+  updated_at timestamp
 }
 
 Table pedido_tarea {

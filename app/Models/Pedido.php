@@ -197,7 +197,16 @@ class Pedido extends Model
         );
     }
 
-    
+
+    public function getUltimoEstatusOrdenProduccionAttribute()
+    {
+        $orden = $this->ordenesProduccion()->orderByDesc('created_at')->first();
+        if ($orden) {
+            return ($orden->tipo ?? 'N/D') . ':' . ($orden->estado ?? 'N/D');
+        }
+        return null;
+    }
+        
     public static function crearMuestra($proyectoId, $data)
     {
         Log::debug('ON crearDesdeProyecto');

@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Livewire\Programacion;
+namespace App\Livewire\Produccion;
 
 use Livewire\Component;
+
 use Livewire\WithPagination;
 use App\Models\Pedido;
 use App\Models\DireccionEntrega;
@@ -24,9 +25,10 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 
-
-class PedidosCrudGeneral extends Component
+class AdministraMuestraCrud extends Component
 {
+
+
     use WithPagination;
 
 
@@ -374,8 +376,10 @@ class PedidosCrudGeneral extends Component
         if ($this->filtro_estado_produccion) {
             $query->where('estado_produccion', $this->filtro_estado_produccion);
         }
+
+         $query->where('tipo', 'MUESTRA');
         
-        return view('livewire.programacion.pedidos-crud-general', [
+        return view('livewire.produccion.administra-muestra-crud', [
             
             'pedidos' => $query->orderByDesc('created_at')->paginate(10),
         ]);
@@ -652,8 +656,8 @@ class PedidosCrudGeneral extends Component
         $this->modalOrdenes = true;
     }
 
+    // public function render()
+    // {
+    //     return view('livewire.produccion.administra-muestra-crud');
+    // }
 }
-
-
-
-//  return view('livewire.programacion.pedidos-crud-general');
