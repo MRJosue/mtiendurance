@@ -114,7 +114,7 @@ class AdministrarTareas extends Component
             $this->mostrarModalConfirmacion = true;
             $this->proyectoPendienteConfirmacion = $tarea->proyecto;
         } else {
-            return redirect()->route('proyecto.show', $proyectoId);
+            return redirect()->route('disenio.disenio_detalle', $proyectoId);
         }
     }
 
