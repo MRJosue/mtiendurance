@@ -1,6 +1,14 @@
 const defaultTheme = require('tailwindcss/defaultTheme')
 const forms = require('@tailwindcss/forms')
+
+const colors = require('tailwindcss/colors')
+
+
 module.exports = {
+
+      presets: [
+        require("./vendor/wireui/wireui/tailwind.config.js")
+    ],
   content: [
     './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
     './vendor/rappasoft/laravel-livewire-tables/resources/views/**/*.blade.php',
@@ -16,6 +24,15 @@ module.exports = {
   ],
   theme: {
     extend: {
+            colors: {
+        primary: colors.indigo,
+        secondary: colors.slate,
+        positive: colors.emerald,
+        negative: colors.red,
+        warning: colors.amber,
+        info: colors.blue,
+        // Puedes agregar más aquí si quieres
+      },
       fontFamily: {
         sans: ['Figtree', ...defaultTheme.fontFamily.sans],
       },

@@ -4,6 +4,8 @@ namespace App\Livewire\Usuarios;
 
 use Livewire\Component;
 use Spatie\Permission\Models\Role;
+use App\Models\GrupoOrden; // Importa tu modelo
+
 use Spatie\Permission\Models\Permission;
 use Livewire\WithPagination;
 
@@ -21,6 +23,8 @@ class RolesCrud extends Component
 
     protected $paginationTheme = 'tailwind';
 
+    protected $listeners = ['togglePermiso'];
+
     public function render()
     {
         $roles = Role::query();
@@ -29,9 +33,15 @@ class RolesCrud extends Component
             $roles->where('name', 'like', '%' . $this->search . '%');
         }
 
+        // Aquí agrupas permisos por grupo para el modal
+        $grupos = GrupoOrden::with(['permissions' => function ($q) {
+            $q->orderBy('grupo_orden_permission.orden');
+        }])->orderBy('nombre')->get();
+
         return view('livewire.usuarios.roles-crud', [
             'rolesList' => $roles->paginate(10),
-            'permisos' => Permission::orderBy('name')->get(),
+            'permisos' => Permission::orderBy('name')->get(), // Si lo sigues usando en otra parte
+            'grupos' => $grupos, // Pásalo a la vista para el modal
         ]);
     }
 
@@ -90,4 +100,22 @@ class RolesCrud extends Component
         $this->nombre = '';
         $this->permisosSeleccionados = [];
     }
+
+public function togglePermiso($role_id, $permiso_id, $checked)
+{
+    $role = \Spatie\Permission\Models\Role::find($role_id);
+    $permiso = \Spatie\Permission\Models\Permission::find($permiso_id);
+    if ($role && $permiso) {
+        if ($checked) {
+            if (!$role->hasPermissionTo($permiso->name)) {
+                $role->givePermissionTo($permiso->name);
+            }
+        } else {
+            if ($role->hasPermissionTo($permiso->name)) {
+                $role->revokePermissionTo($permiso->name);
+            }
+        }
+    }
+    $this->resetPage();
+}
 }

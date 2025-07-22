@@ -12,14 +12,20 @@ class OrdenesProduccionCrud extends Component
 {
     public $ordenId;
     public $modalOpen = false;
-
     public $assigned_user_id;
     public $tipo;
     public $estado;
     public $descripcion;
     public $flujo_id;
-
     public $ordenEdit;
+    public $modalCaracteristicas = false;
+    public $ordenCaracteristicas = null;
+
+
+    public $modalEntrega = false;
+    public $ordenEntrega;
+    public $piezasEntregadas = [];
+
 
     // Define los posibles estados (puedes ajustarlos)
     public $estadosDisponibles = [
@@ -75,8 +81,11 @@ class OrdenesProduccionCrud extends Component
     public function avanzarEstado($ordenId)
     {
         $orden = OrdenProduccion::findOrFail($ordenId);
+        if ($orden->estado === 'EN PROCESO') {
+            $this->abrirModalEntrega($ordenId);
+            return;
+        }
 
-        // Define el orden de los estados:
         $estados = ['SIN INICIAR', 'EN PROCESO', 'TERMINADO'];
         $idx = array_search($orden->estado, $estados);
         if ($idx !== false && $idx < count($estados) - 1) {
@@ -111,4 +120,52 @@ class OrdenesProduccionCrud extends Component
             'flujos'   => \App\Models\FlujoProduccion::all(),
         ]);
     }
+
+    public function verCaracteristicas($ordenId)
+    {
+        $this->ordenCaracteristicas = \App\Models\OrdenProduccion::with([
+            'pedidos.pedidoCaracteristicas.caracteristica',
+            'pedidos.pedidoOpciones.opcion.caracteristicas',
+            'pedidos.proyecto'
+        ])->findOrFail($ordenId);
+
+        $this->modalCaracteristicas = true;
+    }
+
+    public function abrirModalEntrega($ordenId)
+    {
+        $this->ordenEntrega = OrdenProduccion::with(['pedidos.proyecto', 'pedidos.pedidoCaracteristicas.caracteristica'])->findOrFail($ordenId);
+
+        // Inicializar cantidades entregadas si no existen
+        foreach ($this->ordenEntrega->pedidos as $pedido) {
+            $this->piezasEntregadas[$pedido->id] = $pedido->piezas_entregadas ?? 0;
+        }
+
+        $this->modalEntrega = true;
+    }
+
+    public function confirmarEntrega()
+    {
+        foreach ($this->ordenEntrega->pedidos as $pedido) {
+            $entregadas = $this->piezasEntregadas[$pedido->id] ?? 0;
+            if ($entregadas < $pedido->total) {
+                session()->flash('message', "Faltan piezas por entregar en el pedido #{$pedido->id}.");
+                return;
+            }
+
+            $pedido->update([
+                'piezas_entregadas' => $entregadas
+            ]);
+        }
+
+        $this->ordenEntrega->update([
+            'estado' => 'TERMINADO',
+            'fecha_terminado' => now(),
+        ]);
+
+        $this->modalEntrega = false;
+        session()->flash('message', "Orden #{$this->ordenEntrega->id} marcada como TERMINADA.");
+    }
+
+    
 }

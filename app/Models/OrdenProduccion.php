@@ -19,7 +19,7 @@ class OrdenProduccion extends Model
         'tipo',
         'estado',
         'flujo_id',
-        'fecha_sin_iniciar',
+        'fecha_si_iniciar',
         'fecha_en_proceso',
         'fecha_terminado',
         'fecha_cancelado',
@@ -31,7 +31,7 @@ class OrdenProduccion extends Model
         return $this->hasOne(OrdenCorte::class, 'orden_produccion_id');
     }
 
-    public function creador(): BelongsTo
+    public function creador()
     {
         return $this->belongsTo(User::class, 'create_user');
     }

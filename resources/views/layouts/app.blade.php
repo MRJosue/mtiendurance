@@ -13,17 +13,18 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     
 
-    <!-- Vite Assets -->
-    {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
-    {{-- @vite('resources/js/app.js') --}}
 
-         <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     @vite(['resources/css/app.css','resources/js/app.js'])
+
     @livewireStyles
+  @wireUiScripts
+  
 
+  
 
-     @wireUiStyles
-    {{-- <script src="https://cdn.jsdelivr.net/npm/@wireui/scripts@1.0.0/dist/index.umd.js"></script> --}}
+  
+    
 </head>
 
 <body class="font-sans antialiased bg-gray-100 dark:bg-gray-900"
@@ -110,8 +111,9 @@
 
             
         </div>
-        @wireUiScripts
+        
         @livewireScripts
+
         @stack('scripts')
         <x-notify::notify />
         

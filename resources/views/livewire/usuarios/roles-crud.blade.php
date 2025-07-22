@@ -31,13 +31,47 @@
             @foreach($rolesList as $rol)
                 <tr>
                     <td class="border border-gray-300 p-2">{{ $rol->name }}</td>
-                    <td class="border border-gray-300 p-2">
-                        @foreach($rol->permissions as $permiso)
-                            <span class="inline-block bg-gray-200 text-gray-800 text-xs font-semibold mr-1 mb-1 px-2 py-1 rounded">
-                                {{ $permiso->name }}
-                            </span>
-                        @endforeach
-                    </td>
+<td class="border border-gray-300 p-2">
+    @foreach($grupos as $grupo)
+        @php
+            $permisosDeRol = $rol->permissions->pluck('id')->toArray();
+            $permisosGrupo = $grupo->permissions->pluck('id')->toArray();
+            $permisosAsignados = array_intersect($permisosDeRol, $permisosGrupo);
+        @endphp
+        @if(count($permisosGrupo))
+            <div x-data="{ abierto_{{ $grupo->id }}: false }" class="mb-2">
+                <!-- Título del grupo -->
+                <button
+                    type="button"
+                    class="w-full flex items-center justify-between px-2 py-1 bg-gray-100 rounded font-semibold text-blue-700 hover:bg-blue-50"
+                    @click="abierto_{{ $grupo->id }} = !abierto_{{ $grupo->id }}"
+                >
+                    <span>{{ $grupo->nombre }}</span>
+                    <svg :class="{ 'rotate-180': abierto_{{ $grupo->id }} }" class="w-4 h-4 transition-transform"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <!-- Permisos con checkbox en grid 2 columnas -->
+                <div x-show="abierto_{{ $grupo->id }}" x-transition class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1">
+                    @foreach($grupo->permissions as $permiso)
+                        <label class="flex items-center space-x-2 px-2 py-1 bg-gray-100 rounded">
+                            <input
+                                type="checkbox"
+                                @change="$wire.dispatch('togglePermiso', { role_id: {{ $rol->id }}, permiso_id: {{ $permiso->id }}, checked: $event.target.checked })"
+                                {{ in_array($permiso->id, $permisosDeRol) ? 'checked' : '' }}
+                            >
+                            <span class="text-xs text-gray-700 font-semibold">{{ $permiso->name }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+    @endforeach
+</td>
+
+
                     <td class="border border-gray-300 p-2 flex space-x-2 justify-center">
                         <button wire:click="editar('{{ $rol->id }}')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
                             Editar

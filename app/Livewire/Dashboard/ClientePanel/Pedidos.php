@@ -5,6 +5,7 @@ namespace App\Livewire\Dashboard\ClientePanel;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Pedido;
+use Illuminate\Support\Facades\Log;
 
 class Pedidos extends Component
 {
@@ -18,6 +19,9 @@ class Pedidos extends Component
     public bool $mostrarFiltros          = false;
     public bool $mostrarSoloNoAprobados  = true;
 
+    public $modalVerInfo = false;
+    public $infoProyecto = null;
+
     /* ---- Manipuladores de UI ---- */
     public function setTab(string $tab): void
     {
@@ -30,6 +34,25 @@ class Pedidos extends Component
     public function buscarPorFiltros(): void
     {
         $this->resetPage();
+    }
+
+
+    public function abrirModalVerInfo($proyectoId)
+    {
+        Log::debug('Datos del usuario procesados Open modal');
+
+$proyecto = \App\Models\Proyecto::with([
+    'user',
+    'categoria',
+])->findOrFail($proyectoId);
+
+        // Asegúrate de que los campos sean arrays
+        $proyecto->caracteristicas_sel = is_array($proyecto->caracteristicas_sel) ? $proyecto->caracteristicas_sel : json_decode($proyecto->caracteristicas_sel, true);
+        $proyecto->producto_sel        = is_array($proyecto->producto_sel)        ? $proyecto->producto_sel        : json_decode($proyecto->producto_sel, true);
+        $proyecto->categoria_sel       = is_array($proyecto->categoria_sel)       ? $proyecto->categoria_sel       : json_decode($proyecto->categoria_sel, true);
+        
+        $this->infoProyecto = $proyecto;
+        $this->modalVerInfo = true;
     }
 
     /* ---- Render ---- */

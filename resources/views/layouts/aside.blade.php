@@ -153,14 +153,13 @@
                     >Tareas Produccion</a>
 
                 
-                <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Corte</a>
-                <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Sublimado</a>
-                <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Costura</a>
-                <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Maquila</a>
-                <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Facturacion</a>
-                <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Entrega</a>
-                <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Otro</a>
-                <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Rechazado</a>
+                <a href="{{ route('produccion.corte') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Corte</a>
+                <a href="{{ route('produccion.sublimado') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Sublimado</a>
+                <a href="{{ route('produccion.costura') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Costura</a>
+                <a href="{{ route('produccion.maquila') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Maquila</a>
+                <a href="{{ route('produccion.facturacion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Facturacion</a>
+                <a href="{{ route('produccion.entrega') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Entrega</a>
+
 
                 <a href="{{ route('produccion.ordenes_produccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Órdenes de Producción</a>
 

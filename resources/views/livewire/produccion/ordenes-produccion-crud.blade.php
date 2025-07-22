@@ -34,18 +34,36 @@
                                 <div class="text-xs">{{ $pedido->id }} ({{ $pedido->proyecto->nombre ?? '-' }})</div>
                             @endforeach
                         </td>
-                        <td class="border-b px-4 py-2 space-y-1">
+                        <td class="border-b px-4 py-2 space-y-0.5">
+
+                            <button 
+                                wire:click="verCaracteristicas({{ $orden->id }})"
+                                class="px-1 py-1 text-xs bg-violet-500 text-white rounded hover:bg-violet-600 w-full flex items-center justify-center mb-0.5"
+                                title="Ver características"
+                            >
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+                                </svg>
+                                Características
+                            </button>
                             <button wire:click="abrirModal({{ $orden->id }})"
-                                class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 w-full mb-1">
+                                class="px-1 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 w-full flex items-center justify-center">
+                                <!-- Ejemplo de icono (puedes quitarlo si no usas Heroicons o similar) -->
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6-6M19 13V19a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h6"></path></svg>
                                 Editar
                             </button>
                             @if($orden->estado !== 'TERMINADO' && $orden->estado !== 'CANCELADO')
                                 <button wire:click="avanzarEstado({{ $orden->id }})"
-                                    class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 w-full mb-1">
-                                    Avanzar Estatus
+                                    class="px-1 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 w-full flex items-center justify-center">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a4 4 0 014-4h3" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5" />
+                                    </svg>
+                                    Avanzar
                                 </button>
                                 <button wire:click="cancelarOrden({{ $orden->id }})"
-                                    class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 w-full">
+                                    class="px-1 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 w-full flex items-center justify-center">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
                                     Cancelar
                                 </button>
                             @endif
@@ -105,17 +123,126 @@
                         <textarea wire:model="descripcion" class="w-full border rounded p-2"></textarea>
                     </div>
                     <div class="flex justify-end space-x-2 mt-4">
-                        <button type="button" wire:click="$set('modalOpen', false)" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cerrar</button>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Guardar</button>
+                        <button type="button" wire:click="$set('modalOpen', false)" class="px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Cerrar</button>
+                        <button type="submit" class="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">Guardar</button>
                     </div>
                 </form>
             </div>
         </div>
     @endif
 
+
+    @if($modalCaracteristicas && $ordenCaracteristicas)
+        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+            <div class="bg-white p-6 rounded shadow-lg w-full max-w-2xl overflow-y-auto max-h-[80vh]">
+                <h3 class="text-lg font-bold mb-4">Características de la Orden #{{ $ordenCaracteristicas->id }}</h3>
+                @forelse($ordenCaracteristicas->pedidos as $pedido)
+                    <div class="mb-4 border-b pb-2">
+                        <div class="text-sm font-bold text-gray-800 mb-1 flex items-center gap-2">
+                            Pedido #{{ $pedido->id }} ({{ $pedido->proyecto->nombre ?? '-' }})
+                            <span class="ml-2 bg-slate-200 text-blue-900 px-2 py-0.5 rounded text-xs font-semibold">
+                                Total piezas: {{ $pedido->total ?? '-' }}
+                            </span>
+                        </div>
+                        @if($pedido->pedidoCaracteristicas->isNotEmpty())
+                            <ul class="list-disc list-inside text-xs text-gray-700">
+                                @foreach($pedido->pedidoCaracteristicas as $pc)
+                                    <li>
+                                        <span class="font-bold">{{ $pc->caracteristica->nombre ?? 'Sin característica' }}</span>
+                                        @php
+                                            $opcionesRelacionadas = $pedido->pedidoOpciones
+                                                ->filter(fn($po) =>
+                                                    $po->opcion &&
+                                                    $po->opcion->caracteristicas->pluck('id')->contains($pc->caracteristica_id)
+                                                );
+                                        @endphp
+
+                                        
+                                        @if($opcionesRelacionadas->isNotEmpty())
+                                            <ul class="ml-4 list-disc">
+                                                @foreach($opcionesRelacionadas as $opcion)
+                                                    <li>{{ $opcion->opcion->nombre ?? 'Sin opción' }}</li>
+                                                @endforeach
+                                            </ul>
+                                        @else
+                                            <span class="ml-2 text-gray-400">(Sin opciones)</span>
+                                        @endif
+                                    </li>
+                                @endforeach
+
+                                @php
+                                            $totalPiezasOrden = $ordenCaracteristicas->pedidos->sum('total');
+                                        @endphp
+                                        <div class="mt-4 text-right font-bold text-lg text-gray-800">
+                                            Total de piezas de la orden: {{ $totalPiezasOrden }}
+                                        </div>
+                            </ul>
+                        @else
+                            <div class="text-xs text-gray-400">Sin características</div>
+                        @endif
+                    </div>
+                @empty
+                    <div class="text-center text-gray-500 py-4">No hay pedidos en esta orden.</div>
+                @endforelse
+
+                <div class="flex justify-end mt-4">
+                    <button type="button" wire:click="$set('modalCaracteristicas', false)"
+                        class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-xs">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+
+    @if($modalEntrega && $ordenEntrega)
+        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+            <div class="bg-white p-6 rounded shadow-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+                <h3 class="text-lg font-bold mb-4">Confirmar Entrega - Orden #{{ $ordenEntrega->id }}</h3>
+
+                @foreach($ordenEntrega->pedidos as $pedido)
+                    <div class="mb-4 border-b pb-2">
+                        <div class="text-sm font-bold text-gray-800">
+                            Pedido #{{ $pedido->id }} ({{ $pedido->proyecto->nombre ?? '-' }}) - {{ $pedido->producto->nombre ?? 'Sin producto' }}
+                        </div>
+                        <div class="text-xs text-gray-700 mb-1">
+                            Total piezas: {{ $pedido->total }}
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-xs text-gray-600">Piezas entregadas</label>
+                            <input type="number" wire:model.defer="piezasEntregadas.{{ $pedido->id }}"
+                                class="w-full border rounded px-2 py-1 text-sm" min="0" max="{{ $pedido->total }}">
+                        </div>
+
+                        @if($pedido->pedidoCaracteristicas->isNotEmpty())
+                            <ul class="list-disc list-inside text-xs text-gray-600">
+                                @foreach($pedido->pedidoCaracteristicas as $pc)
+                                    <li>{{ $pc->caracteristica->nombre ?? '-' }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
+                @endforeach
+
+                <div class="flex justify-end gap-2 mt-4">
+                    <button type="button" wire:click="$set('modalEntrega', false)"
+                        class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-xs">
+                        Cancelar
+                    </button>
+                    <button type="button" wire:click="confirmarEntrega"
+                        class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs">
+                        Confirmar Entrega y Terminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+
 </div>
 
-<!-- Script AlpineJS para modales (opcional) -->
+<!-- Script AlpineJS para modales -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // Aquí podrías poner lógica extra si necesitas para Alpine o Livewire

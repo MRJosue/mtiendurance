@@ -16,8 +16,8 @@ class UserSeeder extends Seeder
     {
         // Usuarios de prueba con contraseñas simples
         $adminUser = User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
+            'name' => 'german User',
+            'email' => 'german@mtiendurance.com',
             'password' => Hash::make('password123'), // Contraseña simple
           
            

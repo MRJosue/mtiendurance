@@ -88,7 +88,7 @@
                         <button
                             wire:click="setTab('{{ $tab }}')"
                             @class([
-                                'px-4 py-2 rounded-t-lg text-sm whitespace-nowrap',
+                                'px-2 py-1 rounded-t-lg text-sm whitespace-nowrap',
                                 'border-b-2 font-semibold bg-white' => $activeTab === $tab,
                                 'text-gray-600 hover:text-blue-500' => $activeTab !== $tab,
                                 'border-blue-500 text-blue-600'     => $activeTab === $tab,
@@ -104,36 +104,36 @@
             <table class="min-w-full table-fixed text-sm text-left text-gray-700">
                 <thead class="bg-gray-100 text-xs uppercase tracking-wider">
                     <tr>
-                        <th class="px-4 py-2 w-24">ID </th>
+                        <th class="px-2 py-1 w-24">ID </th>
                        
-                        <th class="px-4 py-2">Nombre del proyecto</th>
-                        <th class="px-4 py-2">Cliente</th>
-                        <th class="px-4 py-2">Producto / Categoría</th>
-                        <th class="px-4 py-2">Características</th>
-                        <th class="px-4 py-2">Total</th>
-                        <th class="px-4 py-2">Estado del Diseño</th>
-                        <th class="px-4 py-2">Estado del Pedido</th>
+                        <th class="px-2 py-1">Nombre del proyecto</th>
+                        <th class="px-2 py-1">Cliente</th>
+                        <th class="px-2 py-1">Producto / Categoría</th>
+                        {{-- <th class="px-2 py-1">Características</th> --}}
+                        <th class="px-2 py-1">Total</th>
+                        <th class="px-2 py-1">Estado del Diseño</th>
+                        <th class="px-2 py-1">Estado del Pedido</th>
                         
-                        <th class="px-4 py-2">Producción</th>
-                        <th class="px-4 py-2">Entrega</th>
-                        <th class="px-4 py-2">Acciones</th>
+                        <th class="px-2 py-1">Producción</th>
+                        <th class="px-2 py-1">Entrega</th>
+                        <th class="px-2 py-1">Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="text-xs">
                     @forelse($pedidos as $pedido)
                         <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-2 font-semibold"
+                            <td class="px-2 py-1 font-semibold"
                             title="Proyecto {{ $pedido->proyecto_id }} – Pedido #{{ $pedido->id }}: {{ $pedido->descripcion_corta }}"
                             >
                             {{ $pedido->proyecto_id }}-{{ $pedido->id }}
                             </td>
-                            <td class="px-4 py-2 font-bold">{{$pedido->proyecto->nombre}}</td>
-                            <td class="px-4 py-2 font-bold">{{$pedido->usuario->name ?? 'Sin cliente'}}</td>
-                            <td class="px-4 py-2">
+                            <td class="px-2 py-1 font-bold">{{$pedido->proyecto->nombre}}</td>
+                            <td class="px-2 py-1 font-bold">{{$pedido->usuario->name ?? 'Sin cliente'}}</td>
+                            <td class="px-2 py-1">
                                 <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
                                 <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
                             </td>
-                            <td class="px-4 py-2 align-top">
+                            {{-- <td class="px-2 py-1 align-top">
                                 @if($pedido->pedidoCaracteristicas->isNotEmpty())
                                     <ul class="list-none space-y-1 text-xs">
                                         @foreach($pedido->pedidoCaracteristicas as $index => $caracteristica)
@@ -168,10 +168,10 @@
                                 @else
                                     <span class="text-gray-400 text-xs">Sin características</span>
                                 @endif
-                            </td>
-                            <td class="px-4 py-2">{{ $pedido->total }} piezas</td>
+                            </td> --}}
+                            <td class="px-2 py-1">{{ $pedido->total }} piezas</td>
 
-                            <td class="px-4 py-2 ">
+                            <td class="px-2 py-1 ">
                                 @php
                                     $estado = strtoupper($pedido->proyecto->estado);
                                     $colores = [
@@ -191,7 +191,7 @@
                                 </span>
                             </td>
 
-                            <td class="px-4 py-2">
+                            <td class="px-2 py-1">
                                 <span class="px-2 py-1 rounded text-xs text-white"
                                       style="background-color:
                                       @if($pedido->estado === 'APROBADO') #10B981
@@ -207,12 +207,31 @@
 
 
 
-                            <td class="px-4 py-2">{{ $pedido->fecha_produccion ?? 'No definida' }}</td>
-                            <td class="px-4 py-2">{{ $pedido->fecha_entrega ?? 'No definida' }}</td>
+                            <td class="px-2 py-1">{{ $pedido->fecha_produccion ?? 'No definida' }}</td>
+                            <td class="px-2 py-1">{{ $pedido->fecha_entrega ?? 'No definida' }}</td>
                             <td>
-                                            <a href="{{ route('proyecto.show', $pedido->proyecto_id) }}" class="text-blue-500 hover:underline">
-                                                Ver detalles
-                                            </a>
+
+      
+                                    <div class="relative group inline-block">
+                                        <x-mini-button rounded icon="clipboard" flat red interaction="negative"  href="{{ route('proyecto.show', $pedido->proyecto_id) }}"  />
+                                        <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition">
+                                            Ir a Diseño
+                                        </div>
+                                    </div>
+
+                                    <div class="relative group inline-block">
+                                        <button 
+                                            wire:click="abrirModalVerInfo({{ $pedido->proyecto_id }})"
+                                            type="button"
+                                            class="focus:outline-none"
+                                        >
+                                            <x-mini-button rounded icon="information-circle" flat blue interaction="negative"    wire:click="abrirModalVerInfo({{ $pedido->proyecto_id }})"/>
+                                        </button>
+                                        <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition">
+                                            Ver información
+                                        </div>
+                                    </div>
+
                             </td>
                         </tr>
                     @empty
@@ -227,5 +246,57 @@
         <div class="mt-4">
             {{ $pedidos->links() }}
         </div>
+        
     </div>
+
+
+    @if($modalVerInfo && $infoProyecto)
+    <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div class="bg-white p-6 rounded shadow-lg w-full max-w-2xl relative overflow-y-auto max-h-[90vh]">
+            <h2 class="text-xl font-bold mb-4">Detalles del Proyecto</h2>
+            <button 
+                wire:click="$set('modalVerInfo', false)" 
+                class="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-2xl leading-none"
+                title="Cerrar"
+            >&times;</button>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <p class="text-lg"><span class="font-semibold">Cliente:</span> {{ $infoProyecto->user->name ?? 'Sin usuario' }}</p>
+                </div>
+                <div>
+                    <p class="text-lg"><span class="font-semibold">Proyecto:</span> {{ $infoProyecto->nombre }} <span class="text-sm font-bold">ID:{{ $infoProyecto->id }}</span></p>
+                </div>
+                <div class="sm:col-span-2">
+                    <p class="text-lg"><span class="font-semibold">Descripción:</span> {{ $infoProyecto->descripcion }}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <p class="text-lg font-semibold">Categoría:</p>
+                    <p>{{ $infoProyecto->categoria_sel['nombre'] ?? $infoProyecto->categoria->nombre ?? 'Sin categoría' }}</p>
+                </div>
+                <div>
+                    <p class="text-lg font-semibold">Producto:</p>
+                    <p>{{ $infoProyecto->producto_sel['id'] ?? $infoProyecto->producto->id ?? '' }} {{ $infoProyecto->producto_sel['nombre'] ?? $infoProyecto->producto->nombre ?? 'Sin producto' }}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
+                @foreach($infoProyecto->caracteristicas_sel ?? [] as $caracteristica)
+                    <div class="p-4 border rounded-lg shadow bg-gray-50">
+                        <h3 class="text-lg font-semibold">{{ $caracteristica['nombre'] }}</h3>
+                        <ul class="mt-2 list-disc list-inside">
+                            @foreach($caracteristica['opciones'] ?? [] as $opcion)
+                                <li><span class="font-medium">{{ $opcion['nombre'] }}</span></li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+@endif
+
 </div>

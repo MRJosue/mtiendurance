@@ -80,14 +80,14 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
 
-            RolePermissionSeeder::class,
-            UserSeeder::class,
-            PaisesEstadosCiudadesSeeder::class,
+            // RolePermissionSeeder::class,
+            // UserSeeder::class,
+            // PaisesEstadosCiudadesSeeder::class,
           
-            TipoEnvioSeeder::class,
-            CiudadesTipoEnvioSeeder::class,
-            ClientesTableSeeder::class,
-            ProveedoresTableSeeder::class,
+            // TipoEnvioSeeder::class,
+            // CiudadesTipoEnvioSeeder::class,
+            // ClientesTableSeeder::class,
+            // ProveedoresTableSeeder::class,
             
             // CategoriasTableSeeder::class,
             // ProductosTableSeeder::class,
@@ -98,7 +98,7 @@ class DatabaseSeeder extends Seeder
            // ProyectosTableSeeder::class,
            // TallasTableSeeder::class,
           
-            PermissionSeeder::class,
+            // PermissionSeeder::class,
 
            // ProyectoDefinidoSeeder::class,
            // PedidosTableSeeder::class,
@@ -107,9 +107,9 @@ class DatabaseSeeder extends Seeder
            // PedidoCaracteristicasTableSeeder::class,
 
             //PedidoCaracteristicasTableSeeder::class,
-            ChatSeeder::class,
+            // ChatSeeder::class,
 
-            TareasTableSeeder::class,
+            // TareasTableSeeder::class,
 
             DatosInicialesSeeder::class,
 
