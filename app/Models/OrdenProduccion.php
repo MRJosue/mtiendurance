@@ -19,7 +19,7 @@ class OrdenProduccion extends Model
         'tipo',
         'estado',
         'flujo_id',
-        'fecha_si_iniciar',
+        'fecha_sin_iniciar',
         'fecha_en_proceso',
         'fecha_terminado',
         'fecha_cancelado',

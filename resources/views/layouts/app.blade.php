@@ -101,9 +101,7 @@
                 <main class="flex-1">
                     {{ $slot }}
                 </main>
-                <div class="p-4">
-                    <x-boton-navegacion />
-                </div>
+                <x-boton-navegacion />
 
                 @livewire('cambiar-rol-actual')
             </div>

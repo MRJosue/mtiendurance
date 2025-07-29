@@ -2,7 +2,7 @@
 
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Tareas') }}/{{ __('Produccion') }}
+            {{ __('Tareas') }}/{{ __('Facturacion') }}
         </h2>
     </x-slot>
 
@@ -15,9 +15,9 @@
                    
                    
                     {{-- @livewire('produccion.tarea-produccion-crud') --}}
-                    @livewire('produccion.ordenes-produccion-crud')
+                    {{-- @livewire('produccion.ordenes-produccion-crud') --}}
 
-
+                    @livewire('produccion.ordenes-produccion-crud', ['tipo' => 'FACTURACION'])    
 
 
                 </div>

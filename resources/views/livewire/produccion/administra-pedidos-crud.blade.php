@@ -96,6 +96,8 @@
     @endif
 
     <div class="mb-4 flex flex-wrap gap-2">
+
+
         <!-- Exportar -->
         <button
             class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -115,13 +117,13 @@
         </button>
 
         <!-- Crear Tarea -->
-        <button
+        {{-- <button
             class="px-3 py-1.5 text-sm bg-gray-500 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="selectedPedidos.length === 0"
             wire:click="abrirModalCrearTareaConPedidos"
         >
             Crear Tarea
-        </button>
+        </button> --}}
 
         <!-- Crear Orden de Corte -->
         <button
@@ -140,8 +142,20 @@
             >
            Crear Orden de Producción
        </button>
-    </div>
 
+
+
+       
+    </div>
+    <div class="mb-4 flex flex-wrap gap-2">
+            @if (session()->has('error'))
+                <div x-data="{ visible: true }" x-show="visible" x-transition class="bg-red-100 border border-red-400 text-red-800 px-4 py-3 rounded relative mb-4">
+                    <strong class="font-bold">¡Error!</strong>
+                    <span class="block sm:inline ml-2">{{ session('error') }}</span>
+               
+                </div>
+            @endif
+    </div>
 
 
         
@@ -841,7 +855,121 @@
     @endif
 
 
+    @if($modalCrearOrden)
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-3xl flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b">
+                <h2 class="text-xl font-bold">Crear Orden de Producción</h2>
+            </div>
 
+            <div class="overflow-y-auto p-6 space-y-4">
+                <!-- Tipo de orden -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tipo de Orden</label>
+                    <select wire:model="tipo_modal_orden" class="w-full border border-gray-300 rounded p-2">
+                        <option value="">-- Selecciona tipo --</option>
+                        <option value="CORTE">Corte</option>
+                        <option value="SUBLIMADO">Sublimado</option>
+                        <option value="COSTURA">Costura</option>
+                        <option value="MAQUILA">Maquila</option>
+                        <option value="FACTURACION">Facturación</option>
+                        <option value="ENVIO">Envío</option>
+                        <option value="OTRO">Otro</option>
+                        <option value="RECHAZADO">Rechazado</option>
+                    </select>
+                </div>
+
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Usuario Asignado</label>
+                    <select wire:model="ordenProd_usuario_asignado_id" class="w-full border border-gray-300 rounded p-2">
+                        <option value="">-- Selecciona usuario staff --</option>
+                        @foreach($usuarios as $usuario)
+                            <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('ordenProd_usuario_asignado_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- Pedidos seleccionados -->
+                <div x-data="{ showPedidos: false }" class="border rounded p-4">
+                    <div class="flex justify-between items-center cursor-pointer select-none" @click="showPedidos = !showPedidos">
+                        <h3 class="font-semibold text-gray-700">
+                            Pedidos seleccionados (IDs: {{ implode(', ', $selectedPedidos) }})
+                        </h3>
+                        <span class="text-sm text-blue-500 hover:underline">
+                            <span x-show="!showPedidos">Mostrar</span>
+                            <span x-show="showPedidos">Ocultar</span>
+                        </span>
+                    </div>
+                    <div x-show="showPedidos" x-transition class="mt-3 space-y-2 text-sm text-gray-700">
+                        @foreach($selectedPedidos as $pedidoId)
+                            @php $pedido = \App\Models\Pedido::find($pedidoId); @endphp
+                            @if($pedido)
+                                <div>Pedido #{{ $pedido->id }} – {{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Fecha de inicio -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
+                    <input type="date"
+                        wire:model="{{ $tipo_modal_orden === 'CORTE' ? 'ordenCorte_fecha_inicio' : 'ordenProd_fecha_inicio' }}"
+                        class="w-full border border-gray-300 rounded p-2">
+                </div>
+
+                <!-- Usuario asignado (solo si NO es corte) -->
+                @if($tipo_modal_orden && $tipo_modal_orden !== 'CORTE')
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Usuario Asignado</label>
+                    <select wire:model="ordenProd_usuario_asignado_id" class="w-full border border-gray-300 rounded p-2">
+                        <option value="">-- Selecciona usuario --</option>
+                        @foreach($usuarios as $usuario)
+                            <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
+
+                <!-- Si es CORTE, mostrar tallas agrupadas -->
+                @if($ordenCorte_tallas_json)
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tallas agrupadas</label>
+                        @foreach($ordenCorte_tallas_json as $clave => $info)
+                            <div class="flex justify-between items-center border p-2 rounded mb-2 text-sm">
+                                <div>
+                                    <strong>{{ $info['grupo'] }} - {{ $info['talla'] }}</strong><br>
+                                    <span>Cantidad: {{ $info['cantidad'] }}</span>
+                                </div>
+                                <div class="text-blue-600 font-semibold">A cortar: {{ max(0, $info['cantidad'] - ($info['stock'] ?? 0)) }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Características (opcional)</label>
+                        <textarea wire:model="ordenCorte_caracteristicas" class="w-full border border-gray-300 rounded p-2"></textarea>
+                    </div>
+                @endif
+            </div>
+
+            <div class="p-4 border-t flex justify-end gap-2">
+                <button wire:click="$set('modalCrearOrden', false)" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">
+                    Cancelar
+                </button>
+                <button 
+                    wire:click="guardarOrden" 
+                    class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 cursor-pointer"
+                   
+                >
+                    Crear Orden
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
     
     
 </div>

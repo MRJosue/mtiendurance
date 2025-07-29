@@ -23,6 +23,7 @@ use App\Models\OrdenCorte;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Spatie\LaravelIgnition\Recorders\LogRecorder\LogMessage;
 
 class AdministraPedidosCrud extends Component
 {
@@ -41,7 +42,8 @@ class AdministraPedidosCrud extends Component
     public $clientes = [], $tipos_envio = [];
     public $direccionesFiscales = [], $direccionesEntrega = [];
     public $productos = [], $categorias = [];
-    protected $listeners = ['abrirModalEdicion' => 'abrirModal'];
+    protected $listeners = ['abrirModalEdicion' => 'abrirModal',
+                            'guardarOrden' => 'guardarOrden'];
     public $estado_produccion = 'POR APROBAR';
     public $proyecto_nombre;
     public $producto_nombre;
@@ -77,6 +79,12 @@ class AdministraPedidosCrud extends Component
     public $ordenProd_fecha_inicio;
     public $ordenProd_tipo = 'CORTE';
     public $ordenProd_usuario_asignado_id = '';
+
+
+    public $modalCrearOrden = false;
+    public $tipo_modal_orden = ''; // 'CORTE', 'SUBLIMADO', etc.
+
+
 
     public function mount()
     {
@@ -553,66 +561,55 @@ class AdministraPedidosCrud extends Component
         $this->modalCrearOrdenCorte = true;
     }
 
-    public function guardarOrdenCorte()
+
+
+    public function guardarOrden()
     {
+        Log::debug('Iniciamos el proceso guardarOrden');
+
+        if (empty($this->selectedPedidos)) {
+            session()->flash('error', 'No hay pedidos seleccionados para generar la orden.');
+            return;
+        }
 
 
-        Log::debug('Pre validacion ');
+        // 🔄 Verificar si hay tallas disponibles
+        $tallasAgrupadas = [];
 
-        $this->validate([
-            'ordenCorte_fecha_inicio' => 'required|date',
-          
-        ]);
-        
-        Log::debug('Pasa validacion');
-        DB::beginTransaction();
-        try {
-            // 1️⃣ Crear la orden de producción general
+        foreach ($this->selectedPedidos as $pedidoId) {
+            $pedido = Pedido::with('pedidoTallas.talla', 'pedidoTallas.grupoTalla')->find($pedidoId);
 
-            Log::debug('Crear la orden de producción general');
-            $orden = OrdenProduccion::create([
-                'crete_user' => auth()->id(),
-                'tipo' => 'CORTE',
-            ]);
+            if (!$pedido) continue;
 
-
-
-            // calculo del total 
-            $totalCorte = collect($this->ordenCorte_tallas_json)->sum(function ($item) {
-                return isset($item['cantidad']) ? (int) $item['cantidad'] : 0;
-            });
-
-
-    
-            // 2️⃣ Crear la orden de corte específica
-           OrdenCorte::create([
-                'orden_produccion_id' => $orden->id,
-                'fecha_inicio' => $this->ordenCorte_fecha_inicio,
-                'total' => $totalCorte,
-                'caracteristicas' => $this->ordenCorte_caracteristicas ? json_encode($this->ordenCorte_caracteristicas) : null,
-                'tallas' => json_encode($this->ordenCorte_tallas_json),
-            ]);
-    
-            // 3️⃣ Relacionar los pedidos seleccionados
-            foreach ($this->selectedPedidos as $pedidoId) {
-                \DB::table('pedido_orden_produccion')->insert([
-                    'pedido_id' => $pedidoId,
-                    'orden_produccion_id' => $orden->id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+            foreach ($pedido->tallas_agrupadas as $grupoId => $grupo) {
+                foreach ($grupo['tallas'] as $talla) {
+                    $clave = $grupo['grupo_nombre'] . '-' . $talla['nombre'];
+                    if (!isset($tallasAgrupadas[$clave])) {
+                        $tallasAgrupadas[$clave] = [
+                            'grupo' => $grupo['grupo_nombre'],
+                            'talla' => $talla['nombre'],
+                            'cantidad' => 0,
+                            'stock' => 0,
+                        ];
+                    }
+                    $tallasAgrupadas[$clave]['cantidad'] += $talla['cantidad'];
+                }
             }
-    
-            DB::commit();
-    
-            session()->flash('message', '✅ Orden de Corte creada exitosamente.');
-            $this->reset(['modalCrearOrdenCorte', 'selectedPedidos']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error al crear Orden de Corte', ['error' => $e->getMessage()]);
-            session()->flash('error', 'Error al crear la orden de corte.');
+        }
+
+        // 👉 Guardar según presencia de tallas y tipo
+        if ($this->tipo_modal_orden === 'CORTE' && count($tallasAgrupadas) > 0) {
+            Log::debug('Ejecutamos guardarOrdenCorte');
+            $this->ordenCorte_tallas_json = $tallasAgrupadas; // sincronizamos por si no se precargó
+            $this->guardarOrdenCorte();
+        } else {
+            Log::debug('Ejecutamos guardarOrdenProduccion');
+            $this->guardarOrdenProduccion();
         }
     }
+
+
+    
 
     public function abrirModalCrearTareaConPedidos()
     {
@@ -625,57 +622,118 @@ class AdministraPedidosCrud extends Component
         $this->modalCrearTareaConPedidos = true;
     }
 
-public function verOrdenesDePedido($pedidoId)
-{
-    $pedido = Pedido::find($pedidoId);
+    public function verOrdenesDePedido($pedidoId)
+    {
+        $pedido = Pedido::find($pedidoId);
 
-    $this->pedidoOrdenes = OrdenProduccion::with(['pedidos', 'ordenCorte'])
-        ->whereHas('pedidos', fn($q) => $q->where('pedido.id', $pedidoId))
-        ->get()
-        ->map(function ($orden) {
-            // Duración en formato legible (ej: "2 días 4 horas")
-            $inicio = $orden->fecha_en_proceso ? \Carbon\Carbon::parse($orden->fecha_en_proceso) : null;
-            $fin = $orden->fecha_terminado ? \Carbon\Carbon::parse($orden->fecha_terminado) : null;
-            $duracion = ($inicio && $fin) ? $inicio->diffForHumans($fin, true) : null;
-            return [
-                'id'         => $orden->id,
-                'tipo'       => $orden->tipo,
-                'creado'     => $orden->created_at->format('Y-m-d H:i'),
-                'pedidos'    => $orden->pedidos->map(fn($p) => [
-                    'id' => $p->id,
-                    'producto' => $p->producto->nombre ?? 'Sin producto',
-                ]),
-                'orden_corte'=> $orden->ordenCorte ? [
-                    'fecha_inicio' => $orden->ordenCorte->fecha_inicio?->format('Y-m-d'),
-                    'total' => $orden->ordenCorte->total,
-                ] : null,
-                'fecha_sin_iniciar' => $orden->fecha_sin_iniciar,
-                'fecha_en_proceso'  => $orden->fecha_en_proceso,
-                'fecha_terminado'   => $orden->fecha_terminado,
-                'duracion'          => $duracion,
-            ];
-        })->toArray();
+        $this->pedidoOrdenes = OrdenProduccion::with(['pedidos', 'ordenCorte'])
+            ->whereHas('pedidos', fn($q) => $q->where('pedido.id', $pedidoId))
+            ->get()
+            ->map(function ($orden) {
+                // Duración en formato legible (ej: "2 días 4 horas")
+                $inicio = $orden->fecha_en_proceso ? \Carbon\Carbon::parse($orden->fecha_en_proceso) : null;
+                $fin = $orden->fecha_terminado ? \Carbon\Carbon::parse($orden->fecha_terminado) : null;
+                $duracion = ($inicio && $fin) ? $inicio->diffForHumans($fin, true) : null;
+                return [
+                    'id'         => $orden->id,
+                    'tipo'       => $orden->tipo,
+                    'creado'     => $orden->created_at->format('Y-m-d H:i'),
+                    'pedidos'    => $orden->pedidos->map(fn($p) => [
+                        'id' => $p->id,
+                        'producto' => $p->producto->nombre ?? 'Sin producto',
+                    ]),
+                    'orden_corte'=> $orden->ordenCorte ? [
+                        'fecha_inicio' => $orden->ordenCorte->fecha_inicio?->format('Y-m-d'),
+                        'total' => $orden->ordenCorte->total,
+                    ] : null,
+                    'fecha_sin_iniciar' => $orden->fecha_sin_iniciar,
+                    'fecha_en_proceso'  => $orden->fecha_en_proceso,
+                    'fecha_terminado'   => $orden->fecha_terminado,
+                    'duracion'          => $duracion,
+                ];
+            })->toArray();
 
-    $this->modalOrdenes = true;
-}
-    /**
-     * Abre el modal para crear órdenes de producción (varios o uno a uno).
-     */
+        $this->modalOrdenes = true;
+    }
+
+
     public function abrirModalCrearOrdenProduccion()
     {
-        if (empty($this->selectedPedidos)) {
-            session()->flash('error', 'Debes seleccionar al menos un pedido para crear una Orden de Producción.');
-            return;
-        }
+            if (empty($this->selectedPedidos)) {
+                session()->flash('error', 'Debes seleccionar al menos un pedido.');
+                return;
+            }
 
-        $this->reset(['ordenProd_fecha_inicio', 'ordenProd_tipo']);
-        $this->modalCrearOrdenProduccion = true;
+            $categorias = [];
+            $productos = [];
+
+            foreach ($this->selectedPedidos as $pedidoId) {
+                $pedido = Pedido::with('producto.categoria')->find($pedidoId);
+
+                if (!$pedido || !$pedido->producto || !$pedido->producto->categoria) {
+                    session()->flash('error', "El pedido #{$pedidoId} tiene datos incompletos.");
+                    return;
+                }
+
+                $categorias[] = $pedido->producto->categoria->id;
+                $productos[] = $pedido->producto->id;
+            }
+
+
+            Log::debug('Validar que todos los productos y categorías sean iguales', ['categorias' => $categorias, 'productos' => $productos]);
+            // Validar que todos los productos y categorías sean iguales
+            if (count(array_unique($categorias)) > 1 || count(array_unique($productos)) > 1) {
+
+                Log::debug('Despliega error');
+                session()->flash('error', 'Todos los pedidos seleccionados deben tener el mismo producto y categoría para crear una orden de producción.');
+                return;
+            }
+
+            // ✅ Si pasa validación, continuar con el proceso
+            $this->reset([
+                'modalCrearOrden',
+                'tipo_modal_orden',
+                'ordenCorte_fecha_inicio',
+                'ordenCorte_caracteristicas',
+                'ordenProd_fecha_inicio',
+                'ordenProd_usuario_asignado_id'
+            ]);
+
+            $this->modalCrearOrden = true;
+
+            // Precargar tallas para orden de corte
+            $this->ordenCorte_tallas_json = [];
+            foreach ($this->selectedPedidos as $pedidoId) {
+                $pedido = \App\Models\Pedido::with('pedidoTallas.talla', 'pedidoTallas.grupoTalla')->find($pedidoId);
+                if (!$pedido) continue;
+
+                foreach ($pedido->tallas_agrupadas as $grupoId => $grupo) {
+                    foreach ($grupo['tallas'] as $talla) {
+                        $clave = $grupo['grupo_nombre'] . '-' . $talla['nombre'];
+                        if (!isset($this->ordenCorte_tallas_json[$clave])) {
+                            $this->ordenCorte_tallas_json[$clave] = [
+                                'grupo' => $grupo['grupo_nombre'],
+                                'talla' => $talla['nombre'],
+                                'cantidad' => 0,
+                                'stock' => 0,
+                            ];
+                        }
+                        $this->ordenCorte_tallas_json[$clave]['cantidad'] += $talla['cantidad'];
+                    }
+                }
+            }
     }
+
     /**
      * Guarda la nueva Orden de Producción (sin sub-orden de corte).
     */
     public function guardarOrdenProduccion()
     {
+
+        Log::debug('Pre validacion guardarOrdenProduccion');
+
+        
+
         $this->validate([
             'ordenProd_fecha_inicio' => 'required|date',
             'ordenProd_usuario_asignado_id' => 'required|exists:users,id',
@@ -686,10 +744,15 @@ public function verOrdenesDePedido($pedidoId)
         DB::beginTransaction();
 
         try {
+
+
+             Log::debug('try  guardarOrdenProduccion');
+
             // 1️⃣ Crear la orden de producción general, con flujo_id = 1
             $orden = OrdenProduccion::create([
                 'create_user' => auth()->id(),
                 'tipo'       => $this->ordenProd_tipo,
+                'fecha_sin_iniciar' => $this->ordenProd_fecha_inicio,
                 'flujo_id'   => 1, // uso fijo del flujo 1
                 'assigned_user_id' => $this->ordenProd_usuario_asignado_id,
             ]);
@@ -730,12 +793,89 @@ public function verOrdenesDePedido($pedidoId)
             session()->flash('message', '✅ Orden de Producción creada exitosamente.');
             $this->dispatch('ActualizarTablaPedido');
             $this->reset(['modalCrearOrdenProduccion', 'selectedPedidos', 'ordenProd_tipo']);
+
+            $this ->modalCrearOrden = false;
+            
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al crear Orden de Producción', ['error' => $e->getMessage()]);
             session()->flash('error', 'Error al crear la orden de producción.');
         }
+
+              Log::debug('Fin de guardarOrdenProduccion');
     }
+
+
+
+    public function guardarOrdenCorte()
+    {
+        Log::debug('Pre validacion guardarOrdenCorte');
+
+        $this->validate([
+            'ordenProd_fecha_inicio' => 'required|date',
+          
+        ]);
+        
+        Log::debug('Pasa validacion');
+        DB::beginTransaction();
+        try {
+            // 1️⃣ Crear la orden de producción general
+
+            Log::debug('Crear la orden de Corte');
+
+            Log::debug('Crear OrdenProduccion');
+
+            $orden = OrdenProduccion::create([
+                'create_user' => auth()->id(),
+                'tipo'       => $this->ordenProd_tipo,
+                'fecha_sin_iniciar' => $this->ordenProd_fecha_inicio,
+                'flujo_id'   => 1, // uso fijo del flujo 1
+                'assigned_user_id' => $this->ordenProd_usuario_asignado_id,
+            ]);
+
+            Log::debug('calculo del total ');
+
+            // calculo del total 
+            $totalCorte = collect($this->ordenCorte_tallas_json)->sum(function ($item) {
+                return isset($item['cantidad']) ? (int) $item['cantidad'] : 0;
+            });
+
+
+            Log::debug(' OrdenCorte::create');
+    
+            // 2️⃣ Crear la orden de corte específica
+           OrdenCorte::create([
+                'orden_produccion_id' => $orden->id,
+                'fecha_inicio' => $this->ordenCorte_fecha_inicio,
+                
+                'total' => $totalCorte,
+                'caracteristicas' => $this->ordenCorte_caracteristicas ? json_encode($this->ordenCorte_caracteristicas) : null,
+                'tallas' => json_encode($this->ordenCorte_tallas_json),
+            ]);
+    
+            // 3️⃣ Relacionar los pedidos seleccionados
+            foreach ($this->selectedPedidos as $pedidoId) {
+                \DB::table('pedido_orden_produccion')->insert([
+                    'pedido_id' => $pedidoId,
+                    'orden_produccion_id' => $orden->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+    
+            DB::commit();
+    
+            session()->flash('message', '✅ Orden de Corte creada exitosamente.');
+            $this->reset(['modalCrearOrdenCorte', 'selectedPedidos']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al crear Orden de Corte', ['error' => $e->getMessage()]);
+            session()->flash('error', 'Error al crear la orden de corte.');
+        }
+    }
+
+
 
 
     // public function render()

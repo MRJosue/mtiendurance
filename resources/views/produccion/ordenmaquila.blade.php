@@ -15,8 +15,8 @@
                    
                    
                     {{-- @livewire('produccion.tarea-produccion-crud') --}}
-                    @livewire('produccion.ordenes-produccion-crud')
-
+                    {{-- @livewire('produccion.ordenes-produccion-crud') --}}
+                    @livewire('produccion.ordenes-produccion-crud', ['tipo' => 'MAQUILA'])    
 
 
 
