@@ -75,7 +75,9 @@ class AdministraPedidosCrud extends Component
     public $ordenCorte_tallas_json = [];
     public $modalOrdenes = false;
     public $pedidoOrdenes = [];
+    
     public $modalCrearOrdenProduccion = false;
+
     public $ordenProd_fecha_inicio;
     public $ordenProd_tipo = 'CORTE';
     public $ordenProd_usuario_asignado_id = '';
@@ -876,10 +878,4 @@ class AdministraPedidosCrud extends Component
     }
 
 
-
-
-    // public function render()
-    // {
-    //     return view('livewire.produccion.administra-pedidos-crud');
-    // }
 }

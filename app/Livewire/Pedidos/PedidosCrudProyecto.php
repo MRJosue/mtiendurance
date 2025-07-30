@@ -33,6 +33,7 @@ class PedidosCrudProyecto extends Component
     public $proyectoId;
     public $modal = false;
     public $modal_confirmar_aprobacion = false;
+    public $modal_confirmar_aprobacion_especial = false;
     public $modal_reconfigurar_proyecto = false;
 
     public $pedidoId, $total, $estatus, $tipo, $estado, $fecha_produccion, $fecha_embarque, $fecha_entrega;
@@ -514,6 +515,8 @@ class PedidosCrudProyecto extends Component
         $this->modal_confirmar_aprobacion = true;
     }
 
+
+
     public function aprobar_pedido()
     {
         $pedido = Pedido::findOrFail($this->pedidoId);
@@ -565,6 +568,62 @@ class PedidosCrudProyecto extends Component
         $this->dispatch('ActualizarTablaPedido');
         session()->flash('message', '✅ Pedido aprobado correctamente.');
     }
+
+
+    public function confirmarAprobacionEspecial($id_pedido)
+    {
+        $this->pedidoId = $id_pedido;
+        $this->modal_confirmar_aprobacion_especial = true;
+    }
+
+    public function Crea_Solicitud_Aprobacion_Especial()
+    {
+        $pedido = Pedido::findOrFail($this->pedidoId);
+
+
+        if (!$this->validarConfiguracionProyecto()) {
+            $this->modal_confirmar_aprobacion_especial = false;
+            $this->modal_reconfigurar_proyecto = true;
+            return;
+        }
+
+
+        // Validaciones del pedido 
+        $ahora = now();
+        $fechaProduccion = \Carbon\Carbon::parse($pedido->fecha_produccion);
+
+
+        // Validar fechas si el flag indica que NO se puede aprobar sin ellas
+        if ($pedido->flag_aprobar_sin_fechas == 0) {
+
+            if ($fechaProduccion->lt($ahora)) {
+
+
+
+                $pedido->update([
+                  
+                    'flag_solicitud_aprobar_sin_fechas' => 1,
+                ]);
+            }
+        }else{
+
+            // si la fecha es valida este pedido pude aprobarse de forma normal 
+
+             session()->flash('message', ' Este pedido puede aprobarse de forma normal .');
+                // $this->modal_confirmar_aprobacion_especial = false;
+    
+                // // Redirigir a edición si la fecha es inválida
+                // $this->dispatch('abrirModalEdicion', pedidoId: $pedido->id);
+                // return;
+
+        }
+
+
+        $this->modal_confirmar_aprobacion_especial = false;
+        $this->dispatch('ActualizarTablaPedido');
+        session()->flash('message', '✅ Solicitud enviada correctamente.');
+    }
+
 
 
     public function validarConfiguracionProyecto(): bool

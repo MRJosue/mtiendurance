@@ -195,12 +195,21 @@
                         </td>
                         <td class="p-2 text-center">
                             <span class="px-2 py-1 rounded text-xs text-white font-semibold" style="background-color:
+
+
                                 @if($pedido->estado==='APROBADO') #10B981
                                 @elseif($pedido->estado==='ENTREGADO') #3B82F6
                                 @elseif($pedido->estado==='RECHAZADO') #EF4444
                                 @elseif($pedido->estado==='ARCHIVADO') #6B7280
+                               
                                 @else #FBBF24 @endif;">
-                                {{ strtoupper($pedido->estado) }}
+
+                                @if ($pedido->flag_solicitud_aprobar_sin_fechas == '1')
+                                   APROBACION ESPECIAL
+                                @else
+                                   {{ strtoupper($pedido->estado) }}
+                                @endif
+                                
                             </span>
                         </td>
                         @can('proyectopedidoscolumnafechaproduccion')
@@ -220,12 +229,34 @@
                                 >Editar</button>
                             @endhasanyrole
 
-                            @if ($pedido->estado == 'POR APROBAR' && $pedido->proyecto?->estado === 'DISEÑO APROBADO')
+
+                            @if ($pedido->estado == 'POR APROBAR' && $pedido->proyecto?->estado === 'DISEÑO APROBADO' && $pedido->flag_solicitud_aprobar_sin_fechas == '0')
                                 <button
-                                    wire:click="confirmarAprobacion({{ $pedido->id }})"
-                                    class="bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-1 rounded text-xs"
-                                >Aprobar</button>
+                                    wire:click="confirmarAprobacionEspecial({{ $pedido->id }})"
+                                    class="bg-yellow-500 hover:bg-yellow-600 bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-1 rounded text-xs"
+                                >Aprobacion Especial</button>
                             @endif
+
+
+                            @if ($pedido->estado == 'POR APROBAR' && $pedido->proyecto?->estado === 'DISEÑO APROBADO'  )
+
+                                        @if ($pedido->flag_solicitud_aprobar_sin_fechas == '1' AND $pedido->flag_aprobar_sin_fechas == '0')
+                                            
+                                        @else
+                                            <button
+                                            wire:click="confirmarAprobacion({{ $pedido->id }})"
+                                            class="bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-1 rounded text-xs"
+                                            >Aprobar</button>
+                                        @endif
+
+
+
+                            @endif
+
+
+
+                            
+                            
                         </td>
                     </tr>
                 @endforeach
@@ -444,6 +475,45 @@
             </div>
         </div>
     @endif
+
+    @if ($modal_confirmar_aprobacion_especial)
+        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div class="bg-white rounded shadow-lg w-full max-w-md p-6">
+                <h3 class="text-xl  mb-4">¿Confirmar aprobación <b>Especial</b> del pedido?</h3>
+                <p class="text-xs mb-4">Esta Solicitud permitira aprobar el pedido para pedidos urgentes</p> 
+                
+                <p class="text-gray-700 mb-4">ID del Pedido: <strong>{{ $pedidoId }}</strong></p>
+
+                @php
+                    $pedido = \App\Models\Pedido::find($pedidoId);
+                @endphp
+
+                @if($pedido)
+                    <ul class="text-sm text-gray-600 space-y-1 mb-4">
+                        {{-- $pedido->cliente->nombre_empresa --}}
+                        <li><strong>Cliente:</strong> {{ $pedido->usuario->name ?? 'Sin cliente' }}</li>
+                        <li><strong>Total:</strong> {{ $pedido->total }}</li>
+                        <li><strong>Producción:</strong> {{ $pedido->fecha_produccion ?? 'No definida' }}</li>
+                        <li><strong>Embarque:</strong> {{ $pedido->fecha_embarque ?? 'No definida' }}</li>
+                        <li><strong>Entrega:</strong> {{ $pedido->fecha_entrega ?? 'No definida' }}</li>
+                        <li><strong>Flag Aprobación sin fechas:</strong> {{ $pedido->flag_aprobar_sin_fechas ? 'Sí' : 'No' }}</li>
+                    </ul>
+                @endif
+
+                <div class="flex justify-end gap-2 mt-4">
+                    <button wire:click="$set('modal_confirmar_aprobacion_especial', false)"
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                        Cancelar
+                    </button>
+                    <button wire:click="Crea_Solicitud_Aprobacion_Especial"
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                        Confirmar y Solicitar
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+    
     @if ($modal_reconfigurar_proyecto)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div class="bg-white rounded shadow-lg w-full max-w-lg p-6">
@@ -471,4 +541,6 @@
             </div>
         </div>
     @endif
+
+    
 </div>

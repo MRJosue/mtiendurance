@@ -96,52 +96,20 @@
     @endif
 
     <div class="mb-4 flex flex-wrap gap-2">
-        <!-- Exportar -->
-        <button
-            class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="selectedPedidos.length === 0"
-            wire:click="exportSelected"
-        >
-            Exportar
-        </button>
 
-        <!-- Eliminar -->
-        <button
-            class="px-3 py-1.5 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="selectedPedidos.length === 0"
-            wire:click="deleteSelected"
-        >
-            Eliminar
-        </button>
 
-        <!-- Crear Tarea -->
-        <button
-            class="px-3 py-1.5 text-sm bg-gray-500 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="selectedPedidos.length === 0"
-            wire:click="abrirModalCrearTareaConPedidos"
-        >
-            Crear Tarea
-        </button>
 
-        <!-- Crear Orden de Corte -->
-        <button
-            class="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="selectedPedidos.length === 0"
-            wire:click="abrirModalCrearOrdenCorte"
-        >
-            Crear Orden de Corte
-        </button>
-
-        
-        <button
-                class="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="selectedPedidos.length === 0"
-                wire:click="abrirModalCrearOrdenProduccion"
-            >
-           Crear Orden de Producción
-       </button>
+       
     </div>
-
+    <div class="mb-4 flex flex-wrap gap-2">
+            @if (session()->has('error'))
+                <div x-data="{ visible: true }" x-show="visible" x-transition class="bg-red-100 border border-red-400 text-red-800 px-4 py-3 rounded relative mb-4">
+                    <strong class="font-bold">¡Error!</strong>
+                    <span class="block sm:inline ml-2">{{ session('error') }}</span>
+               
+                </div>
+            @endif
+    </div>
 
 
         
@@ -160,7 +128,6 @@
                 <th class="px-2 py-1 border">Embarque</th>
                 <th class="px-2 py-1 border">Entrega</th>
                 <th class="px-2 py-1 border">Estatus Prod.</th>
-                <th class="px-2 py-1 border">Órdenes</th>
                 <th class="px-2 py-1 border text-center">Acciones</th>
             </tr>
         </thead>
@@ -187,12 +154,21 @@
                     <td class="px-2 py-1 border text-sm">{{ $pedido->fecha_produccion ?? 'N/D' }}</td>
                     <td class="px-2 py-1 border text-sm">{{ $pedido->fecha_embarque ?? 'N/D' }}</td>
                     <td class="px-2 py-1 border text-sm">{{ $pedido->fecha_entrega ?? 'N/D' }}</td>
-                    <td class="px-2 py-1 border text-xs bg-gray-100 rounded text-gray-800">{{ $pedido->estado_produccion }}</td>
-                    <td class="px-2 py-1 border text-center">
-                        <button wire:click="verOrdenesDePedido({{ $pedido->id }})" class="text-blue-500 hover:underline text-xs">Ver más</button>
+                    <td class="px-2 py-1 border text-xs bg-gray-100 rounded text-gray-800">
+                       
+
+                            @if ($pedido->flag_aprobar_sin_fechas == '1')
+                                Pendiente de Aprobar por el cliente
+                            @else
+                                Pendiente de Revisar aprobación
+                            @endif
                     </td>
+
                     <td class="px-2 py-1 border space-y-1 text-center">
-                        <button wire:click="abrirModal({{ $pedido->id }})" class="w-full px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs">Editar</button>
+                      @if ($pedido->flag_aprobar_sin_fechas != '1')
+                            <button wire:click="abrirModalRevisarAprobacion({{ $pedido->id }})" class="w-full px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs">Revisar aprobación</button>
+                      @endif
+
                        
                     </td>
                 </tr>
@@ -456,40 +432,6 @@
 
 
 
-    @if($modalCrearTarea)
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-lg p-6 w-full max-w-lg shadow-lg">
-                <h2 class="text-xl font-bold mb-4">Asignar Tarea al Pedido #{{ $nuevoTareaPedidoId }}</h2>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Usuario Responsable</label>
-                    <select wire:model="nuevoTareaStaffId" class="w-full border border-gray-300 rounded p-2">
-                        <option value="">-- Selecciona --</option>
-                        @foreach($usuarios as $usuario)
-                            <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Tipo de Tarea</label>
-                    <select wire:model="nuevoTareaTipo" class="w-full border border-gray-300 rounded p-2">
-                        <option value="DISEÑO">DISEÑO</option>
-                        <option value="PRODUCCION">PRODUCCIÓN</option>
-                        <option value="CORTE">CORTE</option>
-                        <option value="PINTURA">PINTURA</option>
-                        <option value="FACTURACION">FACTURACIÓN</option>
-                        <option value="INDEFINIDA">INDEFINIDA</option>
-                    </select>
-                </div>
-
-                <div class="flex justify-end gap-2">
-                    <button wire:click="$set('modalCrearTarea', false)" class="bg-gray-300 text-gray-800 px-4 py-2 rounded">Cancelar</button>
-                    <button wire:click="guardarTarea" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Guardar</button>
-                </div>
-            </div>
-        </div>
-    @endif
 
     @if($modalCrearTareaConPedidos)
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -595,6 +537,8 @@
                                             </div>
                                         @endforeach
                                     </div>
+
+                                    
                                 </div>
                             @endif
                         @endforeach
@@ -677,6 +621,9 @@
                                 <div><strong>Tipo:</strong> {{ $orden['tipo'] }}</div>
                                 <div><strong>Creado:</strong> {{ $orden['creado'] }}</div>
                             </div>
+
+
+
                             {{-- Botón de impresión --}}
                             <button
                                 class="text-blue-600 hover:underline text-xs"
@@ -684,8 +631,34 @@
 >
                                 🖨️ Imprimir
                             </button>
+
+
                         </div>
     
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 mb-4">
+                                <div>
+                                    <strong>Fecha sin iniciar:</strong>
+                                    <span>{{ $orden['fecha_sin_iniciar'] ?? 'N/D' }}</span>
+                                </div>
+                                <div>
+                                    <strong>Fecha en proceso:</strong>
+                                    <span>{{ $orden['fecha_en_proceso'] ?? 'N/D' }}</span>
+                                </div>
+                                <div>
+                                    <strong>Fecha terminado:</strong>
+                                    <span>{{ $orden['fecha_terminado'] ?? 'N/D' }}</span>
+                                </div>
+                                <div>
+                                    <strong>Tiempo total de producción:</strong>
+                                    <span>
+                                        @if($orden['duracion'])
+                                            {{ $orden['duracion'] }}
+                                        @else
+                                            N/D
+                                        @endif
+                                    </span>
+                                </div>
+                        </div>
                         {{-- Pedidos relacionados --}}
                         <div class="mb-2">
                             <strong>Pedidos:</strong>
@@ -721,75 +694,104 @@
     </div>
     @endif
 
+@if($modalRevisarAprobacion)
+    <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
+            <h2 class="text-xl font-bold mb-4">Revisión de Aprobación Pedido #{{ $pedidoId }}</h2>
 
-    @if($modalCrearOrdenProduccion)
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-3xl flex flex-col max-h-[90vh]">
-            <!-- Encabezado -->
-            <div class="p-4 border-b">
-                <h2 class="text-xl font-bold">Crear Orden de Producción</h2>
-            </div>
+            <div class="grid grid-cols-1 gap-4 mb-4">
 
-            <!-- Cuerpo -->
-            <div class="overflow-y-auto p-6 space-y-4">
-                <!-- Pedidos seleccionados -->
-                <div x-data="{ showPedidos: false }" class="border rounded p-4">
-                    <div class="flex justify-between items-center cursor-pointer select-none" @click="showPedidos = !showPedidos">
-                        <h3 class="font-semibold text-gray-700">
-                            Pedidos seleccionados (IDs: {{ implode(', ', $selectedPedidos) }})
-                        </h3>
-                        <span class="text-sm text-blue-500 hover:underline">
-                            <span x-show="!showPedidos">Mostrar</span>
-                            <span x-show="showPedidos">Ocultar</span>
-                        </span>
+
+                                    {{-- Información del pedido (colapsable) --}}
+                    <div x-data="{ openInfo: true }" class="mb-6 border border-gray-200 rounded-lg p-4">
+                        <div @click="openInfo = !openInfo" class="flex justify-between items-center cursor-pointer select-none">
+                            <h6 class="text-lg font-bold text-gray-800">
+                                Configuracion del Producto
+                            </h6>
+                            <span class="text-sm text-blue-500 hover:underline">
+                                <span x-show="!openInfo">Mostrar</span>
+                                <span x-show="openInfo">Ocultar</span>
+                            </span>
+                        </div>
+                    
+                        <div x-show="openInfo" x-transition class="mt-3 space-y-1 text-sm text-gray-700">
+                            <div>
+                                <span class="font-semibold">ID Pedido:</span>
+                                {{ $pedidoId ?? 'Nuevo' }} - {{ $proyecto_id_pedido ?? 'N/A' }}
+                            </div>
+                            <div>
+                                <span class="font-semibold">Nombre del Proyecto:</span> {{ $proyecto_nombre ?? 'N/A' }}
+                            </div>
+                            <div>
+                                <span class="font-semibold">Producto:</span> {{ $producto_nombre ?? 'N/A' }}
+                            </div>
+                            <div>
+                                <span class="font-semibold">Categoría:</span> {{ $categoria_nombre ?? 'N/A' }}
+                            </div>
+                        </div>
                     </div>
-                    <div x-show="showPedidos" x-transition class="mt-3 space-y-2 text-sm text-gray-700">
-                        @foreach($selectedPedidos as $pedidoId)
-                            @php $pedido = \App\Models\Pedido::find($pedidoId); @endphp
-                            @if($pedido)
-                                <div>Pedido #{{ $pedido->id }} – {{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
-                            @endif
+
+                    {{-- Total y Cantidades por Talla --}}
+                    @if(!empty($tallas_disponibles))
+                        <h6 class="text-lg font-semibold mb-2">Cantidades por Tallas</h6>
+                        @foreach ($tallas_disponibles as $grupoTalla)
+                            <p class="font-semibold text-gray-700 mt-3">{{ $grupoTalla['nombre'] }}</p>
+                            <div class="grid grid-cols-3 gap-4 mb-2">
+                                @foreach ($grupoTalla['tallas'] as $talla)
+                                    <div>
+                                        <label class="text-sm">{{ $talla['nombre'] }}</label>
+                                        {{-- <input type="number" min="0"
+                                            wire:model.lazy="cantidades_tallas.{{ $grupoTalla['id'] }}.{{ $talla['id'] }}"
+                                            class="w-full border border-gray-300 rounded p-2"> --}}
+
+                                        <input type="number" min="0"
+                                            wire:model.defer="inputsTallas.{{ $grupoTalla['id'] }}_{{ $talla['id'] }}"
+                                            class="w-full border border-gray-300 rounded p-2"
+                                            placeholder="0">
+                                    </div>
+                                @endforeach
+                            </div>
                         @endforeach
-                    </div>
+                    @endif
+
+                {{-- Campos en readonly / disabled --}}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Total</label>
+                    <input type="number" value="{{ $total }}" disabled class="w-full border border-gray-300 rounded p-2 bg-gray-100 cursor-not-allowed">
                 </div>
 
-                <!-- Fecha de Inicio -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
-                    <input type="date" wire:model="ordenProd_fecha_inicio" class="w-full border border-gray-300 rounded p-2">
-                    @error('ordenProd_fecha_inicio') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    <label class="block text-sm font-medium text-gray-700">Estatus</label>
+                    <input type="text" value="{{ $estatus }}" disabled class="w-full border border-gray-300 rounded p-2 bg-gray-100 cursor-not-allowed">
                 </div>
 
-                <!-- Tipo de Orden -->
+ 
+
+                {{-- Fechas editables --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Tipo de Orden</label>
-                    <select wire:model="ordenProd_tipo" class="w-full border border-gray-300 rounded p-2">
-                        <option value="CORTE">CORTE</option>
-                        <option value="PINTURA">PINTURA</option>
-                        <option value="ETIQUETADO">ETIQUETADO</option>
-                        <option value="BORDADO">BORDADO</option>
-                        <option value="OTRO">OTRO</option>
-                    </select>
-                    @error('ordenProd_tipo') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    <label class="block text-sm font-medium text-gray-700">Fecha Producción</label>
+                    <input type="date" wire:model="fecha_produccion" class="w-full border border-gray-300 rounded p-2">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fecha Embarque</label>
+                    <input type="date" wire:model="fecha_embarque" class="w-full border border-gray-300 rounded p-2">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fecha Entrega</label>
+                    <input type="date" wire:model="fecha_entrega" min="{{ date('Y-m-d') }}" class="w-full border border-gray-300 rounded p-2">
                 </div>
             </div>
 
-            <!-- Pie -->
-            <div class="p-4 border-t flex justify-end gap-2 bg-white sticky bottom-0">
-                <button wire:click="$set('modalCrearOrdenProduccion', false)"
-                        class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">
-                    Cancelar
-                </button>
-                <button wire:click="guardarOrdenProduccion"
-                        class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
-                    Crear Orden
-                </button>
+            <div class="flex justify-end gap-2">
+                <button wire:click="rechazarSolicitud" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Rechazar Solicitud</button>
+                <button wire:click="aprobarSolicitud" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Aprobar Solicitud</button>
+                <button wire:click="$set('modalRevisarAprobacion', false)" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cerrar</button>
             </div>
         </div>
     </div>
-    @endif
-
-
+@endif
 
     
     

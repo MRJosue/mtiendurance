@@ -125,14 +125,14 @@
             Crear Tarea
         </button> --}}
 
-        <!-- Crear Orden de Corte -->
-        <button
+        <!-- Crear Orden de Corte  La orden de corte esta combinada en las ordenes de produccion-->
+        {{-- <button
             class="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="selectedPedidos.length === 0"
             wire:click="abrirModalCrearOrdenCorte"
         >
             Crear Orden de Corte
-        </button>
+        </button> --}}
 
         
         <button

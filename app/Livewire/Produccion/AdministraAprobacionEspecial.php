@@ -24,6 +24,7 @@ use App\Models\OrdenCorte;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Spatie\LaravelIgnition\Recorders\LogRecorder\LogMessage;
 
 class AdministraAprobacionEspecial extends Component
 {
@@ -42,7 +43,8 @@ class AdministraAprobacionEspecial extends Component
     public $clientes = [], $tipos_envio = [];
     public $direccionesFiscales = [], $direccionesEntrega = [];
     public $productos = [], $categorias = [];
-    protected $listeners = ['abrirModalEdicion' => 'abrirModal'];
+    protected $listeners = ['abrirModalEdicion' => 'abrirModal',
+                            'guardarOrden' => 'guardarOrden'];
     public $estado_produccion = 'POR APROBAR';
     public $proyecto_nombre;
     public $producto_nombre;
@@ -59,6 +61,11 @@ class AdministraAprobacionEspecial extends Component
     public $selectedPedidos = [];
     public $selectAll = false;
     public $modal_aprobar_sin_fechas = false;
+
+
+    public $modalRevisarAprobacion = false;
+
+
     public $modalCrearTarea = false;
     public $nuevoTareaPedidoId;
     public $nuevoTareaStaffId;
@@ -74,9 +81,17 @@ class AdministraAprobacionEspecial extends Component
     public $ordenCorte_tallas_json = [];
     public $modalOrdenes = false;
     public $pedidoOrdenes = [];
+    
     public $modalCrearOrdenProduccion = false;
+
     public $ordenProd_fecha_inicio;
     public $ordenProd_tipo = 'CORTE';
+    public $ordenProd_usuario_asignado_id = '';
+
+
+    public $modalCrearOrden = false;
+    public $tipo_modal_orden = ''; // 'CORTE', 'SUBLIMADO', etc.
+
 
 
     public function mount()
@@ -85,7 +100,7 @@ class AdministraAprobacionEspecial extends Component
         $this->clientes = Cliente::all();
         $this->direccionesFiscales = DireccionFiscal::with('ciudad.estado')->get();
         $this->direccionesEntrega = DireccionEntrega::with('ciudad.estado')->get();
-        $this->usuarios = User::all();
+        $this->usuarios = User::query()->role('estaf')->get();
         $this->productos_activos = Producto::where('ind_activo', 1)->get();
         $this->categorias_activas = Categoria::where('ind_activo', 1)->get();
     }
@@ -364,9 +379,14 @@ class AdministraAprobacionEspecial extends Component
             $query->where('total', $this->filtro_total);
         }
         
-        if ($this->filtro_estado) {
-            $query->where('estado', 'APROBADO');
-        }
+        // if ($this->filtro_estado) {
+        //     $query->where('estado', $this->filtro_estado);
+        // }
+
+            $query->where('estado', 'POR APROBAR');
+
+
+            $query->where('flag_solicitud_aprobar_sin_fechas', '1');
         
         if ($this->filtro_estado_produccion) {
             $query->where('estado_produccion', $this->filtro_estado_produccion);
@@ -375,12 +395,10 @@ class AdministraAprobacionEspecial extends Component
 
         $query->where('tipo', 'PEDIDO');
 
-        return view('livewire.produccion.administra-pedidos-crud', [
+        return view('livewire.produccion.administra-aprobacion-especial', [
             
             'pedidos' => $query->orderByDesc(column: 'created_at')->paginate(10),
         ]);
-
-
         // return view('livewire.programacion.pedidos-crud-general', [
         //     'pedidos' => $query->orderByDesc('created_at')->paginate(10),
         //     'productos_activos' => Producto::where('ind_activo', 1)->get(),
@@ -435,303 +453,52 @@ class AdministraAprobacionEspecial extends Component
     }
 
 
-    public function abrirModalCrearTarea($pedidoId)
+
+    
+    public function abrirModalRevisarAprobacion($pedidoId)
     {
-        $this->nuevoTareaPedidoId = $pedidoId;
-        $this->nuevoTareaTipo = 'INDEFINIDA';
-        $this->nuevoTareaStaffId = null;
-        $this->modalCrearTarea = true;
+        $pedido = Pedido::findOrFail($pedidoId);
+
+        $this->pedidoId = $pedido->id;
+        $this->total = $pedido->total;
+        $this->estatus = $pedido->estatus;
+        $this->tipo = $pedido->tipo;
+        $this->estado = $pedido->estado;
+        $this->estado_produccion = $pedido->estado_produccion;
+        $this->fecha_produccion = $pedido->fecha_produccion;
+        $this->fecha_embarque = $pedido->fecha_embarque;
+        $this->fecha_entrega = $pedido->fecha_entrega;
+        $this->direccion_fiscal_id = $pedido->direccion_fiscal_id;
+        $this->direccion_entrega_id = $pedido->direccion_entrega_id;
+        $this->id_tipo_envio = $pedido->id_tipo_envio;
+        $this->cliente_id = $pedido->cliente_id;
+        $this->producto_id = $pedido->producto_id;
+
+        $this->modalRevisarAprobacion = true;
     }
 
-    public function guardarTarea()
+    public function aprobarSolicitud()
     {
-        $this->validate([
-            'nuevoTareaPedidoId' => 'required|exists:pedido,id',
-            'nuevoTareaStaffId' => 'required|exists:users,id',
-            'nuevoTareaTipo' => 'required|in:DISEÑO,PRODUCCION,CORTE,PINTURA,FACTURACION,INDEFINIDA',
+        $pedido = Pedido::findOrFail($this->pedidoId);
+
+        $pedido->update([
+            'flag_aprobar_sin_fechas' => 1,
+            'fecha_produccion' => $this->fecha_produccion,
+            'fecha_embarque' => $this->fecha_embarque,
+            'fecha_entrega' => $this->fecha_entrega,
         ]);
 
-         Log::debug('nuevoTareaTipo:', [ $this->nuevoTareaTipo]);
-        
-        TareaProduccion::create([
-            'pedido_id' => $this->nuevoTareaPedidoId,
-            'usuario_id'=> $this->nuevoTareaStaffId,
-            'crete_user'=> auth()->id(),
-            'tipo' => $this->nuevoTareaTipo,
-            'estado' => 'PENDIENTE',
-            'descripcion' => 'Asignada manualmente desde programación',
-        ]);
-    
-        $this->modalCrearTarea = false;
-        session()->flash('message', '✅ Tarea creada correctamente.');
+        $this->modalRevisarAprobacion = false;
+        $this->dispatch('ActualizarTablaPedido');
+        session()->flash('message', '✅ Solicitud aprobada correctamente y fechas actualizadas.');
     }
 
-
-    public function crearTareaConPedidos()
+    public function rechazarSolicitud()
     {
-        $this->validate([
-          
-            'nuevoTareaTipo' => 'required|in:DISEÑO,CORTE,BORDADO,PINTURA,FACTURACION,INDEFINIDA',
-            'nuevoTareaStaffId' => 'required|exists:users,id',
-            'selectedPedidos' => 'required|array|min:1',
-        ]);
-
-        // 1️⃣ Crear la tarea
-        $tarea = TareaProduccion::create([
-            
-            'usuario_id' => $this->nuevoTareaStaffId,
-            'crete_user' => auth()->id(),
-            'tipo' => $this->nuevoTareaTipo,
-            'descripcion' => $this->nuevoTareaDescripcion ?? 'Asignada desde programación',
-            'estado' => 'PENDIENTE',
-            'fecha_inicio' => now(),
-        ]);
-
-        // Añadimos un campo json para tallas 
-
-        // Añadimos un campo de resumen de tallas 
-
-        
-
-        // 2️⃣ Relacionar los pedidos con la tarea (pedido_tarea)
-        $tarea->pedidos()->sync($this->selectedPedidos);
-
-        // 3️⃣ Mensaje de confirmación
-        session()->flash('message', '✅ Tarea creada y pedidos asignados correctamente.');
-
-        // 4️⃣ Opcional: limpiar selección
-        $this->reset(['selectedPedidos',  'nuevoTareaTipo', 'nuevoTareaStaffId', 'nuevoTareaDescripcion']);
-        $this->modalCrearTarea = false;
+        $pedido = Pedido::findOrFail($this->pedidoId);
+        $pedido->update(['estado' => 'RECHAZADO']);
+        $this->modalRevisarAprobacion = false;
+        $this->dispatch('ActualizarTablaPedido');
+        session()->flash('message', '⚠️ Solicitud rechazada.');
     }
-
-
-    public function abrirModalCrearOrdenCorte()
-    {
-        if (empty($this->selectedPedidos)) {
-            session()->flash('error', 'Debes seleccionar al menos un pedido para crear una Orden de Corte.');
-            return;
-        }
-
-
-       
-        $this->reset([
-            'ordenCorte_fecha_inicio',
-            'ordenCorte_caracteristicas',
-            'ordenCorte_tallas',
-            'ordenCorte_tallas_json',
-        ]);
-
-        // ✅ Cargar tallas de los pedidos seleccionados
-        $tallasAgrupadas = [];
-
-        foreach ($this->selectedPedidos as $pedidoId) {
-            $pedido = \App\Models\Pedido::with(['pedidoTallas.talla', 'pedidoTallas.grupoTalla'])->find($pedidoId);
-        
-            if (!$pedido) continue;
-        
-            foreach ($pedido->tallas_agrupadas as $grupoId => $grupo) {
-                $grupoNombre = $grupo['grupo_nombre'];
-        
-                foreach ($grupo['tallas'] as $talla) {
-                    $clave = $grupoNombre . '-' . $talla['nombre'];
-        
-                    if (!isset($tallasAgrupadas[$clave])) {
-                        $tallasAgrupadas[$clave] = [
-                            'grupo' => $grupoNombre,
-                            'talla' => $talla['nombre'],
-                            'cantidad' => 0,
-                            'stock' => 0,
-                        ];
-                    }
-        
-                    $tallasAgrupadas[$clave]['cantidad'] += $talla['cantidad'];
-                }
-            }
-        }
-        
-        $this->ordenCorte_tallas_json = $tallasAgrupadas;
-
-        $this->modalCrearOrdenCorte = true;
-    }
-
-    public function guardarOrdenCorte()
-    {
-
-
-        Log::debug('Pre validacion ');
-
-        $this->validate([
-            'ordenCorte_fecha_inicio' => 'required|date',
-          
-        ]);
-        
-        Log::debug('Pasa validacion');
-        DB::beginTransaction();
-        try {
-            // 1️⃣ Crear la orden de producción general
-
-            Log::debug('Crear la orden de producción general');
-            $orden = OrdenProduccion::create([
-                'crete_user' => auth()->id(),
-                'tipo' => 'CORTE',
-            ]);
-
-
-
-            // calculo del total 
-            $totalCorte = collect($this->ordenCorte_tallas_json)->sum(function ($item) {
-                return isset($item['cantidad']) ? (int) $item['cantidad'] : 0;
-            });
-
-
-    
-            // 2️⃣ Crear la orden de corte específica
-           OrdenCorte::create([
-                'orden_produccion_id' => $orden->id,
-                'fecha_inicio' => $this->ordenCorte_fecha_inicio,
-                'total' => $totalCorte,
-                'caracteristicas' => $this->ordenCorte_caracteristicas ? json_encode($this->ordenCorte_caracteristicas) : null,
-                'tallas' => json_encode($this->ordenCorte_tallas_json),
-            ]);
-    
-            // 3️⃣ Relacionar los pedidos seleccionados
-            foreach ($this->selectedPedidos as $pedidoId) {
-                \DB::table('pedido_orden_produccion')->insert([
-                    'pedido_id' => $pedidoId,
-                    'orden_produccion_id' => $orden->id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-    
-            DB::commit();
-    
-            session()->flash('message', '✅ Orden de Corte creada exitosamente.');
-            $this->reset(['modalCrearOrdenCorte', 'selectedPedidos']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error al crear Orden de Corte', ['error' => $e->getMessage()]);
-            session()->flash('error', 'Error al crear la orden de corte.');
-        }
-    }
-
-    public function abrirModalCrearTareaConPedidos()
-    {
-        if (empty($this->selectedPedidos)) {
-            session()->flash('error', 'Debes seleccionar al menos un pedido.');
-            return;
-        }
-    
-        $this->reset([ 'nuevoTareaTipo', 'nuevoTareaStaffId', 'nuevoTareaDescripcion']);
-        $this->modalCrearTareaConPedidos = true;
-    }
-
-    public function verOrdenesDePedido($pedidoId)
-    {
-        $pedido = Pedido::find($pedidoId);
-    
-        $this->pedidoOrdenes = OrdenProduccion::with(['pedidos', 'ordenCorte'])
-            ->whereHas('pedidos', fn($q) => $q->where('pedido.id', $pedidoId))
-            ->get()
-            ->map(function ($orden) {
-                return [
-                    'id' => $orden->id,
-                    'tipo' => $orden->tipo,
-                    'creado' => $orden->created_at->format('Y-m-d H:i'),
-                    'pedidos' => $orden->pedidos->map(fn($p) => [
-                        'id' => $p->id,
-                        'producto' => $p->producto->nombre ?? 'Sin producto',
-                    ]),
-                    'orden_corte' => $orden->ordenCorte ? [
-                        'fecha_inicio' => $orden->ordenCorte->fecha_inicio?->format('Y-m-d'),
-                        'total' => $orden->ordenCorte->total,
-                    ] : null,
-                ];
-            })->toArray();
-    
-        $this->modalOrdenes = true;
-    }
-    /**
-     * Abre el modal para crear órdenes de producción (varios o uno a uno).
-     */
-    public function abrirModalCrearOrdenProduccion()
-    {
-        if (empty($this->selectedPedidos)) {
-            session()->flash('error', 'Debes seleccionar al menos un pedido para crear una Orden de Producción.');
-            return;
-        }
-
-        $this->reset(['ordenProd_fecha_inicio', 'ordenProd_tipo']);
-        $this->modalCrearOrdenProduccion = true;
-    }
-    /**
-     * Guarda la nueva Orden de Producción (sin sub-orden de corte).
-    */
-    public function guardarOrdenProduccion()
-    {
-        $this->validate([
-            'ordenProd_fecha_inicio' => 'required|date',
-            'ordenProd_tipo'         => 'required|in:CORTE,PINTURA,ETIQUETADO,BORDADO,OTRO',
-            // eliminamos validación de flujo dinámico; usaremos id fijo
-        ]);
-
-        DB::beginTransaction();
-
-        try {
-            // 1️⃣ Crear la orden de producción general, con flujo_id = 1
-            $orden = OrdenProduccion::create([
-                'crete_user' => auth()->id(),
-                'tipo'       => $this->ordenProd_tipo,
-                'flujo_id'   => 1, // uso fijo del flujo 1
-            ]);
-
-            // 2️⃣ Relacionar los pedidos seleccionados
-            foreach ($this->selectedPedidos as $pedidoId) {
-                DB::table('pedido_orden_produccion')->insert([
-                    'pedido_id'            => $pedidoId,
-                    'orden_produccion_id'  => $orden->id,
-                    'created_at'           => now(),
-                    'updated_at'           => now(),
-                ]);
-            }
-
-            // 3️⃣ Inyección de pasos según el JSON del flujo #1
-            $steps = data_get($orden->flujo->config, 'steps', []);
-            foreach ($steps as $step) {
-                $paso = $orden->ordenPasos()->create([
-                    'nombre'         => $step['name'],
-                    'grupo_paralelo' => $step['grupo'],
-                    'estado'         => $step['grupo'] === 1 ? 'EN_PROCESO' : 'PENDIENTE',
-                    'fecha_inicio'   => $step['grupo'] === 1 ? now() : null,
-                ]);
-
-                // 4️⃣ Crear tarea inicial sólo para el primer grupo
-                if ($step['grupo'] === 1) {
-                    $paso->tareasProduccion()->create([
-                        'usuario_id'  => auth()->id(),
-                        'crete_user'  => auth()->id(),   
-                        'descripcion' => "Tarea inicial: {$step['name']}",
-                        // estado por defecto PENDIENTE
-                    ]);
-                }
-            }
-
-            DB::commit();
-
-            session()->flash('message', '✅ Orden de Producción creada exitosamente.');
-            $this->dispatch('ActualizarTablaPedido');
-            $this->reset(['modalCrearOrdenProduccion', 'selectedPedidos', 'ordenProd_tipo']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error al crear Orden de Producción', ['error' => $e->getMessage()]);
-            session()->flash('error', 'Error al crear la orden de producción.');
-        }
-    }
-
-
-    // public function render()
-    // {
-    //     return view('livewire.produccion.administra-aprobacion-especial');
-    // }
 }
-
