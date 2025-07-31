@@ -81,4 +81,13 @@ class OrdenProduccion extends Model
     {
         return $this->belongsToMany(OrdenProduccion::class, 'pedido_orden_produccion');
     }
+
+
+    public function cancelar()
+    {
+        $this->estado = 'CANCELADO';
+        $this->fecha_cancelado = now();
+        return $this->save();
+    }
+
 }

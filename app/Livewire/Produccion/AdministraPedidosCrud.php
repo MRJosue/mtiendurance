@@ -639,6 +639,7 @@ class AdministraPedidosCrud extends Component
                 return [
                     'id'         => $orden->id,
                     'tipo'       => $orden->tipo,
+                    'estado'       => $orden->estado,
                     'creado'     => $orden->created_at->format('Y-m-d H:i'),
                     'pedidos'    => $orden->pedidos->map(fn($p) => [
                         'id' => $p->id,
@@ -875,6 +876,25 @@ class AdministraPedidosCrud extends Component
             Log::error('Error al crear Orden de Corte', ['error' => $e->getMessage()]);
             session()->flash('error', 'Error al crear la orden de corte.');
         }
+    }
+
+    
+    public function cancelarOrden($ordenId)
+    {
+        $orden = OrdenProduccion::find($ordenId);
+
+        if (!$orden) {
+            session()->flash('error', 'Orden no encontrada.');
+            return;
+        }
+
+        $orden->cancelar();
+
+        if ($this->pedidoOrdenes) {
+            $this->verOrdenesDePedido($this->pedidoId);
+        }
+
+        session()->flash('message', "Orden #{$ordenId} cancelada correctamente.");
     }
 
 

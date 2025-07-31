@@ -693,11 +693,19 @@
                             <div>
                                 <div><strong>ID:</strong> {{ $orden['id'] }}</div>
                                 <div><strong>Tipo:</strong> {{ $orden['tipo'] }}</div>
+                                <div><strong>Estado:</strong> {{ $orden['estado'] }}</div>
+
                                 <div><strong>Creado:</strong> {{ $orden['creado'] }}</div>
                             </div>
 
 
-
+                            <button
+                                wire:click="cancelarOrden({{ $orden['id'] }})"
+                                class="text-red-600 hover:underline text-xs ml-4"
+                                onclick="return confirm('¿Seguro que deseas cancelar esta orden?')"
+                            >
+                                ❌ Cancelar
+                            </button>
                             {{-- Botón de impresión --}}
                             <button
                                 class="text-blue-600 hover:underline text-xs"
@@ -711,11 +719,11 @@
     
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 mb-4">
                                 <div>
-                                    <strong>Fecha sin iniciar:</strong>
+                                    <strong>Fecha de Inicio de produccion:</strong>
                                     <span>{{ $orden['fecha_sin_iniciar'] ?? 'N/D' }}</span>
                                 </div>
                                 <div>
-                                    <strong>Fecha en proceso:</strong>
+                                    <strong>Fecha De inicio de proceso:</strong>
                                     <span>{{ $orden['fecha_en_proceso'] ?? 'N/D' }}</span>
                                 </div>
                                 <div>
