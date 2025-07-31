@@ -699,13 +699,19 @@
                             </div>
 
 
-                            <button
-                                wire:click="cancelarOrden({{ $orden['id'] }})"
-                                class="text-red-600 hover:underline text-xs ml-4"
-                                onclick="return confirm('¿Seguro que deseas cancelar esta orden?')"
-                            >
-                                ❌ Cancelar
-                            </button>
+                            @if ($orden['estado'] == 'TERMINADO' || $orden['estado'] == 'CANCELADO')
+                                {{-- No mostrar botón cancelar --}}
+                            @else
+                                <button
+                                    wire:click="cancelarOrden({{ $orden['id'] }})"
+                                    class="text-red-600 hover:underline text-xs ml-4"
+                                    onclick="return confirm('¿Seguro que deseas cancelar esta orden?')"
+                                >
+                                    ❌ Cancelar
+                                </button>
+                            @endif
+
+
                             {{-- Botón de impresión --}}
                             <button
                                 class="text-blue-600 hover:underline text-xs"
