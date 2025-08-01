@@ -86,11 +86,64 @@
                     @error('descripcion') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Config (JSON)</label>
-                    <textarea wire:model.defer="config" class="w-full mt-1 border rounded-lg p-2" rows="4"></textarea>
-                    @error('config') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+                <div
+                        x-data="flujoEditor()"
+                        x-init="init(@js($config));
+                            $watch('steps', () => {
+                                $refs.configTextarea.value = JSON.stringify({ steps }, null, 2);
+                                $refs.configTextarea.dispatchEvent(new Event('input'));
+                            })"
+                        class="mb-4 border p-4 rounded bg-gray-50 max-h-[400px] overflow-auto"
+                    >
+                    <h3 class="font-semibold mb-2">Configuración de Pasos (steps)</h3>
+
+                    <template x-for="(step, index) in steps" :key="index">
+                        <div class="border rounded p-3 mb-3 bg-white shadow">
+                            <div class="flex justify-between items-center mb-2">
+                                <strong x-text="'Paso ' + (index + 1) + ': ' + step.name"></strong>
+                                <button @click="removeStep(index)" class="text-red-500 hover:text-red-700">Eliminar</button>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium">Nombre (name)</label>
+                                    <select x-model="step.name" class="w-full border rounded p-1">
+                                        <option value="" disabled>-- Selecciona un nombre --</option>
+                                        <template x-for="option in opciones" :key="option">
+                                            <option :value="option" x-text="option"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium">Grupo</label>
+                                    <input type="number" min="1" x-model.number="step.grupo" class="w-full border rounded p-1" />
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium">Descripción</label>
+                                    <textarea x-model="step.descripcion" class="w-full border rounded p-1"></textarea>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium">Siguientes pasos (next) — separa por comas</label>
+                                    <input type="text" x-model="step.nextText" 
+                                        @input="step.next = step.nextText.split(',').map(s => s.trim()).filter(s => s.length > 0)"
+                                        class="w-full border rounded p-1" />
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <button 
+                        type="button" 
+                        @click="addStep()" 
+                        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                        + Agregar Paso
+                    </button>
                 </div>
+
+                <!-- Mantener sincronizado el textarea JSON oculto para Livewire -->
+                  <textarea x-ref="configTextarea" wire:model.defer="config"class="hidden"></textarea>
+
 
                 <div class="flex justify-end space-x-2">
                     <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
@@ -107,6 +160,43 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Aquí puedes manejar eventos de Livewire usando dispatch si lo necesitas
+    window.flujoEditor = () => ({
+        steps: [],
+        opciones: ['CORTE','SUBLIMADO','COSTURA','MAQUILA','FACTURACION','ENVIO','OTRO','RECHAZADO'],
+
+        init(initialJson = '{}') {
+            try {
+                const obj = typeof initialJson === 'string' ? JSON.parse(initialJson) : initialJson;
+                const opcionesUpper = this.opciones.map(o => o.toUpperCase());
+                this.steps = (obj.steps || []).map(step => {
+                    const nombreRaw = step.name ? step.name.trim() : '';
+                    const nombreUpper = nombreRaw.toUpperCase();
+                    const matchIndex = opcionesUpper.indexOf(nombreUpper);
+                    return {
+                        ...step,
+                        name: matchIndex !== -1 ? this.opciones[matchIndex] : '',
+                        nextText: (step.next || []).join(', '),
+                    };
+                });
+            } catch (e) {
+                this.steps = [];
+            }
+        },
+
+        addStep() {
+            this.steps.push({
+                name: '',
+                grupo: 1,
+                descripcion: '',
+                next: [],
+                nextText: '',
+            });
+        },
+
+        removeStep(index) {
+            this.steps.splice(index, 1);
+        },
+    });
 });
+
 </script>

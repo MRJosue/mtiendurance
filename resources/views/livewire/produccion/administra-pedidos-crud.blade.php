@@ -877,11 +877,24 @@
             </div>
 
             <div class="overflow-y-auto p-6 space-y-4">
-                <!-- Tipo de orden -->
+                <!-- En el modalCrearOrdenProduccion -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Flujo de Producción</label>
+                    <select wire:model="ordenProd_flujo_id" class="w-full border border-gray-300 rounded p-2">
+                        <option value="">-- Selecciona un flujo --</option>
+                        @foreach($flujosProduccion as $flujo)
+                            <option value="{{ $flujo->id }}">{{ $flujo->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Tipo de Orden (bloqueado si hay flujo seleccionado) -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Tipo de Orden</label>
-                    <select wire:model="tipo_modal_orden" class="w-full border border-gray-300 rounded p-2">
-                        <option value="">-- Selecciona tipo --</option>
+                    <select wire:model="ordenProd_tipo" 
+                        class="w-full border border-gray-300 rounded p-2"
+                        @if($ordenProd_flujo_id) disabled @endif
+                    >
                         <option value="CORTE">Corte</option>
                         <option value="SUBLIMADO">Sublimado</option>
                         <option value="COSTURA">Costura</option>

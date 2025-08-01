@@ -19,6 +19,7 @@ use App\Models\ProductoGrupoTalla;
 use App\Models\TareaProduccion;
 use App\Models\OrdenProduccion;
 use App\Models\OrdenCorte;
+use App\Models\FlujoProduccion;
 
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -86,7 +87,8 @@ class AdministraPedidosCrud extends Component
     public $modalCrearOrden = false;
     public $tipo_modal_orden = ''; // 'CORTE', 'SUBLIMADO', etc.
 
-
+    public $ordenProd_flujo_id = null;
+    public $flujosProduccion = [];
 
     public function mount()
     {
@@ -95,6 +97,7 @@ class AdministraPedidosCrud extends Component
         $this->direccionesFiscales = DireccionFiscal::with('ciudad.estado')->get();
         $this->direccionesEntrega = DireccionEntrega::with('ciudad.estado')->get();
         $this->usuarios = User::query()->role('estaf')->get();
+        $this->flujosProduccion = FlujoProduccion::all();
         $this->productos_activos = Producto::where('ind_activo', 1)->get();
         $this->categorias_activas = Categoria::where('ind_activo', 1)->get();
     }
@@ -608,6 +611,9 @@ class AdministraPedidosCrud extends Component
             Log::debug('Ejecutamos guardarOrdenProduccion');
             $this->guardarOrdenProduccion();
         }
+
+
+        
     }
 
 
@@ -730,83 +736,159 @@ class AdministraPedidosCrud extends Component
     /**
      * Guarda la nueva Orden de Producción (sin sub-orden de corte).
     */
-    public function guardarOrdenProduccion()
-    {
+    // public function guardarOrdenProduccion()
+    // {
 
-        Log::debug('Pre validacion guardarOrdenProduccion');
+    //     Log::debug('Pre validacion guardarOrdenProduccion');
 
         
 
-        $this->validate([
+    //     $this->validate([
+    //         'ordenProd_fecha_inicio' => 'required|date',
+    //         'ordenProd_usuario_asignado_id' => 'required|exists:users,id',
+    //         'ordenProd_tipo'         => 'required|in:CORTE,SUBLIMADO,COSTURA,MAQUILA,FACTURACION,ENVIO,OTRO,RECHAZADO',
+    //         // eliminamos validación de flujo dinámico; usaremos id fijo
+    //     ]);
+
+    //     DB::beginTransaction();
+
+    //     try {
+
+
+    //          Log::debug('try  guardarOrdenProduccion');
+
+    //         // 1️⃣ Crear la orden de producción general, con flujo_id = 1
+    //         $orden = OrdenProduccion::create([
+    //             'create_user' => auth()->id(),
+    //             'tipo'       => $this->ordenProd_tipo,
+    //             'fecha_sin_iniciar' => $this->ordenProd_fecha_inicio,
+    //             'flujo_id'   => 1, // uso fijo del flujo 1
+    //             'assigned_user_id' => $this->ordenProd_usuario_asignado_id,
+    //         ]);
+
+    //         // 2️⃣ Relacionar los pedidos seleccionados
+    //         foreach ($this->selectedPedidos as $pedidoId) {
+    //             DB::table('pedido_orden_produccion')->insert([
+    //                 'pedido_id'            => $pedidoId,
+    //                 'orden_produccion_id'  => $orden->id,
+    //                 'created_at'           => now(),
+    //                 'updated_at'           => now(),
+    //             ]);
+    //         }
+
+    //         // 3️⃣ Inyección de pasos según el JSON del flujo #1
+    //         // $steps = data_get($orden->flujo->config, 'steps', []);
+    //         // foreach ($steps as $step) {
+    //         //     $paso = $orden->ordenPasos()->create([
+    //         //         'nombre'         => $step['name'],
+    //         //         'grupo_paralelo' => $step['grupo'],
+    //         //         'estado'         => $step['grupo'] === 1 ? 'EN_PROCESO' : 'PENDIENTE',
+    //         //         'fecha_inicio'   => $step['grupo'] === 1 ? now() : null,
+    //         //     ]);
+
+    //         //     // 4️⃣ Crear tarea inicial sólo para el primer grupo
+    //         //     if ($step['grupo'] === 1) {
+    //         //         $paso->tareasProduccion()->create([
+    //         //             'usuario_id'  => auth()->id(),
+    //         //             'crete_user'  => auth()->id(),   
+    //         //             'descripcion' => "Tarea inicial: {$step['name']}",
+    //         //             // estado por defecto PENDIENTE
+    //         //         ]);
+    //         //     }
+    //         // }
+
+    //         DB::commit();
+
+    //         session()->flash('message', '✅ Orden de Producción creada exitosamente.');
+    //         $this->dispatch('ActualizarTablaPedido');
+    //         $this->reset(['modalCrearOrdenProduccion', 'selectedPedidos', 'ordenProd_tipo']);
+
+    //         $this ->modalCrearOrden = false;
+            
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         Log::error('Error al crear Orden de Producción', ['error' => $e->getMessage()]);
+    //         session()->flash('error', 'Error al crear la orden de producción.');
+    //     }
+
+    //           Log::debug('Fin de guardarOrdenProduccion');
+    // }
+
+    public function guardarOrdenProduccion()
+    {
+        $rules = [
             'ordenProd_fecha_inicio' => 'required|date',
             'ordenProd_usuario_asignado_id' => 'required|exists:users,id',
-            'ordenProd_tipo'         => 'required|in:CORTE,SUBLIMADO,COSTURA,MAQUILA,FACTURACION,ENVIO,OTRO,RECHAZADO',
-            // eliminamos validación de flujo dinámico; usaremos id fijo
-        ]);
+        ];
+
+        if (!$this->ordenProd_flujo_id) {
+            $rules['ordenProd_tipo'] = 'required|string';
+        }
+
+        $this->validate($rules);
 
         DB::beginTransaction();
 
         try {
+            if ($this->ordenProd_flujo_id) {
+                $flujo = \App\Models\FlujoProduccion::find($this->ordenProd_flujo_id);
+                $steps = data_get($flujo->config, 'steps', []);
 
+                if (empty($steps)) {
+                    throw new \Exception("El flujo seleccionado no tiene pasos definidos.");
+                }
 
-             Log::debug('try  guardarOrdenProduccion');
+                foreach ($steps as $step) {
+                    $orden = OrdenProduccion::create([
+                        'create_user' => auth()->id(),
+                        'tipo' => $step['name'], // Tipo igual al paso del flujo
+                        'fecha_sin_iniciar' => $this->ordenProd_fecha_inicio,
+                        'flujo_id' => $flujo->id,
+                        'assigned_user_id' => $this->ordenProd_usuario_asignado_id,
+                    ]);
 
-            // 1️⃣ Crear la orden de producción general, con flujo_id = 1
-            $orden = OrdenProduccion::create([
-                'create_user' => auth()->id(),
-                'tipo'       => $this->ordenProd_tipo,
-                'fecha_sin_iniciar' => $this->ordenProd_fecha_inicio,
-                'flujo_id'   => 1, // uso fijo del flujo 1
-                'assigned_user_id' => $this->ordenProd_usuario_asignado_id,
-            ]);
-
-            // 2️⃣ Relacionar los pedidos seleccionados
-            foreach ($this->selectedPedidos as $pedidoId) {
-                DB::table('pedido_orden_produccion')->insert([
-                    'pedido_id'            => $pedidoId,
-                    'orden_produccion_id'  => $orden->id,
-                    'created_at'           => now(),
-                    'updated_at'           => now(),
+                    foreach ($this->selectedPedidos as $pedidoId) {
+                        DB::table('pedido_orden_produccion')->insert([
+                            'pedido_id' => $pedidoId,
+                            'orden_produccion_id' => $orden->id,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+            } else {
+                // Si no hay flujo, crear una sola orden con el tipo seleccionado manualmente
+                $orden = OrdenProduccion::create([
+                    'create_user' => auth()->id(),
+                    'tipo' => $this->ordenProd_tipo,
+                    'fecha_sin_iniciar' => $this->ordenProd_fecha_inicio,
+                    'flujo_id' => null,
+                    'assigned_user_id' => $this->ordenProd_usuario_asignado_id,
                 ]);
+
+                foreach ($this->selectedPedidos as $pedidoId) {
+                    DB::table('pedido_orden_produccion')->insert([
+                        'pedido_id' => $pedidoId,
+                        'orden_produccion_id' => $orden->id,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
             }
-
-            // 3️⃣ Inyección de pasos según el JSON del flujo #1
-            // $steps = data_get($orden->flujo->config, 'steps', []);
-            // foreach ($steps as $step) {
-            //     $paso = $orden->ordenPasos()->create([
-            //         'nombre'         => $step['name'],
-            //         'grupo_paralelo' => $step['grupo'],
-            //         'estado'         => $step['grupo'] === 1 ? 'EN_PROCESO' : 'PENDIENTE',
-            //         'fecha_inicio'   => $step['grupo'] === 1 ? now() : null,
-            //     ]);
-
-            //     // 4️⃣ Crear tarea inicial sólo para el primer grupo
-            //     if ($step['grupo'] === 1) {
-            //         $paso->tareasProduccion()->create([
-            //             'usuario_id'  => auth()->id(),
-            //             'crete_user'  => auth()->id(),   
-            //             'descripcion' => "Tarea inicial: {$step['name']}",
-            //             // estado por defecto PENDIENTE
-            //         ]);
-            //     }
-            // }
 
             DB::commit();
 
-            session()->flash('message', '✅ Orden de Producción creada exitosamente.');
+            session()->flash('message', '✅ Orden(es) de Producción creadas exitosamente.');
             $this->dispatch('ActualizarTablaPedido');
-            $this->reset(['modalCrearOrdenProduccion', 'selectedPedidos', 'ordenProd_tipo']);
-
-            $this ->modalCrearOrden = false;
-            
+            $this->reset(['modalCrearOrdenProduccion', 'selectedPedidos', 'ordenProd_tipo', 'ordenProd_flujo_id']);
+            $this->modalCrearOrdenProduccion = false;
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al crear Orden de Producción', ['error' => $e->getMessage()]);
-            session()->flash('error', 'Error al crear la orden de producción.');
+            session()->flash('error', 'Error al crear la orden de producción: ' . $e->getMessage());
         }
-
-              Log::debug('Fin de guardarOrdenProduccion');
     }
 
 

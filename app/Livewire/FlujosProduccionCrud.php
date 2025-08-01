@@ -45,7 +45,8 @@ class FlujosProduccionCrud extends Component
             $this->flujoId      = $id;
             $this->nombre       = $flujo->nombre;
             $this->descripcion  = $flujo->descripcion;
-            $this->config       = json_encode($flujo->config, JSON_PRETTY_PRINT);
+            $this->config = is_string($flujo->config) ? $flujo->config : json_encode($flujo->config, JSON_PRETTY_PRINT);
+
         } else {
             $this->editMode = false;
             $this->reset(['flujoId', 'nombre', 'descripcion', 'config']);
