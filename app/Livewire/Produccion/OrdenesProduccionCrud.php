@@ -28,6 +28,7 @@ class OrdenesProduccionCrud extends Component
 
     public $cantidadesTallasEntregadas = [];
 
+    public $prioridad = 3;
 
 
     // Define los posibles estados (puedes ajustarlos)
@@ -45,6 +46,7 @@ class OrdenesProduccionCrud extends Component
         'tipo'             => 'required|string',
         'estado'           => 'required|string',
         'flujo_id'         => 'nullable|exists:flujos_produccion,id',
+        'prioridad'        => 'required|integer|min:1|max:4', 
     ];
 
 
@@ -55,7 +57,7 @@ class OrdenesProduccionCrud extends Component
 
     public function abrirModal($id = null)
     {
-        $this->reset(['ordenId', 'assigned_user_id', 'tipo', 'estado', 'flujo_id', 'descripcion']);
+        $this->reset(['ordenId', 'assigned_user_id', 'tipo', 'estado', 'flujo_id', 'descripcion', 'prioridad']);
         if ($id) {
             $orden = OrdenProduccion::findOrFail($id);
             $this->ordenEdit = $orden;
@@ -65,6 +67,9 @@ class OrdenesProduccionCrud extends Component
             $this->estado = $orden->estado;
             $this->flujo_id = $orden->flujo_id;
             $this->descripcion = $orden->descripcion ?? '';
+            $this->prioridad = $orden->prioridad ?? 3;
+        } else {
+            $this->prioridad = 3; // default al crear
         }
         $this->modalOpen = true;
     }
@@ -82,12 +87,13 @@ class OrdenesProduccionCrud extends Component
                 'flujo_id'         => $this->flujo_id,
                 'create_user'      => Auth::id(),
                 'descripcion'      => $this->descripcion,
+                'prioridad'        => $this->prioridad,
             ]
         );
+
         $this->modalOpen = false;
         session()->flash('message', 'Orden guardada correctamente.');
     }
-
     // Avanzar el estatus
     public function avanzarEstado($ordenId)
     {

@@ -906,8 +906,19 @@
                     </select>
                 </div>
 
-
                 <div>
+                    <label class="block text-sm font-medium text-gray-700">Prioridad</label>
+                    <select wire:model="ordenProd_prioridad" class="w-full border border-gray-300 rounded p-2">
+                        <option value="1">1 - Muy Alta</option>
+                        <option value="2">2 - Alta</option>
+                        <option value="3">3 - Media</option>
+                        <option value="4">4 - Baja</option>
+                    </select>   
+                    @error('ordenProd_prioridad') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+
+                {{-- <div>
                     <label class="block text-sm font-medium text-gray-700">Usuario Asignado</label>
                     <select wire:model="ordenProd_usuario_asignado_id" class="w-full border border-gray-300 rounded p-2">
                         <option value="">-- Selecciona usuario staff --</option>
@@ -916,7 +927,7 @@
                         @endforeach
                     </select>
                     @error('ordenProd_usuario_asignado_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                </div>
+                </div> --}}
 
                 <!-- Pedidos seleccionados -->
                 <div x-data="{ showPedidos: false }" class="border rounded p-4">
@@ -948,7 +959,7 @@
                 </div>
 
                 <!-- Usuario asignado (solo si NO es corte) -->
-                @if($tipo_modal_orden && $tipo_modal_orden !== 'CORTE')
+                {{-- @if($tipo_modal_orden && $tipo_modal_orden !== 'CORTE')
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Usuario Asignado</label>
                     <select wire:model="ordenProd_usuario_asignado_id" class="w-full border border-gray-300 rounded p-2">
@@ -958,7 +969,7 @@
                         @endforeach
                     </select>
                 </div>
-                @endif
+                @endif --}}
 
                 <!-- Si es CORTE, mostrar tallas agrupadas -->
                 @if($ordenCorte_tallas_json)

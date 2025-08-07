@@ -1,4 +1,4 @@
-<div x-data="{ selectedFlujos: @entangle('selectedFlujos'), modalOpen: @entangle('modalOpen') }" class="container mx-auto p-6">
+<div  class="container mx-auto p-6">
     <!-- Botones de acción -->
     <div class="mb-4 flex flex-wrap space-y-2 sm:space-y-0 sm:space-x-4">
         <button
@@ -68,8 +68,17 @@
     </div>
 
     <!-- Modal -->
-    <div x-show="modalOpen" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
+
+    <!-- Modal -->
+    @if ($modalOpen)
+    <div 
+        x-data="{ selectedFlujos: @entangle('selectedFlujos'), modalOpen: @entangle('modalOpen') }" 
+        x-show="modalOpen" 
+        x-transition
+        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+        @keydown.escape.window="modalOpen = false"
+    >
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6" @click.away="modalOpen = false">
             <h2 class="text-xl font-bold mb-4">
                 {{ $editMode ? 'Editar Flujo' : 'Nuevo Flujo' }}
             </h2>
@@ -87,21 +96,21 @@
                 </div>
 
                 <div
-                        x-data="flujoEditor()"
-                        x-init="init(@js($config));
-                            $watch('steps', () => {
-                                $refs.configTextarea.value = JSON.stringify({ steps }, null, 2);
-                                $refs.configTextarea.dispatchEvent(new Event('input'));
-                            })"
-                        class="mb-4 border p-4 rounded bg-gray-50 max-h-[400px] overflow-auto"
-                    >
+                    x-data="flujoEditor()"
+                    x-init="init(@js($config));
+                        $watch('steps', () => {
+                            $refs.configTextarea.value = JSON.stringify({ steps }, null, 2);
+                            $refs.configTextarea.dispatchEvent(new Event('input'));
+                        })"
+                    class="mb-4 border p-4 rounded bg-gray-50 max-h-[400px] overflow-auto"
+                >
                     <h3 class="font-semibold mb-2">Configuración de Pasos (steps)</h3>
 
                     <template x-for="(step, index) in steps" :key="index">
                         <div class="border rounded p-3 mb-3 bg-white shadow">
                             <div class="flex justify-between items-center mb-2">
                                 <strong x-text="'Paso ' + (index + 1) + ': ' + step.name"></strong>
-                                <button @click="removeStep(index)" class="text-red-500 hover:text-red-700">Eliminar</button>
+                                <button @click="removeStep(index)" class="text-red-500 hover:text-red-700" type="button">Eliminar</button>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -124,9 +133,12 @@
                                 </div>
                                 <div class="md:col-span-2">
                                     <label class="block text-sm font-medium">Siguientes pasos (next) — separa por comas</label>
-                                    <input type="text" x-model="step.nextText" 
-                                        @input="step.next = step.nextText.split(',').map(s => s.trim()).filter(s => s.length > 0)"
-                                        class="w-full border rounded p-1" />
+                                    <input 
+                                        type="text" 
+                                        x-model="step.nextText" 
+                                        @input="step.next = step.nextText.split(',').map(s => s.trim()).filter(s => s.length > 0)" 
+                                        class="w-full border rounded p-1" 
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -142,8 +154,7 @@
                 </div>
 
                 <!-- Mantener sincronizado el textarea JSON oculto para Livewire -->
-                  <textarea x-ref="configTextarea" wire:model.defer="config"class="hidden"></textarea>
-
+                <textarea x-ref="configTextarea" wire:model.defer="config" class="hidden"></textarea>
 
                 <div class="flex justify-end space-x-2">
                     <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
@@ -156,6 +167,8 @@
             </form>
         </div>
     </div>
+    @endif
+
 </div>
 
 <script>

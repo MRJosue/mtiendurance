@@ -79,7 +79,7 @@ $proyecto = \App\Models\Proyecto::with([
         // }
 
         return view('livewire.dashboard.cliente-panel.pedidos', [
-            'pedidos' => $query->orderByDesc('created_at')->paginate(10),
+            'pedidos' => $query->orderByDesc('created_at')->paginate(100),
         ]);
     }
 }

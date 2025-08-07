@@ -90,6 +90,8 @@ class AdministraPedidosCrud extends Component
     public $ordenProd_flujo_id = null;
     public $flujosProduccion = [];
 
+    public $ordenProd_prioridad = 3; // default media
+
     public function mount()
     {
         $this->tipos_envio = TipoEnvio::all();
@@ -116,6 +118,7 @@ class AdministraPedidosCrud extends Component
             'tipo' => 'required|in:PEDIDO,MUESTRA',
             'estado' => 'required|in:POR APROBAR,APROBADO,ENTREGADO,RECHAZADO,ARCHIVADO,POR REPROGRAMAR',
             'estado_produccion' => 'required|in:POR APROBAR,POR PROGRAMAR,PROGRAMADO,IMPRESIÓN,CORTE,COSTURA,ENTREGA,FACTURACIÓN,COMPLETADO,RECHAZADO',
+             'ordenProd_prioridad' => 'required|integer|min:1|max:4',
             'fecha_produccion' => 'nullable|date',
             'fecha_embarque' => 'nullable|date',
             'fecha_entrega' => 'nullable|date',
@@ -705,7 +708,7 @@ class AdministraPedidosCrud extends Component
                 'ordenCorte_fecha_inicio',
                 'ordenCorte_caracteristicas',
                 'ordenProd_fecha_inicio',
-                'ordenProd_usuario_asignado_id'
+              
             ]);
 
             $this->modalCrearOrden = true;
@@ -819,7 +822,7 @@ class AdministraPedidosCrud extends Component
     {
         $rules = [
             'ordenProd_fecha_inicio' => 'required|date',
-            'ordenProd_usuario_asignado_id' => 'required|exists:users,id',
+       
         ];
 
         if (!$this->ordenProd_flujo_id) {
@@ -832,7 +835,7 @@ class AdministraPedidosCrud extends Component
 
         try {
             if ($this->ordenProd_flujo_id) {
-                $flujo = \App\Models\FlujoProduccion::find($this->ordenProd_flujo_id);
+                $flujo = FlujoProduccion::find($this->ordenProd_flujo_id);
                 $steps = data_get($flujo->config, 'steps', []);
 
                 if (empty($steps)) {
@@ -845,7 +848,7 @@ class AdministraPedidosCrud extends Component
                         'tipo' => $step['name'], // Tipo igual al paso del flujo
                         'fecha_sin_iniciar' => $this->ordenProd_fecha_inicio,
                         'flujo_id' => $flujo->id,
-                        'assigned_user_id' => $this->ordenProd_usuario_asignado_id,
+                        'assigned_user_id' => null,
                     ]);
 
                     foreach ($this->selectedPedidos as $pedidoId) {
@@ -863,8 +866,9 @@ class AdministraPedidosCrud extends Component
                     'create_user' => auth()->id(),
                     'tipo' => $this->ordenProd_tipo,
                     'fecha_sin_iniciar' => $this->ordenProd_fecha_inicio,
-                    'flujo_id' => null,
-                    'assigned_user_id' => $this->ordenProd_usuario_asignado_id,
+                    'flujo_id' => $this->ordenProd_flujo_id ?: null,
+                    'assigned_user_id' => null,
+                    'prioridad' => $this->ordenProd_prioridad,
                 ]);
 
                 foreach ($this->selectedPedidos as $pedidoId) {
@@ -882,7 +886,7 @@ class AdministraPedidosCrud extends Component
             session()->flash('message', '✅ Orden(es) de Producción creadas exitosamente.');
             $this->dispatch('ActualizarTablaPedido');
             $this->reset(['modalCrearOrdenProduccion', 'selectedPedidos', 'ordenProd_tipo', 'ordenProd_flujo_id']);
-            $this->modalCrearOrdenProduccion = false;
+            $this->modalCrearOrden = false;
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -913,10 +917,11 @@ class AdministraPedidosCrud extends Component
 
             $orden = OrdenProduccion::create([
                 'create_user' => auth()->id(),
-                'tipo'       => $this->ordenProd_tipo,
+                'tipo' => $this->ordenProd_tipo,
                 'fecha_sin_iniciar' => $this->ordenProd_fecha_inicio,
-                'flujo_id'   => 1, // uso fijo del flujo 1
-                'assigned_user_id' => $this->ordenProd_usuario_asignado_id,
+                'flujo_id' => $this->ordenProd_flujo_id ?: null,
+                'assigned_user_id' => null,
+                'prioridad' => $this->ordenProd_prioridad,
             ]);
 
             Log::debug('calculo del total ');
@@ -953,6 +958,8 @@ class AdministraPedidosCrud extends Component
     
             session()->flash('message', '✅ Orden de Corte creada exitosamente.');
             $this->reset(['modalCrearOrdenCorte', 'selectedPedidos']);
+             $this->modalCrearOrden = false;
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al crear Orden de Corte', ['error' => $e->getMessage()]);

@@ -17,6 +17,7 @@
                     <th class="border-b px-4 py-2">Estado</th>
                     <th class="border-b px-4 py-2">Fecha de Inicio</th>
                     <th class="border-b px-4 py-2">Flujo</th>
+                     <th class="border-b px-4 py-2">Prioridad</th> 
                     <th class="border-b px-4 py-2">Responsable</th>
                     <th class="border-b px-4 py-2">Pedidos</th>
                     <th class="border-b px-4 py-2">Acciones</th>
@@ -30,6 +31,9 @@
                         <td class="border-b px-4 py-2">{{ $orden->estado }}</td>
                        <td class="border-b px-4 py-2">{{ $orden->fecha_sin_iniciar ? \Carbon\Carbon::parse($orden->fecha_sin_iniciar)->format('d/m/Y') : '-' }}</td>
                         <td class="border-b px-4 py-2">{{ $orden->flujo->nombre ?? '-' }}</td>
+                        <td class="border-b px-4 py-2 font-semibold text-center">
+                            {{ $orden->prioridad ?? '-' }}
+                        </td>
                         <td class="border-b px-4 py-2">{{ $orden->usuarioAsignado->name ?? 'No asignado' }}</td>
                         <td class="border-b px-4 py-2">
                             @foreach($orden->pedidos as $pedido)

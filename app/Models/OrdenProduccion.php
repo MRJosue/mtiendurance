@@ -18,6 +18,7 @@ class OrdenProduccion extends Model
         'assigned_user_id',      // nuevo campo para usuario asignado
         'tipo',
         'estado',
+        'prioridad',
         'flujo_id',
         'fecha_sin_iniciar',
         'fecha_en_proceso',
