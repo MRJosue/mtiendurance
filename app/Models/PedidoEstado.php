@@ -15,9 +15,11 @@ class PedidoEstado extends Model
         'proyecto_id',
         'usuario_id',
         'estado',
+        'comentario',
         'fecha_inicio',
         'fecha_fin',
     ];
+
 
     public function pedido()
     {
@@ -40,10 +42,10 @@ class PedidoEstado extends Model
         // $tarea = TareaProduccion::find($id);
         // $tarea->cambiarEstado('EN PROCESO');
         // Validar estado permitido
-        $estadosPermitidos = ['PENDIENTE', 'EN PROCESO', 'COMPLETADA', 'RECHAZADO', 'CANCELADO'];
-        if (!in_array($nuevoEstado, $estadosPermitidos)) {
-            throw new \InvalidArgumentException("Estado no permitido: $nuevoEstado");
-        }
+        // $estadosPermitidos = ['PENDIENTE', 'EN PROCESO', 'COMPLETADA', 'RECHAZADO', 'CANCELADO',];
+        // if (!in_array($nuevoEstado, $estadosPermitidos)) {
+        //     throw new \InvalidArgumentException("Estado no permitido: $nuevoEstado");
+        // }
 
         // Cambiar el estado de la tarea
         $this->estado = $nuevoEstado;
@@ -54,7 +56,7 @@ class PedidoEstado extends Model
             'pedido_id' => $this->pedido_id,
             'proyecto_id' => $this->pedido->proyecto_id,
             'usuario_id' => Auth::id(),
-            'estado' => "TAREA $nuevoEstado",
+            'estado' => "$nuevoEstado",
         ]);
     }
 }

@@ -20,7 +20,10 @@
                             <!-- Componente que muestra el último archivo -->
                             <livewire:proyectos.ultimo-archivo :proyecto-id="$proyecto->id" />
                             <!-- Componente para subir diseño -->
+                            
                             <livewire:proyectos.subir-diseno :proyecto-id="$proyecto->id" />
+
+
                             <livewire:proyectos.resume-estado :proyecto-id="$proyecto->id" />
                         </div>
                         <!-- Lado derecho: pestañas Detalles / Chat -->
@@ -56,15 +59,20 @@
                                 <h2 class="text-2xl font-bold mb-4">Detalles del Proyecto</h2>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3">
                                     <div>
+                                        <div class="text-lg">
+                                            <span class="font-semibold">ID:</span>{{ $proyecto->id }} 
+                                        </div>
+                                        <div class="text-lg">
+                                            <span class="font-semibold">Nombre de Proyecto:</span> {{ $proyecto->nombre }} 
+                                        </div>
+
+                                    </div>
+                                    <div>
                                         <p class="text-lg">
                                             <span class="font-semibold">Cliente:</span> {{ $proyecto->user->name }}
                                         </p>
                                     </div>
-                                    <div>
-                                        <p class="text-lg">
-                                            <span class="font-semibold">Proyecto:</span> {{ $proyecto->nombre }} <span class="text-sm font-bold">ID:{{ $proyecto->id }}</span>
-                                        </p>
-                                    </div>
+
                                     <div class="sm:col-span-2">
                                         <p class="text-lg">
                                             <span class="font-semibold">Descripción:</span> {{ $proyecto->descripcion }}
@@ -89,7 +97,7 @@
                                     </div>
                                     <div>
                                         <p class="text-lg font-semibold">Producto:</p>
-                                        <p>{{ $producto['id'] ?? '' }} {{ $producto['nombre'] ?? 'Sin producto' }}</p>
+                                        <p>{{ $producto['nombre'] ?? 'Sin producto' }}</p>
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-3">

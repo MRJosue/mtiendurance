@@ -93,4 +93,31 @@ class ArchivoProyecto extends Model
     }
 
 
+    // funcion para ver 
+
+    // URL pública normalizada del archivo (verimagen)
+
+    public function getVerimagenAttribute(): ?string
+    {
+        if (!$this->ruta_archivo) return null;
+
+        // 1) Normaliza el path (sin slash inicial)
+        $path = ltrim($this->ruta_archivo, '/');
+
+        // 2) Obtén la url pública del disco (usualmente “/storage/…”) y quítale el slash inicial
+        $public = ltrim(Storage::disk('public')->url($path), '/'); // => "storage/…"
+
+        // 3) Base sin slash final (APP_URL)
+        $base = rtrim(config('app.url') ?: url('/'), '/'); // ej. "http://127.0.0.1:8000"
+
+        // 4) Ensambla sin dobles slashes
+        return  '' . $public; 
+    }
+
+    public function getEsImagenAttribute(): bool
+    {
+        $mime = $this->tipo_archivo ?? '';
+        return str_starts_with($mime, 'image/');
+    }
+
 }

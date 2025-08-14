@@ -13,6 +13,7 @@ use App\Models\Pedido;
 use App\Models\TipoEnvio; 
 use App\Models\Producto; 
 use Carbon\Carbon;
+use App\Models\PedidoEstado;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -49,7 +50,13 @@ class SubirDiseno extends Component
 
     public $error_total;
 
+    public $cobrarMuestra;
 
+    public ArchivoProyecto|null $ultimoArchivo = null;
+
+    // Campos del modal
+    public int $cantidadMuestra = 1;
+    public string $instruccionesMuestra = '';
     protected $rules = [
         'archivo' => 'required|file|max:10240',
         'comentario' => 'nullable|string|max:500',
@@ -209,10 +216,21 @@ class SubirDiseno extends Component
         ]);
     }
 
+    protected function rulesMuestra(): array
+        {
+                return [
+                    'cantidadMuestra'      => 'required|integer|min:1|max:10',
+                    'instruccionesMuestra' => 'nullable|string|max:500',
+                ];
+            }
+
     public function crearMuestraDesdeDiseno()
     {
         $proyecto = Proyecto::find($this->proyectoId);
     
+        $this->validate($this->rulesMuestra());
+
+        
         if (!$proyecto) {
             session()->flash('error', 'No se encontró el proyecto.');
             return;
@@ -236,19 +254,40 @@ class SubirDiseno extends Component
             $this->modalConfirmarMuestra = false;
             return;
         }
-    
+
+
+
+        // === NUEVO: calcular si esta muestra debe cobrarse ===
+        // Cuenta cuántas muestras previas tiene el proyecto
+        $muestrasPrevias = Pedido::where('proyecto_id', $proyecto->id)
+            ->where('tipo', 'MUESTRA')
+            // ->where('estatus', '!=', 'CANCELADA') // <-- descomenta si NO quieres contar canceladas
+            ->count();
+
+        // Si ya hay 2 o más, esta (la próxima) se cobra
+        $cobrarMuestra = $muestrasPrevias >= 2;
+
+
+
         Pedido::crearMuestra($proyecto->id, [
             'cliente_id' => $proyecto->usuario_id,
             'direccion_fiscal_id' => null,
             'direccion_entrega_id' => null,
             'tipo' => 'MUESTRA',
             'estado' => 'POR APROBAR',
-            'total' => 0,
+            'total' => $this->cantidadMuestra,
+            'instrucciones_muestra' => $this->instruccionesMuestra,
             'fecha_produccion' => null,
             'fecha_embarque' => null,
             'fecha_entrega' => null,
             'id_tipo_envio' => null,
+            'cobrar_muestra' => $cobrarMuestra, 
         ]);
+
+
+        // Evento de log al log de pedidos  
+
+        // ..
     
         $this->modalConfirmarMuestra = false;
         session()->flash('message', 'Muestra creada correctamente.');
@@ -481,6 +520,17 @@ class SubirDiseno extends Component
         $this->reset(['archivo', 'comentario', 'modalSubirArchivoDiseno']);
         $this->dispatch('archivoSubido');
         session()->flash('message', 'Archivo de diseño cargado correctamente.');
+    }
+
+
+    public function updatedModalConfirmarMuestra(bool $open)
+    {
+        if ($open) {
+            $this->ultimoArchivo = ArchivoProyecto::where('proyecto_id', $this->proyectoId)
+                ->where('tipo_carga', 1)
+                ->latest('id')
+                ->first();
+        }
     }
 
 

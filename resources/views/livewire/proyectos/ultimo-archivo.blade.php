@@ -4,7 +4,7 @@
     <h2 class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 sm:mb-0 flex items-center gap-2">
       Diseño Actual
     </h2>
-    <livewire:proyectos.project-files :proyecto-id="$this->proyectoId" class="w-full sm:w-auto" />
+
   </div>
 
   <!-- Contenido principal: centrado y tamaño adaptable -->
@@ -24,11 +24,12 @@
              onclick="expandirImagen()">
         <!-- Descripción y metadatos -->
         <div class="mt-4 text-center w-full px-2">
-          <p class="text-gray-700 text-base sm:text-lg">{{ $ultimoArchivo->descripcion }}</p>
+       
           <p class="mt-2 text-gray-600 text-sm sm:text-base">
             <span class="font-semibold">Nombre:</span> {{ $ultimoArchivo->nombre_archivo }}
             <span class="ml-4 font-semibold">Versión:</span> {{ $ultimoArchivo->version }}
           </p>
+          <p class="text-gray-700 text-base sm:text-lg">Comentario:{{ $ultimoArchivo->descripcion }}</p>
         </div>
       </div>
 
@@ -59,6 +60,10 @@
     @else
       <p class="text-gray-500">No se encontraron archivos para este proyecto.</p>
     @endif
+  </div>
+
+  <div class="text-center">
+        <livewire:proyectos.project-files :proyecto-id="$this->proyectoId" class="w-full sm:w-auto" />
   </div>
 
   <!-- Scripts: envueltos en DOMContentLoaded -->

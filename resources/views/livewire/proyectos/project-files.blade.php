@@ -1,9 +1,9 @@
 <div>
     <!-- Activador -->
-    <p class="text-blue-600 underline cursor-pointer" wire:click="$set('modalVerArchivosProyecto', true)">
-        Ver archivos del proyecto
+    <p class="text-blue-600" >
+       <x-link label=" Versiones anteriores y archivos de cliente" wire:click="$set('modalVerArchivosProyecto', true)" />
     </p>
-
+ 
     <!-- Modal -->
     @if($modalVerArchivosProyecto)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">

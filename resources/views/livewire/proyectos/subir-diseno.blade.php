@@ -92,12 +92,63 @@
 
     @if($modalConfirmarMuestra)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
+            <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
                 <h2 class="text-lg font-semibold mb-4">Confirmar creación de muestra</h2>
-                <p class="mb-4">¿Estás seguro de que deseas generar una muestra con base en el diseño actual?</p>
+
+                {{-- Mostrar datos del archivo --}}
+                <div class="mb-4 space-y-1">
+                    <p>
+                        <span class="font-semibold">Archivo:</span>
+                        {{ $ultimoArchivo?->nombre_archivo ?? '-' }}
+                    </p>
+                    <p>
+                        <span class="font-semibold">Versión:</span>
+                        {{ $ultimoArchivo?->version ?? '' }}
+                    </p>
+                    <p>
+                        <span class="font-semibold">Cargado el:</span>
+                        {{ optional($ultimoArchivo?->created_at)->format('Y-m-d H:i') ?? '–' }}
+                    </p>
+                </div>
+
+                {{-- Cantidad solicitada --}}
+                <label class="block mb-1 font-medium">Cantidad solicitada</label>
+                <input
+                    type="number"
+                    min="1"
+                    max='10'
+                    wire:model="cantidadMuestra"
+                    class="w-full border rounded p-2 mb-3"
+                />
+                @error('cantidadMuestra') 
+                    <span class="text-red-500 text-sm">{{ $message }}</span> 
+                @enderror
+
+                {{-- Instrucciones --}}
+                <label class="block mb-1 font-medium">Instrucciones</label>
+                <textarea
+                    wire:model="instruccionesMuestra"
+                    class="w-full border rounded p-2 mb-4"
+                    rows="3"
+                    placeholder="Describe motivos o detalles adicionales (opcional)"
+                ></textarea>
+                @error('instruccionesMuestra') 
+                    <span class="text-red-500 text-sm">{{ $message }}</span> 
+                @enderror
+
                 <div class="flex justify-end space-x-2">
-                    <button wire:click="$set('modalConfirmarMuestra', false)" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">Cancelar</button>
-                    <button wire:click="crearMuestraDesdeDiseno" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">Confirmar</button>
+                    <button
+                        wire:click="$set('modalConfirmarMuestra', false)"
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        wire:click="crearMuestraDesdeDiseno"
+                        class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded"
+                    >
+                        Confirmar
+                    </button>
                 </div>
             </div>
         </div>

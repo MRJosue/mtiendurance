@@ -8,9 +8,10 @@ use Illuminate\Support\Facades\Log;
 use App\Models\ArchivoProyecto;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 use App\Models\TareaProduccion;
-
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Pedido extends Model
 {
@@ -35,16 +36,21 @@ class Pedido extends Model
         'direccion_entrega_id',
         'direccion_entrega',
         'tipo',
+        'estatus_muestra',
         'estado',
         'estado_produccion',
         'fecha_produccion',
         'fecha_embarque',
         'fecha_entrega',
         'id_tipo_envio',
+        'descripcion_pedido',
+        'instrucciones_muestra',
+        'flag_facturacion',
         'url',
         'last_uploaded_file_id',
         'flag_aprobar_sin_fechas',
         'flag_solicitud_aprobar_sin_fechas'
+        
     ];
 
 
@@ -89,6 +95,12 @@ class Pedido extends Model
     public function pedidoOpciones()
     {
         return $this->hasMany(PedidoOpcion::class, 'pedido_id');
+    }
+
+    // App\Models\Pedido.php
+    public function estados()
+    {
+        return $this->hasMany(PedidoEstado::class, 'pedido_id');
     }
 
 
@@ -210,76 +222,91 @@ class Pedido extends Model
         
     public static function crearMuestra($proyectoId, $data)
     {
-        Log::debug('ON crearDesdeProyecto');
-    
-        // Buscar el proyecto
+        Log::debug('ON crearMuestra');
+
         $proyecto = Proyecto::findOrFail($proyectoId);
-        Log::debug('Proyecto cargado:', ['proyecto' => $proyecto]);
-    
-        // Decodificar producto_sel (si es JSON)
-        $producto = is_string($proyecto->producto_sel) 
-            ? json_decode($proyecto->producto_sel, true) 
+
+        $producto = is_string($proyecto->producto_sel)
+            ? json_decode($proyecto->producto_sel, true)
             : $proyecto->producto_sel;
-    
-        Log::debug('Producto decodificado:', ['producto' => $producto]);
-    
-        // Verificar si el producto tiene ID
+
         if (!isset($producto['id'])) {
             throw new \Exception("Error: No se encontró un producto válido en el proyecto.");
         }
-    
-        // Obtener cliente_id desde el proyecto o establecer un valor por defecto
+
         $clienteId = $data['cliente_id'] ?? $proyecto->usuario_id ?? null;
-    
-        // Si cliente_id sigue siendo null, lanzar un error
         if (!$clienteId) {
             throw new \Exception("Error: No se encontró un cliente válido para el pedido.");
         }
-    
-        // 🔍 Obtener el último archivo relacionado con el proyecto
+
+        // Tomar el ÚLTIMO archivo de DISEÑO (tipo_carga = 1), como en la vista
         $ultimoArchivo = ArchivoProyecto::where('proyecto_id', $proyectoId)
-            ->latest('created_at')
+            ->where('tipo_carga', 1)
+            ->latest('id')
             ->first();
-    
+
         $url = $ultimoArchivo ? Storage::disk('public')->url($ultimoArchivo->ruta_archivo) : null;
         $lastFileId = $ultimoArchivo?->id;
-    
-        // Crear pedido
+
+        // (Opcional) Evitar duplicados de muestra por archivo
+        if (!empty($lastFileId)) {
+            $existe = self::where('proyecto_id', $proyecto->id)
+                ->where('last_uploaded_file_id', $lastFileId)
+                ->where('tipo', 'MUESTRA')
+                ->exists();
+
+            if ($existe) {
+                throw new \Exception(message: 'Ya existe una muestra registrada para este diseño.');
+            }
+        }
+
+        // Crear pedido MUESTRA (¡ahora sí guarda instrucciones_muestra!)
         $pedido = self::create([
-            'proyecto_id' => $proyecto->id,
-            'producto_id' => $producto['id'],
-            'user_id' => $proyecto->usuario_id,
-            'cliente_id' => $clienteId,
-            'fecha_creacion' => now(),
-            'total' => $data['total'] ?? 0,
-            'estatus' => $data['estatus'] ?? 'PENDIENTE',
-            'direccion_fiscal_id' => $data['direccion_fiscal_id'] ?? null,
-            'direccion_fiscal' => $data['direccion_fiscal'] ?? null,
-            'direccion_entrega_id' => $data['direccion_entrega_id'] ?? null,
-            'direccion_entrega' => $data['direccion_entrega'] ?? null,
-            'tipo' => $data['tipo'] ?? 'MUESTRA',
-            'estado' => $data['estado'] ?? 'POR PROGRAMAR',
-            'fecha_produccion' => $data['fecha_produccion'] ?? null,
-            'fecha_embarque' => $data['fecha_embarque'] ?? null,
-            'fecha_entrega' => $data['fecha_entrega'] ?? null,
-            'id_tipo_envio' =>  null,
-            'url' => $url,
+            'proyecto_id'           => $proyecto->id,
+            'producto_id'           => $producto['id'],
+            'user_id'               => $proyecto->usuario_id,
+            'cliente_id'            => $clienteId,
+            'fecha_creacion'        => now(),
+            'total'                 => $data['total'] ?? 0, // aquí usas cantidadMuestra
+            'estatus'               => $data['estatus'] ?? 'PENDIENTE',
+            'direccion_fiscal_id'   => $data['direccion_fiscal_id'] ?? null,
+            'direccion_fiscal'      => $data['direccion_fiscal'] ?? null,
+            'direccion_entrega_id'  => $data['direccion_entrega_id'] ?? null,
+            'direccion_entrega'     => $data['direccion_entrega'] ?? null,
+            'tipo'                  => 'MUESTRA',
+            'estatus_muestra' => 'PENDIENTE',
+            'estado'                => $data['estado'] ?? 'POR PROGRAMAR', // tú mandas 'POR APROBAR'
+            'fecha_produccion'      => $data['fecha_produccion'] ?? null,
+            'fecha_embarque'        => $data['fecha_embarque'] ?? null,
+            'fecha_entrega'         => $data['fecha_entrega'] ?? null,
+            'id_tipo_envio'         => $data['id_tipo_envio'] ?? null, // por si luego lo ocupas
+            'descripcion_pedido'    => $data['descripcion_pedido'] ?? null, // (opcional)
+            'instrucciones_muestra' => $data['instrucciones_muestra'] ?? null, // <-- FALTABA
+            'url'                   => $url,
             'last_uploaded_file_id' => $lastFileId,
+            'flag_facturacion'      => (int) ($data['flag_facturacion'] ?? 0), // 0 = no cobra, 1 = sí cobra
         ]);
-    
-        // Guardar tallas si están disponibles
+
+        PedidoEstado::create([
+                'pedido_id'    => $pedido->id,
+                'proyecto_id'  => $pedido->proyecto_id,
+                'usuario_id'   => Auth::id(),
+                'estado'       => 'PENDIENTE',
+                'fecha_inicio' => now(), // opcional, si lo usas en tu flujo
+        ]);
+
         if (!empty($data['cantidades_tallas'])) {
             foreach ($data['cantidades_tallas'] as $tallaId => $cantidad) {
                 if ($cantidad > 0) {
                     PedidoTalla::create([
                         'pedido_id' => $pedido->id,
-                        'talla_id' => $tallaId,
-                        'cantidad' => $cantidad,
+                        'talla_id'  => $tallaId,
+                        'cantidad'  => $cantidad,
                     ]);
                 }
             }
         }
-    
+
         return $pedido;
     }
 
@@ -394,5 +421,22 @@ class Pedido extends Model
     
     
 
+    // App/Models/Pedido.php
+    public function scopeDeMuestra($q)
+    {
+        return $q->where('tipo', 'MUESTRA');
+    }
 
+    public function scopeEstatusMuestra($q, string $status)
+    {
+        return $q->where('estatus_muestra', $status);
+    }
+
+
+
+    public function ultimoEstado()
+    {
+        return $this->hasOne(\App\Models\PedidoEstado::class, 'pedido_id')
+            ->latestOfMany('id'); // último por id
+    }
 }
