@@ -20,7 +20,7 @@ class tareasproduccion extends Controller
 
     public function aprobacion_especial(){
 
-        if (!auth()->user()->hasRole('admin')) {
+         if (!auth()->user()->can('asideAprobacionesEspeciales')) {
             return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
         }
 

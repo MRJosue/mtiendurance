@@ -1,5 +1,77 @@
 {{-- resources/views/livewire/admin/muestras/tab-pendiente.blade.php --}}
 <div x-data="{ selected: @entangle('selected') }" class="container mx-auto p-6">
+
+
+    {{-- Filtros minimizables --}}
+    @if($mostrarFiltros)
+        <div x-data="{ abierto: @entangle('mostrarFiltros') }" class="mb-6">
+            <template x-if="abierto">
+                <div class="w-full bg-white border border-gray-200 shadow-md rounded-lg">
+                    <div class="flex justify-between items-center p-4 border-b">
+                        <h2 class="text-lg font-bold text-gray-700">Filtros</h2>
+                        <div class="flex items-center gap-2">
+                            <button
+                                wire:click="buscarPorFiltros"
+                                class="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-100 text-sm">
+                                Filtrar
+                            </button>
+                            <button
+                                @click="abierto = false"
+                                class="text-gray-500 hover:text-gray-700 text-xl leading-none"
+                                title="Cerrar filtros">✕</button>
+                        </div>
+                    </div>
+
+                    <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <input class="w-full border rounded px-3 py-2" placeholder="ID o Proyecto-ID"
+                               wire:model.live.debounce.500ms="f_id" />
+
+                        <input class="w-full border rounded px-3 py-2" placeholder="Producto / Categoría"
+                               wire:model.live.debounce.500ms="f_producto" />
+
+                        <input class="w-full border rounded px-3 py-2" placeholder="Cliente"
+                               wire:model.live.debounce.500ms="f_cliente" />
+
+                        <input class="w-full border rounded px-3 py-2" placeholder="Archivo / Versión"
+                               wire:model.live.debounce.500ms="f_archivo" />
+
+                        <input class="w-full border rounded px-3 py-2" placeholder="Piezas (>=)"
+                               wire:model.live.debounce.500ms="f_total_min" />
+
+                        <input class="w-full border rounded px-3 py-2" placeholder="Solicitó (usuario estado {{ $estadoColumna }})"
+                               wire:model.live.debounce.500ms="f_usuario" />
+
+                        <input class="w-full border rounded px-3 py-2" placeholder="Instrucciones"
+                               wire:model.live.debounce.500ms="f_instrucciones" />
+
+                        <select class="w-full border rounded px-3 py-2"
+                                wire:model.live="f_estatus">
+                            <option value="">Estatus (todos)</option>
+                            <option value="PENDIENTE">PENDIENTE</option>
+                            <option value="SOLICITADA">SOLICITADA</option>
+                            <option value="MUESTRA LISTA">MUESTRA LISTA</option>
+                            <option value="ENTREGADA">ENTREGADA</option>
+                            <option value="CANCELADA">CANCELADA</option>
+                        </select>
+                    </div>
+                </div>
+            </template>
+
+            <template x-if="!abierto">
+                <div class="mb-4">
+                    <button @click="abierto = true" class="text-sm text-blue-600 hover:underline">
+                        Mostrar Filtros
+                    </button>
+                </div>
+            </template>
+        </div>
+    @else
+        <div class="mb-4">
+            <button wire:click="$set('mostrarFiltros', true)" class="text-sm text-blue-600 hover:underline">
+                Mostrar Filtros
+            </button>
+        </div>
+    @endif
     {{-- Acciones --}}
     <div class="mb-4 flex flex-wrap space-y-2 sm:space-y-0 sm:space-x-4">
         <button
@@ -10,6 +82,9 @@
             Marcar como Lista
         </button>
     </div>
+
+
+    
 
     {{-- Tabla --}}
     <div class="overflow-x-auto bg-white rounded-lg shadow">
@@ -101,21 +176,55 @@
                             </span>
                         </td>
 
-                        <td class="border-b px-4 py-2">
-                            <button
-                                class="px-3 py-1 rounded bg-blue-500 text-white hover:bg-blue-600"
-                                wire:click="marcarSolicitada([{{ $pedido->id }}])"
-                            >
-                                Marcar LISTA
-                            </button>
 
+                        <td class="border-b px-4 py-2">
+                            <div class="flex flex-wrap items-center gap-2">
+                                {{-- Marcar SOLICITADA --}}
+                                <div class="relative group">
                                 <button
-                                class="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-800"
-                                wire:click="abrirModalEstados({{ $pedido->id }})"
-                            >
-                                Ver estados
-                            </button>
-                            
+                                    type="button"
+                                    aria-label="Marcar como SOLICITADA"
+                                    class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    wire:click.stop='marcarSolicitada([{{ $pedido->id }}])'
+                                    wire:loading.attr="disabled"
+                                    wire:target="marcarSolicitada"
+                                >
+                                    {{-- icono check --}}
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0L3.293 9.957a1 1 0 111.414-1.414l4 4 6.543-6.543a1 1 0 011.457 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span class="hidden sm:inline">Marcar SOLICITADA</span>
+                                    {{-- spinner mientras corre la acción --}}
+                                    <svg class="ml-1 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" wire:loading wire:target="marcarSolicitada">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                                    </svg>
+                                </button>
+                                {{-- tooltip (solo en móviles/estrecho mostramos el texto arriba) --}}
+                                <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition sm:hidden">
+                                    Marcar SOLICITADA
+                                </div>
+                                </div>
+
+                                {{-- Ver estados --}}
+                                <div class="relative group">
+                                <button
+                                    type="button"
+                                    aria-label="Ver estados"
+                                    class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-700 text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400/50"
+                                    wire:click.stop="abrirModalEstados({{ $pedido->id }})"
+                                >
+                                    {{-- icono eye --}}
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 5c-7.633 0-11 7-11 7s3.367 7 11 7 11-7 11-7-3.367-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/><circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                    <span class="hidden sm:inline">Ver estados</span>
+                                </button>
+                                <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition sm:hidden">
+                                    Ver estados
+                                </div>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 @endforeach
@@ -145,7 +254,7 @@
                         class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
                         wire:click="cerrarModalEstados"
                     >
-                        Cerrar
+                        x
                     </button>
                 </div>
 

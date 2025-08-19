@@ -281,7 +281,7 @@ class Pedido extends Model
             'fecha_entrega'         => $data['fecha_entrega'] ?? null,
             'id_tipo_envio'         => $data['id_tipo_envio'] ?? null, // por si luego lo ocupas
             'descripcion_pedido'    => $data['descripcion_pedido'] ?? null, // (opcional)
-            'instrucciones_muestra' => $data['instrucciones_muestra'] ?? null, // <-- FALTABA
+            'instrucciones_muestra' => $data['instrucciones_muestra'] ?? null, //
             'url'                   => $url,
             'last_uploaded_file_id' => $lastFileId,
             'flag_facturacion'      => (int) ($data['flag_facturacion'] ?? 0), // 0 = no cobra, 1 = sí cobra
