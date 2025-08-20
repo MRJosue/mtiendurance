@@ -96,7 +96,8 @@
                     <th class="border px-4 py-2">Quien solicita la Muestra</th>
                     <th class="border px-4 py-2">Motivos e instrucciones</th>
                     <th class="border px-4 py-2">Estatus</th>
-
+                    <th class="border px-4 py-2">Tipo de entrega</th>
+                    <th class="border px-4 py-2">Evidencia</th>
                     @unless($esCliente)
                         <th class="border px-4 py-2">Liga</th>
                     @endunless
@@ -164,13 +165,54 @@
                             </span>
                         </td>
 
+
+
+                        {{-- NUEVA: Tipo de entrega --}}
+                        <td class="p-2 px-4 py-2 font-semibold min-w-[8rem]">
+                            @php
+                                $rawTipo = $pedido->estatus_entrega_muestra ?? null;
+                                $tipo = is_string($rawTipo) ? strtoupper($rawTipo) : 'PENDIENTE';
+                                $mapEntrega = [
+                                    'PENDIENTE' => 'bg-yellow-400 text-black',
+                                    'DIGITAL'   => 'bg-sky-600 text-white',
+                                    'FISICA'    => 'bg-fuchsia-600 text-white',
+                                ];
+                                $claseEntrega = $mapEntrega[$tipo] ?? 'bg-gray-300 text-gray-800';
+                            @endphp
+                            <span class="px-2 py-1 rounded text-xs font-semibold {{ $claseEntrega }}">
+                                {{ $tipo }}
+                            </span>
+                        </td>
+
+                        {{-- NUEVA: Evidencia (última evidencia cargada por with([...])) --}}
+                        <td class="p-2 px-4 py-2 min-w-[12rem]">
+                            @php
+                                // gracias al with('archivos' ... limit 1) esto no causa N+1
+                                $evidencia = optional($pedido->archivos)->first();
+                            @endphp
+
+                            @if($evidencia)
+                                <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($evidencia->ruta_archivo) }}"
+                                class="text-blue-600 underline"
+                                target="_blank" rel="noopener">
+                                {{ $evidencia->nombre_archivo }}
+                                </a>
+                                <div class="text-xs text-gray-500">
+                                    {{ $evidencia->tipo_archivo ?? 'archivo' }}
+                                    · {{ optional($evidencia->created_at)->format('Y-m-d H:i') }}
+                                </div>
+                            @else
+                                <span class="text-gray-500">Sin evidencia</span>
+                            @endif
+                        </td>
+
                         @unless($esCliente)
                             <td class="p-2 px-4 py-2 min-w-[10rem]">
                                 <a
                                   href="http://127.0.0.1:8000/produccion/Administraciondemuestras?tab={{ urlencode($estatusMuestra ?: 'PENDIENTE') }}"
                                   class="inline-block px-3 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700"
                                   target="_blank" rel="noopener">
-                                  ver administracion
+                                  Ir a administracion
                                 </a>
                             </td>
                         @endunless

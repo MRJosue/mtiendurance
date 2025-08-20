@@ -136,6 +136,21 @@
                             @else
                                 <span class="text-gray-500">Sin archivo</span>
                             @endif
+
+                                                                {{-- Botón ir a diseño --}}
+                                    <div class="relative group shrink-0">
+                                        <x-mini-button 
+                                            rounded 
+                                            icon="clipboard" 
+                                            flat 
+                                            red 
+                                            interaction="negative"  
+                                            href="{{ route('proyecto.show', $pedido->proyecto_id) }}"  
+                                        />
+                                        <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition">
+                                            Ir a Diseño
+                                        </div>
+                                    </div>
                         </td>
 
                         <td class="border-b px-4 py-2">{{ $pedido->total ?? 'N/A' }}</td>

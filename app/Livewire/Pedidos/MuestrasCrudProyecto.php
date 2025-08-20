@@ -98,6 +98,10 @@ class MuestrasCrudProyecto extends Component
                 'usuario',
                 'cliente',               // asumiendo relación cliente()
                 'producto.categoria',    // para producto y categoría
+                'archivos' => fn($q) => $q
+                ->where('tipo_carga', 3)
+                ->orderByDesc('id')
+                ->limit(1),
             ]);
 
         // Filtros

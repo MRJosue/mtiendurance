@@ -442,7 +442,10 @@ class Pedido extends Model
         return $this->hasOne(\App\Models\PedidoEstado::class, 'pedido_id')
             ->latestOfMany('id'); // último por id
     }
-
+public function archivos()
+{
+    return $this->hasMany(ArchivoPedido::class, 'pedido_id');
+}
 
         /**
      * Todas las evidencias de entrega (tipo_carga = 3), ordenadas de la más reciente a la más antigua.

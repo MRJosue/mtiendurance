@@ -334,7 +334,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de entrega</label>
                             <select class="w-full border rounded px-3 py-2" wire:model.live="entregaSeleccion">
-                                <option value="PENDIENTE">PENDIENTE</option>
+                              
                                 <option value="DIGITAL">DIGITAL</option>
                                 <option value="FISICA">FISICA</option>
                             </select>
