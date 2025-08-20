@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Pedido;
 use App\Models\PedidoEstado;
+use App\Models\ArchivoPedido;
 use Illuminate\Support\Facades\Auth;
 
 class TabEntregada extends Component
@@ -92,6 +93,7 @@ class TabEntregada extends Component
                 'archivo',
                 'cliente',
                 'estados.usuario',
+                'evidenciaEntrega'
             ])
             ->latest('id');
 
@@ -205,6 +207,9 @@ class TabEntregada extends Component
             ->unique('pedido_id')
             ->keyBy('pedido_id');
     }
+
+
+
 
     public function render()
     {

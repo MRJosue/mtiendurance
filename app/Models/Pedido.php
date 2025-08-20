@@ -9,7 +9,7 @@ use App\Models\ArchivoProyecto;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-
+use App\Models\ArchivoPedido;
 use App\Models\TareaProduccion;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -36,6 +36,7 @@ class Pedido extends Model
         'direccion_entrega_id',
         'direccion_entrega',
         'tipo',
+        'estatus_entrega_muestra',
         'estatus_muestra',
         'estado',
         'estado_produccion',
@@ -115,6 +116,8 @@ class Pedido extends Model
         return $this->belongsTo(TipoEnvio::class, 'id_tipo_envio');
     }
 
+
+    
 
     public static function crearDesdeProyecto($proyectoId, $data)
     {
@@ -438,5 +441,30 @@ class Pedido extends Model
     {
         return $this->hasOne(\App\Models\PedidoEstado::class, 'pedido_id')
             ->latestOfMany('id'); // último por id
+    }
+
+
+        /**
+     * Todas las evidencias de entrega (tipo_carga = 3), ordenadas de la más reciente a la más antigua.
+     */
+    /**
+     * Todas las evidencias de entrega (tipo_carga = 3), más recientes primero.
+     */
+    public function archivosEvidencia()
+    {
+        return $this->hasMany(ArchivoPedido::class, 'pedido_id')
+            ->where('tipo_carga', 3)
+            ->orderByDesc('id');
+    }
+
+    /**
+     * Solo la evidencia más reciente (atajo).
+     * Compatible con Laravel 8+ usando ofMany.
+     */
+    public function evidenciaEntrega()
+    {
+        return $this->hasOne(ArchivoPedido::class, 'pedido_id')
+            ->where('tipo_carga', 3)
+            ->ofMany('id', 'max'); // <- sin closure como 3er arg
     }
 }

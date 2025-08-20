@@ -71,13 +71,13 @@
         </div>
     @endif
 
-    {{-- Acciones --}}
+    {{-- (A) Acciones --}}
     <div class="mb-4 flex flex-wrap space-y-2 sm:space-y-0 sm:space-x-4">
         <button
             class="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="selected.length === 0"
-            wire:click="marcarSolicitada">
-            Marcar como Entregada
+            wire:click="abrirModalEntregarSeleccion">
+            Entregar selección
         </button>
     </div>
 
@@ -101,6 +101,8 @@
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Solicitó</th>
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Instrucciones</th>
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Estatus</th>
+                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Tipo de entrega</th>
+                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Evidencia</th>
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
                 </tr>
             </thead>
@@ -116,7 +118,7 @@
                             'CANCELADA'      => 'bg-gray-500 text-white',
                         ])->get($estatusMuestra, 'bg-gray-300 text-gray-800');
 
-                        $reg = $ultimosPorEstado->get($pedido->id) ?? null; // último estado según $estadoColumna
+                        $reg = $ultimosPorEstado->get($pedido->id) ?? null;
                     @endphp
                     <tr class="hover:bg-gray-50">
                         <td class="border-b px-4 py-2">
@@ -138,14 +140,33 @@
 
                         <td class="border-b px-4 py-2">{{ $pedido->cliente->nombre ?? 'Cliente' }}</td>
 
-                        <td class="border-b px-4 py-2">
-                            @if($pedido->archivo)
-                                <a href="{{ Storage::url($pedido->archivo->ruta_archivo) }}"
-                                   class="text-blue-600 hover:underline"
-                                   target="_blank" rel="noopener">
-                                   {{ $pedido->archivo->nombre_archivo }}
-                                </a>
-                                <div class="text-xs text-gray-500">Versión: {{ $pedido->archivo->version ?? '-' }}</div>
+                        <td class="border-b px-4 py-2 align-top">
+                            @if($pedido->archivo?->verimagen)
+                                <div class="flex items-center justify-between space-x-3 max-w-[20rem]">
+                                    <div class="flex items-center space-x-3 min-w-0 flex-1">
+                                        @if($pedido->archivo->es_imagen)
+                                            <a href="{{ $pedido->archivo->verimagen }}" target="_blank" rel="noopener" class="shrink-0">
+                                                <img src="{{ $pedido->archivo->verimagen }}" alt="{{ $pedido->archivo->nombre_archivo }}"
+                                                     class="h-12 w-12 rounded object-cover ring-1 ring-gray-200" />
+                                            </a>
+                                        @endif
+                                        <div class="min-w-0">
+                                            <a href="{{ $pedido->archivo->verimagen }}" target="_blank" rel="noopener"
+                                               class="text-blue-600 hover:underline block truncate"
+                                               title="{{ $pedido->archivo->nombre_archivo }}">
+                                                {{ $pedido->archivo->nombre_archivo }}
+                                            </a>
+                                            <div class="text-xs text-gray-500">Versión: {{ $pedido->archivo->version ?? '-' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="relative group shrink-0">
+                                        <x-mini-button rounded icon="clipboard" flat red interaction="negative"
+                                            href="{{ route('proyecto.show', $pedido->proyecto_id) }}" />
+                                        <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition">
+                                            Ir a Diseño
+                                        </div>
+                                    </div>
+                                </div>
                             @else
                                 <span class="text-gray-500">Sin archivo</span>
                             @endif
@@ -153,7 +174,6 @@
 
                         <td class="border-b px-4 py-2">{{ $pedido->total ?? 'N/A' }}</td>
 
-                        {{-- Solicitó (último registro del estado seleccionado) --}}
                         <td class="border-b px-4 py-2">
                             @if($reg && $reg->usuario)
                                 <span class="font-medium">{{ $reg->usuario->name }}</span>
@@ -165,38 +185,34 @@
 
                         <td class="border-b px-4 py-2">{{ $pedido->instrucciones_muestra ?? 'N/A' }}</td>
 
-                        {{-- Estatus --}}
                         <td class="border-b px-4 py-2">
                             <span class="px-2 py-1 rounded text-xs font-semibold {{ $clase }}">
                                 {{ $estatusMuestra ?: 'N/A' }}
                             </span>
                         </td>
+                        
 
-                        {{-- Acciones --}}
+                        {{-- (B) Acciones por fila --}}
                         <td class="border-b px-4 py-2">
                             <div class="flex flex-wrap items-center gap-2">
+                                {{-- NUEVO: Entregar (por fila) --}}
                                 <div class="relative group">
                                     <button
                                         type="button"
-                                        aria-label="Marcar como Entregada"
-                                        class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        wire:click.stop='marcarSolicitada([{{ $pedido->id }}])'
-                                        wire:loading.attr="disabled"
-                                        wire:target="marcarSolicitada">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0L3.293 9.957a1 1 0 111.414-1.414l4 4 6.543-6.543a1 1 0 011.457 0z" clip-rule="evenodd"/>
+                                        aria-label="Entregar"
+                                        class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400/50"
+                                        wire:click.stop="abrirModalEntregar({{ $pedido->id }})">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M20.285 6.709a1 1 0 010 1.414l-9.192 9.192a1 1 0 01-1.414 0l-4.243-4.243a1 1 0 111.414-1.414l3.536 3.536 8.485-8.485a1 1 0 011.414 0z"/>
                                         </svg>
-                                        <span class="hidden sm:inline">Marcar Entregada</span>
-                                        <svg class="ml-1 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" wire:loading wire:target="marcarSolicitada">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
-                                        </svg>
+                                        <span class="hidden sm:inline">Entregar</span>
                                     </button>
                                     <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition sm:hidden">
-                                        Marcar Entregada
+                                        Marcar ENTREGADA
                                     </div>
                                 </div>
 
+                                {{-- Ver estados (como ya lo tenías) --}}
                                 <div class="relative group">
                                     <button
                                         type="button"
@@ -298,6 +314,63 @@
                         Cerrar
                     </button>
                 </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- (C) NUEVO: Modal Confirmar Entrega --}}
+    @if($modalEntregaOpen)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/50" wire:click="cerrarModalEntregar"></div>
+
+            <div class="relative bg-white w-full max-w-xl rounded-2xl shadow-xl">
+                <div class="flex items-center justify-between px-5 py-3 border-b">
+                    <h3 class="text-lg font-semibold">Confirmar entrega del Pedido #{{ $entregaPedidoId }}</h3>
+                    <button class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300" wire:click="cerrarModalEntregar" aria-label="Cerrar">x</button>
+                </div>
+
+                <form wire:submit.prevent="confirmarEntrega" class="px-5 py-4">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de entrega</label>
+                            <select class="w-full border rounded px-3 py-2" wire:model.live="entregaSeleccion">
+                                <option value="PENDIENTE">PENDIENTE</option>
+                                <option value="DIGITAL">DIGITAL</option>
+                                <option value="FISICA">FISICA</option>
+                            </select>
+                            @error('entregaSeleccion') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Evidencia (1 archivo)</label>
+                            <input type="file" class="w-full border rounded px-3 py-2"
+                                   wire:model="evidencia"
+                                   accept="image/*,application/pdf" />
+                            @error('evidencia') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+
+                            @if($evidencia && str_starts_with($evidencia->getMimeType(), 'image/'))
+                                <div class="mt-3">
+                                    <img src="{{ $evidencia->temporaryUrl() }}" alt="Vista previa"
+                                        class="h-32 rounded object-cover ring-1 ring-gray-200">
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="text-sm text-gray-600">
+                            Al confirmar, el pedido se marcará como <span class="font-semibold">ENTREGADA</span>
+                            y la evidencia se guardará ligada al pedido.
+                        </div>
+                    </div>
+
+                    <div class="mt-5 flex justify-end gap-2 border-t pt-4">
+                        <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300" wire:click="cerrarModalEntregar">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50" wire:loading.attr="disabled">
+                            Confirmar entrega
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     @endif

@@ -222,6 +222,8 @@
                             <td class="p-2">{{ $pedido->fecha_entrega ?? 'No definida' }}</td>
                         @endcan
                         <td class="p-2 flex justify-center space-x-2">
+
+                            
                             @hasanyrole('admin')
                                 <button
                                     wire:click="abrirModal({{ $pedido->id }})"

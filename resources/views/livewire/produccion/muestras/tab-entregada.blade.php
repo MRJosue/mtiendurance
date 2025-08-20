@@ -98,6 +98,8 @@
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Solicitó</th>
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Instrucciones</th>
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Estatus</th>
+                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Tipo de entrega</th>
+                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Evidencia</th>
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
                 </tr>
             </thead>
@@ -167,6 +169,48 @@
                                 {{ $estatusMuestra ?: 'N/A' }}
                             </span>
                         </td>
+
+
+                        {{-- Tipo de entrega --}}
+                        <td class="border-b px-4 py-2">
+                            @php
+                                $rawTipo = $pedido->estatus_entrega_muestra ?? null;
+                                // Evitamos convertir Closures/objetos: solo aceptamos string
+                                $tipo = is_string($rawTipo) ? strtoupper($rawTipo) : 'PENDIENTE';
+
+                                $mapEntrega = [
+                                    'PENDIENTE' => 'bg-yellow-400 text-black',
+                                    'DIGITAL'   => 'bg-sky-600 text-white',
+                                    'FISICA'    => 'bg-fuchsia-600 text-white',
+                                ];
+                                $claseEntrega = $mapEntrega[$tipo] ?? 'bg-gray-300 text-gray-800';
+                            @endphp
+
+                            <span class="px-2 py-1 rounded text-xs font-semibold {{ $claseEntrega }}">
+                                {{ $tipo }}
+                            </span>
+                        </td>
+
+                        {{-- Evidencia (usa la relación evidenciaEntrega) --}}
+                        <td class="border-b px-4 py-2">
+                            @php
+                                // gracias al with('evidenciaEntrega'), esto no pega N+1
+                                $evidencia = $pedido->evidenciaEntrega; // objeto o null
+                            @endphp
+
+                            @if($evidencia)
+                                <a href="{{ $evidencia->verimagen ?? \Illuminate\Support\Facades\Storage::disk('public')->url($evidencia->ruta_archivo) }}"
+                                class="text-blue-600 hover:underline" target="_blank" rel="noopener">
+                                    {{ $evidencia->nombre_archivo }}
+                                </a>
+                                <div class="text-xs text-gray-500">
+                                    {{ $evidencia->tipo_archivo ?? 'archivo' }} · {{ optional($evidencia->created_at)->format('Y-m-d H:i') }}
+                                </div>
+                            @else
+                                <span class="text-gray-500">Sin evidencia</span>
+                            @endif
+                        </td>
+
 
 
                         <td class="border-b px-4 py-2">

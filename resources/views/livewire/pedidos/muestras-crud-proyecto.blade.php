@@ -170,18 +170,18 @@
                                   href="http://127.0.0.1:8000/produccion/Administraciondemuestras?tab={{ urlencode($estatusMuestra ?: 'PENDIENTE') }}"
                                   class="inline-block px-3 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700"
                                   target="_blank" rel="noopener">
-                                  Abrir {{ $estatusMuestra ?: 'PENDIENTE' }}
+                                  ver administracion
                                 </a>
                             </td>
                         @endunless
 
                         <td class="p-2 px-4 py-2 font-semibold min-w-[6rem]">
                             {{-- Acciones aquí --}}
-                            <button
+                            {{-- <button
                                 class="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-800"
                                 wire:click="abrirModal({{ $pedido->id }})">
                                 Editar
-                            </button>
+                            </button> --}}
                         </td>
                     </tr>
                 @endforeach

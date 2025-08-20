@@ -132,14 +132,49 @@
 
                         <td class="border-b px-4 py-2">{{ $pedido->cliente->nombre ?? 'Cliente' }}</td>
 
-                        <td class="border-b px-4 py-2">
-                            @if($pedido->archivo)
-                                <a href="{{ Storage::url($pedido->archivo->ruta_archivo) }}"
-                                   class="text-blue-600 hover:underline"
-                                   target="_blank">
-                                   {{ $pedido->archivo->nombre_archivo }}
-                                </a>
-                                <div class="text-xs text-gray-500">Versión: {{ $pedido->archivo->version ?? '-' }}</div>
+                        <td class="border-b px-4 py-2 align-top">
+                            @if($pedido->archivo?->verimagen)
+                                <div class="flex items-center justify-between space-x-3 max-w-[20rem]">
+                                    {{-- Archivo --}}
+                                    <div class="flex items-center space-x-3 min-w-0 flex-1">
+                                        @if($pedido->archivo->es_imagen)
+                                            <a href="{{ $pedido->archivo->verimagen }}" target="_blank" rel="noopener" class="shrink-0">
+                                                <img
+                                                    src="{{ $pedido->archivo->verimagen }}"
+                                                    alt="{{ $pedido->archivo->nombre_archivo }}"
+                                                    class="h-12 w-12 rounded object-cover ring-1 ring-gray-200"
+                                                />
+                                            </a>
+                                        @endif
+
+                                        <div class="min-w-0">
+                                            <a href="{{ $pedido->archivo->verimagen }}"
+                                            target="_blank" rel="noopener"
+                                            class="text-blue-600 hover:underline block truncate"
+                                            title="{{ $pedido->archivo->nombre_archivo }}">
+                                                {{ $pedido->archivo->nombre_archivo }}
+                                            </a>
+                                            <div class="text-xs text-gray-500">
+                                                Versión: {{ $pedido->archivo->version ?? '-' }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Botón ir a diseño --}}
+                                    <div class="relative group shrink-0">
+                                        <x-mini-button 
+                                            rounded 
+                                            icon="clipboard" 
+                                            flat 
+                                            red 
+                                            interaction="negative"  
+                                            href="{{ route('proyecto.show', $pedido->proyecto_id) }}"  
+                                        />
+                                        <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition">
+                                            Ir a Diseño
+                                        </div>
+                                    </div>
+                                </div>
                             @else
                                 <span class="text-gray-500">Sin archivo</span>
                             @endif
