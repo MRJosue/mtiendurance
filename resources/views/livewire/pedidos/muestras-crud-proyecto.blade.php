@@ -98,9 +98,7 @@
                     <th class="border px-4 py-2">Estatus</th>
                     <th class="border px-4 py-2">Tipo de entrega</th>
                     <th class="border px-4 py-2">Evidencia</th>
-                    @unless($esCliente)
-                        <th class="border px-4 py-2">Liga</th>
-                    @endunless
+
 
                     <th class="border px-4 py-2">Acciones</th>
                 </tr>
@@ -129,7 +127,7 @@
                         </td>
 
                         <td class="p-2 px-4 py-2 font-semibold min-w-[4rem]">
-                            {{ $pedido->cliente->nombre ?? $pedido->cliente->razon_social ?? 'Cliente' }}
+                            {{  $pedido->usuario->name ?? $pedido->cliente->razon_social ?? 'Cliente' }}
                         </td>
 
                         <td class="p-2 px-4 py-2 font-semibold min-w-[10rem]">
@@ -197,25 +195,31 @@
                                 target="_blank" rel="noopener">
                                 {{ $evidencia->nombre_archivo }}
                                 </a>
-                                <div class="text-xs text-gray-500">
-                                    {{ $evidencia->tipo_archivo ?? 'archivo' }}
-                                    · {{ optional($evidencia->created_at)->format('Y-m-d H:i') }}
-                                </div>
+
+
+    
                             @else
                                 <span class="text-gray-500">Sin evidencia</span>
+
+
+
                             @endif
+
+                            @unless($esCliente)
+                                <br>
+                                <span> 
+                                <a 
+                                    href="{{ route('produccion.adminmuestras', ['tab' => $estatusMuestra ?: 'PENDIENTE']) }}"
+                                    target="_blank"
+                                      class="text-blue-600 underline" 
+                                    rel="noopener">
+                                    Ir a administración
+                                </a>
+                                </span>
+                            @endunless
                         </td>
 
-                        @unless($esCliente)
-                            <td class="p-2 px-4 py-2 min-w-[10rem]">
-                                <a
-                                  href="http://127.0.0.1:8000/produccion/Administraciondemuestras?tab={{ urlencode($estatusMuestra ?: 'PENDIENTE') }}"
-                                  class="inline-block px-3 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700"
-                                  target="_blank" rel="noopener">
-                                  Ir a administracion
-                                </a>
-                            </td>
-                        @endunless
+ 
 
                         <td class="p-2 px-4 py-2 font-semibold min-w-[6rem]">
                             {{-- Acciones aquí --}}

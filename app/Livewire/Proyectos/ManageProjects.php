@@ -16,7 +16,7 @@ class ManageProjects extends Component
 {
         use WithPagination;
 
-        public $perPage = 8;
+        public $perPage = 20;
         public $selectedProjects = [];
         public $selectedProject;
         public $selectAll = false;
@@ -31,6 +31,15 @@ class ManageProjects extends Component
 
         // Cargamos los diseñadores UNA sola vez
         public $designers;
+
+
+        public bool $modalResumen = false;
+        public ?int $proyectoResumenId = null;
+        public ?\App\Models\Pedido $ultimoPedidoPendiente = null;
+        /** @var \Illuminate\Support\Collection<int,\App\Models\Pedido> */
+        public $ultimosPedidos;
+        /** @var \App\Models\Proyecto|null */
+        public $proyectoResumen = null;
 
 
             /* ---------- Props UI ---------- */
@@ -81,13 +90,27 @@ class ManageProjects extends Component
         }
 
 
-        public function updatedSelectAll(bool $value): void
-        {
-            $this->selectedProjects = $value
-                ? Proyecto::when($this->activeTab!=='TODOS', fn($q)=>$q->where('estado',$this->activeTab))
-                        ->pluck('id')->toArray()
-                : [];
-        }
+            public function updatedSelectAll(bool $value): void
+            {
+                $this->selectedProjects = [];
+
+                if (!$value) {
+                    return;
+                }
+
+                $ids = Proyecto::query()
+                    ->when($this->activeTab !== 'TODOS', fn($q) => $q->where('estado', $this->activeTab))
+                    ->when($this->activeTab === 'DISEÑO APROBADO', function ($q) {
+                        $q->whereHas('pedidos', function ($sub) {
+                            $sub->where('tipo', 'PEDIDO')
+                                ->where('estado', 'POR APROBAR');
+                        });
+                    })
+                    ->pluck('id')
+                    ->toArray();
+
+                $this->selectedProjects = $ids;
+            }
 
 
         public function deleteSelected(): void
@@ -196,6 +219,50 @@ class ManageProjects extends Component
         }
 
 
+        public function abrirResumenPedidos(int $proyectoId): void
+        {
+            $this->proyectoResumenId = $proyectoId;
+
+            // Cargar proyecto y relaciones mínimas para el resumen
+            $this->proyectoResumen = Proyecto::select('id','nombre')
+                ->find($proyectoId);
+
+            // Último pedido con estatus PENDIENTE
+            $this->ultimoPedidoPendiente = \App\Models\Pedido::with([
+                    'producto:id,nombre,categoria_id',
+                    'producto.categoria:id,nombre',
+                ])
+                ->where('proyecto_id', $proyectoId)
+                ->where('tipo', 'PEDIDO')
+                ->where('estado', 'POR APROBAR')
+                ->latest('id')
+                ->first();
+
+            // Últimos 5 pedidos (para lista compacta)
+            $this->ultimosPedidos = \App\Models\Pedido::with([
+                    'producto:id,nombre,categoria_id',
+                    'producto.categoria:id,nombre',
+                ])
+                ->where('proyecto_id', $proyectoId)
+                ->where('tipo', 'PEDIDO')
+                ->where('estado', 'POR APROBAR')
+                ->latest('id')
+                ->take(5)
+                ->get();
+
+            $this->modalResumen = true;
+        }
+
+        public function cerrarResumenPedidos(): void
+        {
+            $this->modalResumen         = false;
+            $this->proyectoResumenId    = null;
+            $this->proyectoResumen      = null;
+            $this->ultimoPedidoPendiente = null;
+            $this->ultimosPedidos       = collect();
+        }
+
+
         public function render()
         {
             $query = Proyecto::query()
@@ -215,6 +282,14 @@ class ManageProjects extends Component
 
             if ($this->activeTab !== 'TODOS') {
                 $query->where('estado', $this->activeTab);
+            }
+
+                // 👇 Filtro permanente solo para el tab "DISEÑO APROBADO"
+            if ($this->activeTab === 'DISEÑO APROBADO') {
+                $query->whereHas('pedidos', function ($q) {
+                    $q->where('tipo', 'PEDIDO')
+                    ->where('estado', 'POR APROBAR');
+                });
             }
 
             if (!Auth::user()->can('tablaProyectos-ver-todos-los-proyectos')) {

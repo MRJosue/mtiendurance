@@ -100,8 +100,7 @@
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Piezas</th>
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Solicitó</th>
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Instrucciones</th>
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Estatus</th>
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Tipo de entrega</th>
+
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Evidencia</th>
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
                 </tr>
@@ -138,7 +137,7 @@
                             <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
                         </td>
 
-                        <td class="border-b px-4 py-2">{{ $pedido->cliente->nombre ?? 'Cliente' }}</td>
+                        <td class="border-b px-4 py-2"> {{ $pedido->usuario->name ?? $pedido->cliente->razon_social ?? 'Cliente' }}</td>
 
                         <td class="border-b px-4 py-2 align-top">
                             @if($pedido->archivo?->verimagen)

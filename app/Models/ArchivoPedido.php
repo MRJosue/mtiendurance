@@ -50,6 +50,8 @@ class ArchivoPedido extends Model
         return str_starts_with($mime, 'image/');
     }
 
+
+    
     /** Descargar archivo */
     public function descargar()
     {

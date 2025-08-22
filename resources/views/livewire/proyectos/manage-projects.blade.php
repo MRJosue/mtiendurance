@@ -191,14 +191,27 @@
                                             <td class="border-b px-4 py-2 text-gray-700 text-sm">
                                                 @if($project->pedidos->isNotEmpty())
                                                     <ul class="list-disc list-inside">
-                                                        @foreach($project->pedidos as $pedido)
-                                                            <li class="text-gray-600">
-                                                                <span class="font-semibold">Categoría:</span> {{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }},
-                                                                <span class="font-semibold">Producto:</span> {{ $pedido->producto->nombre ?? 'Sin producto' }},
-                                                                <span class="font-semibold">Total:</span> {{ $pedido->total}},
-                                                                <span class="font-semibold">Estatus:</span> {{ $pedido->estatus }}
-                                                            </li>
-                                                        @endforeach
+                                                    @php
+                                                        $ultimoPedido = \App\Models\Pedido::where('proyecto_id', $project->id)
+                                                            ->where('tipo', 'PEDIDO')
+                                                            ->where('estado', 'POR APROBAR')
+                                                            ->latest('id')
+                                                            ->first();
+                                                    @endphp
+                                                    @if($ultimoPedido)
+                                                        <li class="text-gray-600">
+                                                            <span class="font-semibold">Categoría:</span> {{ $ultimoPedido->producto->categoria->nombre ?? 'Sin categoría' }},
+                                                            <span class="font-semibold">Producto:</span> {{ $ultimoPedido->producto->nombre ?? 'Sin producto' }},
+                                                            <span class="font-semibold">Total:</span> {{ $ultimoPedido->total }},
+                                                            <span class="font-semibold">Estatus:</span> {{ $ultimoPedido->estado }}
+                                                        </li>
+                                                    @else
+                                                        <span class="text-gray-500">Sin pedidos</span>
+                                                    @endif
+
+                                                            <button  wire:click="abrirResumenPedidos({{ $project->id }})" class="text-blue-500 hover:underline text-xs mt-1">
+                                                                    Ver más
+                                                            </button>
                                                     </ul>
                                                 @else
                                                     <span class="text-gray-500">Sin pedidos</span>
@@ -365,4 +378,105 @@
         </div>
     </div>
     @endif
+
+
+    {{-- Modal: Resumen de pedidos --}}
+    @if($modalResumen)
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl mx-4">
+            <div class="p-4 border-b flex items-center justify-between">
+                <h3 class="text-lg font-semibold">
+                    Resumen de pedidos · Proyecto #{{ $proyectoResumen?->id ?? $proyectoResumenId }}
+                </h3>
+                <button wire:click="cerrarResumenPedidos" class="text-gray-500 hover:text-gray-700 text-xl leading-none">✕</button>
+            </div>
+
+            <div class="p-4 space-y-4">
+                {{-- Último pedido pendiente --}}
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="text-sm font-bold mb-2">Último pedido POR APROBAR</h4>
+
+                    @if($ultimoPedidoPendiente)
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                            <div><span class="font-semibold">ID:</span> {{ $ultimoPedidoPendiente->id }}</div>
+                            <div><span class="font-semibold">Fecha:</span> {{ optional($ultimoPedidoPendiente->created_at)->format('Y-m-d H:i') }}</div>
+                            <div><span class="font-semibold">Producto:</span> {{ $ultimoPedidoPendiente->producto->nombre ?? '—' }}</div>
+                            <div><span class="font-semibold">Categoría:</span> {{ $ultimoPedidoPendiente->producto->categoria->nombre ?? '—' }}</div>
+                            <div><span class="font-semibold">Total:</span> {{ $ultimoPedidoPendiente->total }}</div>
+                            <div><span class="font-semibold">Estatus:</span> {{ $ultimoPedidoPendiente->estado }}</div>
+                        </div>
+                    @else
+                        <p class="text-sm text-gray-600 italic">Sin pedidos pendientes.</p>
+                    @endif
+                </div>
+
+                {{-- Lista compacta (últimos 5 pedidos) --}}
+                <div class="bg-white border rounded-lg">
+                    <div class="px-4 py-2 border-b">
+                        <h4 class="text-sm font-bold">Últimos pedidos (5)</h4>
+                    </div>
+                    <div class="p-2 overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">ID</th>
+                                    <th class="px-3 py-2 text-left">Producto</th>
+                                    <th class="px-3 py-2 text-left">Categoría</th>
+                                    <th class="px-3 py-2 text-left">Total</th>
+                                    <th class="px-3 py-2 text-left">Estatus</th>
+                                    <th class="px-3 py-2 text-left">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($ultimosPedidos as $p)
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="px-3 py-2">{{ $p->id }}</td>
+                                        <td class="px-3 py-2">{{ $p->producto->nombre ?? '—' }}</td>
+                                        <td class="px-3 py-2">{{ $p->producto->categoria->nombre ?? '—' }}</td>
+                                        <td class="px-3 py-2">{{ $p->total }}</td>
+                                        <td class="px-3 py-2">
+                                            <span class="px-2 py-0.5 rounded-full text-xs
+                                                @class([
+                                                    'bg-yellow-100 text-yellow-800' => $p->estado === 'PENDIENTE',
+                                                    'bg-emerald-100 text-emerald-800' => $p->estado === 'PROGRAMADO' || $p->estado === 'APROBADO',
+                                                    'bg-blue-100 text-blue-800' => $p->estado === 'POR PROGRAMAR',
+                                                    'bg-red-100 text-red-800' => $p->estado === 'CANCELADO',
+                                                    'bg-gray-100 text-gray-800' => !in_array($p->estado, ['PENDIENTE','PROGRAMADO','APROBADO','POR PROGRAMAR','CANCELADO']),
+                                                ])
+                                            ">
+                                                {{ $p->estado }}
+                                            </span>
+                                        </td>
+                                        <td class="px-3 py-2">{{ optional($p->created_at)->format('Y-m-d H:i') }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="px-3 py-3 text-center text-gray-500">Sin pedidos.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Ligas de acción --}}
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <a href="{{ route('proyecto.show', $proyectoResumenId) }}"
+                    target="_blank" rel="noopener"
+                    class="text-blue-600 hover:underline text-sm">
+                        Ver más en la página del proyecto
+                    </a>
+
+                    <div class="text-right">
+                        <button wire:click="cerrarResumenPedidos"
+                                class="px-4 py-2 rounded bg-gray-600 text-white hover:bg-gray-700 text-sm">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
 </div>

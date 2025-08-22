@@ -257,8 +257,7 @@ class SubirDiseno extends Component
 
 
 
-        // === NUEVO: calcular si esta muestra debe cobrarse ===
-        // Cuenta cuántas muestras previas tiene el proyecto
+
         $muestrasPrevias = Pedido::where('proyecto_id', $proyecto->id)
             ->where('tipo', 'MUESTRA')
             // ->where('estatus', '!=', 'CANCELADA') // <-- descomenta si NO quieres contar canceladas
@@ -267,6 +266,11 @@ class SubirDiseno extends Component
         // Si ya hay 2 o más, esta (la próxima) se cobra
         $cobrarMuestra = $muestrasPrevias >= 2;
 
+        $totalMuestras = Pedido::where('proyecto_id', $proyecto->id)
+        ->where('tipo', 'MUESTRA')
+        ->count();
+
+        $estatusMuestra = $totalMuestras > 0 ? 'PENDIENTE' : 'SOLICITADA';
 
 
         Pedido::crearMuestra($proyecto->id, [
@@ -282,8 +286,13 @@ class SubirDiseno extends Component
             'fecha_entrega' => null,
             'id_tipo_envio' => null,
             'cobrar_muestra' => $cobrarMuestra, 
+            'estatusMuestra' => $estatusMuestra
         ]);
 
+
+        $this->modalConfirmarMuestra = false;
+        session()->flash('message', "Muestra creada correctamente con estatus {$estatusMuestra}.");
+        $this->dispatch('ActualizarTablaMuestra');
 
         // Evento de log al log de pedidos  
 

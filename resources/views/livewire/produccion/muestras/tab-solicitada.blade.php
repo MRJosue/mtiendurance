@@ -130,7 +130,7 @@
                             <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
                         </td>
 
-                        <td class="border-b px-4 py-2">{{ $pedido->cliente->nombre ?? 'Cliente' }}</td>
+                        <td class="border-b px-4 py-2"> {{ $pedido->usuario->name ?? $pedido->cliente->razon_social ?? 'Cliente' }}</td>
 
                         <td class="border-b px-4 py-2 align-top">
                             @if($pedido->archivo?->verimagen)

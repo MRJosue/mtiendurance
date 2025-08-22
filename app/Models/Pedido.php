@@ -277,7 +277,7 @@ class Pedido extends Model
             'direccion_entrega_id'  => $data['direccion_entrega_id'] ?? null,
             'direccion_entrega'     => $data['direccion_entrega'] ?? null,
             'tipo'                  => 'MUESTRA',
-            'estatus_muestra' => 'PENDIENTE',
+            'estatus_muestra'       => $data ['estatusMuestra'],
             'estado'                => $data['estado'] ?? 'POR PROGRAMAR', // tú mandas 'POR APROBAR'
             'fecha_produccion'      => $data['fecha_produccion'] ?? null,
             'fecha_embarque'        => $data['fecha_embarque'] ?? null,
@@ -294,7 +294,7 @@ class Pedido extends Model
                 'pedido_id'    => $pedido->id,
                 'proyecto_id'  => $pedido->proyecto_id,
                 'usuario_id'   => Auth::id(),
-                'estado'       => 'PENDIENTE',
+                'estado'       => $data ['estatusMuestra'],
                 'fecha_inicio' => now(), // opcional, si lo usas en tu flujo
         ]);
 

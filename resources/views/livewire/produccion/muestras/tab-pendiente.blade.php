@@ -83,6 +83,14 @@
         >
             Marcar como SOLICITADA
         </button>
+
+        <button
+            class="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="selected.length === 0"
+            wire:click="cancelarMuestra"
+        >
+            Cancelar Seleccionados
+        </button>
     </div>
 
     {{-- Tabla --}}
@@ -130,7 +138,7 @@
                             <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
                         </td>
 
-                        <td class="border-b px-4 py-2">{{ $pedido->cliente->nombre ?? 'Cliente' }}</td>
+                        <td class="border-b px-4 py-2"> {{ $pedido->usuario->name ?? $pedido->cliente->razon_social ?? 'Cliente' }}</td>
 
                         <td class="border-b px-4 py-2 align-top">
                             @if($pedido->archivo?->verimagen)
@@ -239,6 +247,32 @@
                                 <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition sm:hidden">
                                     Marcar SOLICITADA
                                 </div>
+
+                                {{-- Cancelar --}}
+                                <div class="relative group">
+                                    <button
+                                        type="button"
+                                        aria-label="Cancelar muestra"
+                                        class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400/50"
+                                        wire:click.stop='cancelarMuestra([{{ $pedido->id }}])'
+                                        wire:loading.attr="disabled"
+                                        wire:target="cancelarMuestra"
+                                    >
+                                        {{-- icono X --}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 8.586l4.95-4.95a1 1 0 111.414 1.414L11.414 10l4.95 4.95a1 1 0 01-1.414 1.414L10 11.414l-4.95 4.95a1 1 0 01-1.414-1.414L8.586 10l-4.95-4.95A1 1 0 115.05 3.636L10 8.586z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span class="hidden sm:inline">Cancelar</span>
+                                        <svg class="ml-1 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" wire:loading wire:target="cancelarMuestra">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                                        </svg>
+                                    </button>
+                                    <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition sm:hidden">
+                                        Cancelar muestra
+                                    </div>
+                                </div>
+
                                 </div>
 
                                 {{-- Ver estados --}}
@@ -255,9 +289,15 @@
                                     </svg>
                                     <span class="hidden sm:inline">Ver estados</span>
                                 </button>
+
+
+                                
+
                                 <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition sm:hidden">
                                     Ver estados
                                 </div>
+
+
                                 </div>
                             </div>
                         </td>

@@ -219,4 +219,38 @@ class TabPendiente extends Component
             'ultimosPorEstado' => $ultimosPorEstado,
         ]);
     }
+
+
+
+    /** Acción: cancelar muestra */
+    public function cancelarMuestra(array $ids = []): void
+    {
+        $ids = $ids ?: $this->selected;
+        if (empty($ids)) return;
+
+        Pedido::deMuestra()->whereIn('id', $ids)
+            ->update(['estatus_muestra' => 'CANCELADA']);
+
+        // Log de estados
+        $pedidos = Pedido::query()
+            ->select('id', 'proyecto_id')
+            ->whereIn('id', $ids)
+            ->get();
+
+        foreach ($pedidos as $pedido) {
+            PedidoEstado::create([
+                'pedido_id'    => $pedido->id,
+                'proyecto_id'  => $pedido->proyecto_id,
+                'usuario_id'   => Auth::id(),
+                'estado'       => 'CANCELADA',
+                'fecha_inicio' => now(),
+            ]);
+        }
+
+        $this->reset('selected');
+
+        // Notificar al padre para refrescar contadores
+        $this->dispatch('muestraActualizada')
+            ->to(\App\Livewire\Produccion\Muestras\AdminMuestrasTabs::class);
+    }
 }

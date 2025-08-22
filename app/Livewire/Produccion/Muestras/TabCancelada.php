@@ -205,6 +205,51 @@ class TabCancelada extends Component
             ->keyBy('pedido_id');
     }
 
+    /** Acción: restaurar cancelación -> PENDIENTE */
+    public function restaurarPendiente(array $ids = []): void
+    {
+        $ids = $ids ?: $this->selected;
+        if (empty($ids)) return;
+
+        // 1) Actualiza estatus de la muestra
+        Pedido::deMuestra()
+            ->whereIn('id', $ids)
+            ->update(['estatus_muestra' => 'PENDIENTE']);
+
+        // 2) Registra estado y cierra el último CANCELADA si aplica
+        $pedidos = Pedido::query()
+            ->select('id', 'proyecto_id')
+            ->whereIn('id', $ids)
+            ->get();
+
+        foreach ($pedidos as $pedido) {
+            // Cierra el último estado CANCELADA (si no tenía fecha_fin)
+            $ultimoCancel = PedidoEstado::where('pedido_id', $pedido->id)
+                ->where('estado', 'CANCELADA')
+                ->latest('id')
+                ->first();
+
+            if ($ultimoCancel && is_null($ultimoCancel->fecha_fin)) {
+                $ultimoCancel->update(['fecha_fin' => now()]);
+            }
+
+            // Crea el nuevo estado PENDIENTE
+            PedidoEstado::create([
+                'pedido_id'    => $pedido->id,
+                'proyecto_id'  => $pedido->proyecto_id,
+                'usuario_id'   => Auth::id(),
+                'estado'       => 'PENDIENTE',
+                'fecha_inicio' => now(),
+            ]);
+        }
+
+        $this->reset('selected');
+
+        // Notifica al padre para refrescar contadores (v3 -> dispatch)
+        $this->dispatch('muestraActualizada')
+            ->to(\App\Livewire\Produccion\Muestras\AdminMuestrasTabs::class);
+    }
+
     public function render()
     {
         $pedidos = $this->pedidos;
