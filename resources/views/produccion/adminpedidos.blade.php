@@ -13,7 +13,14 @@
                     <h1 class="text-2xl font-bold mb-4">Lista de Pedidos</h1>
                     {{-- @livewire('programacion.calendario-pedidos') --}}
                     {{-- @livewire('programacion.pedidos-crud-general') --}}
-                    @livewire('produccion.administra-pedidos-crud')
+                    {{-- @livewire('produccion.administra-pedidos-crud')
+ --}}
+
+
+
+                    <hr/>
+
+                    @livewire('produccion.pedidos-por-filtro')
 
 
 

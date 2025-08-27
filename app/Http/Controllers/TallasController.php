@@ -27,6 +27,14 @@ class TallasController extends Controller
         if (!auth()->user()->hasRole('admin')) {
             return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
         }
-        return view('catalogos.tallas.flujoproduccion');
+        return view('catalogos.produccion.flujoproduccion');
+    }
+
+
+    public function flujoFiltrosProduccion(){
+        if (!auth()->user()->hasRole('admin')) {
+            return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
+        }
+        return view('catalogos.produccion.filtrosProduccionvista');
     }
 }

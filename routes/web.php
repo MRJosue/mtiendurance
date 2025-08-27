@@ -124,7 +124,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // proyectos
-Route::get('/proyectos',[ProyectosController::class, 'index'])->middleware(['auth','verified'])->name('proyectos.index');
+Route::get('/proyectos',[ProyectosConteroller::class, 'index'])->middleware(['auth','verified'])->name('proyectos.index');
 Route::get('/proyectos/{proyecto}', [ProyectosController::class, 'show'])->middleware(['auth', 'verified'])->name('proyecto.show');
 
 
@@ -213,6 +213,11 @@ Route::get('/produccion/entrega',[tareasproduccion::class, 'entrega'])->middlewa
 
 
     Route::get('catalogos/flujoProduccion', [TallasController::class, 'flujoProduccion'])->middleware(['auth', 'verified'])->name('catalogos.flujoProduccion');
+
+    //FiltrosProduccionCrud
+
+    Route::get('catalogos/flujoFiltrosProduccion', [TallasController::class, 'flujoFiltrosProduccion'])->middleware(['auth', 'verified'])->name('catalogos.flujoFiltrosProduccion');
+
 
 // Prueba data tables
 

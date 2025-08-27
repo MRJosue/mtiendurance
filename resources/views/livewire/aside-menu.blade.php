@@ -87,6 +87,12 @@
                         :class="isActive('disenio.admin_tarea') ? 'bg-gray-800 text-blue-400' : ''"
                         class="block px-2 py-1 rounded hover:bg-gray-800"
                     >Tareas Diseño</a>
+
+                    <a href="{{ route('produccion.adminmuestras') }}" 
+                        @click="setSelected('produccion.adminmuestras')"
+                        :class="isActive('produccion.adminmuestras') ? 'bg-gray-800 text-blue-400' : ''"
+                        class="block px-2 py-1 rounded hover:bg-gray-800">Administración Muestras</a>
+
                 </div>
             </div>
             @endcan
@@ -119,10 +125,6 @@
                         class="block px-2 py-1 rounded hover:bg-gray-800">Aprobaciones Especiales</a>
 
 
-                    <a href="{{ route('produccion.adminmuestras') }}" 
-                        @click="setSelected('produccion.adminmuestras')"
-                        :class="isActive('produccion.adminmuestras') ? 'bg-gray-800 text-blue-400' : ''"
-                        class="block px-2 py-1 rounded hover:bg-gray-800">Administración Muestras</a>
 
 
                     <a href="{{ route('produccion.adminpedidos') }}" 
