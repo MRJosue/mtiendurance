@@ -37,4 +37,12 @@ class TallasController extends Controller
         }
         return view('catalogos.produccion.filtrosProduccionvista');
     }
+
+
+    public function hojaFiltrosProduccion(){
+        if (!auth()->user()->hasRole('admin')) {
+            return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
+        }
+        return view('catalogos.produccion.hojafiltrosproduccionvista');
+    }
 }

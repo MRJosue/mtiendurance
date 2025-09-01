@@ -105,6 +105,8 @@
                             {{ $col['label'] ?? $col['nombre'] }}
                         </th>
                     @endforeach
+
+                    
                 </tr>
             </thead>
             <tbody>

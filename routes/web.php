@@ -218,6 +218,8 @@ Route::get('/produccion/entrega',[tareasproduccion::class, 'entrega'])->middlewa
 
     Route::get('catalogos/flujoFiltrosProduccion', [TallasController::class, 'flujoFiltrosProduccion'])->middleware(['auth', 'verified'])->name('catalogos.flujoFiltrosProduccion');
 
+    Route::get('catalogos/hojaFiltrosProduccion', [TallasController::class, 'hojaFiltrosProduccion'])->middleware(['auth', 'verified'])->name('catalogos.hojaFiltrosProduccion');
+
 
 // Prueba data tables
 
