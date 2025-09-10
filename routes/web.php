@@ -129,7 +129,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // proyectos
-Route::get('/proyectos',[ProyectosConteroller::class, 'index'])->middleware(['auth','verified'])->name('proyectos.index');
+Route::get('/proyectos',[ProyectosController::class, 'index'])->middleware(['auth','verified'])->name('proyectos.index');
 Route::get('/proyectos/{proyecto}', [ProyectosController::class, 'show'])->middleware(['auth', 'verified'])->name('proyecto.show');
 
 
