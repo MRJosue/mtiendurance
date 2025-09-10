@@ -194,7 +194,7 @@
                                                     @php
                                                         $ultimoPedido = \App\Models\Pedido::where('proyecto_id', $project->id)
                                                             ->where('tipo', 'PEDIDO')
-                                                            ->where('estado', 'POR APROBAR')
+                                                            ->where('estado_id', '1')
                                                             ->latest('id')
                                                             ->first();
                                                     @endphp

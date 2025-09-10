@@ -39,6 +39,7 @@ class Pedido extends Model
         'estatus_entrega_muestra',
         'estatus_muestra',
         'estado',
+        'estado_id',
         'estado_produccion',
         'fecha_produccion',
         'fecha_embarque',
@@ -53,13 +54,10 @@ class Pedido extends Model
         'flag_solicitud_aprobar_sin_fechas'
         
     ];
-
-
     public function tareasProduccion()
     {
         return $this->belongsToMany(TareaProduccion::class, 'pedido_tarea', 'pedido_id', 'tarea_produccion_id');
     }
-
     /**
      * Relación con la tabla de clientes.
      */
@@ -67,16 +65,13 @@ class Pedido extends Model
     {
         return $this->belongsTo(Cliente::class);
     }
-
-
-        /**
+    /**
      * Relación con el modelo Proyecto.
      */
     public function proyecto()
     {
         return $this->belongsTo(Proyecto::class, 'proyecto_id');
     }
-
     /**
      * Relación con el modelo Producto.
      */
@@ -84,41 +79,46 @@ class Pedido extends Model
     {
         return $this->belongsTo(Producto::class, 'producto_id');
     }
-
     // Relacion con el modelo de pedidoCaracteristica
-
     public function pedidoCaracteristicas()
     {
         return $this->hasMany(PedidoCaracteristica::class, 'pedido_id');
     }
-
-
     public function pedidoOpciones()
     {
         return $this->hasMany(PedidoOpcion::class, 'pedido_id');
     }
-
     // App\Models\Pedido.php
     public function estados()
     {
         return $this->hasMany(PedidoEstado::class, 'pedido_id');
     }
-
-
     public function pedidoTallas()
     {
         return $this->hasMany(PedidoTalla::class, 'pedido_id');
     }
-
     // Relación con TipoEnvio
     public function tipoEnvio()
     {
         return $this->belongsTo(TipoEnvio::class, 'id_tipo_envio');
     }
-
-
-    
-
+    // app/Models/Pedido.php (extracto)
+    public function estadoPedido()
+    {
+        return $this->belongsTo(\App\Models\EstadoPedido::class, 'estado_id');
+    }
+    /**
+     * (Opcional) Virtual: $pedido->estado regresa el nombre del catálogo.
+     * Útil si aún tienes vistas/código que leen "estado".
+     */
+    public function getEstadoAttribute(): ?string
+    {
+        return $this->estadoPedido->nombre ?? null;
+    }  
+    public function tipoPedido()
+    {
+        return $this->belongsTo(TipoPedido::class, 'tipo_id');
+    }  
     public static function crearDesdeProyecto($proyectoId, $data)
     {
 
@@ -165,6 +165,7 @@ class Pedido extends Model
             'direccion_entrega' => $data['direccion_entrega'] ?? null,
             'tipo' => $data['tipo'] ?? 'PEDIDO',
             'estado' => $data['estado'] ?? 'POR PROGRAMAR',
+            'estado_id' => $data['estado_id'] ?? 1,
             'fecha_produccion' => $data['fecha_produccion'] ?? null,
             'fecha_embarque' => $data['fecha_embarque'] ?? null,
             'fecha_entrega' => $data['fecha_entrega'] ?? null,
@@ -190,19 +191,14 @@ class Pedido extends Model
     
         return $pedido;
     }
-    
-    
     public function archivo()
     {
         return $this->belongsTo(ArchivoProyecto::class, 'last_uploaded_file_id');
     }
-    
     public function usuario()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-
-
     public function ordenesProduccion()
     {
         return $this->belongsToMany(
@@ -212,8 +208,6 @@ class Pedido extends Model
             'orden_produccion_id'
         );
     }
-
-
     public function getUltimoEstatusOrdenProduccionAttribute()
     {
         $orden = $this->ordenesProduccion()->orderByDesc('created_at')->first();
@@ -221,8 +215,7 @@ class Pedido extends Model
             return ($orden->tipo ?? 'N/D') . ':' . ($orden->estado ?? 'N/D');
         }
         return null;
-    }
-        
+    }   
     public static function crearMuestra($proyectoId, $data)
     {
         Log::debug('ON crearMuestra');
@@ -312,7 +305,6 @@ class Pedido extends Model
 
         return $pedido;
     }
-
     public static function calculaTiemposTotalesPorId($pedidoId)
     {
         $pedido = self::with(['pedidoOpciones.opcion'])->findOrFail($pedidoId);
@@ -342,8 +334,6 @@ class Pedido extends Model
             ])->toArray(),
         ];
     }
-
-
     public static function asignaTotalesPasoTiempo($pedidoId)
     {
         $pedido = self::findOrFail($pedidoId);
@@ -359,10 +349,7 @@ class Pedido extends Model
 
         return $resultados;
     }
-
-
     // App\Models\Pedido.php
-
     public function getTallasAgrupadasAttribute()
     {
         if (!$this->relationLoaded('pedidoTallas')) {
@@ -383,7 +370,6 @@ class Pedido extends Model
                 ];
             });
     }
-
     public static function combinarTallasDePedidos($pedidos)
     {
         $tallasCombinadas = collect();
@@ -421,35 +407,39 @@ class Pedido extends Model
                 ];
             });
     }
-    
-    
-
     // App/Models/Pedido.php
     public function scopeDeMuestra($q)
     {
         return $q->where('tipo', 'MUESTRA');
     }
-
+    public function scopeSoloPedidos($q)
+    {
+        return $q->where('tipo', 'PEDIDO');
+    }
     public function scopeEstatusMuestra($q, string $status)
     {
         return $q->where('estatus_muestra', $status);
     }
-
-
-
     public function ultimoEstado()
     {
         return $this->hasOne(\App\Models\PedidoEstado::class, 'pedido_id')
             ->latestOfMany('id'); // último por id
     }
-public function archivos()
-{
-    return $this->hasMany(ArchivoPedido::class, 'pedido_id');
-}
+    public function archivos()
+    {
+        return $this->hasMany(ArchivoPedido::class, 'pedido_id');
+    }
 
-        /**
-     * Todas las evidencias de entrega (tipo_carga = 3), ordenadas de la más reciente a la más antigua.
-     */
+    public function getClaveAttribute(): string{
+         return "{$this->proyecto_id}-{$this->id}";
+    }
+
+        public function getTooltipClaveAttribute(): string
+    {
+        $desc = $this->descripcion_corta ?? '';
+        return "Proyecto {$this->proyecto_id} - Pedido #{$this->id}: {$desc}";
+    }
+
     /**
      * Todas las evidencias de entrega (tipo_carga = 3), más recientes primero.
      */

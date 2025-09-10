@@ -179,37 +179,34 @@
                         <td class="p-2">{{ $pedido->usuario->name ?? 'Sin usuario' }}</td>
                         <td class="p-2">{{ $pedido->total }} piezas</td>
                         <td class="p-2">
-                            <span class="px-2 py-1 rounded text-xs text-white font-semibold {{
-                                collect([
-                                    'PENDIENTE' => 'bg-yellow-400 text-black',
-                                    'ASIGNADO' => 'bg-blue-500',
-                                    'EN PROCESO' => 'bg-orange-500',
-                                    'REVISION' => 'bg-purple-600',
-                                    'DISEÑO APROBADO' => 'bg-emerald-600',
-                                    'DISEÑO RECHAZADO' => 'bg-red-600',
-                                    'CANCELADO' => 'bg-gray-500',
-                                ])->get(strtoupper($pedido->proyecto->estado), 'bg-yellow-400 text-black')
-                            }}">
+                            @php
+                                $colorProyecto = collect([
+                                    'PENDIENTE'         => 'bg-yellow-400 text-black',
+                                    'ASIGNADO'          => 'bg-blue-500 text-white',
+                                    'EN PROCESO'        => 'bg-orange-500 text-white',
+                                    'REVISION'          => 'bg-purple-600 text-white',
+                                    'DISEÑO APROBADO'   => 'bg-emerald-600 text-white',
+                                    'DISEÑO RECHAZADO'  => 'bg-red-600 text-white',
+                                    'CANCELADO'         => 'bg-gray-500 text-white',
+                                ])->get(strtoupper($pedido->proyecto->estado), 'bg-gray-400 text-black');
+                            @endphp
+
+                            <span class="px-2 py-1 rounded text-xs font-semibold {{ $colorProyecto }}">
                                 {{ strtoupper($pedido->proyecto->estado) }}
                             </span>
                         </td>
                         <td class="p-2 text-center">
-                            <span class="px-2 py-1 rounded text-xs text-white font-semibold" style="background-color:
+                            @php
+                                $nombreEstado = $pedido->estadoPedido?->nombre ?? 'SIN ESTADO';
+                                $colorClase   = $pedido->estadoPedido?->color ?? 'bg-gray-400 text-black';
+                            @endphp
 
-
-                                @if($pedido->estado==='APROBADO') #10B981
-                                @elseif($pedido->estado==='ENTREGADO') #3B82F6
-                                @elseif($pedido->estado==='RECHAZADO') #EF4444
-                                @elseif($pedido->estado==='ARCHIVADO') #6B7280
-                               
-                                @else #FBBF24 @endif;">
-
+                            <span class="px-2 py-1 rounded text-xs font-semibold {{ $colorClase }}">
                                 @if ($pedido->flag_solicitud_aprobar_sin_fechas == '1')
-                                   APROBACION ESPECIAL
+                                    APROBACION ESPECIAL
                                 @else
-                                   {{ strtoupper($pedido->estado) }}
+                                    {{ strtoupper($nombreEstado) }}
                                 @endif
-                                
                             </span>
                         </td>
                         @can('proyectopedidoscolumnafechaproduccion')
@@ -333,18 +330,16 @@
                         </div>
                      @endcan
                      @can('proyectopedidosEditarInputEstado')
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Estado</label>
-                            <select wire:model="estado" class="w-full border border-gray-300 rounded p-2">
-                                <option value="POR APROBAR">Por aprobar</option>
-                                <option value="APROBADO">Aprobado</option>
-                                <option value="ENTREGADO">Entrega</option>
-                                <option value="RECHAZADO">Rechazado</option>
-                                <option value="ARCHIVADO">Archivado</option>
-
-                            </select>
-                            @error('estado') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                        </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Estado</label>
+                                <select wire:model="estado_id" class="w-full border rounded p-2">
+                                    <option value="">-- Selecciona un estado --</option>
+                                    @foreach ($estados as $e)
+                                        <option value="{{ $e['id'] }}">{{ $e['nombre'] }}</option>
+                                    @endforeach
+                                </select>
+                                @error('estado_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            </div>
                      @endcan
                 </div>
 

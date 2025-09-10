@@ -99,11 +99,11 @@ class ManageProjects extends Component
                 }
 
                 $ids = Proyecto::query()
-                    ->when($this->activeTab !== 'TODOS', fn($q) => $q->where('estado', $this->activeTab))
+                    ->when($this->activeTab !== 'TODOS', fn($q) => $q->where('estado_id', $this->activeTab))
                     ->when($this->activeTab === 'DISEÑO APROBADO', function ($q) {
                         $q->whereHas('pedidos', function ($sub) {
                             $sub->where('tipo', 'PEDIDO')
-                                ->where('estado', 'POR APROBAR');
+                                ->where('estado_id', '1');
                         });
                     })
                     ->pluck('id')
@@ -234,7 +234,7 @@ class ManageProjects extends Component
                 ])
                 ->where('proyecto_id', $proyectoId)
                 ->where('tipo', 'PEDIDO')
-                ->where('estado', 'POR APROBAR')
+                ->where('estado_id', '1')
                 ->latest('id')
                 ->first();
 
@@ -245,7 +245,7 @@ class ManageProjects extends Component
                 ])
                 ->where('proyecto_id', $proyectoId)
                 ->where('tipo', 'PEDIDO')
-                ->where('estado', 'POR APROBAR')
+                ->where('estado_id', '1')
                 ->latest('id')
                 ->take(5)
                 ->get();
@@ -288,7 +288,7 @@ class ManageProjects extends Component
             if ($this->activeTab === 'DISEÑO APROBADO') {
                 $query->whereHas('pedidos', function ($q) {
                     $q->where('tipo', 'PEDIDO')
-                    ->where('estado', 'POR APROBAR');
+                    ->where('estado_id', '1');
                 });
             }
 

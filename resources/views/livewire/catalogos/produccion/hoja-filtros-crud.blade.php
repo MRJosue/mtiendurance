@@ -36,6 +36,8 @@
                     <td class="px-3 py-2 text-sm">{{ $h->orden ?? '—' }}</td>
                     <td class="px-3 py-2 text-sm">
                         <button class="text-blue-600 hover:underline" wire:click="openEdit({{ $h->id }})">Editar</button>
+                          <span class="mx-1 text-gray-300">|</span>
+                        <button class="text-red-600 hover:underline" @click="$wire.openDelete({{ $h->id }})">Eliminar</button>
                     </td>
                 </tr>
                 @endforeach
@@ -45,12 +47,511 @@
 
     <div class="mt-4">{{ $hojas->links() }}</div>
 
-    {{-- Modal crear/editar (omito detalle del formulario por espacio: incluye nombre/slug/rol/estados/base_columnas/filtros) --}}
+
+    {{-- =========================
+     MODAL CREAR / EDITAR HOJA
+     ========================= --}}
+    <div x-data="{ open: @entangle('modalOpen'), tab: 'datos', filtroSearch: '' }"
+        x-show="open" x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/40" @click="open=false"></div>
+
+        <div class="relative w-full max-w-5xl bg-white rounded-2xl shadow-xl p-5 sm:p-6">
+            {{-- Header --}}
+            <div class="flex items-start justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        {{ $editId ? 'Editar Hoja de filtros de producción' : 'Crear Hoja de filtros de producción' }}
+                    </h3>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Agrupa filtros en pestañas y define columnas base, rol de acceso y estatus permitidos.
+                    </p>
+                </div>
+                <button class="ml-4 text-gray-500 hover:text-gray-700" @click="open=false">✕</button>
+            </div>
+
+            {{-- Tabs --}}
+            <div class="mt-4 border-b">
+                <nav class="flex flex-wrap -mb-px gap-2">
+                    <button :class="tab==='datos' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'"
+                            class="px-3 py-2 border-b-2 text-sm font-medium"
+                            @click="tab='datos'">Datos</button>
+                    <button :class="tab==='columnas' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'"
+                            class="px-3 py-2 border-b-2 text-sm font-medium"
+                            @click="tab='columnas'">Columnas base</button>
+                    <button :class="tab==='filtros' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'"
+                            class="px-3 py-2 border-b-2 text-sm font-medium"
+                            @click="tab='filtros'">Filtros</button>
+                    <button :class="tab==='acceso' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'"
+                            class="px-3 py-2 border-b-2 text-sm font-medium"
+                            @click="tab='acceso'">Acceso</button>
+                </nav>
+            </div>
+
+            {{-- Contenido: DATOS --}}
+            <div x-show="tab==='datos'" class="mt-4 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nombre *</label>
+                        <input type="text" wire:model.live="form.nombre"
+                            class="mt-1 w-full rounded-lg border-gray-300 focus:ring-blue-500"
+                            placeholder="Ej. Hoja Producción Playeras">
+                        @error('form.nombre') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Slug</label>
+                        <input type="text" wire:model.live="form.slug"
+                            class="mt-1 w-full rounded-lg border-gray-300 focus:ring-blue-500"
+                            placeholder="se-autogenera-si-lo-dejas-vacío">
+                        @error('form.slug') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Descripción</label>
+                    <textarea wire:model.live="form.descripcion"
+                            class="mt-1 w-full rounded-lg border-gray-300 focus:ring-blue-500"
+                            rows="3" placeholder="Descripción breve…"></textarea>
+                    @error('form.descripcion') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="flex items-center gap-2">
+                        <input id="visible" type="checkbox" class="rounded border-gray-300"
+                            wire:model.live="form.visible">
+                        <label for="visible" class="text-sm text-gray-700">Visible en el sistema</label>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Orden</label>
+                        <input type="number" min="0" wire:model.live="form.orden"
+                            class="mt-1 w-32 rounded-lg border-gray-300 focus:ring-blue-500">
+                        @error('form.orden') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+            </div>
+
+            {{-- Contenido: COLUMNAS BASE --}}
+            <div x-show="tab==='columnas'" class="mt-4">
+                <p class="text-sm text-gray-600 mb-3">
+                    Las <strong>columnas base</strong> se muestran en todas las pestañas de esta Hoja.
+                    <strong>ID</strong> y el checkbox de selección múltiple siempre se muestran.
+                </p>
+
+                <div class="overflow-x-auto rounded-lg border">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-600">Orden</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-600">Key</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-600">Label</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-600">Visible</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-600">Fija</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            @foreach($form['base_columnas'] as $i => $c)
+                                <tr>
+                                    <td class="px-3 py-2">
+                                        <input type="number" min="1"
+                                            class="w-20 rounded border-gray-300"
+                                            wire:model.live="form.base_columnas.{{ $i }}.orden">
+                                    </td>
+                                    <td class="px-3 py-2 text-sm text-gray-700">{{ $c['key'] ?? '' }}</td>
+                                    <td class="px-3 py-2">
+                                        <input type="text" class="w-full rounded border-gray-300"
+                                            wire:model.live="form.base_columnas.{{ $i }}.label"
+                                            @disabled(($c['key'] ?? '')==='id')>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="checkbox" class="rounded border-gray-300"
+                                            wire:model.live="form.base_columnas.{{ $i }}.visible"
+                                            @disabled(($c['key'] ?? '')==='id' || ($c['fixed'] ?? false))>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="checkbox" class="rounded border-gray-300"
+                                            wire:model.live="form.base_columnas.{{ $i }}.fixed"
+                                            @disabled(($c['key'] ?? '')==='id')>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                @error('form.base_columnas') <p class="text-xs text-red-600 mt-2">{{ $message }}</p> @enderror
+
+                <p class="text-xs text-gray-500 mt-2">
+                    Consejo: usa números 1..N para ordenar. El sistema normaliza y asegura que <strong>ID</strong> siempre esté visible.
+                </p>
+            </div>
+
+            {{-- Contenido: FILTROS --}}
+            <div x-show="tab==='filtros'" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-sm font-medium text-gray-700">Filtros disponibles</label>
+                        <input x-model="filtroSearch"
+                            class="w-40 rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                            placeholder="Buscar…">
+                    </div>
+                    <div class="max-h-72 overflow-y-auto rounded-lg border p-2">
+                        @foreach($filtros as $f)
+                            <template x-if="'{{ Str::lower($f->nombre) }}'.includes(filtroSearch.toLowerCase())">
+                                <label class="flex items-center gap-2 py-1">
+                                    <input type="checkbox" class="rounded border-gray-300"
+                                        value="{{ $f->id }}"
+                                        @checked(in_array($f->id, $filtro_ids))
+                                        @change="$event.target.checked
+                                                ? @this.filtro_ids.push({{ $f->id }})
+                                                : @this.filtro_ids = @this.filtro_ids.filter(i => i !== {{ $f->id }})">
+                                    <span class="text-sm text-gray-700">{{ $f->nombre }}</span>
+                                </label>
+                            </template>
+                        @endforeach
+                        @if($filtros->isEmpty())
+                            <div class="text-sm text-gray-500">No hay filtros aún.</div>
+                        @endif
+                    </div>
+
+                    <div class="mt-3">
+                        <button class="px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+                                x-on:click="$wire.dispatch('abrir-modal-filtro')">
+                            Crear filtro…
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-gray-700 mb-2 block">Orden de pestañas</label>
+                    <div class="max-h-72 overflow-y-auto rounded-lg border divide-y">
+                        @forelse($filtro_ids as $idx => $fid)
+                            @php $fn = \App\Models\FiltroProduccion::find($fid)?->nombre ?? "Filtro #$fid"; @endphp
+                            <div class="flex items-center justify-between px-2 py-2">
+                                <span class="text-sm text-gray-700">{{ $fn }}</span>
+                                <div class="flex gap-1">
+                                    <button type="button" class="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200"
+                                            wire:click="moveUpAssign({{ $idx }})" title="Arriba">↑</button>
+                                    <button type="button" class="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200"
+                                            wire:click="moveDownAssign({{ $idx }})" title="Abajo">↓</button>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="px-2 py-3 text-sm text-gray-500">Sin filtros asignados.</div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            {{-- Contenido: ACCESO --}}
+            <div x-show="tab==='acceso'" class="mt-4 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Rol con acceso</label>
+                        <select wire:model.live="form.role_id"
+                                class="mt-1 w-full rounded-lg border-gray-300 focus:ring-blue-500">
+                            <option value="">— Sin restricción por rol —</option>
+                            @foreach($roles as $id => $name)
+                                <option value="{{ $id }}">{{ $name }}</option>
+                            @endforeach
+                        </select>
+                        @error('form.role_id') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Estatus de pedidos permitidos</label>
+                        <div class="mt-1 rounded-lg border p-2 max-h-40 overflow-y-auto">
+                            @forelse($estados as $e)
+                                <label class="inline-flex items-center gap-2 mr-3 mb-2">
+                                    <input type="checkbox" class="rounded border-gray-300"
+                                        value="{{ $e['id'] }}"
+                                        @checked(in_array($e['id'], $form['estados_permitidos'] ?? []))
+                                        @change="$event.target.checked
+                                            ? @this.form.estados_permitidos.push({{ $e['id'] }})
+                                            : @this.form.estados_permitidos = @this.form.estados_permitidos.filter(x => x !== {{ $e['id'] }})">
+                                    <span class="text-sm text-gray-700">{{ $e['nombre'] }}</span>
+                                </label>
+                            @empty
+                                <span class="text-sm text-gray-500">No hay estados en el catálogo.</span>
+                            @endforelse
+                        </div>
+                        @error('form.estados_permitidos') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                        <p class="text-xs text-gray-500 mt-1">Si no seleccionas ninguno, se mostrarán <em>todos</em> los estatus.</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Footer --}}
+            <div class="mt-6 flex justify-end gap-2">
+                <button class="px-4 py-2 rounded-lg border" @click="open=false">Cancelar</button>
+                <button class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                        wire:click="save">
+                    Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- =========================
+    MODAL INLINE: NUEVO FILTRO
+    ========================= --}}
+    <div x-data="{ open: @entangle('modalFiltroOpen'), tab: @entangle('modalFiltroTab') }"
+        x-show="open" x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/40" @click="open=false"></div>
+
+        <div class="relative w-full max-w-5xl bg-white rounded-2xl shadow-xl p-5 sm:p-6">
+            {{-- Header --}}
+            <div class="flex items-start justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Nuevo filtro de producción</h3>
+                    <p class="text-sm text-gray-500 mt-1">Configura datos, productos y columnas.</p>
+                </div>
+                <button class="ml-4 text-gray-500 hover:text-gray-700" @click="open=false">✕</button>
+            </div>
+
+            {{-- Tabs --}}
+            <div class="mt-4 border-b">
+                <nav class="flex flex-wrap -mb-px gap-2">
+                    <button :class="tab==='datos' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'"
+                            class="px-3 py-2 border-b-2 text-sm font-medium"
+                            @click="tab='datos'">Datos</button>
+                    <button :class="tab==='productos' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'"
+                            class="px-3 py-2 border-b-2 text-sm font-medium"
+                            @click="tab='productos'">Productos</button>
+                    <button :class="tab==='columnas' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'"
+                            class="px-3 py-2 border-b-2 text-sm font-medium"
+                            @click="tab='columnas'">Columnas</button>
+                </nav>
+            </div>
+
+            {{-- TAB: DATOS --}}
+            <div x-show="tab==='datos'" class="mt-4 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nombre *</label>
+                        <input type="text" wire:model.live="filtroForm.nombre"
+                            class="mt-1 w-full rounded-lg border-gray-300 focus:ring-blue-500"
+                            placeholder="Ej. Punto de Cruz">
+                        @error('filtroForm.nombre') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Slug</label>
+                        <input type="text" wire:model.live="filtroForm.slug"
+                            class="mt-1 w-full rounded-lg border-gray-300 focus:ring-blue-500"
+                            placeholder="se-autogenera-si-lo-dejas-vacío">
+                        @error('filtroForm.slug') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Descripción</label>
+                    <textarea wire:model.live="filtroForm.descripcion" rows="3"
+                            class="mt-1 w-full rounded-lg border-gray-300 focus:ring-blue-500"
+                            placeholder="Descripción breve…"></textarea>
+                    @error('filtroForm.descripcion') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="flex items-center gap-2">
+                        <input id="filtro_visible" type="checkbox" class="rounded border-gray-300"
+                            wire:model.live="filtroForm.visible">
+                        <label for="filtro_visible" class="text-sm text-gray-700">Visible</label>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Orden</label>
+                        <input type="number" min="0" wire:model.live="filtroForm.orden"
+                            class="mt-1 w-32 rounded-lg border-gray-300 focus:ring-blue-500">
+                        @error('filtroForm.orden') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+            </div>
+
+            {{-- TAB: PRODUCTOS --}}
+            <div x-show="tab==='productos'" class="mt-4">
+                <div class="mb-3 flex items-center gap-2">
+                    <input type="text" placeholder="Buscar producto…"
+                        class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        wire:model.live.debounce.300ms="productoSearchFiltro">
+                    <span class="text-xs text-gray-500">({{ $productos->count() }} mostrados)</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Selecciona productos</label>
+                        <select multiple size="10"
+                                class="mt-1 w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                wire:model="filtro_producto_ids">
+                            @foreach($productos as $prod)
+                                <option value="{{ $prod->id }}">{{ $prod->nombre }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Mantén Ctrl/Cmd para selección múltiple.</p>
+                        @error('filtro_producto_ids') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <h4 class="text-sm font-semibold text-gray-700">Seleccionados ({{ count($filtro_producto_ids) }})</h4>
+                        <div class="mt-2 text-xs text-gray-600 space-y-1 max-h-48 overflow-auto">
+                            @forelse($productos->whereIn('id', $filtro_producto_ids) as $p)
+                                <div class="flex items-center justify-between">
+                                    <span class="truncate">{{ $p->nombre }}</span>
+                                    <button
+                                        class="text-red-600 hover:underline"
+                                        wire:click="$set('filtro_producto_ids', {{ json_encode(array_values(array_diff($filtro_producto_ids, [$p->id]))) }})"
+                                    >quitar</button>
+                                </div>
+                            @empty
+                                <span class="text-gray-400">Sin productos seleccionados.</span>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- TAB: COLUMNAS --}}
+            <div x-show="tab==='columnas'" class="mt-4">
+                <div class="mb-3 flex items-center gap-2">
+                    <input type="text" placeholder="Buscar característica…"
+                        class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        wire:model.live.debounce.300ms="caracteristicaSearchFiltro">
+                    <select
+                        class="rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        x-on:change="$wire.filtroAddCaracteristica(parseInt($event.target.value)); $event.target.value='';"
+                    >
+                        <option value="">Añadir característica…</option>
+                        @foreach($caracteristicas as $car)
+                            <option value="{{ $car->id }}">{{ $car->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="overflow-x-auto bg-white rounded-lg border border-gray-200">
+                    <table class="min-w-full border-collapse">
+                        <thead class="bg-gray-100">
+                            <tr class="text-sm text-gray-600">
+                                <th class="px-3 py-2 text-left">#</th>
+                                <th class="px-3 py-2 text-left">Característica</th>
+                                <th class="px-3 py-2 text-left">Etiqueta</th>
+                                <th class="px-3 py-2 text-left">Visible</th>
+                                <th class="px-3 py-2 text-left">Render</th>
+                                <th class="px-3 py-2 text-left">Multivalor</th>
+                                <th class="px-3 py-2 text-left">Max</th>
+                                <th class="px-3 py-2 text-left">Ancho</th>
+                                <th class="px-3 py-2 text-left">Fallback</th>
+                                <th class="px-3 py-2 text-left">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($filtro_columnas as $i => $col)
+                                <tr class="hover:bg-gray-50 text-sm">
+                                    <td class="px-3 py-2 align-top">
+                                        <input type="number" class="w-16 rounded border-gray-300"
+                                            wire:model="filtro_columnas.{{ $i }}.orden">
+                                    </td>
+                                    <td class="px-3 py-2 align-top">
+                                        <div class="font-medium text-gray-800">{{ $col['nombre'] }}</div>
+                                        <div class="text-xs text-gray-500">ID: {{ $col['caracteristica_id'] }}</div>
+                                    </td>
+                                    <td class="px-3 py-2 align-top">
+                                        <input type="text" class="w-40 rounded border-gray-300"
+                                            wire:model="filtro_columnas.{{ $i }}.label">
+                                    </td>
+                                    <td class="px-3 py-2 align-top">
+                                        <input type="checkbox"
+                                            wire:model="filtro_columnas.{{ $i }}.visible">
+                                    </td>
+                                    <td class="px-3 py-2 align-top">
+                                        <select class="w-32 rounded border-gray-300"
+                                                wire:model="filtro_columnas.{{ $i }}.render">
+                                            <option value="texto">Texto</option>
+                                            <option value="badges">Badges</option>
+                                            <option value="chips">Chips</option>
+                                            <option value="iconos">Íconos</option>
+                                            <option value="count">Conteo</option>
+                                        </select>
+                                    </td>
+                                    <td class="px-3 py-2 align-top">
+                                        <select class="w-28 rounded border-gray-300"
+                                                wire:model="filtro_columnas.{{ $i }}.multivalor_modo">
+                                            <option value="inline">Inline</option>
+                                            <option value="badges">Badges</option>
+                                            <option value="count">Conteo</option>
+                                        </select>
+                                    </td>
+                                    <td class="px-3 py-2 align-top">
+                                        <input type="number" class="w-20 rounded border-gray-300"
+                                            wire:model="filtro_columnas.{{ $i }}.max_items" min="1" max="99">
+                                    </td>
+                                    <td class="px-3 py-2 align-top">
+                                        <input type="text" class="w-28 rounded border-gray-300"
+                                            wire:model="filtro_columnas.{{ $i }}.ancho" placeholder="p.ej. w-32">
+                                    </td>
+                                    <td class="px-3 py-2 align-top">
+                                        <input type="text" class="w-28 rounded border-gray-300"
+                                            wire:model="filtro_columnas.{{ $i }}.fallback" placeholder="—">
+                                    </td>
+                                    <td class="px-3 py-2 align-top">
+                                        <div class="flex items-center gap-1">
+                                            <button class="px-2 py-1 rounded bg-gray-200 hover:bg-gray-300"
+                                                    @click.prevent="$wire.filtroReorderColumna({{ $i }}, {{ max(0, $i-1) }})">↑</button>
+                                            <button class="px-2 py-1 rounded bg-gray-200 hover:bg-gray-300"
+                                                    @click.prevent="$wire.filtroReorderColumna({{ $i }}, {{ min(count($filtro_columnas)-1, $i+1) }})">↓</button>
+                                            <button class="px-2 py-1 rounded bg-red-500 text-white hover:bg-red-600"
+                                                    wire:click="filtroRemoveColumna({{ $i }})">Quitar</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="10" class="px-4 py-6 text-center text-gray-500">Aún no hay columnas configuradas.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                <p class="text-xs text-gray-500 mt-2">
+                    Consejo: prioriza 3–6 columnas clave para mantener la tabla legible en pantallas pequeñas.
+                </p>
+            </div>
+
+            {{-- Footer --}}
+            <div class="mt-6 flex justify-end gap-2">
+                <button class="px-4 py-2 rounded-lg border" @click="open=false">Cancelar</button>
+                <button class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+                        wire:click="saveFiltro">Crear filtro</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL CONFIRMAR ELIMINACIÓN --}}
+    <div x-data="{ open: @entangle('confirmDeleteOpen') }"
+        x-show="open" x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/40" @click="open=false"></div>
+
+        <div class="relative w-full max-w-md bg-white rounded-2xl shadow-xl p-5 sm:p-6">
+            <h3 class="text-lg font-semibold text-gray-900">Eliminar hoja</h3>
+            <p class="mt-2 text-sm text-gray-600">
+                Esta acción eliminará la hoja seleccionada. Los filtros asociados <strong>no</strong> se eliminarán,
+                solo se romperá la relación con esta hoja. ¿Deseas continuar?
+            </p>
+
+            <div class="mt-6 flex justify-end gap-2">
+                <button class="px-4 py-2 rounded-lg border" @click="open=false">Cancelar</button>
+                <button class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                        wire:click="deleteHoja">
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('hojas-notify', e => console.log(e.detail?.message));
+    
 });
 </script>
 

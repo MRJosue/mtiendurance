@@ -46,15 +46,14 @@
                 <input type="number" wire:model.defer="filtro_total_min" class="w-full border rounded p-2" min="0">
             </div>
     
+            {{-- Filtro: Estado del Pedido (por id) --}}
             <div>
                 <label class="text-sm text-gray-700">Estado del Pedido</label>
-                <select wire:model.defer="filtro_estado" class="w-full border rounded p-2">
+                <select wire:model.defer="filtro_estado_id" class="w-full border rounded p-2">
                     <option value="">Todos</option>
-                    <option value="POR APROBAR">Por aprobar</option>
-                    <option value="APROBADO">Aprobado</option>
-                    <option value="ENTREGADO">Entregado</option>
-                    <option value="RECHAZADO">Rechazado</option>
-                    <option value="ARCHIVADO">Archivado</option>
+                    @foreach($catalogoEstados as $e)
+                        <option value="{{ $e->id }}">{{ $e->nombre }}</option>
+                    @endforeach
                 </select>
             </div>
     
@@ -147,8 +146,13 @@
                     </td>
                     <td class="px-2 py-1 border text-sm">{{ $pedido->total }} piezas</td>
                     <td class="px-2 py-1 border">
-                        <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $pedido->estado === 'POR APROBAR' ? 'bg-yellow-400 text-black' : ($pedido->estado === 'APROBADO' ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700') }}">
-                            {{ $pedido->estado }}
+                        @php $nombreEstado = $pedido->estadoPedido->nombre ?? 'N/D'; @endphp
+                        <span class="px-2 py-0.5 rounded-full text-xs font-semibold
+                            {{ $nombreEstado === 'POR APROBAR' ? 'bg-yellow-400 text-black'
+                            : ($nombreEstado === 'APROBADO' ? 'bg-green-500 text-white'
+                            : ($nombreEstado === 'RECHAZADO' ? 'bg-red-500 text-white'
+                            : 'bg-gray-300 text-gray-700')) }}">
+                            {{ $nombreEstado }}
                         </span>
                     </td>
                     <td class="px-2 py-1 border text-sm">{{ $pedido->fecha_produccion ?? 'N/D' }}</td>
@@ -280,15 +284,12 @@
                     <div  class="grid grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Estado del pedido</label>
-                            <select wire:model="estado" class="w-full border border-gray-300 rounded p-2">
-                                <option value="POR APROBAR">Por aprobar</option>
-                                <option value="APROBADO">Aprobado</option>
-                                <option value="ENTREGADO">Entregado</option>
-                                <option value="RECHAZADO">Rechazado</option>
-                                <option value="ARCHIVADO">Archivado</option>
-                                <option value="POR REPROGRAMAR">Por Reprogramar</option>
+                            <select wire:model="estado_id" class="w-full border border-gray-300 rounded p-2">
+                                @foreach($catalogoEstados as $e)
+                                    <option value="{{ $e->id }}">{{ $e->nombre }}</option>
+                                @endforeach
                             </select>
-                            @error('estado') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                            @error('estado_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="mb-4">
@@ -429,9 +430,6 @@
             </div>
         </div>
     @endif
-
-
-
 
     @if($modalCrearTareaConPedidos)
         <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -694,105 +692,105 @@
     </div>
     @endif
 
-@if($modalRevisarAprobacion)
-    <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
-            <h2 class="text-xl font-bold mb-4">Revisión de Aprobación Pedido #{{ $pedidoId }}</h2>
+    @if($modalRevisarAprobacion)
+        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
+                <h2 class="text-xl font-bold mb-4">Revisión de Aprobación Pedido #{{ $pedidoId }}</h2>
 
-            <div class="grid grid-cols-1 gap-4 mb-4">
+                <div class="grid grid-cols-1 gap-4 mb-4">
 
 
-                                    {{-- Información del pedido (colapsable) --}}
-                    <div x-data="{ openInfo: true }" class="mb-6 border border-gray-200 rounded-lg p-4">
-                        <div @click="openInfo = !openInfo" class="flex justify-between items-center cursor-pointer select-none">
-                            <h6 class="text-lg font-bold text-gray-800">
-                                Configuracion del Producto
-                            </h6>
-                            <span class="text-sm text-blue-500 hover:underline">
-                                <span x-show="!openInfo">Mostrar</span>
-                                <span x-show="openInfo">Ocultar</span>
-                            </span>
+                                        {{-- Información del pedido (colapsable) --}}
+                        <div x-data="{ openInfo: true }" class="mb-6 border border-gray-200 rounded-lg p-4">
+                            <div @click="openInfo = !openInfo" class="flex justify-between items-center cursor-pointer select-none">
+                                <h6 class="text-lg font-bold text-gray-800">
+                                    Configuracion del Producto
+                                </h6>
+                                <span class="text-sm text-blue-500 hover:underline">
+                                    <span x-show="!openInfo">Mostrar</span>
+                                    <span x-show="openInfo">Ocultar</span>
+                                </span>
+                            </div>
+                        
+                            <div x-show="openInfo" x-transition class="mt-3 space-y-1 text-sm text-gray-700">
+                                <div>
+                                    <span class="font-semibold">ID Pedido:</span>
+                                    {{ $pedidoId ?? 'Nuevo' }} - {{ $proyecto_id_pedido ?? 'N/A' }}
+                                </div>
+                                <div>
+                                    <span class="font-semibold">Nombre del Proyecto:</span> {{ $proyecto_nombre ?? 'N/A' }}
+                                </div>
+                                <div>
+                                    <span class="font-semibold">Producto:</span> {{ $producto_nombre ?? 'N/A' }}
+                                </div>
+                                <div>
+                                    <span class="font-semibold">Categoría:</span> {{ $categoria_nombre ?? 'N/A' }}
+                                </div>
+                            </div>
                         </div>
-                    
-                        <div x-show="openInfo" x-transition class="mt-3 space-y-1 text-sm text-gray-700">
-                            <div>
-                                <span class="font-semibold">ID Pedido:</span>
-                                {{ $pedidoId ?? 'Nuevo' }} - {{ $proyecto_id_pedido ?? 'N/A' }}
-                            </div>
-                            <div>
-                                <span class="font-semibold">Nombre del Proyecto:</span> {{ $proyecto_nombre ?? 'N/A' }}
-                            </div>
-                            <div>
-                                <span class="font-semibold">Producto:</span> {{ $producto_nombre ?? 'N/A' }}
-                            </div>
-                            <div>
-                                <span class="font-semibold">Categoría:</span> {{ $categoria_nombre ?? 'N/A' }}
-                            </div>
-                        </div>
+
+                        {{-- Total y Cantidades por Talla --}}
+                        @if(!empty($tallas_disponibles))
+                            <h6 class="text-lg font-semibold mb-2">Cantidades por Tallas</h6>
+                            @foreach ($tallas_disponibles as $grupoTalla)
+                                <p class="font-semibold text-gray-700 mt-3">{{ $grupoTalla['nombre'] }}</p>
+                                <div class="grid grid-cols-3 gap-4 mb-2">
+                                    @foreach ($grupoTalla['tallas'] as $talla)
+                                        <div>
+                                            <label class="text-sm">{{ $talla['nombre'] }}</label>
+                                            {{-- <input type="number" min="0"
+                                                wire:model.lazy="cantidades_tallas.{{ $grupoTalla['id'] }}.{{ $talla['id'] }}"
+                                                class="w-full border border-gray-300 rounded p-2"> --}}
+
+                                            <input type="number" min="0"
+                                                wire:model.defer="inputsTallas.{{ $grupoTalla['id'] }}_{{ $talla['id'] }}"
+                                                class="w-full border border-gray-300 rounded p-2"
+                                                placeholder="0">
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endforeach
+                        @endif
+
+                    {{-- Campos en readonly / disabled --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Total</label>
+                        <input type="number" value="{{ $total }}" disabled class="w-full border border-gray-300 rounded p-2 bg-gray-100 cursor-not-allowed">
                     </div>
 
-                    {{-- Total y Cantidades por Talla --}}
-                    @if(!empty($tallas_disponibles))
-                        <h6 class="text-lg font-semibold mb-2">Cantidades por Tallas</h6>
-                        @foreach ($tallas_disponibles as $grupoTalla)
-                            <p class="font-semibold text-gray-700 mt-3">{{ $grupoTalla['nombre'] }}</p>
-                            <div class="grid grid-cols-3 gap-4 mb-2">
-                                @foreach ($grupoTalla['tallas'] as $talla)
-                                    <div>
-                                        <label class="text-sm">{{ $talla['nombre'] }}</label>
-                                        {{-- <input type="number" min="0"
-                                            wire:model.lazy="cantidades_tallas.{{ $grupoTalla['id'] }}.{{ $talla['id'] }}"
-                                            class="w-full border border-gray-300 rounded p-2"> --}}
-
-                                        <input type="number" min="0"
-                                            wire:model.defer="inputsTallas.{{ $grupoTalla['id'] }}_{{ $talla['id'] }}"
-                                            class="w-full border border-gray-300 rounded p-2"
-                                            placeholder="0">
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endforeach
-                    @endif
-
-                {{-- Campos en readonly / disabled --}}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Total</label>
-                    <input type="number" value="{{ $total }}" disabled class="w-full border border-gray-300 rounded p-2 bg-gray-100 cursor-not-allowed">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Estatus</label>
-                    <input type="text" value="{{ $estatus }}" disabled class="w-full border border-gray-300 rounded p-2 bg-gray-100 cursor-not-allowed">
-                </div>
-
- 
-
-                {{-- Fechas editables --}}
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Fecha Producción</label>
-                    <input type="date" wire:model="fecha_produccion" class="w-full border border-gray-300 rounded p-2">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Fecha Embarque</label>
-                    <input type="date" wire:model="fecha_embarque" class="w-full border border-gray-300 rounded p-2">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Fecha Entrega</label>
-                    <input type="date" wire:model="fecha_entrega" min="{{ date('Y-m-d') }}" class="w-full border border-gray-300 rounded p-2">
-                </div>
-            </div>
-
-            <div class="flex justify-end gap-2">
-                <button wire:click="rechazarSolicitud" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Rechazar Solicitud</button>
-                <button wire:click="aprobarSolicitud" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Aprobar Solicitud</button>
-                <button wire:click="$set('modalRevisarAprobacion', false)" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cerrar</button>
-            </div>
-        </div>
-    </div>
-@endif
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Estatus</label>
+                        <input type="text" value="{{ $estatus }}" disabled class="w-full border border-gray-300 rounded p-2 bg-gray-100 cursor-not-allowed">
+                    </div>
 
     
+
+                    {{-- Fechas editables --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fecha Producción</label>
+                        <input type="date" wire:model="fecha_produccion" class="w-full border border-gray-300 rounded p-2">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fecha Embarque</label>
+                        <input type="date" wire:model="fecha_embarque" class="w-full border border-gray-300 rounded p-2">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fecha Entrega</label>
+                        <input type="date" wire:model="fecha_entrega" min="{{ date('Y-m-d') }}" class="w-full border border-gray-300 rounded p-2">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <button wire:click="rechazarSolicitud" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Rechazar Solicitud</button>
+                    <button wire:click="aprobarSolicitud" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Aprobar Solicitud</button>
+                    <button wire:click="$set('modalRevisarAprobacion', false)" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+        
     
 </div>

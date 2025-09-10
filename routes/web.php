@@ -32,6 +32,11 @@ use App\Http\Controllers\ProgramacionController;
 use App\Http\Controllers\ProduccionController;
 use App\Http\Controllers\ReprogramacionProyecto;
 use App\Http\Controllers\tareasproduccion;
+use App\Http\Controllers\HojasViewerController;
+
+
+use App\Livewire\Produccion\HojasCrud;
+use App\Livewire\Produccion\HojaViewer;
 
 use App\Http\Controllers\PreproyectoUploadController;
 
@@ -220,6 +225,33 @@ Route::get('/produccion/entrega',[tareasproduccion::class, 'entrega'])->middlewa
 
     Route::get('catalogos/hojaFiltrosProduccion', [TallasController::class, 'hojaFiltrosProduccion'])->middleware(['auth', 'verified'])->name('catalogos.hojaFiltrosProduccion');
 
+    // Route::middleware(['auth'])->group(function () {
+    //     // CRUD (solo admin/gestores)
+    //     // CRUD (solo admin/gestores)
+    //     // if (class_exists(\App\Livewire\Produccion\HojasCrud::class)) {
+    //     //     Route::get('/produccion/hojas', \App\Livewire\Produccion\HojasCrud::class)
+    //     //         ->name('produccion.hojas.index')
+    //     //         ->can('manage', \App\Models\HojaFiltroProduccion::class);
+    //     // }
+
+
+    //         Route::get('/produccion/hojas/{hoja:slug}', HojaViewer::class)
+    //     ->name('produccion.hojas.show');
+
+
+    //     // Viewer (aplica policy view)
+    //     // if (class_exists(\App\Livewire\Produccion\HojaViewer::class)) {
+    //     //     Route::get('/produccion/hojas/{hoja:slug}', \App\Livewire\Produccion\HojaViewer::class)
+    //     //         ->name('produccion.hojas.show')
+    //     //         ->can('view', 'hoja');
+    //     // }
+    // });
+
+    Route::middleware(['auth'])->group(function () {
+        // OJO: elimina la ruta anterior que apuntaba directamente al componente Livewire
+        Route::get('/produccion/hojas/{key}', [HojasViewerController::class, 'show'])
+            ->name('produccion.hojas.show');
+    });
 
 // Prueba data tables
 

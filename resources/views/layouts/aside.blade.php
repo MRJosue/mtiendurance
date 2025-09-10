@@ -137,6 +137,9 @@
                     @can('asideAdministraciónPedidos')
                          <a href="{{ route('produccion.adminpedidos') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Administración Pedidos</a>
                     @endcan
+
+
+                    @livewire(name: 'aside-hojas')
                    
                     <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Tareas Produccion</a>
                     <a href="{{ route('produccion.corte') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Corte</a>
@@ -261,8 +264,9 @@
                             <a href="{{ route('catalogos.tallas.tallas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Tallas</a>
                             <a href="{{ route('catalogos.tallas.grupos') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Grupos</a>
                             <a href="{{ route('catalogos.flujoProduccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Flujo De Produccion</a>
+                            <a href="{{ route('catalogos.hojaFiltrosProduccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800"> Hoja Filtros Produccion</a>
                             <a href="{{ route('catalogos.flujoFiltrosProduccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Filtros Produccion</a>
-                            <a href="{{ route('catalogos.hojaFiltrosProduccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Filtros Produccion</a>
+                          
                         </div>
                     </div>
 

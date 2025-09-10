@@ -20,6 +20,9 @@ use App\Models\ProductoGrupoTalla;
 use App\Models\TareaProduccion;
 use App\Models\OrdenProduccion;
 use App\Models\OrdenCorte;
+use App\Models\EstadoPedido;
+use Illuminate\Validation\Rule;
+
 
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -94,35 +97,54 @@ class AdministraAprobacionEspecial extends Component
 
 
 
+    public $estado_id = null;           // en el modal
+    public $filtro_estado_id = '';      // filtro por estado
+    public $catalogoEstados = [];       // para selects
+
+    // ids útiles para lógicas internas
+    protected $estado_por_aprobar_id = null;
+    protected $estado_rechazado_id   = null;
+
+
     public function mount()
     {
         $this->tipos_envio = TipoEnvio::all();
         $this->clientes = Cliente::all();
         $this->direccionesFiscales = DireccionFiscal::with('ciudad.estado')->get();
-        $this->direccionesEntrega = DireccionEntrega::with('ciudad.estado')->get();
+        $this->direccionesEntrega  = DireccionEntrega::with('ciudad.estado')->get();
         $this->usuarios = User::query()->role('estaf')->get();
         $this->productos_activos = Producto::where('ind_activo', 1)->get();
         $this->categorias_activas = Categoria::where('ind_activo', 1)->get();
-    }
 
+        $this->catalogoEstados = EstadoPedido::query()
+            ->orderByRaw('COALESCE(orden,999999), nombre')
+            ->get(['id','nombre']);
+
+        // ids de estados usados en la lógica
+        $this->estado_por_aprobar_id = EstadoPedido::where('nombre','POR APROBAR')->value('id');
+        $this->estado_rechazado_id   = EstadoPedido::where('nombre','RECHAZADO')->value('id');
+    }
     protected function rules()
     {
         return [
-
-
             'total' => function ($attribute, $value, $fail) {
                 if (empty(array_filter($this->cantidades_tallas)) && empty($value)) {
                     $fail('Debe ingresar un total o capturar cantidades por tallas.');
                 }
             },
             'estatus' => 'required|string',
-            'tipo' => 'required|in:PEDIDO,MUESTRA',
-            'estado' => 'required|in:POR APROBAR,APROBADO,ENTREGADO,RECHAZADO,ARCHIVADO,POR REPROGRAMAR',
+            'tipo'    => 'required|in:PEDIDO,MUESTRA',
+
+            'estado_id' => [
+                'required',
+                'integer',
+                Rule::exists((new EstadoPedido)->getTable(), 'id'),
+            ],
+
             'estado_produccion' => 'required|in:POR APROBAR,POR PROGRAMAR,PROGRAMADO,IMPRESIÓN,CORTE,COSTURA,ENTREGA,FACTURACIÓN,COMPLETADO,RECHAZADO',
-            'fecha_produccion' => 'nullable|date',
-            'fecha_embarque' => 'nullable|date',
-            'fecha_entrega' => 'nullable|date',
-          
+            'fecha_produccion'  => 'nullable|date',
+            'fecha_embarque'    => 'nullable|date',
+            'fecha_entrega'     => 'nullable|date',
         ];
     }
 
@@ -138,7 +160,7 @@ class AdministraAprobacionEspecial extends Component
                 'total' => $pedido->total,
                 'estatus' => $pedido->estatus,
                 'tipo' => $pedido->tipo,
-                'estado' => $pedido->estado,
+                 'estado_id' => $pedido->estado_id,
                 'estado_produccion'=>  $pedido->estado_produccion,
                 'fecha_produccion' => $pedido->fecha_produccion,
                 'fecha_embarque' => $pedido->fecha_embarque,
@@ -177,9 +199,9 @@ class AdministraAprobacionEspecial extends Component
                 'tallas_disponibles', 'cantidades_tallas', 'producto_id', 'cliente_id'
             ]);
             $this->estatus = 'PENDIENTE';
-            $this->tipo = 'PEDIDO';
-            $this->estado = 'POR APROBAR';
-            $this->estado_produccion = $pedido->estado_produccion ?? 'POR APROBAR';
+            $this->tipo    = 'PEDIDO';
+            $this->estado_id = $this->estado_por_aprobar_id;     // <— por defecto
+            $this->estado_produccion = 'POR APROBAR';
         }
 
         $this->modal = true;
@@ -214,7 +236,7 @@ class AdministraAprobacionEspecial extends Component
             'total' => $this->total,
             'estatus' => $this->estatus,
             'tipo' => $this->tipo,
-            'estado' => $this->estado,
+            'estado_id' => $this->estado_id, 
             'estado_produccion' => $this->estado_produccion,
             'fecha_produccion' => $this->fecha_produccion,
             'fecha_embarque' => $this->fecha_embarque,
@@ -346,65 +368,54 @@ class AdministraAprobacionEspecial extends Component
     }
     
 
-    public function render()
-    {
+public function render()
+{
+    $query = Pedido::with([
+        'cliente',
+        'producto.categoria',
+        'tipoEnvio',
+        'proyecto.user',
+        'tareasProduccion.usuario',
+        'pedidoCaracteristicas.caracteristica',
+        'pedidoOpciones.opcion.caracteristicas',
+        'estadoPedido:id,nombre', // <— para mostrar nombre
+    ]);
 
-        $query = Pedido::with([
-            'cliente',
-            'producto.categoria',
-            'tipoEnvio',
-            'proyecto.user',
-            'tareasProduccion.usuario',
-            'pedidoCaracteristicas.caracteristica',
-            'pedidoOpciones.opcion.caracteristicas'
-        ]);
-
-        if ($this->filtro_usuario) {
-            $query->whereHas('proyecto.user', function ($q) {
-                $q->where('name', 'like', '%' . $this->filtro_usuario . '%');
-            });
-        }
-        
-        if ($this->filtro_producto) {
-            $query->where('producto_id', $this->filtro_producto);
-        }
-        
-        if ($this->filtro_categoria) {
-            $query->whereHas('producto.categoria', function ($q) {
-                $q->where('id', $this->filtro_categoria);
-            });
-        }
-        
-        if ($this->filtro_total) {
-            $query->where('total', $this->filtro_total);
-        }
-        
-        // if ($this->filtro_estado) {
-        //     $query->where('estado', $this->filtro_estado);
-        // }
-
-            $query->where('estado', 'POR APROBAR');
-
-
-            $query->where('flag_solicitud_aprobar_sin_fechas', '1');
-        
-        if ($this->filtro_estado_produccion) {
-            $query->where('estado_produccion', $this->filtro_estado_produccion);
-        }
-
-
-        $query->where('tipo', 'PEDIDO');
-
-        return view('livewire.produccion.administra-aprobacion-especial', [
-            
-            'pedidos' => $query->orderByDesc(column: 'created_at')->paginate(10),
-        ]);
-        // return view('livewire.programacion.pedidos-crud-general', [
-        //     'pedidos' => $query->orderByDesc('created_at')->paginate(10),
-        //     'productos_activos' => Producto::where('ind_activo', 1)->get(),
-        //     'categorias_activas' => Categoria::where('ind_activo', 1)->get(),
-        // ]);
+    if ($this->filtro_usuario) {
+        $query->whereHas('proyecto.user', fn($q) =>
+            $q->where('name','like','%'.$this->filtro_usuario.'%'));
     }
+    if ($this->filtro_producto) {
+        $query->where('producto_id', $this->filtro_producto);
+    }
+    if ($this->filtro_categoria) {
+        $query->whereHas('producto.categoria', fn($q) =>
+            $q->where('id', $this->filtro_categoria));
+    }
+    if ($this->filtro_total) {
+        $query->where('total', $this->filtro_total);
+    }
+    if ($this->filtro_estado_id !== '' && $this->filtro_estado_id !== null) {
+        $query->where('estado_id', (int)$this->filtro_estado_id);
+    }
+
+    // Antes: $query->where('estado', 'POR APROBAR');
+    if ($this->estado_por_aprobar_id) {
+        $query->where('estado_id', $this->estado_por_aprobar_id);
+    }
+
+    $query->where('flag_solicitud_aprobar_sin_fechas', '1');
+
+    if ($this->filtro_estado_produccion) {
+        $query->where('estado_produccion', $this->filtro_estado_produccion);
+    }
+
+    $query->where('tipo', 'PEDIDO');
+
+    return view('livewire.produccion.administra-aprobacion-especial', [
+        'pedidos' => $query->orderByDesc('created_at')->paginate(10),
+    ]);
+}
 
     public function deleteSelected()
     {
@@ -463,7 +474,7 @@ class AdministraAprobacionEspecial extends Component
         $this->total = $pedido->total;
         $this->estatus = $pedido->estatus;
         $this->tipo = $pedido->tipo;
-        $this->estado = $pedido->estado;
+         $this->estado_id = $pedido->estado_id;
         $this->estado_produccion = $pedido->estado_produccion;
         $this->fecha_produccion = $pedido->fecha_produccion;
         $this->fecha_embarque = $pedido->fecha_embarque;
@@ -496,7 +507,9 @@ class AdministraAprobacionEspecial extends Component
     public function rechazarSolicitud()
     {
         $pedido = Pedido::findOrFail($this->pedidoId);
-        $pedido->update(['estado' => 'RECHAZADO']);
+        $pedido->update([
+            'estado_id' => $this->estado_rechazado_id ?: $pedido->estado_id, // <—
+        ]);
         $this->modalRevisarAprobacion = false;
         $this->dispatch('ActualizarTablaPedido');
         session()->flash('message', '⚠️ Solicitud rechazada.');

@@ -22,8 +22,8 @@ return new class extends Migration
             
             $table->enum('tipo', ['POR DEFINIR','PEDIDO', 'MUESTRA', ])->default('POR DEFINIR');
 
-            $table->enum('estado', ['POR APROBAR', 'APROBADO',  'ENTREGADO', 'RECHAZADO', 'ARCHIVADO','POR REPROGRAMAR'])->default('POR APROBAR');
-            
+            //$table->enum('estado', ['POR APROBAR', 'APROBADO',  'ENTREGADO', 'RECHAZADO', 'ARCHIVADO','POR REPROGRAMAR'])->default('POR APROBAR'); Estados Originales cambiar por 
+            $table->enum('estado', ['POR APROBAR', 'POR PROGRAMAR','APROBADO',  'EN PRODUCCION', 'LISTO PARA ENTREGAR','ENTREGADO','RECHAZADO', 'ARCHIVADO','RECONFIGURAR'])->default('POR APROBAR');
             $table->enum('estado_produccion', ['POR APROBAR','POR PROGRAMAR', 'PROGRAMADO',  'IMPRESIÓN', 'CORTE', 'COSTURA', 'ENTREGA', 'FACTURACIÓN', 'COMPLETADO', 'RECHAZADO'])->default('POR APROBAR');
             
 

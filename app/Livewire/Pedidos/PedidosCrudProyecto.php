@@ -14,6 +14,8 @@ use App\Models\Categoria;
 use App\Models\Ciudad;
 use App\Models\Pais;
 use App\Models\Estado;
+use App\Models\EstadoPedido;
+
 use App\Models\TipoEnvio;
 use App\Models\PedidoCaracteristica;
 use App\Models\Caracteristica;
@@ -60,6 +62,10 @@ class PedidosCrudProyecto extends Component
 
     public $clientes = []; // Lista de clientes relacionados con el usuario
     public $cliente_id; // Cliente seleccionado en el formulario
+
+
+    public ?int $estado_id = null;     // ⬅️ nuevo
+    public array $estados = [];        // ⬅️ nuevo
     
     protected $listeners = ['abrirModalEdicion' => 'abrirModal',
                             'ActualizarTablaPedido' => 'actualizarTabla',];
@@ -77,7 +83,8 @@ class PedidosCrudProyecto extends Component
             ],
             'estatus' => 'required|string',
             'tipo' => 'required|in:PEDIDO,MUESTRA',
-            'estado' => 'required|in:POR APROBAR,APROBADO,ENTREGADO,RECHAZADO,ARCHIVADO',
+            //'estado' => 'required|in:POR APROBAR,APROBADO,ENTREGADO,RECHAZADO,ARCHIVADO',
+            'estado_id' => 'nullable|exists:estados_pedido,id', 
             'fecha_produccion' => 'nullable|date',
             'fecha_embarque' => 'nullable|date',
             'fecha_entrega' => 'nullable|date',
@@ -87,9 +94,34 @@ class PedidosCrudProyecto extends Component
 
     public function abrirModal($pedidoId = null)
     {
+
+            // catálogo (solo activos, ordenados)
+            $this->estados = EstadoPedido::where('ind_activo', 1)
+            ->orderByRaw('COALESCE(orden, 999999), id')
+            ->get(['id', 'nombre', 'color'])
+            ->toArray();
+
+
+
         if ($pedidoId) {
 
-            $pedido = Pedido::with(['pedidoTallas.talla', 'pedidoTallas.grupoTalla'])->findOrFail($pedidoId);
+        $pedido = Pedido::with(['pedidoTallas.talla','pedidoTallas.grupoTalla','estadoPedido'])->findOrFail($pedidoId);
+        // ...
+        $this->tipo = $pedido->tipo;
+
+        // ✅ preferimos estado_id; si viene null tratamos de inferirlo por nombre (legacy)
+        $this->estado_id = $pedido->estado_id
+            ?? EstadoPedido::idPorNombre($pedido->estado ?? '') // puede ser null y está bien
+            ?? null;
+
+        // (opcional) mantén el campo legacy en memoria si lo usas en otro lado
+        $this->estado = $pedido->estado;
+
+        // ...
+        $this->on_Calcula_Fechas_Entrega();
+
+
+
 
             // Limpio el error 
             $this->error_total = null;
@@ -110,6 +142,8 @@ class PedidosCrudProyecto extends Component
 
             $this->cliente_id = $pedido->cliente_id;
 
+
+ 
             // Disparar la carga de tipos de envío si hay una dirección de entrega
             if (!empty($this->direccion_entrega_id)) {
                 $this->cargarTiposEnvio();
@@ -149,11 +183,18 @@ class PedidosCrudProyecto extends Component
 
         } else {
             $this->reset([
-                'pedidoId', 'total', 'estatus', 'tipo', 'estado',
-                'fecha_produccion', 'fecha_embarque', 'fecha_entrega',
-                'direccion_fiscal_id', 'direccion_entrega_id', 'id_tipo_envio',
-                'tallas_disponibles', 'cantidades_tallas','cliente_id'
+                'pedidoId','total','estatus','tipo','estado','estado_id',
+                'fecha_produccion','fecha_embarque','fecha_entrega',
+                'direccion_fiscal_id','direccion_entrega_id','id_tipo_envio',
+                'tallas_disponibles','cantidades_tallas','cliente_id'
             ]);
+
+            // defaults
+            $this->estatus = 'PENDIENTE';
+            $this->tipo = 'PEDIDO';
+
+            // ✅ default “POR APROBAR” si existe
+            $this->estado_id = EstadoPedido::idPorNombre('POR APROBAR');
 
             // Obtener el producto desde `producto_sel` del proyecto
             $proyecto = Proyecto::findOrFail($this->proyectoId);
@@ -195,6 +236,11 @@ class PedidosCrudProyecto extends Component
         $this->validate();
         Log::debug('Pre Guardado');
 
+
+        $this->recopilarCantidadesTallas();
+        $this->error_total = null;
+        $this->validate();
+
         // Resetear error antes de validar
         $this->error_total = null;
 
@@ -228,6 +274,9 @@ class PedidosCrudProyecto extends Component
         // Construcción de dirección como texto
         $Auxiliar_direccion_entrega = trim("$ciudades_name, $estado_name, $pais_name");
         $Auxiliar_direccion_fiscal = trim("$fiscal_ciudades_name, $fiscal_estado_name, $fiscal_pais_name");
+
+        $estadoNombre = $this->estado_id ? EstadoPedido::find($this->estado_id)?->nombre : null;
+
     
         if ($this->pedidoId) {
             // Actualizar un pedido existente
@@ -236,7 +285,8 @@ class PedidosCrudProyecto extends Component
                 'total' => $this->total,
                 'estatus' => $this->estatus,
                 'tipo' => $this->tipo,
-                'estado' => $this->estado,
+                'estado_id' => $this->estado_id,        
+                'estado' => $estadoNombre,     
                 'fecha_produccion' => $this->fecha_produccion,
                 'fecha_embarque' => $this->fecha_embarque,
                 'fecha_entrega' => $this->fecha_entrega,
@@ -273,7 +323,8 @@ class PedidosCrudProyecto extends Component
                 'total' => $this->total,
                 'estatus' => $this->estatus,
                 'tipo' => $this->tipo,
-                'estado' => $this->estado,
+                'estado_id' => $this->estado_id,        
+                'estado' => $estadoNombre,              
                 'fecha_produccion' => $this->fecha_produccion,
                 'fecha_embarque' => $this->fecha_embarque,
                 'fecha_entrega' => $this->fecha_entrega,
@@ -659,28 +710,22 @@ class PedidosCrudProyecto extends Component
         $proyecto = Proyecto::find($this->proyectoId);
         $this->pedidoId = $id_pedido;
         $pedido = Pedido::findOrFail($this->pedidoId);
+        
 
         if ($pedido) {
             // Aquí puedes usar una notificación, email, log, o evento personalizado
             Log::warning("🛠 Se ha solicitado reconfiguración para el proyecto ID {$proyecto->id}");
-    
-            // Ejemplo con una notificación a admin:
-            // Notification::route('mail', 'admin@example.com')->notify(new SolicitudReconfiguracion($proyecto));
 
-            $pedido->update([
-                'estado' => 'POR REPROGRAMAR',
+
+            $this->setEstado($pedido, 'POR REPROGRAMAR', [
                 'estado_produccion' => 'POR PROGRAMAR',
             ]);
-
 
     
             session()->flash('message', '🔧 Se ha solicitado la reconfiguración del proyecto.');
 
-            // Añadir flag_solicitud_reconfiguracion 
-            // una vez este este flag en programacion mostrar un boton que al accionar nos envie a la pantalla de reconfiguracion
-            // Añadir estatus 'Por Reconfigurar'
 
-        
+
         }
     
         $this->modal_reconfigurar_proyecto = false;
