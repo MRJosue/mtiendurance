@@ -81,7 +81,7 @@ class FiltrosProduccionCrud extends Component
     public function updatedFormNombre(string $value): void
     {
         if (blank($this->form['slug'])) {
-            $this->form['slug'] = Str::slug($value);
+            //$this->form['slug'] = Str::slug($value);
         }
     }
 

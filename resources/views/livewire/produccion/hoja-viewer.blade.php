@@ -94,46 +94,52 @@
                     @foreach($baseCols as $bc)
                         @if(($bc['key'] ?? '') !== 'id' && ($bc['visible'] ?? true))
                             <th class="px-3 py-2">
-                                @switch($bc['key'])
-                                    @case('proyecto')
-                                        <input
-                                            class="w-36 sm:w-44 rounded-lg border-gray-300 focus:ring-blue-500"
-                                            placeholder="Proyecto…"
-                                            wire:model.live.debounce.400ms="filters.proyecto"
-                                        >
-                                    @break
-                                    @case('producto')
-                                        <input
-                                            class="w-36 sm:w-44 rounded-lg border-gray-300 focus:ring-blue-500"
-                                            placeholder="Producto…"
-                                            wire:model.live.debounce.400ms="filters.producto"
-                                        >
-                                    @break
-                                    @case('estado')
-                                        <select
-                                            class="w-36 sm:w-44 rounded-lg border-gray-300 focus:ring-blue-500"
-                                            wire:model.live.debounce.400ms="filters.estado_id"
-                                        >
-                                            <option value="">Todos</option>
-                                            @foreach($this->estados as $e)
-                                                <option value="{{ $e->id }}">{{ $e->nombre }}</option>
-                                            @endforeach
-                                        </select>
-                                    @break
-                                    @case('total')
-                                        <input
-                                            class="w-28 sm:w-32 rounded-lg border-gray-300 focus:ring-blue-500"
-                                            placeholder="Total…"
-                                            wire:model.live.debounce.400ms="filters.total"
-                                        >
-                                    @break
-                                    @default
-                                        <input
-                                            class="w-32 sm:w-40 rounded-lg border-gray-300 focus:ring-blue-500"
-                                            placeholder="Filtrar…"
-                                            wire:model.live.debounce.400ms="filters.{{ $bc['key'] }}"
-                                        >
-                                @endswitch
+@switch($bc['key'])
+    @case('proyecto')
+        <input class="w-36 sm:w-44 rounded-lg border-gray-300 focus:ring-blue-500"
+               placeholder="Proyecto…" wire:model.live.debounce.400ms="filters.proyecto">
+    @break
+
+    @case('producto')
+        <input class="w-36 sm:w-44 rounded-lg border-gray-300 focus:ring-blue-500"
+               placeholder="Producto…" wire:model.live.debounce.400ms="filters.producto">
+    @break
+
+    @case('estado')
+        <select class="w-36 sm:w-44 rounded-lg border-gray-300 focus:ring-blue-500"
+                wire:model.live.debounce.400ms="filters.estado_id">
+            <option value="">Todos</option>
+            @foreach($this->estados as $e)
+                <option value="{{ $e->id }}">{{ $e->nombre }}</option>
+            @endforeach
+        </select>
+    @break
+
+    @case('total')
+        <input class="w-28 sm:w-32 rounded-lg border-gray-300 focus:ring-blue-500"
+               placeholder="Total…" wire:model.live.debounce.400ms="filters.total">
+    @break
+
+    {{-- NUEVOS: fechas --}}
+    @case('fecha_produccion')
+        <input type="date" class="w-40 rounded-lg border-gray-300 focus:ring-blue-500"
+               wire:model.live.debounce.400ms="filters.fecha_produccion">
+    @break
+
+    @case('fecha_embarque')
+        <input type="date" class="w-40 rounded-lg border-gray-300 focus:ring-blue-500"
+               wire:model.live.debounce.400ms="filters.fecha_embarque">
+    @break
+
+    @case('fecha_entrega')
+        <input type="date" class="w-40 rounded-lg border-gray-300 focus:ring-blue-500"
+               wire:model.live.debounce.400ms="filters.fecha_entrega">
+    @break
+
+    @default
+        <input class="w-32 sm:w-40 rounded-lg border-gray-300 focus:ring-blue-500"
+               placeholder="Filtrar…" wire:model.live.debounce.400ms="filters.{{ $bc['key'] }}">
+@endswitch
                             </th>
                         @endif
                     @endforeach
@@ -187,11 +193,15 @@
                                         @switch($bc['key'])
                                             @case('proyecto') {{ $pedido->proyecto->nombre ?? '—' }} @break
                                             @case('producto') {{ $pedido->producto->nombre ?? '—' }} @break
-                                            @case('estado')
-                                                {{ $pedido->estadoPedido->nombre ?? '—' }}
-                                            @break
+                                            @case('estado')   {{ $pedido->estadoPedido->nombre ?? '—' }} @break
                                             @case('total')    {{ number_format((float)($pedido->total ?? 0), 2) }} @break
-                                            @default          —
+
+                                            {{-- NUEVOS: fechas (si tienes casts a date en el modelo Pedido, usa ->format) --}}
+                                            @case('fecha_produccion') {{ $pedido->fecha_produccion?->format('d/m/Y') ?? '—' }} @break
+                                            @case('fecha_embarque')   {{ $pedido->fecha_embarque?->format('d/m/Y') ?? '—' }} @break
+                                            @case('fecha_entrega')    {{ $pedido->fecha_entrega?->format('d/m/Y') ?? '—' }} @break
+
+                                            @default — 
                                         @endswitch
                                     </td>
                                 @endif

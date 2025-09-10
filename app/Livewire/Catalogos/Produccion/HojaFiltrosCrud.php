@@ -1,5 +1,5 @@
 <?php
-// app/Livewire/Catalogos/Produccion/HojaFiltrosCrud.php
+
 namespace App\Livewire\Catalogos\Produccion;
 
 use App\Models\Caracteristica;
@@ -122,7 +122,7 @@ class HojaFiltrosCrud extends Component
     {
         $this->form['base_columnas'] = \App\Models\HojaFiltroProduccion::defaultBaseColumnas();
         $this->ensureEstadoBaseCol();
-
+        $this->ensureFechasBaseCols();
         // roles...
         $this->roles = \Spatie\Permission\Models\Role::query()->orderBy('name')->pluck('name','id')->toArray();
 
@@ -164,22 +164,44 @@ class HojaFiltrosCrud extends Component
             'visible'=>true, 'orden'=>null,
         ];
         $this->ensureEstadoBaseCol();
+        $this->ensureFechasBaseCols(); 
         $this->filtro_ids = [];
         $this->modalOpen = true;
         $this->dispatch('hojas-notify', message: 'Creando hoja…');
     }
+
+    // public function openEdit(int $id): void
+    // {
+    //     $this->resetErrorBag(); $this->resetValidation();
+    //     $hoja = HojaFiltroProduccion::with('filtros:id')->findOrFail($id);
+    //     $this->editId = $hoja->id;
+    //     $this->form = [
+    //         'nombre'=>$hoja->nombre, 'slug'=>$hoja->slug, 'descripcion'=>$hoja->descripcion,
+    //         'role_id'=>$hoja->role_id, 'estados_permitidos'=>$hoja->estados_permitidos ?? [],
+    //         'base_columnas'=>$hoja->base_columnas ?: HojaFiltroProduccion::defaultBaseColumnas(),
+    //         'visible'=>(bool)$hoja->visible, 'orden'=>$hoja->orden,
+    //     ];
+    //     $this->filtro_ids = $hoja->filtros()->pluck('filtros_produccion.id')->all();
+    //     $this->modalOpen = true;
+    //     $this->dispatch('hojas-notify', message: 'Editando hoja.');
+    // }
 
     public function openEdit(int $id): void
     {
         $this->resetErrorBag(); $this->resetValidation();
         $hoja = HojaFiltroProduccion::with('filtros:id')->findOrFail($id);
         $this->editId = $hoja->id;
+
         $this->form = [
             'nombre'=>$hoja->nombre, 'slug'=>$hoja->slug, 'descripcion'=>$hoja->descripcion,
             'role_id'=>$hoja->role_id, 'estados_permitidos'=>$hoja->estados_permitidos ?? [],
             'base_columnas'=>$hoja->base_columnas ?: HojaFiltroProduccion::defaultBaseColumnas(),
             'visible'=>(bool)$hoja->visible, 'orden'=>$hoja->orden,
         ];
+
+        $this->ensureEstadoBaseCol();
+        $this->ensureFechasBaseCols(); // ← NUEVO
+
         $this->filtro_ids = $hoja->filtros()->pluck('filtros_produccion.id')->all();
         $this->modalOpen = true;
         $this->dispatch('hojas-notify', message: 'Editando hoja.');
@@ -402,6 +424,30 @@ class HojaFiltrosCrud extends Component
             ->all();
     }
 
+
+    private function ensureFechasBaseCols(): void
+    {
+        $keys = ['fecha_produccion' => 'F. Producción', 'fecha_embarque' => 'F. Embarque', 'fecha_entrega' => 'F. Entrega'];
+
+        $cols = $this->form['base_columnas'] ?? [];
+        $maxOrden = (int) (collect($cols)->max('orden') ?? 0);
+
+        foreach ($keys as $key => $label) {
+            $existe = collect($cols)->contains(fn($c) => ($c['key'] ?? null) === $key);
+            if (!$existe) {
+                $cols[] = [
+                    'key'     => $key,
+                    'label'   => $label,
+                    'visible' => true,   // visibles por defecto
+                    'fixed'   => false,  // no fijas por defecto (el usuario puede fijarlas)
+                    'orden'   => ++$maxOrden,
+                ];
+            }
+        }
+
+        // normaliza índices
+        $this->form['base_columnas'] = array_values($cols);
+    }
 
     private function ensureEstadoBaseCol(): void
     {

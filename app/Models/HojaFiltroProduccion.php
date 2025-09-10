@@ -59,30 +59,62 @@ protected $casts = [
     }
 
     /** Config por defecto de columnas base */
-    public static function defaultBaseColumnas(): array
-    {
-        // ID y checkbox son siempre mostrados (id se fuerza visible/fijo en la vista)
-        return [
-            ['key' => 'id',      'label' => 'ID',       'visible' => true,  'fixed' => true,  'orden' => 1],
-            ['key' => 'proyecto','label' => 'Proyecto', 'visible' => true,  'fixed' => false, 'orden' => 2],
-            ['key' => 'producto','label' => 'Producto', 'visible' => true,  'fixed' => false, 'orden' => 3],
-            ['key' => 'total',   'label' => 'Total',    'visible' => true,  'fixed' => false, 'orden' => 4],
+public static function defaultBaseColumnas(): array
+{
+    // Siempre presentes
+    $base = [
+        ['key' => 'id',       'label' => 'ID',        'visible' => true,  'fixed' => true,  'orden' => 1],
+        ['key' => 'proyecto', 'label' => 'Proyecto',  'visible' => true,  'fixed' => false, 'orden' => 2],
+        ['key' => 'producto', 'label' => 'Producto',  'visible' => true,  'fixed' => false, 'orden' => 3],
+        ['key' => 'total',    'label' => 'Total',     'visible' => true,  'fixed' => false, 'orden' => 4],
+        ['key' => 'estado',   'label' => 'Estado',    'visible' => true,  'fixed' => false, 'orden' => 5],
+    ];
 
-            // NUEVA: mapea a pedido.estado
-            ['key' => 'estado',  'label' => 'Estado',   'visible' => true,  'fixed' => false, 'orden' => 5],
-        ];
-    }
+    // Añade fechas si no existen
+    $maxOrden = (int) collect($base)->max('orden');
+
+    $add = function (&$arr, string $key, string $label) use (&$maxOrden) {
+        if (!collect($arr)->contains(fn($c) => ($c['key'] ?? null) === $key)) {
+            $arr[] = [
+                'key'     => $key,
+                'label'   => $label,
+                'visible' => true,
+                'fixed'   => false,
+                'orden'   => ++$maxOrden,
+            ];
+        }
+    };
+
+    $add($base, 'fecha_produccion', 'F. Producción');
+    $add($base, 'fecha_embarque',   'F. Embarque');
+    $add($base, 'fecha_entrega',    'F. Entrega');
+
+    return $base;
+}
 
     /** Columnas base normalizadas/ordenadas (Collection) */
     public function columnasBase(): \Illuminate\Support\Collection
     {
-    $cols = collect($this->base_columnas ?: static::defaultBaseColumnas());
+        $cols = collect($this->base_columnas ?: static::defaultBaseColumnas());
 
-    // Si falta 'estado', lo agregamos con orden adecuado
-    if (!$cols->contains(fn($c) => ($c['key'] ?? null) === 'estado')) {
-        $cols->push([ 'key' => 'estado', 'label' => 'Estado', 'visible' => true, 'fixed' => false, 'orden' => 4 ]);
-    }
+        // Asegurar estado y fechas (por compatibilidad hacia atrás)
+        $ensure = function (string $key, string $label) use (&$cols) {
+            if (!$cols->contains(fn($c) => ($c['key'] ?? null) === $key)) {
+                $cols->push([
+                    'key'     => $key,
+                    'label'   => $label,
+                    'visible' => true,
+                    'fixed'   => false,
+                    'orden'   => (int) ($cols->max('orden') ?? 0) + 1,
+                ]);
+            }
+        };
 
-    return $cols->sortBy('orden')->values();
+        $ensure('estado',           'Estado');
+        $ensure('fecha_produccion', 'F. Producción');
+        $ensure('fecha_embarque',   'F. Embarque');
+        $ensure('fecha_entrega',    'F. Entrega');
+
+        return $cols->sortBy('orden')->values();
     }
 }

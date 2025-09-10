@@ -27,11 +27,14 @@ class HojaViewer extends Component
 
     /** Filtros por columna (base) */
     public array $filters = [
-        'id'         => null,
-        'proyecto'   => '',
-        'producto'   => '',
-        'estado_id'  => null,
-        'total'      => '',
+        'id'               => null,
+        'proyecto'         => '',
+        'producto'         => '',
+        'estado_id'        => null,
+        'total'            => '',
+        'fecha_produccion' => null, // <- nuevo
+        'fecha_embarque'   => null, // <- nuevo
+        'fecha_entrega'    => null, // <- nuevo
     ];
 
     /** Filtros por característica (dinámicos del filtro) */
@@ -97,9 +100,10 @@ class HojaViewer extends Component
         }
 
         // Columnas base
-        $columnasBase = collect($hoja->base_columnas ?: HojaFiltroProduccion::defaultBaseColumnas())
-            ->sortBy('orden')->values();
+        // $columnasBase = collect($hoja->base_columnas ?: HojaFiltroProduccion::defaultBaseColumnas())
+        //     ->sortBy('orden')->values();
 
+        $columnasBase = $hoja->columnasBase();
         // Columnas dinámicas del filtro activo
         $columnasFiltro = collect();
         $productoIds = collect();
@@ -149,7 +153,13 @@ class HojaViewer extends Component
             ->when(
                 ($t = trim((string)Arr::get($this->filters, 'total', ''))) !== '',
                 fn($qq) => $qq->where('total', $t) // ajusta a >= si lo prefieres
-            );
+            )
+            ->when(Arr::get($this->filters,'fecha_produccion'),
+                fn($qq,$d)=>$qq->whereDate('fecha_produccion',$d))
+            ->when(Arr::get($this->filters,'fecha_embarque'),
+                fn($qq,$d)=>$qq->whereDate('fecha_embarque',$d))
+            ->when(Arr::get($this->filters,'fecha_entrega'),
+                fn($qq,$d)=>$qq->whereDate('fecha_entrega',$d));
 
         // (Opcional) aplicar filtersCar aquí si quieres filtrar por características específicas
         // ...

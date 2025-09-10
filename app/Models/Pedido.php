@@ -54,6 +54,12 @@ class Pedido extends Model
         'flag_solicitud_aprobar_sin_fechas'
         
     ];
+
+    protected $casts = [
+        'fecha_produccion' => 'date',     // Carbon|null
+        'fecha_embarque'   => 'date',
+        'fecha_entrega'    => 'date',
+    ];
     public function tareasProduccion()
     {
         return $this->belongsToMany(TareaProduccion::class, 'pedido_tarea', 'pedido_id', 'tarea_produccion_id');
