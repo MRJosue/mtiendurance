@@ -99,6 +99,12 @@
         <input class="w-36 sm:w-44 rounded-lg border-gray-300 focus:ring-blue-500"
                placeholder="Proyecto…" wire:model.live.debounce.400ms="filters.proyecto">
     @break
+    
+    @case('cliente')
+        <input class="w-36 sm:w-44 rounded-lg border-gray-300 focus:ring-blue-500"
+            placeholder="Cliente…"
+            wire:model.live.debounce.400ms="filters.cliente">
+    @break
 
     @case('producto')
         <input class="w-36 sm:w-44 rounded-lg border-gray-300 focus:ring-blue-500"
@@ -193,6 +199,7 @@
                                         @switch($bc['key'])
                                             @case('proyecto') {{ $pedido->proyecto->nombre ?? '—' }} @break
                                             @case('producto') {{ $pedido->producto->nombre ?? '—' }} @break
+                                            @case('cliente'){{ $pedido->usuario->name ?? '—' }}@break
                                             @case('estado')   {{ $pedido->estadoPedido->nombre ?? '—' }} @break
                                             @case('total')    {{ number_format((float)($pedido->total ?? 0), 2) }} @break
 

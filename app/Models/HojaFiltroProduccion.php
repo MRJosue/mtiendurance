@@ -65,9 +65,10 @@ public static function defaultBaseColumnas(): array
     $base = [
         ['key' => 'id',       'label' => 'ID',        'visible' => true,  'fixed' => true,  'orden' => 1],
         ['key' => 'proyecto', 'label' => 'Proyecto',  'visible' => true,  'fixed' => false, 'orden' => 2],
-        ['key' => 'producto', 'label' => 'Producto',  'visible' => true,  'fixed' => false, 'orden' => 3],
-        ['key' => 'total',    'label' => 'Total',     'visible' => true,  'fixed' => false, 'orden' => 4],
-        ['key' => 'estado',   'label' => 'Estado',    'visible' => true,  'fixed' => false, 'orden' => 5],
+        ['key' => 'cliente',  'label' => 'Cliente',   'visible' => true,  'fixed' => false, 'orden' => 3], 
+        ['key' => 'producto', 'label' => 'Producto',  'visible' => true,  'fixed' => false, 'orden' => 4],
+        ['key' => 'total',    'label' => 'Total',     'visible' => true,  'fixed' => false, 'orden' => 5],
+        ['key' => 'estado',   'label' => 'Estado',    'visible' => true,  'fixed' => false, 'orden' => 6],
     ];
 
     // Añade fechas si no existen

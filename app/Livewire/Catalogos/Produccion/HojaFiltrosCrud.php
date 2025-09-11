@@ -126,8 +126,9 @@ class HojaFiltrosCrud extends Component
         // roles...
         $this->roles = \Spatie\Permission\Models\Role::query()->orderBy('name')->pluck('name','id')->toArray();
 
-        // estados distinct + nuevos estatus
+        
         $this->hydrateEstadosPermitidos();
+        $this->ensureClienteBaseCol();
     }
 
     public function updatedFormNombre($v): void
@@ -165,6 +166,7 @@ class HojaFiltrosCrud extends Component
         ];
         $this->ensureEstadoBaseCol();
         $this->ensureFechasBaseCols(); 
+        $this->ensureClienteBaseCol();
         $this->filtro_ids = [];
         $this->modalOpen = true;
         $this->dispatch('hojas-notify', message: 'Creando hoja…');
@@ -201,6 +203,7 @@ class HojaFiltrosCrud extends Component
 
         $this->ensureEstadoBaseCol();
         $this->ensureFechasBaseCols(); // ← NUEVO
+        $this->ensureClienteBaseCol();
 
         $this->filtro_ids = $hoja->filtros()->pluck('filtros_produccion.id')->all();
         $this->modalOpen = true;
@@ -521,6 +524,33 @@ class HojaFiltrosCrud extends Component
 
         $this->dispatch('hojas-notify', message: 'Hoja eliminada.');
         $this->resetPage(); // refresca la lista en la página 1
+    }
+
+    private function ensureClienteBaseCol(): void
+    {
+        $cols = $this->form['base_columnas'] ?? [];
+
+        $ix = collect($cols)->search(fn($c) => ($c['key'] ?? null) === 'cliente');
+        if ($ix === false) {
+            $orden = (int) (collect($cols)->max('orden') ?? 0) + 1;
+            // Configurable: visible=true por defecto, fixed=false (usuario decide)
+            $cols[] = [
+                'key'     => 'cliente',
+                'label'   => 'Cliente',
+                'visible' => true,
+                'fixed'   => false,
+                'orden'   => $orden,
+            ];
+            $this->form['base_columnas'] = array_values($cols);
+            return;
+        }
+
+        // Normaliza si ya existía (sin forzarla como fija)
+        $cols[$ix]['label']   = $cols[$ix]['label']   ?? 'Cliente';
+        $cols[$ix]['visible'] = $cols[$ix]['visible'] ?? true;
+        $cols[$ix]['fixed']   = (bool)($cols[$ix]['fixed'] ?? false);
+
+        $this->form['base_columnas'] = array_values($cols);
     }
 }
 

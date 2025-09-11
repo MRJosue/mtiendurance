@@ -30,6 +30,7 @@ class HojaViewer extends Component
         'id'               => null,
         'proyecto'         => '',
         'producto'         => '',
+        'cliente'          => '',
         'estado_id'        => null,
         'total'            => '',
         'fecha_produccion' => null, // <- nuevo
@@ -127,6 +128,7 @@ class HojaViewer extends Component
                 'producto:id,nombre',
                 'proyecto:id,nombre',
                 'estadoPedido:id,nombre',
+                'usuario:id,name',
             ])
             ->soloPedidos()
             ->when($productoIds->isNotEmpty(), fn($qq) => $qq->whereIn('producto_id', $productoIds))
@@ -136,7 +138,8 @@ class HojaViewer extends Component
                 $qq->where(function ($s) use ($term) {
                     $s->whereHas('proyecto', fn($q) => $q->where('nombre', 'like', $term))
                       ->orWhereHas('producto', fn($q) => $q->where('nombre', 'like', $term))
-                      ->orWhereHas('estadoPedido', fn($q) => $q->where('nombre', 'like', $term));
+                      ->orWhereHas('estadoPedido', fn($q) => $q->where('nombre', 'like', $term))
+                      ->orWhereHas('usuario',  fn($q) => $q->where('name',   'like', $term)); 
                 });
             })
             // ---- filtros por columna base ----
@@ -148,6 +151,10 @@ class HojaViewer extends Component
             ->when(
                 ($p = trim((string)Arr::get($this->filters, 'producto', ''))) !== '',
                 fn($qq) => $qq->whereHas('producto', fn($q) => $q->where('nombre', 'like', "%{$this->filters['producto']}%"))
+            )
+            ->when(
+                ($c = trim((string)Arr::get($this->filters, 'cliente', ''))) !== '',
+                fn($qq) => $qq->whereHas('usuario', fn($q) => $q->where('name', 'like', "%{$this->filters['cliente']}%"))
             )
             ->when(Arr::get($this->filters, 'estado_id'), fn($qq, $eid) => $qq->where('estado_id', (int)$eid))
             ->when(
