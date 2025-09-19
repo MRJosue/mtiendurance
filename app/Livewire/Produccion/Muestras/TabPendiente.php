@@ -79,6 +79,8 @@ class TabPendiente extends Component
 
         $this->reset('selected');
 
+        $this->dispatch('dropdown-cerrar');
+
         // Notificar al padre para refrescar contadores
         $this->dispatch('muestraActualizada')
              ->to(\App\Livewire\Produccion\Muestras\AdminMuestrasTabs::class);
@@ -188,6 +190,8 @@ class TabPendiente extends Component
             ];
         })->toArray();
 
+        $this->dispatch('dropdown-cerrar');
+
         $this->modalEstadosOpen = true;
     }
 
@@ -249,6 +253,7 @@ class TabPendiente extends Component
 
         $this->reset('selected');
 
+        $this->dispatch('dropdown-cerrar');
         // Notificar al padre para refrescar contadores
         $this->dispatch('muestraActualizada')
             ->to(\App\Livewire\Produccion\Muestras\AdminMuestrasTabs::class);

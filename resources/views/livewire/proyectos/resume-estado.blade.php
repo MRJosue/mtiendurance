@@ -1,4 +1,4 @@
-<div>
+<div> 
     @if (!$tieneAprobado)
         <div class="p-4 text-gray-500 text-center">
             El proyecto aún no ha sido aprobado.

@@ -114,7 +114,7 @@ class AdministrarTareas extends Component
             $this->mostrarModalConfirmacion = true;
             $this->proyectoPendienteConfirmacion = $tarea->proyecto;
         } else {
-            return redirect()->route('disenio.disenio_detalle', $proyectoId);
+            return redirect()->route('proyecto.show', $proyectoId);
         }
     }
 
@@ -139,7 +139,7 @@ class AdministrarTareas extends Component
         ]);
 
         $this->mostrarModalConfirmacion = false;
-        return redirect()->route('disenio.disenio_detalle', $proyecto->id);
+        return redirect()->route('proyecto.show', $proyecto->id);
     }
 
     public function cancelarConfirmacion()

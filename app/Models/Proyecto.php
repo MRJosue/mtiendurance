@@ -199,8 +199,8 @@ class Proyecto extends Model
         Log::info("Estado actualizado", [
             'proyecto_id' => $this->id,
             'anterior' => $estadoAnterior,
-            'nuevo' => $nuevoEstado,
-            'usuario' => Auth::id(),
+            'nuevo'    => $nuevoEstado,
+            'usuario'  => Auth::id(),
         ]);
 
         return true;

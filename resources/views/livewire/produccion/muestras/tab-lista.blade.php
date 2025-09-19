@@ -1,4 +1,6 @@
-<div x-data="{ selected: @entangle('selected') }" class="container mx-auto p-6">
+<div x-data="{ selected: @entangle('selected') }"
+    x-on:dropdown-cerrar.window="document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }))"
+ class="container mx-auto p-6">
 
     {{-- Filtros minimizables --}}
     @if($mostrarFiltros)
@@ -82,7 +84,7 @@
     </div>
 
     {{-- Tabla --}}
-    <div class="overflow-x-auto bg-white rounded-lg shadow">
+    <div class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8">
         <table class="min-w-full border-collapse border border-gray-200 rounded-lg">
             <thead class="bg-gray-100">
                 <tr>
@@ -101,7 +103,7 @@
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Solicitó</th>
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Instrucciones</th>
 
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Evidencia</th>
+                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Estado</th>
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
                 </tr>
             </thead>
@@ -130,7 +132,12 @@
                                 " />
                         </td>
 
-                        <td class="border-b px-4 py-2">{{ $pedido->proyecto_id }}-{{ $pedido->id }}</td>
+                        <td
+                            class="p-2 px-4 py-2 font-semibold min-w-[4rem]"
+                            title="{{ $pedido->tooltip_clave }}"
+                        >
+                            {!! $pedido->clave_link !!}
+                        </td>
 
                         <td class="border-b px-4 py-2">
                             <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
@@ -158,13 +165,7 @@
                                             <div class="text-xs text-gray-500">Versión: {{ $pedido->archivo->version ?? '-' }}</div>
                                         </div>
                                     </div>
-                                    <div class="relative group shrink-0">
-                                        <x-mini-button rounded icon="clipboard" flat red interaction="negative"
-                                            href="{{ route('proyecto.show', $pedido->proyecto_id) }}" />
-                                        <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition">
-                                            Ir a Diseño
-                                        </div>
-                                    </div>
+
                                 </div>
                             @else
                                 <span class="text-gray-500">Sin archivo</span>
@@ -193,41 +194,33 @@
 
                         {{-- (B) Acciones por fila --}}
                         <td class="border-b px-4 py-2">
-                            <div class="flex flex-wrap items-center gap-2">
-                                {{-- NUEVO: Entregar (por fila) --}}
-                                <div class="relative group">
-                                    <button
-                                        type="button"
-                                        aria-label="Entregar"
-                                        class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400/50"
-                                        wire:click.stop="abrirModalEntregar({{ $pedido->id }})">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M20.285 6.709a1 1 0 010 1.414l-9.192 9.192a1 1 0 01-1.414 0l-4.243-4.243a1 1 0 111.414-1.414l3.536 3.536 8.485-8.485a1 1 0 011.414 0z"/>
-                                        </svg>
-                                        <span class="hidden sm:inline">Entregar</span>
-                                    </button>
-                                    <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition sm:hidden">
-                                        Marcar ENTREGADA
-                                    </div>
-                                </div>
 
-                                {{-- Ver estados (como ya lo tenías) --}}
-                                <div class="relative group">
-                                    <button
-                                        type="button"
-                                        aria-label="Ver estados"
-                                        class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-700 text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400/50"
-                                        wire:click.stop="abrirModalEstados({{ $pedido->id }})">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M12 5c-7.633 0-11 7-11 7s3.367 7 11 7 11-7 11-7-3.367-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/><circle cx="12" cy="12" r="3"/>
-                                        </svg>
-                                        <span class="hidden sm:inline">Ver estados</span>
-                                    </button>
-                                    <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition sm:hidden">
-                                        Ver estados
-                                    </div>
-                                </div>
-                            </div>
+                            <x-dropdown  >
+                                <x-dropdown.item>
+                                    <b 
+                                     
+                                    aria-label="Marcar como SOLICITADA"
+                                    wire:click.stop="abrirModalEntregar({{ $pedido->id }})"
+                                    wire:loading.attr="disabled"
+                                    wire:target="marcarSolicitada">Marcar como Etregada</b>
+                                </x-dropdown.item>
+                            
+                                {{-- <x-dropdown.item separator>
+                                    <b   
+                                        wire:click.stop='cancelarMuestra([{{ $pedido->id }}])'
+                                        wire:loading.attr="disabled"
+                                        wire:target="cancelarMuestra">Cancelar muestra</b>
+                                </x-dropdown.item> --}}
+                            
+                                <x-dropdown.item separator>
+                                    <b 
+                                       
+                                    wire:click.stop="abrirModalEstados({{ $pedido->id }})" >Ver Estados</b>
+                                </x-dropdown.item>
+                            </x-dropdown>
+
+                            
+
                         </td>
                     </tr>
                 @endforeach

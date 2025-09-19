@@ -186,9 +186,9 @@
                             {{-- ID --}}
                             <td
                                 class="p-2 px-4 py-2 font-semibold min-w-[4rem]"
-                                title="Proyecto {{ $pedido->proyecto_id }} - Pedido #{{ $pedido->id }}: {{ $pedido->descripcion_corta }}"
+                                title="{{ $pedido->tooltip_clave }}"
                             >
-                                {{ $pedido->proyecto_id }}-{{ $pedido->id }}
+                                {!! $pedido->clave_link !!}
                             </td>
 
 
@@ -244,6 +244,8 @@
                                     @endif
                                 </td>
                             @endforeach
+
+                            {{-- Aqui irian las acciones --}}
                         </tr>
                     @endforeach
                 @else

@@ -183,7 +183,7 @@ class TabCancelada extends Component
                 'created_at'   => optional($e->created_at)->toDateTimeString(),
             ];
         })->toArray();
-
+        $this->dispatch('dropdown-cerrar');
         $this->modalEstadosOpen = true;
     }
 
@@ -244,6 +244,7 @@ class TabCancelada extends Component
         }
 
         $this->reset('selected');
+        $this->dispatch('dropdown-cerrar');
 
         // Notifica al padre para refrescar contadores (v3 -> dispatch)
         $this->dispatch('muestraActualizada')

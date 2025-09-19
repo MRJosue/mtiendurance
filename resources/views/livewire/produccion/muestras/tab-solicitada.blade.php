@@ -1,5 +1,7 @@
 {{-- resources/views/livewire/admin/muestras/tab-pendiente.blade.php --}}
-<div x-data="{ selected: @entangle('selected') }" class="container mx-auto p-6">
+<div x-data="{ selected: @entangle('selected') }" 
+x-on:dropdown-cerrar.window="document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }))"
+class="container mx-auto p-6">
 
 
     {{-- Filtros minimizables --}}
@@ -87,7 +89,7 @@
     
 
     {{-- Tabla --}}
-    <div class="overflow-x-auto bg-white rounded-lg shadow">
+    <div class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8">
         <table class="min-w-full border-collapse border border-gray-200 rounded-lg">
             <thead class="bg-gray-100">
                 <tr>
@@ -123,7 +125,13 @@
                                 "
                             />
                         </td>
-                        <td class="border-b px-4 py-2">{{ $pedido->proyecto_id }}-{{ $pedido->id }}</td>
+                        
+                       <td
+                            class="p-2 px-4 py-2 font-semibold min-w-[4rem]"
+                            title="{{ $pedido->tooltip_clave }}"
+                        >
+                            {!! $pedido->clave_link !!}
+                        </td>
 
                         <td class="border-b px-4 py-2">
                             <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
@@ -160,20 +168,7 @@
                                         </div>
                                     </div>
 
-                                    {{-- Botón ir a diseño --}}
-                                    <div class="relative group shrink-0">
-                                        <x-mini-button 
-                                            rounded 
-                                            icon="clipboard" 
-                                            flat 
-                                            red 
-                                            interaction="negative"  
-                                            href="{{ route('proyecto.show', $pedido->proyecto_id) }}"  
-                                        />
-                                        <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition">
-                                            Ir a Diseño
-                                        </div>
-                                    </div>
+
                                 </div>
                             @else
                                 <span class="text-gray-500">Sin archivo</span>
@@ -212,54 +207,33 @@
                         </td>
 
 
-                        <td class="border-b px-4 py-2">
-                            <div class="flex flex-wrap items-center gap-2">
-                                {{-- Marcar SOLICITADA --}}
-                                <div class="relative group">
-                                <button
-                                    type="button"
+                        <td class="border-b px-4 py-2 " >
+
+                                <x-dropdown  >
+                                <x-dropdown.item>
+                                    <b 
+                                     
                                     aria-label="Marcar como SOLICITADA"
-                                    class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400/50 disabled:opacity-50 disabled:cursor-not-allowed"
                                     wire:click.stop='marcarSolicitada([{{ $pedido->id }}])'
                                     wire:loading.attr="disabled"
-                                    wire:target="marcarSolicitada"
-                                >
-                                    {{-- icono check --}}
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0L3.293 9.957a1 1 0 111.414-1.414l4 4 6.543-6.543a1 1 0 011.457 0z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <span class="hidden sm:inline">Marcar SOLICITADA</span>
-                                    {{-- spinner mientras corre la acción --}}
-                                    <svg class="ml-1 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" wire:loading wire:target="marcarSolicitada">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
-                                    </svg>
-                                </button>
-                                {{-- tooltip (solo en móviles/estrecho mostramos el texto arriba) --}}
-                                <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition sm:hidden">
-                                    Marcar SOLICITADA
-                                </div>
-                                </div>
+                                    wire:target="marcarSolicitada">Marcar como Lista</b>
+                                </x-dropdown.item>
+                            
+                                {{-- <x-dropdown.item separator>
+                                    <b   
+                                        wire:click.stop='cancelarMuestra([{{ $pedido->id }}])'
+                                        wire:loading.attr="disabled"
+                                        wire:target="cancelarMuestra">Cancelar muestra</b>
+                                </x-dropdown.item> --}}
+                            
+                                <x-dropdown.item separator>
+                                    <b 
+                                       
+                                    wire:click.stop="abrirModalEstados({{ $pedido->id }})" >Ver Estados</b>
+                                </x-dropdown.item>
+                            </x-dropdown>
 
-                                {{-- Ver estados --}}
-                                <div class="relative group">
-                                <button
-                                    type="button"
-                                    aria-label="Ver estados"
-                                    class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-700 text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400/50"
-                                    wire:click.stop="abrirModalEstados({{ $pedido->id }})"
-                                >
-                                    {{-- icono eye --}}
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 5c-7.633 0-11 7-11 7s3.367 7 11 7 11-7 11-7-3.367-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/><circle cx="12" cy="12" r="3"/>
-                                    </svg>
-                                    <span class="hidden sm:inline">Ver estados</span>
-                                </button>
-                                <div class="absolute z-10 w-max left-1/2 -translate-x-1/2 -top-8 px-2 py-1 text-xs bg-gray-800 text-white rounded shadow opacity-0 group-hover:opacity-100 pointer-events-none transition sm:hidden">
-                                    Ver estados
-                                </div>
-                                </div>
-                            </div>
+
                         </td>
                     </tr>
                 @endforeach

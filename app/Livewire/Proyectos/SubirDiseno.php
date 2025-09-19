@@ -17,8 +17,9 @@ use App\Models\PedidoEstado;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\log;
-
+use Illuminate\Support\Facades\Log; 
+use App\Notifications\NuevaNotificacion;
+use Illuminate\Support\Str;
 
 class SubirDiseno extends Component
 {
@@ -53,6 +54,11 @@ class SubirDiseno extends Component
     public $cobrarMuestra;
 
     public ArchivoProyecto|null $ultimoArchivo = null;
+    public bool $archivoDuplicado = false;   // si ya la tenías, se reutiliza
+    public ?string $archivoNombre = null;    // nombre original
+    public ?string $archivoNombreFinal = null; // nombre con sello de tiempo que se usará en el guardado
+
+
 
     // Campos del modal
     public int $cantidadMuestra = 1;
@@ -76,49 +82,57 @@ class SubirDiseno extends Component
     public function subir()
     {
         Log::debug('function subir');
-        Log::debug('function pre validate');
         $this->validate($this->rulesArchivo());
         Log::debug('function validate');
+
+        if ($this->archivoDuplicado) {
+            session()->flash('error', 'Ya existe un archivo con ese nombre final en este proyecto.');
+            return;
+        }
 
         $proyecto = Proyecto::find($this->proyectoId);
         if (!$proyecto) return;
 
-        $path = $this->archivo->store('disenos', 'public');
+        // Aseguramos nombre final determinístico (si por alguna razón no se generó en updatedArchivo)
+        $finalName = $this->archivoNombreFinal ?: $this->construirNombreFinal();
+
+        // Guardar con nombre final
+        $path = $this->archivo->storeAs('disenos', $finalName, 'public');
 
         $archivo = ArchivoProyecto::create([
-            'proyecto_id' => $proyecto->id,
-            'nombre_archivo' => $this->archivo->getClientOriginalName(),
-            'ruta_archivo' => $path,
-            'tipo_archivo' => $this->archivo->getClientMimeType(),
-            'usuario_id' => Auth::id(),
-            'descripcion' => $this->comentario,
-            'tipo_carga' => 1,
+            'proyecto_id'    => $proyecto->id,
+            'nombre_archivo' => $finalName, // <-- nombre con fecha-hora-minuto
+            'ruta_archivo'   => $path,
+            'tipo_archivo'   => $this->archivo->getClientMimeType(),
+            'usuario_id'     => Auth::id(),
+            'descripcion'    => $this->comentario,
+            'tipo_carga'     => 1,
+            'flag_can_delete'=> 1,
         ]);
 
         $proyecto->estado = 'REVISION';
         $proyecto->save();
 
         proyecto_estados::create([
-            'proyecto_id' => $proyecto->id,
-            'estado' => 'REVISION',
-            'comentario' => $this->comentario,
-            'url' => $archivo->ruta_archivo,
-            'fecha_inicio' => now(),
-            'usuario_id' => Auth::id(),
-            'last_uploaded_file_id' => $archivo->id,
+            'proyecto_id'          => $proyecto->id,
+            'estado'               => 'REVISION',
+            'comentario'           => $this->comentario,
+            'url'                  => $archivo->ruta_archivo,
+            'fecha_inicio'         => now(),
+            'usuario_id'           => Auth::id(),
+            'last_uploaded_file_id'=> $archivo->id,
         ]);
 
         Tarea::where('proyecto_id', $proyecto->id)->update(['estado' => 'EN PROCESO']);
 
         $this->registrarEventoEnChat("Se subió un nuevo archivo de diseño y se cambió el estado a REVISION.");
 
-
         $this->dispatch('actualizarMensajes');
         $this->dispatch('estadoActualizado');
         $this->dispatch('archivoSubido');
         $this->cargarEstado();
 
-        $this->reset(['archivo', 'comentario', 'modalOpen']);
+        $this->reset(['archivo', 'comentario', 'modalOpen', 'archivoNombre', 'archivoNombreFinal', 'archivoDuplicado']);
         session()->flash('message', 'Archivo cargado correctamente.');
     }
 
@@ -128,6 +142,11 @@ class SubirDiseno extends Component
         if (!$proyecto) return;
 
         $archivo = ArchivoProyecto::where('proyecto_id', $proyecto->id)->latest()->first();
+        
+        if ($archivo && $archivo->flag_can_delete !== 0) {
+            $archivo->update(['flag_can_delete' => 0]);
+        }
+
 
         $nombre = auth()->user()->name;
         
@@ -171,6 +190,9 @@ class SubirDiseno extends Component
 
         $archivo = ArchivoProyecto::where('proyecto_id', $proyecto->id)->latest()->first();
 
+        if ($archivo && $archivo->flag_can_delete !== 0) {
+            $archivo->update(['flag_can_delete' => 0]);
+        }
         // $proyecto->estado = 'EN PROCESO';
         $proyecto->estado = 'DISEÑO RECHAZADO';
         $proyecto->save();
@@ -237,6 +259,8 @@ class SubirDiseno extends Component
         }
     
         $archivo = ArchivoProyecto::where('proyecto_id', $proyecto->id)->latest()->first();
+
+        
     
         if (!$archivo) {
             session()->flash('error', 'No puedes crear una muestra sin haber cargado al menos un archivo de diseño.');
@@ -288,6 +312,11 @@ class SubirDiseno extends Component
             'cobrar_muestra' => $cobrarMuestra, 
             'estatusMuestra' => $estatusMuestra
         ]);
+
+
+        if ($archivo && $archivo->flag_can_delete !== 0) {
+            $archivo->update(['flag_can_delete' => 0]);
+        }
 
 
         $this->modalConfirmarMuestra = false;
@@ -486,47 +515,55 @@ class SubirDiseno extends Component
     public function subirArchivoDiseno()
     {
         $this->validate([
-            'archivo' => 'required|file|max:10240',
-            'comentario' => 'nullable|string|max:500',
+            'archivo'   => 'required|file|max:10240',
+            'comentario'=> 'nullable|string|max:500',
         ]);
+
+        if ($this->archivoDuplicado) {
+            session()->flash('error', 'Ya existe un archivo con ese nombre final en este proyecto.');
+            return;
+        }
 
         $proyecto = Proyecto::find($this->proyectoId);
         if (!$proyecto) return;
 
-        $path = $this->archivo->store('disenos', 'public');
+        $finalName = $this->archivoNombreFinal ?: $this->construirNombreFinal();
+        $path = $this->archivo->storeAs('disenos', $finalName, 'public');
 
         ArchivoProyecto::create([
-            'proyecto_id' => $proyecto->id,
-            'nombre_archivo' => $this->archivo->getClientOriginalName(),
-            'ruta_archivo' => $path,
-            'tipo_archivo' => $this->archivo->getClientMimeType(),
-            'usuario_id' => Auth::id(),
-            'descripcion' => $this->comentario,
-            'tipo_carga' => 1,
+            'proyecto_id'    => $proyecto->id,
+            'nombre_archivo' => $finalName, // <-- nombre con fecha-hora-minuto
+            'ruta_archivo'   => $path,
+            'tipo_archivo'   => $this->archivo->getClientMimeType(),
+            'usuario_id'     => Auth::id(),
+            'descripcion'    => $this->comentario,
+            'tipo_carga'     => 1,
+            'flag_can_delete'=> 1,
         ]);
 
         $archivo = ArchivoProyecto::where('proyecto_id', $proyecto->id)->latest('id')->first();
         $totalArchivos = ArchivoProyecto::where('proyecto_id', $proyecto->id)->count();
-        
+
         $comentarioEstado = $totalArchivos > 1
             ? 'El cliente ha actualizado el archivo de arte del proyecto'
             : 'El cliente ha cargado el primer arte del proyecto';
 
-        $AuxEstado = $totalArchivos > 1
-        ? 'ARTE CARGADO'
-        : 'PRIMER ARTE CARGADO';
-        
+        $AuxEstado = $totalArchivos > 1 ? 'ARTE CARGADO' : 'PRIMER ARTE CARGADO';
+
         proyecto_estados::create([
-            'proyecto_id' => $proyecto->id,
-            'estado' => $AuxEstado,
-            'comentario' => $comentarioEstado,
-            'url' => $archivo?->ruta_archivo,
-            'fecha_inicio' => now(),
-            'usuario_id' => Auth::id(),
-            'last_uploaded_file_id' => $archivo?->id,
+            'proyecto_id'          => $proyecto->id,
+            'estado'               => $AuxEstado,
+            'comentario'           => $comentarioEstado,
+            'url'                  => $archivo?->ruta_archivo,
+            'fecha_inicio'         => now(),
+            'usuario_id'           => Auth::id(),
+            'last_uploaded_file_id'=> $archivo?->id,
         ]);
 
-        $this->reset(['archivo', 'comentario', 'modalSubirArchivoDiseno']);
+        $this->reset([
+            'archivo', 'comentario', 'modalSubirArchivoDiseno',
+            'archivoNombre', 'archivoNombreFinal', 'archivoDuplicado'
+        ]);
         $this->dispatch('archivoSubido');
         session()->flash('message', 'Archivo de diseño cargado correctamente.');
     }
@@ -539,6 +576,94 @@ class SubirDiseno extends Component
                 ->where('tipo_carga', 1)
                 ->latest('id')
                 ->first();
+        }
+    }
+
+    private function construirNombreFinal(): ?string
+    {
+        if (!$this->archivo) {
+            return null;
+        }
+
+        $timestamp = now()->format('Ymd_Hi'); // 20250918_1142
+        $original  = $this->archivo->getClientOriginalName();
+        $base      = pathinfo($original, PATHINFO_FILENAME);
+        $ext       = $this->archivo->getClientOriginalExtension();
+
+        // slug del nombre base (sin extensión), con guion bajo
+        $baseSlug  = Str::slug($base, '_');
+        // limitar un poco el largo del base para rutas amigables
+        $baseSlug  = Str::limit($baseSlug, 80, '');
+
+        return $ext
+            ? "{$baseSlug}_{$timestamp}.{$ext}"
+            : "{$baseSlug}_{$timestamp}";
+    }
+
+
+
+    public function updatedArchivo(): void
+    {
+        $this->archivoDuplicado = false;
+        $this->archivoNombre    = null;
+        $this->archivoNombreFinal = null;
+
+        if (!$this->archivo || !$this->proyectoId) {
+            return;
+        }
+
+        $this->archivoNombre      = $this->archivo->getClientOriginalName();
+        $this->archivoNombreFinal = $this->construirNombreFinal();
+
+        // Si quieres bloquear por duplicado exacto del nombre FINAL (con timestamp),
+        // esto casi nunca ocurrirá. Lo dejamos por si hay almacenamiento repetido en el mismo minuto.
+        $this->archivoDuplicado = \App\Models\ArchivoProyecto::where('proyecto_id', $this->proyectoId)
+            ->where('nombre_archivo', $this->archivoNombreFinal)
+            ->exists();
+    }
+
+
+    public function notificarEstatus(): void
+    {
+        try {
+            // (Opcional) refuerzo de autorización además del @can en Blade
+            // if (!auth()->user()?->can('notificaralclienteproyecto')) {
+            //     session()->flash('error', 'No tienes permisos para notificar al cliente.');
+            //     return;
+            // }
+
+            $proyecto = Proyecto::with(['user'])->find($this->proyectoId);
+            if (!$proyecto) {
+                session()->flash('error', 'Proyecto no encontrado.');
+                return;
+            }
+
+            // 1) Notificar al usuario creador del proyecto
+            $destinatario = $proyecto->user; // <- relación correcta del modelo
+            if ($destinatario) {
+                $liga = route('proyecto.show', $proyecto->id);
+                $mensaje = "Tu proyecto #{$proyecto->id} cambió de estatus a {$proyecto->estado}. Revisa las novedades del diseño.";
+                $destinatario->notify(new NuevaNotificacion($mensaje, $liga));
+            } else {
+                Log::warning('Proyecto sin usuario asociado', ['proyecto_id' => $proyecto->id]);
+            }
+
+            // 2) Proteger archivos: poner en 0 todos los que estén en 1
+            \App\Models\ArchivoProyecto::where('proyecto_id', $proyecto->id)
+                ->where('flag_can_delete', 1)
+                ->update(['flag_can_delete' => 0]);
+
+            // 3) Registrar en chat/historial (tu helper existente)
+            $this->registrarEventoEnChat('Se notificó al cliente sobre el estatus del proyecto y se protegieron los archivos (flag_can_delete = 0).');
+
+            // 4) Refrescar UI
+            $this->dispatch('actualizarMensajes');
+            $this->dispatch('estadoActualizado');
+
+            session()->flash('message', 'Notificación enviada y archivos protegidos correctamente.');
+        } catch (\Throwable $e) {
+            Log::error('Error al notificar estatus', ['error' => $e->getMessage()]);
+            session()->flash('error', 'Ocurrió un error al notificar el estatus.');
         }
     }
 

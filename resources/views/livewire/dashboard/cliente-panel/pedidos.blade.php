@@ -122,10 +122,11 @@
                 <tbody class="text-xs">
                     @forelse($pedidos as $pedido)
                         <tr class="hover:bg-gray-50">
-                            <td class="px-2 py-1 font-semibold"
-                            title="Proyecto {{ $pedido->proyecto_id }} – Pedido #{{ $pedido->id }}: {{ $pedido->descripcion_corta }}"
+                            <td
+                                class="p-2 px-4 py-2 font-semibold min-w-[4rem]"
+                                title="{{ $pedido->tooltip_clave }}"
                             >
-                            {{ $pedido->proyecto_id }}-{{ $pedido->id }}
+                                {!! $pedido->clave_link !!}
                             </td>
                             <td class="px-2 py-1 font-bold">{{$pedido->proyecto->nombre}}</td>
                             <td class="px-2 py-1 font-bold">{{$pedido->usuario->name ?? 'Sin cliente'}}</td>

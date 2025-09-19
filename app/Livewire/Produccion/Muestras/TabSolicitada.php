@@ -76,6 +76,7 @@ class TabSolicitada extends Component
         }
 
         $this->reset('selected');
+        $this->dispatch('dropdown-cerrar');
 
         // Notificar al padre para refrescar contadores (dispatch en v3)
         $this->dispatch('muestraActualizada')
@@ -184,6 +185,8 @@ class TabSolicitada extends Component
                 'created_at'   => optional($e->created_at)->toDateTimeString(),
             ];
         })->toArray();
+
+        $this->dispatch('dropdown-cerrar');
 
         $this->modalEstadosOpen = true;
     }

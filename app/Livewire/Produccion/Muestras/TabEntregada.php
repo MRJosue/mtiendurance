@@ -187,6 +187,8 @@ class TabEntregada extends Component
             ];
         })->toArray();
 
+        $this->dispatch('dropdown-cerrar');
+
         $this->modalEstadosOpen = true;
     }
 

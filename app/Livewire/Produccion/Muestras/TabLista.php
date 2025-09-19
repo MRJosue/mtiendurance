@@ -92,6 +92,7 @@ class TabLista extends Component
     public function abrirModalEntregarSeleccion(): void
     {
         $ids = array_values($this->selected);
+               $this->dispatch('dropdown-cerrar');
         if (count($ids) !== 1) {
             $this->dispatch('notify', type: 'warning', message: 'Selecciona exactamente un pedido.');
             return;
@@ -108,6 +109,8 @@ class TabLista extends Component
             $this->dispatch('notify', type: 'warning', message: 'El pedido ya está ENTREGADA.');
             return;
         }
+
+        $this->dispatch('dropdown-cerrar');
 
         $this->resetValidation();
         $this->reset(['evidencia']);
@@ -175,9 +178,12 @@ class TabLista extends Component
 
         // 4) Cerrar modal y refrescar
         $this->cerrarModalEntregar();
+
         $this->dispatch('muestraActualizada')
              ->to(\App\Livewire\Produccion\Muestras\AdminMuestrasTabs::class);
         $this->dispatch('refresh')->self();
+
+
     }
 
     /* ============== Estados (igual que tenías) ============== */
@@ -201,7 +207,7 @@ class TabLista extends Component
                 'created_at'   => optional($e->created_at)->toDateTimeString(),
             ];
         })->toArray();
-
+        $this->dispatch('dropdown-cerrar');
         $this->modalEstadosOpen = true;
     }
 

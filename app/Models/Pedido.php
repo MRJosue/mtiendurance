@@ -440,7 +440,7 @@ class Pedido extends Model
          return "{$this->proyecto_id}-{$this->id}";
     }
 
-        public function getTooltipClaveAttribute(): string
+    public function getTooltipClaveAttribute(): string
     {
         $desc = $this->descripcion_corta ?? '';
         return "Proyecto {$this->proyecto_id} - Pedido #{$this->id}: {$desc}";
@@ -466,4 +466,32 @@ class Pedido extends Model
             ->where('tipo_carga', 3)
             ->ofMany('id', 'max'); // <- sin closure como 3er arg
     }
+
+    // App/Models/Pedido.php
+
+    // URL al proyecto (route helper)
+    public function getProyectoUrlAttribute(): string
+    {
+        return $this->proyecto_id
+            ? route('proyecto.show', $this->proyecto_id)
+            : '#';
+    }
+
+    // Anchor listo para usarse en la celda (con título y texto "proyecto-pedido")
+    public function getClaveLinkAttribute(): string
+    {
+        if (!$this->proyecto_id) {
+            return e("{$this->proyecto_id}-{$this->id}");
+        }
+
+        $href  = route('proyecto.show', $this->proyecto_id);
+        $texto = "{$this->proyecto_id}-{$this->id}";
+
+        return sprintf(
+            '<a href="%s" class="text-blue-600 hover:underline">%s</a>',
+            e($href),
+            e($texto)
+        );
+    }
+
 }

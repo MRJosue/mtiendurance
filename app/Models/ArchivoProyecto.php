@@ -20,6 +20,7 @@ class ArchivoProyecto extends Model
         'tipo_archivo',
         'tipo_carga',
         'flag_descarga',
+        'flag_can_delete',
         'usuario_id',
         'descripcion',
         'version',

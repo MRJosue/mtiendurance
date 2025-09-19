@@ -22,3 +22,4 @@ INSERT INTO `permissions` (`id`, `name`, `guard_name`, `created_at`, `updated_at
 INSERT INTO `permissions` (`id`, `name`, `guard_name`, `created_at`, `updated_at`) VALUES (50, 'asideAdministraciónMuestrasTabPendiente', 'web', '2025-08-19 11:26:24', '2025-08-19 11:26:24');
 
 
+

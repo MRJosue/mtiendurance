@@ -136,9 +136,11 @@
                     <td class="px-2 py-1 border">
                         <input type="checkbox" wire:model="selectedPedidos" value="{{ $pedido->id }}" />
                     </td>
-                    <td class="px-2 py-1 font-semibold border"
-                        title="Proyecto {{ $pedido->proyecto_id }} – Pedido #{{ $pedido->id }}: {{ $pedido->descripcion_corta }}">
-                        {{ $pedido->proyecto_id }}-{{ $pedido->id }}
+                    <td
+                        class="p-2 px-4 py-2 font-semibold min-w-[4rem]"
+                        title="{{ $pedido->tooltip_clave }}"
+                    >
+                        {!! $pedido->clave_link !!}
                     </td>
                     <td class="px-2 py-1 border">
                         <div class="font-medium text-sm">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
