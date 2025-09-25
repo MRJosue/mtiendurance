@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
 class HojaFiltroProduccion extends Model
 {
     use HasFactory;
@@ -17,16 +18,18 @@ class HojaFiltroProduccion extends Model
         'descripcion',
         'role_id',
         'estados_permitidos',
+        'estados_diseno_permitidos',
         'base_columnas',
         'visible',
         'orden',
     ];
 
-protected $casts = [
-    'estados_permitidos' => 'array',
-    'base_columnas'      => 'array',
-    'visible'            => 'boolean',
-];
+    protected $casts = [
+        'estados_permitidos' => 'array',
+        'estados_diseno_permitidos' => 'array',
+        'base_columnas'      => 'array',
+        'visible'            => 'boolean',
+    ];
 
     /** Filtros (pestañas) asignados a la hoja */
     public function filtros()
@@ -62,35 +65,37 @@ protected $casts = [
 public static function defaultBaseColumnas(): array
 {
     // Siempre presentes
-    $base = [
-        ['key' => 'id',       'label' => 'ID',        'visible' => true,  'fixed' => true,  'orden' => 1],
-        ['key' => 'proyecto', 'label' => 'Proyecto',  'visible' => true,  'fixed' => false, 'orden' => 2],
-        ['key' => 'cliente',  'label' => 'Cliente',   'visible' => true,  'fixed' => false, 'orden' => 3], 
-        ['key' => 'producto', 'label' => 'Producto',  'visible' => true,  'fixed' => false, 'orden' => 4],
-        ['key' => 'total',    'label' => 'Total',     'visible' => true,  'fixed' => false, 'orden' => 5],
-        ['key' => 'estado',   'label' => 'Estado',    'visible' => true,  'fixed' => false, 'orden' => 6],
-    ];
+        $base = [
+            ['key' => 'id',       'label' => 'ID',        'visible' => true,  'fixed' => true,  'orden' => 1],
+            ['key' => 'proyecto', 'label' => 'Proyecto',  'visible' => true,  'fixed' => false, 'orden' => 2],
+            ['key' => 'cliente',  'label' => 'Cliente',   'visible' => true,  'fixed' => false, 'orden' => 3],
+            ['key' => 'producto', 'label' => 'Producto',  'visible' => true,  'fixed' => false, 'orden' => 4],
+            ['key' => 'total',    'label' => 'Total',     'visible' => true,  'fixed' => false, 'orden' => 5],
+            ['key' => 'estado',   'label' => 'Estado',    'visible' => true,  'fixed' => false, 'orden' => 6],
+            ['key' => 'estado_disenio', 'label' => 'Estado Diseño', 'visible' => true, 'fixed' => false, 'orden' => 7],
+        ];
+
 
     // Añade fechas si no existen
-    $maxOrden = (int) collect($base)->max('orden');
+        $maxOrden = (int) collect($base)->max('orden');
 
-    $add = function (&$arr, string $key, string $label) use (&$maxOrden) {
-        if (!collect($arr)->contains(fn($c) => ($c['key'] ?? null) === $key)) {
-            $arr[] = [
-                'key'     => $key,
-                'label'   => $label,
-                'visible' => true,
-                'fixed'   => false,
-                'orden'   => ++$maxOrden,
-            ];
-        }
-    };
+        $add = function (&$arr, string $key, string $label) use (&$maxOrden) {
+            if (!collect($arr)->contains(fn($c) => ($c['key'] ?? null) === $key)) {
+                $arr[] = [
+                    'key'     => $key,
+                    'label'   => $label,
+                    'visible' => true,
+                    'fixed'   => false,
+                    'orden'   => ++$maxOrden,
+                ];
+            }
+        };
 
-    $add($base, 'fecha_produccion', 'F. Producción');
-    $add($base, 'fecha_embarque',   'F. Embarque');
-    $add($base, 'fecha_entrega',    'F. Entrega');
+        $add($base, 'fecha_produccion', 'F. Producción');
+        $add($base, 'fecha_embarque',   'F. Embarque');
+        $add($base, 'fecha_entrega',    'F. Entrega');
 
-    return $base;
+        return $base;
 }
 
     /** Columnas base normalizadas/ordenadas (Collection) */
@@ -112,6 +117,7 @@ public static function defaultBaseColumnas(): array
         };
 
         $ensure('estado',           'Estado');
+        $ensure('estado_disenio',   'Estado Diseño'); 
         $ensure('fecha_produccion', 'F. Producción');
         $ensure('fecha_embarque',   'F. Embarque');
         $ensure('fecha_entrega',    'F. Entrega');

@@ -71,6 +71,16 @@ class Proyecto extends Model
         ];
 
 
+        protected static array $estadosDiseno = [
+            'PENDIENTE',
+            'ASIGNADO',
+            'EN PROCESO',
+            'REVISION',
+            'DISEÑO APROBADO',
+            'DISEÑO RECHAZADO',
+            'CANCELADO',
+        ];
+
     public function user()
     {
         return $this->belongsTo(User::class, 'usuario_id');
@@ -124,6 +134,12 @@ class Proyecto extends Model
         return $this->hasMany(proyecto_estados::class, 'proyecto_id');
     }
 
+        public static function estadosDiseno(): array
+    {
+        return self::$estadosDiseno;
+    }
+
+    
     public function tareas()
     {
         return $this->hasMany(Tarea::class, 'proyecto_id');

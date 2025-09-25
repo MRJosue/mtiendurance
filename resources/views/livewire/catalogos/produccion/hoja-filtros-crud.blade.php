@@ -148,6 +148,7 @@
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-600">Label</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-600">Visible</th>
                                 <th class="px-3 py-2 text-left text-xs font-medium text-gray-600">Fija</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-600">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y">
@@ -174,6 +175,24 @@
                                             wire:model.live="form.base_columnas.{{ $i }}.fixed"
                                             @disabled(($c['key'] ?? '')==='id')>
                                     </td>
+
+                                    <td class="px-3 py-2">
+                                        <div class="flex items-center gap-1">
+                                        {{-- ↑ subir --}}
+                                        <button type="button"
+                                                class="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-40"
+                                                wire:click="baseColUp({{ $i }})"
+                                                @disabled($i === 0 || (($c['key'] ?? '') === 'id'))
+                                                title="Arriba">↑</button>
+
+                                        {{-- ↓ bajar --}}
+                                        <button type="button"
+                                                class="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-40"
+                                                wire:click="baseColDown({{ $i }})"
+                                                @disabled($i === (count($form['base_columnas']) - 1) || (($c['key'] ?? '') === 'id'))
+                                                title="Abajo">↓</button>
+                                        </div>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -196,24 +215,37 @@
                             class="w-40 rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
                             placeholder="Buscar…">
                     </div>
-                    <div class="max-h-72 overflow-y-auto rounded-lg border p-2">
-                        @foreach($filtros as $f)
-                            <template x-if="'{{ Str::lower($f->nombre) }}'.includes(filtroSearch.toLowerCase())">
-                                <label class="flex items-center gap-2 py-1">
-                                    <input type="checkbox" class="rounded border-gray-300"
-                                        value="{{ $f->id }}"
-                                        @checked(in_array($f->id, $filtro_ids))
-                                        @change="$event.target.checked
-                                                ? @this.filtro_ids.push({{ $f->id }})
-                                                : @this.filtro_ids = @this.filtro_ids.filter(i => i !== {{ $f->id }})">
-                                    <span class="text-sm text-gray-700">{{ $f->nombre }}</span>
-                                </label>
-                            </template>
-                        @endforeach
-                        @if($filtros->isEmpty())
-                            <div class="text-sm text-gray-500">No hay filtros aún.</div>
-                        @endif
-                    </div>
+                        {{-- Filtros disponibles --}}
+                        <div class="max-h-72 overflow-y-auto rounded-lg border p-2">
+                            @foreach($filtros as $f)
+                                <template x-if="'{{ Str::lower($f->nombre) }}'.includes(filtroSearch.toLowerCase())">
+                                    <div class="flex items-center justify-between py-1">
+                                        <label class="flex items-center gap-2">
+                                            <input type="checkbox" class="rounded border-gray-300"
+                                                value="{{ $f->id }}"
+                                                @checked(in_array($f->id, $filtro_ids))
+                                                @change="$event.target.checked
+                                                        ? @this.filtro_ids.push({{ $f->id }})
+                                                        : @this.filtro_ids = @this.filtro_ids.filter(i => i !== {{ $f->id }})">
+                                            <span class="text-sm text-gray-700">{{ $f->nombre }}</span>
+                                        </label>
+
+                                        <button
+                                            type="button"
+                                            class="text-blue-600 hover:underline text-xs"
+                                            x-on:click="$wire.dispatch('editar-filtro', { id: {{ $f->id }} })"
+                                            title="Editar filtro"
+                                        >
+                                            Editar
+                                        </button>
+                                    </div>
+                                </template>
+                            @endforeach
+                            @if($filtros->isEmpty())
+                                <div class="text-sm text-gray-500">No hay filtros aún.</div>
+                            @endif
+                        </div>
+
 
                     <div class="mt-3">
                         <button class="px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
@@ -223,24 +255,33 @@
                     </div>
                 </div>
 
+
+                
                 <div>
                     <label class="text-sm font-medium text-gray-700 mb-2 block">Orden de pestañas</label>
-                    <div class="max-h-72 overflow-y-auto rounded-lg border divide-y">
-                        @forelse($filtro_ids as $idx => $fid)
-                            @php $fn = \App\Models\FiltroProduccion::find($fid)?->nombre ?? "Filtro #$fid"; @endphp
-                            <div class="flex items-center justify-between px-2 py-2">
-                                <span class="text-sm text-gray-700">{{ $fn }}</span>
-                                <div class="flex gap-1">
-                                    <button type="button" class="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200"
-                                            wire:click="moveUpAssign({{ $idx }})" title="Arriba">↑</button>
-                                    <button type="button" class="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200"
-                                            wire:click="moveDownAssign({{ $idx }})" title="Abajo">↓</button>
+
+                        <div class="max-h-72 overflow-y-auto rounded-lg border divide-y">
+                            @forelse($filtro_ids as $idx => $fid)
+                                @php $fn = \App\Models\FiltroProduccion::find($fid)?->nombre ?? "Filtro #$fid"; @endphp
+                                <div class="flex items-center justify-between px-2 py-2">
+                                    <span class="text-sm text-gray-700">{{ $fn }}</span>
+
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" class="text-blue-600 hover:underline text-xs"
+                                            x-on:click="$wire.dispatch('editar-filtro', { id: {{ $fid }} })">
+                                            Editar
+                                        </button>
+
+                                        <button type="button" class="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200"
+                                                wire:click="moveUpAssign({{ $idx }})" title="Arriba">↑</button>
+                                        <button type="button" class="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200"
+                                                wire:click="moveDownAssign({{ $idx }})" title="Abajo">↓</button>
+                                    </div>
                                 </div>
-                            </div>
-                        @empty
-                            <div class="px-2 py-3 text-sm text-gray-500">Sin filtros asignados.</div>
-                        @endforelse
-                    </div>
+                            @empty
+                                <div class="px-2 py-3 text-sm text-gray-500">Sin filtros asignados.</div>
+                            @endforelse
+                        </div>
                 </div>
             </div>
 
@@ -260,25 +301,46 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Estatus de pedidos permitidos</label>
-                        <div class="mt-1 rounded-lg border p-2 max-h-40 overflow-y-auto">
-                            @forelse($estados as $e)
-                                <label class="inline-flex items-center gap-2 mr-3 mb-2">
-                                    <input type="checkbox" class="rounded border-gray-300"
-                                        value="{{ $e['id'] }}"
-                                        @checked(in_array($e['id'], $form['estados_permitidos'] ?? []))
-                                        @change="$event.target.checked
-                                            ? @this.form.estados_permitidos.push({{ $e['id'] }})
-                                            : @this.form.estados_permitidos = @this.form.estados_permitidos.filter(x => x !== {{ $e['id'] }})">
-                                    <span class="text-sm text-gray-700">{{ $e['nombre'] }}</span>
-                                </label>
-                            @empty
-                                <span class="text-sm text-gray-500">No hay estados en el catálogo.</span>
-                            @endforelse
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Estatus de pedidos permitidos</label>
+                            <div class="mt-1 rounded-lg border p-2 max-h-40 overflow-y-auto">
+                                @forelse($estados as $e)
+                                    <label class="inline-flex items-center gap-2 mr-3 mb-2">
+                                        <input type="checkbox" class="rounded border-gray-300"
+                                            value="{{ $e['id'] }}"
+                                            @checked(in_array($e['id'], $form['estados_permitidos'] ?? []))
+                                            @change="$event.target.checked
+                                                ? @this.form.estados_permitidos.push({{ $e['id'] }})
+                                                : @this.form.estados_permitidos = @this.form.estados_permitidos.filter(x => x !== {{ $e['id'] }})">
+                                        <span class="text-sm text-gray-700">{{ $e['nombre'] }}</span>
+                                    </label>
+                                @empty
+                                    <span class="text-sm text-gray-500">No hay estados en el catálogo.</span>
+                                @endforelse
+                            </div>
+                            @error('form.estados_permitidos') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            <p class="text-xs text-gray-500 mt-1">Si no seleccionas ninguno, se mostrarán <em>todos</em> los estatus.</p>
                         </div>
-                        @error('form.estados_permitidos') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                        <p class="text-xs text-gray-500 mt-1">Si no seleccionas ninguno, se mostrarán <em>todos</em> los estatus.</p>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mt-4">Estatus de Diseños permitidos</label>
+                            <div class="mt-1 rounded-lg border p-2 max-h-40 overflow-y-auto">
+                                @foreach($this->estadosDiseno as $status)
+                                    <label class="inline-flex items-center gap-2 mr-3 mb-2">
+                                        <input type="checkbox" class="rounded border-gray-300"
+                                            value="{{ $status }}"
+                                            @checked(in_array($status, $form['estados_diseno_permitidos'] ?? []))
+                                            @change="$event.target.checked
+                                                    ? @this.form.estados_diseno_permitidos.push('{{ $status }}')
+                                                    : @this.form.estados_diseno_permitidos = @this.form.estados_diseno_permitidos.filter(x => x !== '{{ $status }}')">
+                                        <span class="text-sm text-gray-700">{{ $status }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                            @error('form.estados_diseno_permitidos') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            <p class="text-xs text-gray-500 mt-1">Si no seleccionas ninguno, se mostrarán <em>todos</em> los estatus de diseño.</p>
+                        </div>
                     </div>
+
                 </div>
             </div>
 
@@ -305,12 +367,13 @@
             {{-- Header --}}
             <div class="flex items-start justify-between">
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-900">Nuevo filtro de producción</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        {{ $filtroEditId ? 'Editar filtro de producción' : 'Nuevo filtro de producción' }}
+                    </h3>
                     <p class="text-sm text-gray-500 mt-1">Configura datos, productos y columnas.</p>
                 </div>
                 <button class="ml-4 text-gray-500 hover:text-gray-700" @click="open=false">✕</button>
             </div>
-
             {{-- Tabs --}}
             <div class="mt-4 border-b">
                 <nav class="flex flex-wrap -mb-px gap-2">
@@ -518,8 +581,13 @@
             {{-- Footer --}}
             <div class="mt-6 flex justify-end gap-2">
                 <button class="px-4 py-2 rounded-lg border" @click="open=false">Cancelar</button>
-                <button class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
-                        wire:click="saveFiltro">Crear filtro</button>
+
+                <button
+                    class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+                    wire:click="{{ $filtroEditId ? 'updateFiltro' : 'saveFiltro' }}"
+                >
+                    {{ $filtroEditId ? 'Guardar cambios' : 'Crear filtro' }}
+                </button>
             </div>
         </div>
     </div>

@@ -6,6 +6,7 @@ use App\Models\Caracteristica;
 use App\Models\FiltroProduccion;
 use App\Models\HojaFiltroProduccion;
 use App\Models\Producto;
+use App\Models\Proyecto;
 use App\Models\EstadoPedido;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -34,6 +35,7 @@ class HojaFiltrosCrud extends Component
         'descripcion' => '',
         'role_id' => null,
         'estados_permitidos' => [],
+        'estados_diseno_permitidos' => [], // ← NUEVO
         'base_columnas' => [],
         'visible' => true,
         'orden' => null,
@@ -43,6 +45,7 @@ class HojaFiltrosCrud extends Component
     public array $filtro_ids = []; // filtros incluidos en la hoja (ordenados)
     public array $roles = [];      // para selector (id=>name)
     public array $estados = [];    // para multiselect (distinct pedidos.estado)
+    public array $estadosDiseno = [];
 
     /* ===============================
      * MODAL INLINE: CREAR NUEVO FILTRO
@@ -76,6 +79,8 @@ class HojaFiltrosCrud extends Component
     public bool $confirmDeleteOpen = false;
     public ?int $deleteId = null;
 
+    public ?int $filtroEditId = null;
+
     protected function rules(): array
     {
         return [
@@ -87,6 +92,10 @@ class HojaFiltrosCrud extends Component
             'form.role_id' => ['nullable','integer','exists:roles,id'],
             'form.estados_permitidos'   => ['array'],
             'form.estados_permitidos.*' => ['integer','exists:estados_pedido,id'],
+
+            'form.estados_diseno_permitidos'   => ['array'],
+            'form.estados_diseno_permitidos.*' => [Rule::in($this->estadosDiseno)],
+
             'form.base_columnas' => ['array'],
             'form.visible' => ['boolean'],
             'form.orden' => ['nullable','integer','min:0'],
@@ -121,14 +130,15 @@ class HojaFiltrosCrud extends Component
     public function mount(): void
     {
         $this->form['base_columnas'] = \App\Models\HojaFiltroProduccion::defaultBaseColumnas();
-        $this->ensureEstadoBaseCol();
-        $this->ensureFechasBaseCols();
-        // roles...
-        $this->roles = \Spatie\Permission\Models\Role::query()->orderBy('name')->pluck('name','id')->toArray();
 
-        
-        $this->hydrateEstadosPermitidos();
+        $this->ensureEstadoBaseCol();
+        $this->ensureEstadoDisenioBaseCol(); // ← NUEVO
+        $this->ensureFechasBaseCols();
         $this->ensureClienteBaseCol();
+
+        $this->roles = \Spatie\Permission\Models\Role::query()->orderBy('name')->pluck('name','id')->toArray();
+        $this->hydrateEstadosPermitidos();     // pedidos
+        $this->estadosDiseno = Proyecto::estadosDiseno();
     }
 
     public function updatedFormNombre($v): void
@@ -161,32 +171,21 @@ class HojaFiltrosCrud extends Component
         $this->form = [
             'nombre'=>'','slug'=>'','descripcion'=>'','role_id'=>null,
             'estados_permitidos'=>[],
+            'estados_diseno_permitidos'=>[],
             'base_columnas'=>\App\Models\HojaFiltroProduccion::defaultBaseColumnas(),
             'visible'=>true, 'orden'=>null,
         ];
         $this->ensureEstadoBaseCol();
         $this->ensureFechasBaseCols(); 
         $this->ensureClienteBaseCol();
+        $this->normalizeBaseCols();
         $this->filtro_ids = [];
         $this->modalOpen = true;
+        
         $this->dispatch('hojas-notify', message: 'Creando hoja…');
     }
 
-    // public function openEdit(int $id): void
-    // {
-    //     $this->resetErrorBag(); $this->resetValidation();
-    //     $hoja = HojaFiltroProduccion::with('filtros:id')->findOrFail($id);
-    //     $this->editId = $hoja->id;
-    //     $this->form = [
-    //         'nombre'=>$hoja->nombre, 'slug'=>$hoja->slug, 'descripcion'=>$hoja->descripcion,
-    //         'role_id'=>$hoja->role_id, 'estados_permitidos'=>$hoja->estados_permitidos ?? [],
-    //         'base_columnas'=>$hoja->base_columnas ?: HojaFiltroProduccion::defaultBaseColumnas(),
-    //         'visible'=>(bool)$hoja->visible, 'orden'=>$hoja->orden,
-    //     ];
-    //     $this->filtro_ids = $hoja->filtros()->pluck('filtros_produccion.id')->all();
-    //     $this->modalOpen = true;
-    //     $this->dispatch('hojas-notify', message: 'Editando hoja.');
-    // }
+
 
     public function openEdit(int $id): void
     {
@@ -196,15 +195,18 @@ class HojaFiltrosCrud extends Component
 
         $this->form = [
             'nombre'=>$hoja->nombre, 'slug'=>$hoja->slug, 'descripcion'=>$hoja->descripcion,
-            'role_id'=>$hoja->role_id, 'estados_permitidos'=>$hoja->estados_permitidos ?? [],
+            'role_id'=>$hoja->role_id,
+            'estados_permitidos'=>$hoja->estados_permitidos ?? [],
+            'estados_diseno_permitidos'=>$hoja->estados_diseno_permitidos ?? [], // 👈 NUEVO
             'base_columnas'=>$hoja->base_columnas ?: HojaFiltroProduccion::defaultBaseColumnas(),
             'visible'=>(bool)$hoja->visible, 'orden'=>$hoja->orden,
         ];
 
         $this->ensureEstadoBaseCol();
-        $this->ensureFechasBaseCols(); // ← NUEVO
+        $this->ensureEstadoDisenioBaseCol(); 
+        $this->ensureFechasBaseCols();
         $this->ensureClienteBaseCol();
-
+        $this->normalizeBaseCols();
         $this->filtro_ids = $hoja->filtros()->pluck('filtros_produccion.id')->all();
         $this->modalOpen = true;
         $this->dispatch('hojas-notify', message: 'Editando hoja.');
@@ -212,19 +214,19 @@ class HojaFiltrosCrud extends Component
 
     public function save(): void
     {
-        
+
+         $this->normalizeBaseCols();
+         
         $this->form['estados_permitidos'] = array_values(array_unique(
             array_map('intval', $this->form['estados_permitidos'] ?? [])
         ));
-        
-        Log::debug('316 inicio de save');
 
-   
+        $valid = $this->estadosDiseno;
+        $this->form['estados_diseno_permitidos'] = array_values(array_unique(
+            array_values(array_filter($this->form['estados_diseno_permitidos'] ?? [], fn($v) => in_array($v, $valid, true)))
+        ));
 
         $this->validate();
-
-        Log::debug('316 des pues de validate');
-        
 
         $base = filled($this->form['slug']) ? Str::slug($this->form['slug']) : Str::slug($this->form['nombre']);
         $slug = $base; $i=1;
@@ -243,12 +245,13 @@ class HojaFiltrosCrud extends Component
                 'descripcion'=>$this->form['descripcion'] ?: null,
                 'role_id'=>$this->form['role_id'],
                 'estados_permitidos'=>$this->form['estados_permitidos'] ?: [],
+                'estados_diseno_permitidos'=>$this->form['estados_diseno_permitidos'] ?: [], // 👈 NUEVO: ¡GUARDAR!
                 'base_columnas'=>$this->form['base_columnas'] ?: HojaFiltroProduccion::defaultBaseColumnas(),
                 'visible'=>(bool)$this->form['visible'],
                 'orden'=>$this->form['orden'],
             ])->save();
 
-            // sync filtros con orden
+            // sync filtros...
             $sync = [];
             foreach (array_values($this->filtro_ids) as $idx => $fid) {
                 $sync[$fid] = ['orden' => $idx+1];
@@ -283,6 +286,9 @@ class HojaFiltrosCrud extends Component
     public function openModalFiltro(): void
     {
         $this->resetErrorBag(); $this->resetValidation();
+
+        $this->filtroEditId = null;
+
         $this->filtroForm = [
             'nombre'      => '',
             'slug'        => '',
@@ -402,6 +408,7 @@ class HojaFiltrosCrud extends Component
     protected $listeners = [
         'filtro-creado'       => 'assignFiltro',
         'abrir-modal-filtro'  => 'openModalFiltro',
+        'editar-filtro'       => 'openEditFiltro',
     ];
 
     public function assignFiltro(int $filtroId): void
@@ -449,6 +456,33 @@ class HojaFiltrosCrud extends Component
         }
 
         // normaliza índices
+        $this->form['base_columnas'] = array_values($cols);
+    }
+
+        private function ensureEstadoDisenioBaseCol(): void
+    {
+        $cols = $this->form['base_columnas'] ?? [];
+        $has = collect($cols)->contains(fn($c) => ($c['key'] ?? null) === 'estado_disenio');
+
+        if (!$has) {
+            $orden = (int) (collect($cols)->max('orden') ?? 0) + 1;
+            $cols[] = [
+                'key'     => 'estado_disenio',
+                'label'   => 'Estado Diseño',
+                'visible' => true,
+                'fixed'   => false,
+                'orden'   => $orden,
+            ];
+        } else {
+            foreach ($cols as &$c) {
+                if (($c['key'] ?? null) === 'estado_disenio') {
+                    $c['label']   = $c['label'] ?? 'Estado Diseño';
+                    $c['visible'] = $c['visible'] ?? true;
+                    $c['fixed']   = (bool)($c['fixed'] ?? false);
+                }
+            } unset($c);
+        }
+
         $this->form['base_columnas'] = array_values($cols);
     }
 
@@ -526,6 +560,60 @@ class HojaFiltrosCrud extends Component
         $this->resetPage(); // refresca la lista en la página 1
     }
 
+
+        /** Reordenar columnas base en $form['base_columnas'] */
+        private function moveBaseCol(int $from, int $to): void
+        {
+            $cols = $this->form['base_columnas'] ?? [];
+            if (!isset($cols[$from]) || $to < 0 || $to >= count($cols)) {
+                return;
+            }
+
+            // Evitar mover la columna ID si quieres que sea fija
+            $fromKey = $cols[$from]['key'] ?? null;
+            if ($fromKey === 'id') return;
+
+            // Opcional: impedir dejar ID fuera del índice 0
+            // (si ID existe y to es 0, no permitas si el que va a 0 no es ID)
+            $idIndex = collect($cols)->search(fn($c) => ($c['key'] ?? null) === 'id');
+            if ($idIndex !== false && $to === 0 && $fromKey !== 'id') {
+                return;
+            }
+
+            $item = $cols[$from];
+            array_splice($cols, $from, 1);
+            array_splice($cols, $to, 0, [$item]);
+
+            // Normaliza orden correlativo 1..N
+            foreach ($cols as $i => &$c) {
+                $c['orden'] = $i + 1;
+            } unset($c);
+
+            $this->form['base_columnas'] = array_values($cols);
+        }
+
+        public function baseColUp(int $index): void
+        {
+            $this->moveBaseCol($index, $index - 1);
+        }
+
+        public function baseColDown(int $index): void
+        {
+            $this->moveBaseCol($index, $index + 1);
+        }
+
+
+        private function normalizeBaseCols(): void
+        {
+            $cols = collect($this->form['base_columnas'] ?? [])
+                ->sortBy('orden')
+                ->values()
+                ->all();
+
+            foreach ($cols as $i => &$c) { $c['orden'] = $i + 1; } unset($c);
+
+            $this->form['base_columnas'] = $cols;
+        }
     private function ensureClienteBaseCol(): void
     {
         $cols = $this->form['base_columnas'] ?? [];
@@ -552,6 +640,116 @@ class HojaFiltrosCrud extends Component
 
         $this->form['base_columnas'] = array_values($cols);
     }
+
+    public function openEditFiltro(int $id): void
+    {
+        $this->resetErrorBag(); $this->resetValidation();
+
+        $filtro = FiltroProduccion::with([
+            'productos:id',
+            'caracteristicas' => function ($q) {
+                $q->select('caracteristicas.id','caracteristicas.nombre');
+            }
+        ])->findOrFail($id);
+
+        $this->filtroEditId = $filtro->id;
+
+        // Datos base
+        $this->filtroForm = [
+            'nombre'      => $filtro->nombre,
+            'slug'        => $filtro->slug,
+            'descripcion' => $filtro->descripcion ?? '',
+            'visible'     => (bool)$filtro->visible,
+            'orden'       => $filtro->orden,
+        ];
+
+        // Productos seleccionados
+        $this->filtro_producto_ids = $filtro->productos()->pluck('productos.id')->all();
+
+        // Columnas (desde el pivot)
+        $pivotRows = $filtro->caracteristicas()
+            ->withPivot(['orden','label','visible','ancho','render','multivalor_modo','max_items','fallback'])
+            ->orderBy('pivot_orden')
+            ->get();
+
+        $this->filtro_columnas = $pivotRows->map(function($car){
+            return [
+                'caracteristica_id' => (int) $car->id,
+                'nombre'            => $car->nombre,
+                'orden'             => (int) ($car->pivot->orden ?? 0),
+                'label'             => $car->pivot->label ?? $car->nombre,
+                'visible'           => (bool) ($car->pivot->visible ?? true),
+                'ancho'             => $car->pivot->ancho,
+                'render'            => $car->pivot->render ?? 'texto',
+                'multivalor_modo'   => $car->pivot->multivalor_modo ?? 'inline',
+                'max_items'         => (int) ($car->pivot->max_items ?? 4),
+                'fallback'          => $car->pivot->fallback ?? '—',
+            ];
+        })->values()->all();
+
+        // Abrir modal en TAB datos
+        $this->modalFiltroTab = 'datos';
+        $this->modalFiltroOpen = true;
+
+        $this->dispatch('hojas-notify', message: 'Editando filtro…');
+    }
+
+    public function updateFiltro(): void
+    {
+        if (!$this->filtroEditId) return;
+
+        $this->validate($this->rulesFiltro());
+
+        // Asegura slug único si el usuario lo cambió
+        $base = filled($this->filtroForm['slug']) ? Str::slug($this->filtroForm['slug']) : Str::slug($this->filtroForm['nombre']);
+        $slug = $base; $i = 1;
+        while (FiltroProduccion::where('slug', $slug)->where('id','!=',$this->filtroEditId)->exists()) {
+            $slug = $base.'-'.(++$i);
+        }
+
+        \DB::transaction(function () use ($slug) {
+            /** @var \App\Models\FiltroProduccion $filtro */
+            $filtro = FiltroProduccion::lockForUpdate()->findOrFail($this->filtroEditId);
+
+            $filtro->fill([
+                'nombre'      => $this->filtroForm['nombre'],
+                'slug'        => $slug,
+                'descripcion' => $this->filtroForm['descripcion'] ?: null,
+                'visible'     => (bool) $this->filtroForm['visible'],
+                'orden'       => $this->filtroForm['orden'],
+            ])->save();
+
+            // Productos
+            $filtro->productos()->sync($this->filtro_producto_ids);
+
+            // Columnas (características) vía pivot
+            $sync = [];
+            foreach ($this->filtro_columnas as $col) {
+                $sync[$col['caracteristica_id']] = [
+                    'orden'           => (int) ($col['orden'] ?? 0),
+                    'label'           => $col['label'] ?? null,
+                    'visible'         => (bool) ($col['visible'] ?? true),
+                    'ancho'           => $col['ancho'] ?? null,
+                    'render'          => $col['render'] ?? 'texto',
+                    'multivalor_modo' => $col['multivalor_modo'] ?? 'inline',
+                    'max_items'       => (int) ($col['max_items'] ?? 4),
+                    'fallback'        => $col['fallback'] ?? null,
+                ];
+            }
+            $filtro->caracteristicas()->sync($sync);
+        });
+
+        $this->dispatch('hojas-notify', message: 'Filtro actualizado.');
+        $this->modalFiltroOpen = false;
+        $this->filtroEditId = null;
+
+        // Si el filtro editado está asignado a la hoja, no hay que tocar $filtro_ids.
+        // Si cambió el nombre, la UI lo reflejará al re-renderizar.
+    }
+
+
+
+
 }
 
 
