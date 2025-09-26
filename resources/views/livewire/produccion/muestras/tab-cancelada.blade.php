@@ -24,38 +24,38 @@ class="container mx-auto p-6">
                     </div>
                 </div>
 
-                <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <input class="w-full border rounded px-3 py-2" placeholder="ID o Proyecto-ID"
-                           wire:model.live.debounce.500ms="f_id" />
+                        <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            <input class="w-full border rounded px-3 py-2" placeholder="ID o Proyecto-ID"
+                                wire:model.live.debounce.500ms="f_id" />
 
-                    <input class="w-full border rounded px-3 py-2" placeholder="Producto / Categoría"
-                           wire:model.live.debounce.500ms="f_producto" />
+                            <input class="w-full border rounded px-3 py-2" placeholder="Producto / Categoría"
+                                wire:model.live.debounce.500ms="f_producto" />
 
-                    <input class="w-full border rounded px-3 py-2" placeholder="Cliente"
-                           wire:model.live.debounce.500ms="f_cliente" />
+                            <input class="w-full border rounded px-3 py-2" placeholder="Cliente"
+                                wire:model.live.debounce.500ms="f_cliente" />
 
-                    <input class="w-full border rounded px-3 py-2" placeholder="Archivo / Versión"
-                           wire:model.live.debounce.500ms="f_archivo" />
+                            {{-- <input class="w-full border rounded px-3 py-2" placeholder="Archivo / Versión"
+                                wire:model.live.debounce.500ms="f_archivo" /> --}}
 
-                    <input class="w-full border rounded px-3 py-2" placeholder="Piezas (>=)"
-                           wire:model.live.debounce.500ms="f_total_min" />
+                            <input class="w-full border rounded px-3 py-2" placeholder="Piezas (>=)"
+                                wire:model.live.debounce.500ms="f_total_min" />
 
-                    <input class="w-full border rounded px-3 py-2" placeholder="Solicitó (usuario estado {{ $estadoColumna ?? 'SOLICITADA' }})"
-                           wire:model.live.debounce.500ms="f_usuario" />
+                            {{-- <input class="w-full border rounded px-3 py-2" placeholder="Solicitado por ({{ $estadoColumna }})"
+                                wire:model.live.debounce.500ms="f_usuario" /> --}}
 
-                    <input class="w-full border rounded px-3 py-2" placeholder="Instrucciones"
-                           wire:model.live.debounce.500ms="f_instrucciones" />
+                            {{-- <input class="w-full border rounded px-3 py-2" placeholder="Instrucciones"
+                                wire:model.live.debounce.500ms="f_instrucciones" /> --}}
 
-                    <select class="w-full border rounded px-3 py-2"
-                            wire:model.live="f_estatus">
-                        <option value="">Estatus (todos)</option>
-                        <option value="PENDIENTE">PENDIENTE</option>
-                        <option value="SOLICITADA">SOLICITADA</option>
-                        <option value="MUESTRA LISTA">MUESTRA LISTA</option>
-                        <option value="ENTREGADA">ENTREGADA</option>
-                        <option value="CANCELADA">CANCELADA</option>
-                    </select>
-                </div>
+                            {{-- <select class="w-full border rounded px-3 py-2"
+                                    wire:model.live="f_estatus">
+                                <option value="">Estatus (todos)</option>
+                                <option value="PENDIENTE">PENDIENTE</option>
+                                <option value="SOLICITADA">SOLICITADA</option>
+                                <option value="MUESTRA LISTA">MUESTRA LISTA</option>
+                                <option value="ENTREGADA">ENTREGADA</option>
+                                <option value="CANCELADA">CANCELADA</option>
+                            </select> --}}
+                        </div>
             </div>
         </template>
 

@@ -157,7 +157,9 @@
                                     @endcan
                                 
 
-                                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Estado del Disño</th>
+                                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600 whitespace-nowrap min-w-[10rem]">
+                                        Estado del Diseño
+                                    </th>
                                     @can('dashboardjefediseñadorproyectos')
                                         <th class="px-4 py-3 border">Tareas</th>
                                         <th class="px-4 py-3 border">Historial</th>
@@ -190,7 +192,7 @@
                                         @can('tablaProyectos-ver-columna-pedidos')
                                             <td class="border-b px-4 py-2 text-gray-700 text-sm">
                                                 @if($project->pedidos->isNotEmpty())
-                                                    <ul class="list-disc list-inside">
+                                               
                                                     @php
                                                         $ultimoPedido = \App\Models\Pedido::where('proyecto_id', $project->id)
                                                             ->where('tipo', 'PEDIDO')
@@ -199,20 +201,22 @@
                                                             ->first();
                                                     @endphp
                                                     @if($ultimoPedido)
-                                                        <li class="text-gray-600">
-                                                            <span class="font-semibold">Categoría:</span> {{ $ultimoPedido->producto->categoria->nombre ?? 'Sin categoría' }},
-                                                            <span class="font-semibold">Producto:</span> {{ $ultimoPedido->producto->nombre ?? 'Sin producto' }},
-                                                            <span class="font-semibold">Total:</span> {{ $ultimoPedido->total }},
-                                                            <span class="font-semibold">Estatus:</span> {{ $ultimoPedido->estado }}
-                                                        </li>
+                                                        
+                                                            {{-- <span class="font-semibold">Categoría:</span> {{ $ultimoPedido->producto->categoria->nombre ?? 'Sin categoría' }}, --}}
+                                                            {{-- <span class="font-semibold">Producto:</span> {{ $ultimoPedido->producto->nombre ?? 'Sin producto' }}, --}}
+                                                            {{-- <span class="font-semibold">Total:</span> {{ $ultimoPedido->total }}, --}}
+                                                            {{-- <span class="font-semibold">Estatus:</span> {{ $ultimoPedido->estado }} --}}
+                                                 
+                                                                <button  wire:click="abrirResumenPedidos({{ $project->id }})" class="text-blue-500 hover:underline text-xs mt-1">
+                                                                    Ver más
+                                                            </button>
                                                     @else
                                                         <span class="text-gray-500">Sin pedidos</span>
                                                     @endif
 
-                                                            <button  wire:click="abrirResumenPedidos({{ $project->id }})" class="text-blue-500 hover:underline text-xs mt-1">
-                                                                    Ver más
-                                                            </button>
-                                                    </ul>
+
+                                                
+
                                                 @else
                                                     <span class="text-gray-500">Sin pedidos</span>
                                                 @endif
@@ -231,8 +235,9 @@
                                                 'CANCELADO'         => 'bg-gray-500 text-white',
                                             ];
                                         @endphp
-                                        <td class="border-b px-4 py-2 text-sm">
-                                            <span class="px-2 py-1 rounded-full text-xs font-semibold {{ $colores[$estado] ?? 'bg-gray-300 text-gray-700' }}">
+                                        <td class="border-b px-4 py-2 text-sm whitespace-nowrap min-w-[10rem]">
+                                            <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold
+                                                        {{ $colores[$estado] ?? 'bg-gray-300 text-gray-700' }}">
                                                 {{ $estado }}
                                             </span>
                                         </td>
@@ -245,9 +250,9 @@
                                                             <ul class="list-disc list-inside space-y-1">
                                                                 @foreach($project->tareas as $tarea)
                                                                     <li class="text-xs">
-                                                                        <strong>Usuario:</strong> {{ $tarea->staff->name ?? 'No asignado' }}<br>
+                                                                        {{-- <strong>Usuario:</strong> {{ $tarea->staff->name ?? 'No asignado' }}<br> --}}
                                                                         <strong>Descripción:</strong> {{ $tarea->descripcion }}<br>
-                                                                        <strong>Estado:</strong> {{ $tarea->estado }}
+                                                                        {{-- <strong>Estado:</strong> {{ $tarea->estado }} --}}
                                                                     </li>
                                                                 @endforeach
                                                             </ul>
@@ -258,7 +263,7 @@
                                             <td class="px-4 py-3 border">                                                    
                                                 @if($project->estados->isNotEmpty())
                                                             <ul class="list-disc list-inside text-gray-600 space-y-1 text-xs">
-                                                                @foreach($project->estados->sortByDesc('id')->take(2) as $estado)
+                                                                @foreach($project->estados->sortByDesc('id')->take(1) as $estado)
                                                                     <li>
                                                                         <strong>{{ $estado->estado }}</strong> 
                                                                         ({{ \Carbon\Carbon::parse($estado->fecha_inicio)->format('d-m-Y H:i') }})
@@ -279,18 +284,22 @@
 
                                         
                                         <td class="px-4 py-2 border text-center space-y-1">
+                                        <x-dropdown>
+                                                <x-dropdown.item
+                                                    
+                                                    :href="route('proyecto.show', $project->id)"
+                                                    label="Ver detalles"
+                                                />
+                                                @can('dashboardjefediseñadorproyectos')
+                                                    @if($project->tareas->isEmpty()) 
+                                                    <x-dropdown.item separator>
+                                                        <b wire:click="abrirModalAsignacion({{ $project->id }})" >Asignar Tarea</b>
+                                                    </x-dropdown.item>
 
-                                            @can('dashboardjefediseñadorproyectos')
-                                                @if($project->tareas->isEmpty()) 
-                                                <button wire:click="abrirModalAsignacion({{ $project->id }})"class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-semibold px-3 py-1 rounded">
-                                                    Asignar Tarea
-                                                </button>
-                                                @endif 
-                                            @endcan
-                                          
-                                            <a href="{{ route('proyecto.show', $project->id) }}" class="text-blue-500 hover:underline">
-                                                Ver detalles
-                                            </a>
+                                                    @endif 
+                                                @endcan
+                                        </x-dropdown>
+
                                         </td>
                                     </tr>
                                 @endforeach

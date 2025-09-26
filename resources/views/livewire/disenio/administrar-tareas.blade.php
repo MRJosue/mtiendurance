@@ -29,16 +29,24 @@
                         <td class="border p-2">{{ $task->estado }}</td>
                         <td class="border p-2 text-center">
 
-                            @hasanyrole('admin')
-                            <button wire:click="abrirModal({{ $task->id }})" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded">
-                                Cambiar Estado
-                            </button>
-                            @endhasanyrole
+
+                            <x-dropdown>  
+                                
+                                @hasanyrole('admin')
+                                <x-dropdown.item separator>
+                                    <b   
+                                        wire:click="abrirModal({{ $task->id }})"
+                                        wire:loading.attr="disabled"
+                                        wire:target="cancelarMuestra">Cambiar Estado</b>
+                                </x-dropdown.item>
+                                @endhasanyrole
                             
-                            <button wire:click="verificarProceso({{ $task->proyecto->id }})"
-                                class="bg-green-500 hover:bg-green-600 text-white font-semibold px-3 py-1 rounded">
-                                Ver detalles
-                            </button>
+                                <x-dropdown.item separator>
+                                    <b  wire:click="verificarProceso({{ $task->proyecto->id }})" >Ver detalles</b>
+                                </x-dropdown.item>
+                            </x-dropdown>
+
+
                         </td>
                     </tr>
                 @endforeach
