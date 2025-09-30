@@ -188,7 +188,7 @@ class HojaViewer extends Component
             ->with([
                 'producto:id,nombre',
                 'proyecto:id,nombre,estado',
-                'estadoPedido:id,nombre',
+                'estadoPedido:id,nombre,color',
                 'usuario:id,name',
             ])
             ->from('pedido') // aseguramos alias correcto

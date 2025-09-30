@@ -31,29 +31,29 @@
                             placeholder="Buscar ID (proyecto-id)"
                             wire:model.live.debounce.500ms="f_id" />
 
-                        <input type="text" class="w-full border rounded px-3 py-2"
+                        {{-- <input type="text" class="w-full border rounded px-3 py-2"
                             placeholder="Producto / Categoría"
-                            wire:model.live.debounce.500ms="f_producto" />
+                            wire:model.live.debounce.500ms="f_producto" /> --}}
 
-                        <input type="text" class="w-full border rounded px-3 py-2"
+                        {{-- <input type="text" class="w-full border rounded px-3 py-2"
                             placeholder="Cliente"
-                            wire:model.live.debounce.500ms="f_cliente" />
+                            wire:model.live.debounce.500ms="f_cliente" /> --}}
 
                         <input type="text" class="w-full border rounded px-3 py-2"
                             placeholder="Archivo / Versión"
                             wire:model.live.debounce.500ms="f_archivo" />
 
-                        <input type="text" class="w-full border rounded px-3 py-2"
+                        {{-- <input type="text" class="w-full border rounded px-3 py-2"
                             placeholder="Piezas solicitadas (>=)"
-                            wire:model.live.debounce.500ms="f_total_min" />
+                            wire:model.live.debounce.500ms="f_total_min" /> --}}
 
-                        <input type="text" class="w-full border rounded px-3 py-2"
+                        {{-- <input type="text" class="w-full border rounded px-3 py-2"
                             placeholder="Solicitante"
-                            wire:model.live.debounce.500ms="f_usuario" />
+                            wire:model.live.debounce.500ms="f_usuario" /> --}}
 
-                        <input type="text" class="w-full border rounded px-3 py-2"
+                        {{-- <input type="text" class="w-full border rounded px-3 py-2"
                             placeholder="Motivos / Instrucciones"
-                            wire:model.live.debounce.500ms="f_instrucciones" />
+                            wire:model.live.debounce.500ms="f_instrucciones" /> --}}
 
                         <select class="w-full border rounded px-3 py-2"
                                 wire:model.live="f_estatus">
@@ -116,10 +116,14 @@
                         ])->get($estatusMuestra, 'bg-gray-300 text-gray-800');
                     @endphp
                     <tr class="hover:bg-gray-50">
-                        <td class="p-2 px-4 py-2 font-semibold min-w-[4rem]"
-                            title="Proyecto {{ $pedido->proyecto_id }} - Muestra #{{ $pedido->id }}: {{ $pedido->descripcion_corta }}">
-                            {{ $pedido->proyecto_id }}-{{ $pedido->id }}
+                        <td
+                            class="p-2 px-4 py-2 font-semibold min-w-[4rem]"
+                            title="{{ $pedido->tooltip_clave }}"
+                        >
+                            {!! $pedido->clave_link !!}
                         </td>
+
+                        
 
                         <td class="p-2">
                             <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>

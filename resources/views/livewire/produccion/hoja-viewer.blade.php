@@ -1,4 +1,17 @@
 <div x-data="{ active: @entangle('activeFiltroId'), selected: [] }" class="container mx-auto p-6">
+
+    @php
+        // Colores fijos para estados de proyecto/diseño
+        $coloresEstadoDiseno = [
+            'PENDIENTE'        => 'bg-yellow-400 text-black',
+            'ASIGNADO'         => 'bg-blue-500 text-white',
+            'EN PROCESO'       => 'bg-orange-500 text-white',
+            'REVISION'         => 'bg-purple-600 text-white',
+            'DISEÑO APROBADO'  => 'bg-emerald-600 text-white',
+            'DISEÑO RECHAZADO' => 'bg-red-600 text-white',
+            'CANCELADO'        => 'bg-gray-500 text-white',
+        ];
+    @endphp
     {{-- Header con búsqueda --}}
     <div class="mb-4 flex flex-wrap gap-2 items-center">
         <h2 class="text-xl font-bold">Hoja: {{ $this->hoja->nombre }}</h2>
@@ -390,8 +403,36 @@
                                             @case('proyecto') {{ $pedido->proyecto->nombre ?? '—' }} @break
                                             @case('producto') {{ $pedido->producto->nombre ?? '—' }} @break
                                             @case('cliente'){{ $pedido->usuario->name ?? '—' }}@break
-                                            @case('estado')   {{ $pedido->estadoPedido->nombre ?? '—' }} @break
-                                            @case('estado_disenio'){{ $pedido->proyecto->estado ?? '—' }}@break
+                                            @case('estado')
+                                                @php
+                                                    $nombreEstado = $pedido->estadoPedido->nombre ?? '—';
+                                                    // Ejemplo en BD: "bg-yellow-400 text-black"
+                                                    $claseColor   = $pedido->estadoPedido->color ?? '';
+                                                    if ($claseColor === '') {
+                                                        $claseColor = 'bg-gray-200 text-green-700';
+                                                    }
+                                                @endphp
+
+                                                <span
+                                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[9rem] justify-center {{ $claseColor }}"
+                                                    title="{{ $nombreEstado }}"
+                                                >
+                                                    {{ $nombreEstado }}
+                                                </span>
+                                            @break
+                                            @case('estado_disenio')
+                                                @php
+                                                    $estadoDiseno = $pedido->proyecto->estado ?? '—';
+                                                    $claseDiseno  = $coloresEstadoDiseno[$estadoDiseno] ?? 'bg-gray-200 text-gray-700';
+                                                @endphp
+
+                                                <span
+                                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[11rem] justify-center {{ $claseDiseno }}"
+                                                    title="{{ $estadoDiseno }}"
+                                                >
+                                                    {{ $estadoDiseno }}
+                                                </span>
+                                            @break
                                             @case('total')    {{ number_format((float)($pedido->total ?? 0), 2) }} @break
 
                                             {{-- NUEVOS: fechas (si tienes casts a date en el modelo Pedido, usa ->format) --}}
