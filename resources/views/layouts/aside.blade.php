@@ -264,8 +264,8 @@
                             <a href="{{ route('catalogos.tallas.tallas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Tallas</a>
                             <a href="{{ route('catalogos.tallas.grupos') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Grupos</a>
                             <a href="{{ route('catalogos.flujoProduccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Flujo De Produccion</a>
-                            <a href="{{ route('catalogos.hojaFiltrosProduccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800"> Hoja Filtros Produccion</a>
-                            <a href="{{ route('catalogos.flujoFiltrosProduccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Filtros Produccion</a>
+                            <a href="{{ route('catalogos.hojaFiltrosProduccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800"> Hojas de Produccion</a>
+                            <a href="{{ route('catalogos.flujoFiltrosProduccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">Filtros de Produccion</a>
                           
                         </div>
                     </div>

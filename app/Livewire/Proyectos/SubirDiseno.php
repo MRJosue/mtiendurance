@@ -143,6 +143,8 @@ class SubirDiseno extends Component
     public function aprobarDiseno()
     {
 
+        Log::debug('Pre validacion');
+
         $this->actualizarBloqueoMuestras();
         if ($this->bloqueadoPorMuestras) {
             $this->modalRechazar = false;
@@ -150,9 +152,9 @@ class SubirDiseno extends Component
             return;
         }
 
-        $this->validate([
-            'comentarioRechazo' => 'required|string|min:5',
-        ]);
+       Log::debug('Despuies de actualizarBloqueoMuestras');
+
+
 
 
         $proyecto = Proyecto::find($this->proyectoId);
