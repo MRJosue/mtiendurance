@@ -407,9 +407,9 @@
                                                 @php
                                                     $nombreEstado = $pedido->estadoPedido->nombre ?? '—';
                                                     // Ejemplo en BD: "bg-yellow-400 text-black"
-                                                    $claseColor   = $pedido->estadoPedido->color ?? '';
+                                                    $claseColor   = trim((string)($pedido->estadoPedido->color ?? ''));
                                                     if ($claseColor === '') {
-                                                        $claseColor = 'bg-gray-200 text-green-700';
+                                                        $claseColor = 'bg-gray-200 text-gray-700';
                                                     }
                                                 @endphp
 
