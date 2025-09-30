@@ -19,7 +19,7 @@
 <!-- Contenido del panel -->
     <div x-show="abierto" x-transition>
             <!-- Acciones y Crear/Editar -->
-            {{-- <div class="mb-6 bg-white rounded-xl shadow p-6">
+            <div class="mb-6 bg-white rounded-xl shadow p-6">
                 <form wire:submit.prevent="{{ $editingId ? 'update' : 'store' }}" class="space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <div>
@@ -59,15 +59,15 @@
                         @endif
                     </div>
                 </form>
-            </div> --}}
+            </div>
 
             <!-- Filtro de búsqueda -->
-            {{-- <div class="mb-4">
+            <div class="mb-4">
                 <input type="text" wire:model.debounce.500ms="search" class="border px-4 py-2 rounded-lg w-full sm:w-1/3" placeholder="Buscar sucursal..." />
-            </div> --}}
+            </div>
 
             <!-- Listado -->
-            {{-- <div class="overflow-x-auto bg-white rounded-lg shadow">
+            <div class="overflow-x-auto bg-white rounded-lg shadow">
                 <table class="min-w-full border-collapse border border-gray-200 rounded-lg">
                     <thead class="bg-gray-100">
                         <tr>
@@ -109,10 +109,10 @@
                 </table>
             </div>
 
-            <div class="mt-4">{{ $sucursales->links() }}</div> --}}
+            <div class="mt-4">{{ $sucursales->links() }}</div>
 
             <!-- MODAL: Usuarios asignados -->
-            {{-- <div
+            <div
                 x-data="{ open: @entangle('showUserModal') }"
                 x-show="open"
                 style="display: none"
@@ -139,6 +139,6 @@
                         </button>
                     </div>
                 </div>
-            </div> --}}
+            </div>
     </div>
 </div>
