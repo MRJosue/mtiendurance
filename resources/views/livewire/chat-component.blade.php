@@ -2,7 +2,7 @@
 <div class="chat-container flex flex-col h-full w-full min-h-0">
    
     <!-- Lista de mensajes -->
-    <div id="messages" class="flex-grow overflow-y-auto bg-gray-100 p-4">
+    <div id="messages" class="flex-grow overflow-y-auto bg-gray-100 p-4 max-h-[30vh]">
         @foreach ($mensajes as $mensaje)
             <div class="chat-message my-2 p-2 rounded-lg 
                 {{ $mensaje['usuario_id'] === auth()->id() ? 'bg-blue-200 text-right ml-auto rounded-full' : 'bg-gray-200 text-left mr-auto rounded-full' }}">

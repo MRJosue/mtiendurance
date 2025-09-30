@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log; 
 use App\Notifications\NuevaNotificacion;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
 
 class SubirDiseno extends Component
 {
@@ -58,6 +59,8 @@ class SubirDiseno extends Component
     public ?string $archivoNombre = null;    // nombre original
     public ?string $archivoNombreFinal = null; // nombre con sello de tiempo que se usará en el guardado
 
+     public bool $bloqueadoPorMuestras = false;
+
 
 
     // Campos del modal
@@ -72,6 +75,7 @@ class SubirDiseno extends Component
     {
         $this->proyectoId = $proyectoId;
         $this->cargarEstado();
+         $this->actualizarBloqueoMuestras();
     }
 
     public function cargarEstado()
@@ -131,13 +135,26 @@ class SubirDiseno extends Component
         $this->dispatch('estadoActualizado');
         $this->dispatch('archivoSubido');
         $this->cargarEstado();
-
+        $this->actualizarBloqueoMuestras();
         $this->reset(['archivo', 'comentario', 'modalOpen', 'archivoNombre', 'archivoNombreFinal', 'archivoDuplicado']);
         session()->flash('message', 'Archivo cargado correctamente.');
     }
 
     public function aprobarDiseno()
     {
+
+        $this->actualizarBloqueoMuestras();
+        if ($this->bloqueadoPorMuestras) {
+            $this->modalRechazar = false;
+            session()->flash('error', 'No puedes rechazar el diseño: existen muestras en proceso. Cierra o cancela todas las muestras (ENTREGADA o CANCELADA) para continuar.');
+            return;
+        }
+
+        $this->validate([
+            'comentarioRechazo' => 'required|string|min:5',
+        ]);
+
+
         $proyecto = Proyecto::find($this->proyectoId);
         if (!$proyecto) return;
 
@@ -181,6 +198,15 @@ class SubirDiseno extends Component
 
     public function rechazarDiseno()
     {
+
+        $this->actualizarBloqueoMuestras();
+
+        if ($this->bloqueadoPorMuestras) {
+            $this->modalRechazar = false;
+            session()->flash('error', 'No puedes rechazar el diseño: existen muestras en proceso. Cierra o cancela todas las muestras (ENTREGADA o CANCELADA) para continuar.');
+            return;
+        }
+
         $this->validate([
             'comentarioRechazo' => 'required|string|min:5',
         ]);
@@ -331,6 +357,8 @@ class SubirDiseno extends Component
         session()->flash('message', 'Muestra creada correctamente.');
         // $this->dispatch('muestraCreada');
         $this->dispatch('ActualizarTablaMuestra');
+
+        $this->actualizarBloqueoMuestras();
         
     }
 
@@ -666,6 +694,33 @@ class SubirDiseno extends Component
             session()->flash('error', 'Ocurrió un error al notificar el estatus.');
         }
     }
+
+
+    private function hasMuestrasActivas(int $proyectoId): bool
+    {
+        // Detecta la columna disponible
+        $col = Schema::hasColumn('pedido', 'estatus_muestra')
+            ? 'estatus_muestra'
+            : (Schema::hasColumn('pedido', 'estatus')
+                ? 'estatus'
+                : 'estado');
+
+        return Pedido::where('proyecto_id', $proyectoId)
+            ->where('tipo', 'MUESTRA')
+            ->where(function ($q) use ($col) {
+                // Activa si no está entregada o cancelada.
+                // Considera NULL como "aún activa" (no cerrada).
+                $q->whereNull($col)
+                ->orWhereNotIn($col, ['ENTREGADA', 'CANCELADA']);
+            })
+            ->exists();
+    }
+
+    private function actualizarBloqueoMuestras(): void
+    {
+        $this->bloqueadoPorMuestras = $this->hasMuestrasActivas($this->proyectoId);
+    }
+
 
 
     public function render()

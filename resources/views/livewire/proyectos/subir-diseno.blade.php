@@ -39,35 +39,57 @@
 
     {{-- si eres cliente o admin --}}
     @if($estado === 'REVISION')
-        
+
         @can('proyectodiseñoAprobarDiseño')
-            <button wire:click="$set('modalAprobar', true)"
-                class="px-4 py-2 rounded-md bg-green-300 text-green-900 hover:bg-green-400 transition font-semibold shadow-sm">
+            <button
+                wire:click="$set('modalAprobar', true)"
+                class="px-4 py-2 rounded-md bg-green-300 text-green-900 hover:bg-green-400 transition font-semibold shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                @disabled($bloqueadoPorMuestras)
+                title="{{ $bloqueadoPorMuestras ? 'Hay muestras en proceso: no puedes aprobar.' : '' }}"
+            >
                 Aprobar Diseño
-            </button>        
+            </button>
         @endcan
 
-
         @can('proyectodiseñoRechazarDiseño')
-            <button wire:click="$set('modalRechazar', true)"
-                class="px-4 py-2 rounded-md bg-rose-300 text-rose-900 hover:bg-rose-400 transition font-semibold shadow-sm">
+            <button
+                wire:click="$set('modalRechazar', true)"
+                class="px-4 py-2 rounded-md bg-rose-300 text-rose-900 hover:bg-rose-400 transition font-semibold shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                @disabled($bloqueadoPorMuestras)
+                title="{{ $bloqueadoPorMuestras ? 'Hay muestras en proceso: no puedes rechazar.' : '' }}"
+            >
                 Rechazar Diseño
-            </button>            
+            </button>
         @endcan
 
         @can('proyectodiseñoCrearMuestra')
-                <button wire:click="$set('modalConfirmarMuestra', true)"
-                    class="px-4 py-2 rounded-md bg-orange-300 text-orange-900 hover:bg-orange-400 transition font-semibold shadow-sm">
-                    Crear Muestra
-                </button>
+            <button
+                wire:click="$set('modalConfirmarMuestra', true)"
+                class="px-4 py-2 rounded-md bg-orange-300 text-orange-900 hover:bg-orange-400 transition font-semibold shadow-sm"
+            >
+                Crear Muestra
+            </button>
         @endcan
-
-
 
     @endif
 </div>
 
 <!-- Alertas -->
+
+@if ($bloqueadoPorMuestras)
+    @hasrole('cliente')
+        <div class="bg-amber-100 border border-amber-300 text-amber-900 px-4 py-3 rounded-md mb-4 text-sm shadow-sm">
+            <strong class="font-semibold">Acción bloqueada:</strong>
+            <span class="ml-1">
+                No puedes aprobar o rechazar el diseño mientras existan muestras Pendientes
+                <span class="font-semibold">ENTREGADA</span> o <span class="font-semibold">CANCELADA</span>.
+                
+            </span>
+        </div>
+    @endhasrole
+@endif
+
+
 @if (session()->has('error'))
     <div class="bg-rose-100 border border-rose-300 text-rose-800 px-4 py-3 rounded-md mb-4 text-sm shadow-sm">
         <strong class="font-semibold">Error:</strong>

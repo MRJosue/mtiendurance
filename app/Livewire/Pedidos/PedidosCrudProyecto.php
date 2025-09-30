@@ -612,6 +612,7 @@ class PedidosCrudProyecto extends Component
         // Aprobar el pedido
         $pedido->update([
             'estado' => 'APROBADO',
+            'estado_id' => 3,
             'estado_produccion' => 'POR PROGRAMAR',
         ]);
 

@@ -12,6 +12,7 @@
             <thead class="bg-gray-100">
                 <tr>
                     <th class="border p-2 text-left">ID</th>
+                    <th class="border p-2 text-left">ID proyecto</th>
                     <th class="border p-2 text-left">Proyecto</th>
                     <th class="border p-2 text-left">Asignado a</th>
                     <th class="border p-2 text-left">Descripción</th>
@@ -23,10 +24,33 @@
                 @foreach($tasks as $task)
                     <tr class="hover:bg-gray-50">
                         <td class="border p-2">{{ $task->id }}</td>
+                        <td class="border p-2">{{ $task->proyecto->id ?? 'Sin id' }}</td>
                         <td class="border p-2">{{ $task->proyecto->nombre ?? 'Sin proyecto' }}</td>
                         <td class="border p-2">{{ $task->staff->name ?? 'No asignado' }}</td>
                         <td class="border p-2">{{ $task->descripcion }}</td>
-                        <td class="border p-2">{{ $task->estado }}</td>
+                        <td class="border p-2">
+                                @php
+                                    $estado = strtoupper($task->estado ?? 'PENDIENTE');
+                                    $clases = [
+                                        'PENDIENTE'   => 'bg-yellow-100 text-yellow-800 ring-yellow-600/20',
+                                        'EN PROCESO'  => 'bg-blue-100 text-blue-800 ring-blue-600/20',
+                                        'COMPLETADA'  => 'bg-emerald-100 text-emerald-800 ring-emerald-600/20',
+                                        'RECHAZADO'   => 'bg-rose-100 text-rose-800 ring-rose-600/20',
+                                    ];
+                                    $badge = $clases[$estado] ?? 'bg-gray-100 text-gray-800 ring-gray-600/20';
+                                @endphp
+
+                                <span class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ring-1 ring-inset {{ $badge }}">
+                                    <span class="h-1.5 w-1.5 rounded-full 
+                                        @if($estado==='PENDIENTE') bg-yellow-500
+                                        @elseif($estado==='EN PROCESO') bg-blue-500
+                                        @elseif($estado==='COMPLETADA') bg-emerald-500
+                                        @elseif($estado==='RECHAZADO') bg-rose-500
+                                        @else bg-gray-500 @endif">
+                                    </span>
+                                    {{ $estado }}
+                                </span>
+                            </td>
                         <td class="border p-2 text-center">
 
 

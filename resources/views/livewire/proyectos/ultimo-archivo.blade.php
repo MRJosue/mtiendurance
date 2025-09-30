@@ -16,31 +16,66 @@
           : $ultimoArchivo->ruta_archivo;
       @endphp
 
-      <div class="relative group transition-all duration-300 ease-in-out w-full max-w-xs sm:max-w-md md:max-w-lg">
+    <div class="relative group transition-all duration-300 ease-in-out w-full max-w-xs sm:max-w-md md:max-w-lg">
         <img id="archivoImagen"
-             src="{{ $rutaArchivo }}"
-             class="w-full h-auto rounded-lg shadow-lg cursor-pointer object-contain"
-             alt="{{ $ultimoArchivo->nombre_archivo }}"
-             onclick="expandirImagen()">
+            src="{{ $rutaArchivo }}"
+            class="w-full h-auto max-h-[70vh] rounded-lg shadow-lg cursor-pointer object-contain"
+            alt="{{ $ultimoArchivo->nombre_archivo }}"
+            onclick="expandirImagen()">
         <!-- Descripción y metadatos -->
         <div class="mt-4 text-center w-full px-2">
-       
-          <p class="mt-2 text-gray-600 text-sm sm:text-base">
-            <span class="font-semibold">Nombre:</span> {{ $ultimoArchivo->nombre_archivo }}
-            <span class="ml-4 font-semibold">Versión:</span> {{ $ultimoArchivo->version }}
-          </p>
-          <p class="text-gray-700 text-base sm:text-lg">Comentario:{{ $ultimoArchivo->descripcion }}</p>
+            <p class="mt-2 text-gray-600 text-sm sm:text-base">
+                <span class="font-semibold">Nombre:</span> {{ $ultimoArchivo->nombre_archivo }}
+                <span class="ml-4 font-semibold">Versión:</span> {{ $ultimoArchivo->version }}
+            </p>
+            <p class="text-gray-700 text-base sm:text-lg">
+                Comentario: {{ $ultimoArchivo->descripcion }}
+            </p>
         </div>
-      </div>
+    </div>
+
 
       <!-- Modal con AlpineJS: padding adaptativo -->
-      <div id="modalImagen"
+      {{-- <div id="modalImagen"
            x-data="imageZoom()"
            x-show="open"
            @open-image.window="openModal($event.detail)"
            x-cloak
-           class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 sm:p-8">
+           class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 sm:p-8"> --}}
+        <div id="modalImagen"
+            x-data="imageZoom()"
+            x-show="open"
+            x-cloak
+            @open-image.window="openModal($event.detail)"
+            @keydown.window.escape="close()"
+            @click.self="close()"
+            class="fixed inset-0 bg-black/75 flex items-center justify-center p-4 sm:p-8
+                    z-[100]  <!-- Asegura estar por encima de cualquier z-50/60 -->">
         <div class="relative w-full max-w-full">
+
+          <!-- Controles en esquina superior derecha -->
+          <div class="absolute top-4 right-4 flex space-x-2 bg-white/80 rounded-md p-3 shadow-lg z-[120]">
+              <button @click="close()" 
+                  class="w-10 h-10 flex items-center justify-center text-2xl font-bold rounded-full bg-red-500 text-white hover:bg-red-600"
+                  title="Cerrar">
+                  &times;
+              </button>
+              {{-- <button @click="zoomIn()" 
+                  class="w-10 h-10 flex items-center justify-center text-2xl font-bold rounded-full bg-emerald-500 text-white hover:bg-emerald-600"
+                  title="Acercar">
+                  ＋
+              </button>
+              <button @click="zoomOut()" 
+                  class="w-10 h-10 flex items-center justify-center text-2xl font-bold rounded-full bg-blue-500 text-white hover:bg-blue-600"
+                  title="Alejar">
+                  －
+              </button>
+              <button @click="reset()" 
+                  class="px-4 py-2 rounded-md bg-gray-700 text-white hover:bg-gray-800 text-sm font-semibold"
+                  title="Reset">
+                  Reset
+              </button> --}}
+          </div>
           <div class="overflow-hidden">
             <img x-ref="img"
                  :src="src"

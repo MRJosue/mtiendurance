@@ -128,14 +128,14 @@
     </div>
 
     {{-- VISTA DESKTOP: Tabla --}}
-    <div class="hidden sm:block overflow-x-auto bg-white rounded shadow">
+    <div class="hidden sm:block overflow-x-auto bg-white rounded shadow min-h-64 pb-8">
         <table class="min-w-full table-auto divide-y divide-gray-200 text-sm">
             <thead class="bg-gray-100 text-gray-700">
                 <tr>
                     <th class="p-2 text-left">ID</th>
                     <th class="p-2 text-left">Proyecto</th>
                     <th class="p-2 text-left">Producto / Categoría</th>
-                    <th class="p-2 text-left">Características</th>
+                    {{-- <th class="p-2 text-left">Características</th> --}}
                     <th class="p-2 text-left">Cliente</th>
                     <th class="p-2 text-left">Piezas Totales</th>
                     <th class="p-2 text-left">Estado Diseño</th>
@@ -167,7 +167,7 @@
                             <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
                             <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
                         </td>
-                        <td class="p-2 align-top text-xs text-gray-700">
+                        {{-- <td class="p-2 align-top text-xs text-gray-700">
                             @if($pedido->pedidoCaracteristicas->isNotEmpty())
                                 <ul class="list-disc list-inside space-y-1">
                                     @foreach($pedido->pedidoCaracteristicas as $car)
@@ -177,7 +177,7 @@
                             @else
                                 <span class="text-gray-400">Sin características</span>
                             @endif
-                        </td>
+                        </td> --}}
                         <td class="p-2">{{ $pedido->usuario->name ?? 'Sin usuario' }}</td>
                         <td class="p-2">{{ $pedido->total }} piezas</td>
                         <td class="p-2">
@@ -211,52 +211,44 @@
                                 @endif
                             </span>
                         </td>
-                        @can('proyectopedidoscolumnafechaproduccion')
-                            <td class="p-2">{{ $pedido->fecha_produccion ?? 'No definida' }}</td>
-                        @endcan
-                        @can('proyectopedidoscolumnafechaenbarque')
-                            <td class="p-2">{{ $pedido->fecha_embarque ?? 'No definida' }}</td>
-                        @endcan
-                        @can('proyectopedidoscolumnafechaEntrega')
-                            <td class="p-2">{{ $pedido->fecha_entrega ?? 'No definida' }}</td>
-                        @endcan
-                        <td class="p-2 flex justify-center space-x-2">
+                            @can('proyectopedidoscolumnafechaproduccion')
+                                <td class="p-2">{{ $pedido->fecha_produccion?->format('Y-m-d') ?? 'No definida' }}</td>
+                            @endcan
+                            @can('proyectopedidoscolumnafechaenbarque')
+                                <td class="p-2">{{ $pedido->fecha_embarque?->format('Y-m-d') ?? 'No definida' }}</td>
+                            @endcan
+                            @can('proyectopedidoscolumnafechaEntrega')
+                                <td class="p-2">{{ $pedido->fecha_entrega?->format('Y-m-d') ?? 'No definida' }}</td>
+                            @endcan
+                        <td class="border-b px-4 py-2">
+
+
+
+                            <x-dropdown>
 
                             
-                            @hasanyrole('admin')
-                                <button
-                                    wire:click="abrirModal({{ $pedido->id }})"
-                                    class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded text-xs"
-                                >Editar</button>
-                            @endhasanyrole
+                                @if ($pedido->estado == 'POR APROBAR' && $pedido->proyecto?->estado === 'DISEÑO APROBADO' && $pedido->flag_solicitud_aprobar_sin_fechas == '0')
+                                <x-dropdown.item >
+                                    <b   wire:click="confirmarAprobacionEspecial({{ $pedido->id }})" >Aprobacion Especial</b>
+                                </x-dropdown.item>
+                                @endif
 
-
-                            @if ($pedido->estado == 'POR APROBAR' && $pedido->proyecto?->estado === 'DISEÑO APROBADO' && $pedido->flag_solicitud_aprobar_sin_fechas == '0')
-                                <button
-                                    wire:click="confirmarAprobacionEspecial({{ $pedido->id }})"
-                                    class="bg-yellow-500 hover:bg-yellow-600 bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-1 rounded text-xs"
-                                >Aprobacion Especial</button>
-                            @endif
-
-
-                            @if ($pedido->estado == 'POR APROBAR' && $pedido->proyecto?->estado === 'DISEÑO APROBADO'  )
-
-                                        @if ($pedido->flag_solicitud_aprobar_sin_fechas == '1' AND $pedido->flag_aprobar_sin_fechas == '0')
-                                            
-                                        @else
-                                            <button
-                                            wire:click="confirmarAprobacion({{ $pedido->id }})"
-                                            class="bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-1 rounded text-xs"
-                                            >Aprobar</button>
-                                        @endif
+                                @if ($pedido->estado == 'POR APROBAR' && $pedido->proyecto?->estado === 'DISEÑO APROBADO'  )
+                                <x-dropdown.item separator>
+                                    <b  wire:click="confirmarAprobacion({{ $pedido->id }})" >Aprobar</b>
+                                </x-dropdown.item>
+                                @endif
+                                
+                                @hasanyrole('admin')
+                                <x-dropdown.item separator>
+                                    <b wire:click="abrirModal({{ $pedido->id }})" >Editar</b>
+                                </x-dropdown.item>
+                                @endhasanyrole
+                            </x-dropdown>
 
 
 
-                            @endif
-
-
-
-                            
+          
                             
                         </td>
                     </tr>
