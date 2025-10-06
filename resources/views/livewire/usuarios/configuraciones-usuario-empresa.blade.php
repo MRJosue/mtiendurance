@@ -73,18 +73,22 @@
                                     @endif
                                 </td>
                                 <td class="border-b px-4 py-2 text-center space-x-1">
-                                    <button
-                                        class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"
-                                        wire:click="editarEmpresa({{ $empresa->id }})"
-                                    >Editar</button>
-                                    <button
-                                        class="px-2 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600"
-                                        wire:click="gestionarUsuarios({{ $empresa->id }})"
-                                    >Usuarios</button>
-                                    <button
-                                        class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                                        wire:click="confirmarEliminar({{ $empresa->id }})"
-                                    >Eliminar</button>
+
+                                <x-dropdown>
+                                        <x-dropdown.item>
+                                        <b wire:click="editarEmpresa({{ $empresa->id }})">Editar</b>
+                                        </x-dropdown.item>
+                                
+                                        <x-dropdown.item separator>
+                                            <b  wire:click="gestionarUsuarios({{ $empresa->id }})" >Usuarioss</b>
+                                        </x-dropdown.item>
+                                
+                                        <x-dropdown.item separator>
+                                            <b  wire:click="confirmarEliminar({{ $empresa->id }})" >Eliminar</b>
+                                        </x-dropdown.item>
+                                </x-dropdown>
+
+
                                 </td>
                             </tr>
                         @empty

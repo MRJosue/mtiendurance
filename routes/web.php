@@ -59,6 +59,30 @@ use App\Models\MensajeChat;
 
 use App\Http\Controllers\DemoController;
 
+
+//Lang
+
+use Illuminate\Support\Facades\Cookie;
+
+Route::get('/lang/{locale}', function (string $locale) {
+    abort_unless(in_array($locale, ['es','en']), 404);
+
+    // Sesión
+    session(['locale' => $locale]);
+
+    // Cookie 1 año
+    Cookie::queue('locale', $locale, 60 * 24 * 365);
+
+    // Opcional: persistir en BD
+    if (auth()->check() && \Schema::hasColumn('users', 'locale')) {
+        auth()->user()->forceFill(['locale' => $locale])->save();
+    }
+
+    return back();
+})->name('lang.switch');
+
+
+
 Route::get('/notificacion', [DemoController::class, 'mostrarNotificacion']);
 
 
@@ -66,10 +90,6 @@ Route::get('/notificacion', [DemoController::class, 'mostrarNotificacion']);
 Route::get('/', function () {
     return view('auth.login');
 });
-
-// Route::get('/dashboard', function () {
-//     return view('dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
 
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
@@ -106,6 +126,9 @@ Route::get('/emitir-demo', function () {
 });
 
 Route::view('/demo', 'demo');
+
+
+
 
 
 Route::get('/ChatMessageTest', function () {
