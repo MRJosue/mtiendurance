@@ -49,6 +49,9 @@
 
         {{-- Navegación --}}
         <nav class="p-4 space-y-2 text-sm">
+
+
+
             @can('asidedashboard')
             <a href="{{ route('dashboard') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                 {{ __('menu.dashboard') }}
@@ -61,15 +64,35 @@
             </a>
             @endcan
 
-            @can('asideproyectos')
-            <a href="{{ route('proyectos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                {{ __('menu.designs') }}
-            </a>
-            @endcan
 
-            <a href="{{ route('pedidos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                {{ __('menu.orders') }}
-            </a>
+
+
+            
+            <div>
+                <button
+                    @click="toggleSection('pedidos')"
+                    :class="openSections.pedidos ? 'underline text-blue-400' : ''"
+                    class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
+                >
+                    <span>{{ __('menu.custom_orders') }}</span>
+                    <svg :class="openSections.pedidos ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
+                         class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
+                         viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+
+                </button>
+
+                <div x-show="openSections.pedidos" x-transition class="pl-6 mt-1 space-y-1">
+
+                    <a href="{{ route('pedidos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                        {{ __('menu.orders') }}
+                    </a>
+
+
+                </div>
+            </div>
+
 
             {{-- Diseño --}}
             @can('asidediseniodesplegable')
@@ -86,7 +109,18 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                     </svg>
                 </button>
+
+
+
                 <div x-show="openSections.disenio" x-transition class="pl-6 mt-1 space-y-1">
+
+
+                    @can('asideproyectos')
+                    <a href="{{ route('proyectos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                        {{ __('menu.designs') }}
+                    </a>
+                    @endcan
+                    
                     <a href="{{ route('disenio.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                         {{ __('menu.design_admin') }}
                     </a>

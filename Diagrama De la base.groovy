@@ -780,6 +780,71 @@ Table password_reset_tokens {
   created_at timestamp
 }
 
+
+Table client {
+  client_id int [pk, increment]
+  name longtext [not null]
+  email longtext [not null]
+  user longtext [not null]
+  password longtext [not null]
+  tipo longtext
+  credito longtext
+  plazos longtext
+  address longtext
+  phone longtext
+  company longtext
+  website longtext
+  skype_id longtext
+  facebook_profile_link longtext
+  linkedin_profile_link longtext
+  twitter_profile_link longtext
+  short_note longtext
+  chat_status varchar(20) [default: 'offline']
+  super int [default: 0]
+  super_id int [default: 0]
+  aprobar int [default: 0]
+}
+
+Table project {
+  project_id int [pk, increment]
+  status int [default: 0]
+  title longtext
+  description longtext
+  demo_url longtext
+  currency longtext
+  project_category_id int [default: 0]
+  client_id int [default: 0]
+  subclient_id int [default: 0]
+  staffs longtext
+  budget longtext
+  timer_status int [default: 0]
+  timer_starting_timestamp longtext
+  total_time_spent int [default: 0]
+  progress_status longtext
+  timestamp_start longtext
+  timestamp_end longtext
+  category longtext
+  cantidad longtext
+  entrega longtext
+  produccion int [default: 0]
+  precio longtext
+  adicionales longtext
+  listones longtext
+  playeras longtext
+  aprobado int [default: 0]
+  aprobado_time longtext
+  a_solicitud longtext
+  a_horas int [default: 0]
+  client_address_id int [default: 0]
+  archivo longtext
+  hidde int [default: 0]
+  factura int [default: 0]
+  ajuste int [default: 0]
+  cscontrol int [default: 0]
+}
+
+Ref: project.client_id > client.client_id
+
 //// =========================
 //// Relaciones (Ref)
 //// =========================
@@ -884,3 +949,8 @@ Ref: pedido_opciones.opcion_id > opciones.id
 Ref: pedido_tallas.pedido_id > pedido.id
 Ref: pedido_tallas.talla_id > tallas.id
 
+
+
+Ref: "chats"."id" < "chats"."updated_at"
+
+Ref: "client"."client_id" < "client"."short_note"

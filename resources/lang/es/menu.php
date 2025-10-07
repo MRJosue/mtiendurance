@@ -9,6 +9,7 @@ return [
     'requests' => 'Solicitudes de Proyectos',
     'designs' => 'Diseños',
     'orders' => 'Pedidos',
+    'custom_orders' => 'Pedidos',
 
     // Grupos
     'design' => 'Diseño',

@@ -9,6 +9,7 @@ return [
     'requests' => 'Project Requests',
     'designs' => 'Designs',
     'orders' => 'Orders',
+    'custom_orders' => 'Orders',
 
     // Groups
     'design' => 'Design',
