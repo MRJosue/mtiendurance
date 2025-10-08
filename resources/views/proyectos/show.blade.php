@@ -100,17 +100,35 @@
                                         <p>{{ $producto['nombre'] ?? 'Sin producto' }}</p>
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-3">
-                                    @foreach($caracteristicas as $caracteristica)
+                          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-3">
+                                    @forelse(($caracteristicas ?? []) as $caracteristica)
+                                        @php
+                                            // Asegura estructura esperada
+                                            $caracteristica = is_array($caracteristica) ? $caracteristica : (array) $caracteristica;
+                                            $opciones = $caracteristica['opciones'] ?? [];
+                                            if (!is_array($opciones)) {
+                                                $opciones = (array) $opciones;
+                                            }
+                                        @endphp
                                         <div class="p-4 border rounded-lg shadow bg-gray-50 dark:bg-gray-700">
-                                            <h3 class="text-lg font-semibold">{{ $caracteristica['nombre'] }}</h3>
-                                            <ul class="mt-2 list-disc list-inside">
-                                                @foreach($caracteristica['opciones'] as $opcion)
-                                                    <li><span class="font-medium">{{ $opcion['nombre'] }}</span></li>
-                                                @endforeach
-                                            </ul>
+                                            <h3 class="text-lg font-semibold">{{ $caracteristica['nombre'] ?? 'Sin nombre' }}</h3>
+
+                                            @if(!empty($opciones))
+                                                <ul class="mt-2 list-disc list-inside">
+                                                    @foreach($opciones as $opcion)
+                                                        @php $opcion = is_array($opcion) ? $opcion : (array) $opcion; @endphp
+                                                        <li><span class="font-medium">{{ $opcion['nombre'] ?? '—' }}</span></li>
+                                                    @endforeach
+                                                </ul>
+                                            @else
+                                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Sin opciones</p>
+                                            @endif
                                         </div>
-                                    @endforeach
+                                    @empty
+                                        <div class="sm:col-span-2 lg:col-span-3">
+                                            <p class="text-sm text-gray-600 dark:text-gray-300">Sin características seleccionadas.</p>
+                                        </div>
+                                    @endforelse
                                 </div>
                             </div>
                             <!-- Contenido Chat -->
