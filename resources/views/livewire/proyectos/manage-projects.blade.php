@@ -181,9 +181,19 @@
                                             />
                                         </td>
                                         @endhasanyrole
-                                        <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->id }}</td>
+                                        <td
+                                            class="border-b px-4 py-2 text-gray-700  font-semibold min-w-[6rem]"
+                                            title="{{ $project->nombre ?? 'Proyecto #'.$project->id }}"
+                                        >
+                                            {!! $project->proyecto_link !!}
+                                            {{-- Si prefieres sin accessor, usa:
+                                            <a href="{{ route('proyecto.show', $project->id) }}" class="text-blue-600 font-semibold hover:underline">
+                                                Proyecto #{{ $project->id }}
+                                            </a>
+                                            --}}
+                                        </td>
                                     
-                                            <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->nombre }}</td>
+                                        <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->nombre }}</td>
                                     
                                         @can('tablaProyectos-ver-todos-los-proyectos')
                                         <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->user->name ?? 'Sin Cliente' }}</td>

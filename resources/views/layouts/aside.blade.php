@@ -67,7 +67,7 @@
 
 
 
-            
+              {{-- Pedidos --}}
             <div>
                 <button
                     @click="toggleSection('pedidos')"
@@ -89,7 +89,7 @@
                         {{ __('menu.orders') }}
                     </a>
 
-
+                       @livewire('aside-hojas', ['ubicacion' => 'pedidos'])
                 </div>
             </div>
 
@@ -124,14 +124,19 @@
                     <a href="{{ route('disenio.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                         {{ __('menu.design_admin') }}
                     </a>
+                    
                     <a href="{{ route('disenio.admin_tarea') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                         {{ __('menu.design_tasks') }}
                     </a>
+
                     @can('asideAdministraciónMuestras')
                         <a href="{{ route('produccion.adminmuestras') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                             {{ __('menu.samples_admin') }}
                         </a>
                     @endcan
+
+                    @livewire('aside-hojas', ['ubicacion' => 'diseño'])
+                    
                 </div>
             </div>
             @endcan
@@ -159,15 +164,17 @@
                         </a>
                     @endcan
 
-                    @can('asideAdministraciónPedidos')
+
+                    @livewire('aside-hojas', ['ubicacion' => 'produccion'])
+
+
+                    {{-- @can('asideAdministraciónPedidos')
                         <a href="{{ route('produccion.adminpedidos') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                             {{ __('menu.orders_admin') }}
                         </a>
-                    @endcan
+                    @endcan --}}
 
-                    @livewire(name: 'aside-hojas')
-
-                    <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                    {{-- <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                         {{ __('menu.prod_tasks') }}
                     </a>
                     <a href="{{ route('produccion.corte') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
@@ -190,7 +197,7 @@
                     </a>
                     <a href="{{ route('produccion.ordenes_produccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                         {{ __('menu.work_orders') }}
-                    </a>
+                    </a> --}}
                 </div>
             </div>
             @endcan
@@ -213,6 +220,8 @@
                     <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                         {{ __('menu.deliveries_admin') }}
                     </a>
+
+                      @livewire('aside-hojas', ['ubicacion' => 'entregas'])
                 </div>
             </div>
 
@@ -234,6 +243,7 @@
                     <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                         {{ __('menu.invoicing_admin') }}
                     </a>
+                    @livewire('aside-hojas', ['ubicacion' => 'facturacion'])
                 </div>
             </div>
 

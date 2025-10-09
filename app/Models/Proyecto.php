@@ -139,12 +139,10 @@ class Proyecto extends Model
         return self::$estadosDiseno;
     }
 
-    
     public function tareas()
     {
         return $this->hasMany(Tarea::class, 'proyecto_id');
     }
-
 
     public function actualizarEstado($accion)
     {
@@ -221,4 +219,32 @@ class Proyecto extends Model
 
         return true;
     }
+
+    // URL del show del proyecto (solo con su id)
+    public function getProyectoUrlAttribute(): string
+    {
+        return $this->id
+            ? route('proyecto.show', $this->id)
+            : '#';
+    }
+
+    // Enlace HTML con estilo Tailwind, listo para usarse en un <td>
+    public function getProyectoLinkAttribute(): string
+    {
+        if (!$this->id) {
+            return e('Proyecto #N/A');
+        }
+
+        $href  = route('proyecto.show', $this->id);
+        $texto = "#{$this->id}";
+        $titulo = e($this->nombre ?? "Ver proyecto #{$this->id}");
+
+        return sprintf(
+            '<a href="%s" title="%s" class="text-blue-600 font-semibold hover:underline">%s</a>',
+            e($href),
+            $titulo,
+            e($texto)
+        );
+    }
+
 }

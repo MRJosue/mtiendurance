@@ -20,6 +20,7 @@ class HojaFiltroProduccion extends Model
         'estados_permitidos',
         'estados_diseno_permitidos',
         'base_columnas',
+        'menu_config',
         'visible',
         'orden',
     ];
@@ -28,6 +29,7 @@ class HojaFiltroProduccion extends Model
         'estados_permitidos' => 'array',
         'estados_diseno_permitidos' => 'array',
         'base_columnas'      => 'array',
+        'menu_config'      => 'array',
         'visible'            => 'boolean',
     ];
 

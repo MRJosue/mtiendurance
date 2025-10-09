@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class MigrarClientesYProyectos extends Command
 {
@@ -135,116 +136,175 @@ class MigrarClientesYProyectos extends Command
      * - tipo = 'PROYECTO' por defecto
      * - JSONs y banderas: por defecto NULL/1
      */
-    protected function migrarProjectsAProyectos(int $fallbackUserId, bool $dry)
-    {
-        $projects = DB::table('project')->orderBy('project_id')->get();
-        $inserted = false;
+protected function migrarProjectsAProyectos(int $fallbackUserId, bool $dry)
+{
+    $projects = DB::table('project')->orderBy('project_id')->get();
 
-
-        foreach ($projects as $p) {
-            // usuario_id: si no existe ese user, usa fallback
-            $usuarioId = (int) $p->client_id;
-            $userExiste = DB::table('users')->where('id', $usuarioId)->exists();
-            if (!$userExiste) {
-                $this->warn(" - project_id={$p->project_id} sin users.id={$usuarioId}, usando fallback={$fallbackUserId}");
-                $usuarioId = $fallbackUserId;
-            }
-
-            // nombre
-            $nombre = trim((string) $p->title);
-            if ($nombre === '') {
-                $nombre = 'Proyecto '.$p->project_id;
-            }
-            $nombre = mb_substr($nombre, 0, 255);
-
-            // descripcion
-            $descripcion = $p->description ?: null;
-
-            // estado
-            $estado = $this->mapEstado($p);
-
-            // fechas
-            [$fechaCreacionDT, $fechaProduccion, $fechaEmbarque, $fechaEntregaDT] = $this->mapFechas($p);
-
-            $minTS = Carbon::create(1970, 1, 1, 0, 0, 1, 'UTC');
-
-
-            // tipo / campos JSON / banderas
-            $tipo = 'PROYECTO';
-            $flagArmado = 1;
-
-            // Preparar valores seguros
-            $fechaCreacion = null;
-            if ($fechaCreacionDT && $fechaCreacionDT->greaterThanOrEqualTo($minTS)) {
-                $fechaCreacion = $fechaCreacionDT->toDateTimeString(); // YYYY-MM-DD HH:MM:SS
-            }
-
-            // fecha_entrega es DATE en tu esquema → si hay datetime, lo bajo a DATE
-            $fechaEntrega = $fechaEntregaDT ? $fechaEntregaDT->toDateString() : null;
-
-
-
-            $row = [
-                'id'                  => (int) $p->project_id,
-                'usuario_id'          => $usuarioId,
-                'direccion_fiscal_id' => null,
-                'direccion_fiscal'    => null,
-                'direccion_entrega_id'=> null,
-                'direccion_entrega'   => null,
-                'nombre'              => $nombre,
-                'descripcion'         => $descripcion,
-                'id_tipo_envio'       => null,
-                'tipo'                => $tipo,
-                'numero_muestras'     => 0,
-                'estado'              => $estado,
-                // 'fecha_creacion'   => (se decide abajo),
-                'fecha_produccion'    => null,
-                'fecha_embarque'      => null,
-                'fecha_entrega'       => $fechaEntrega,
-                'categoria_sel'       => null,
-                'flag_armado'         => 1,
-                'producto_sel'        => null,
-                'caracteristicas_sel' => null,
-                'opciones_sel'        => null,
-                'total_piezas_sel'    => null,
-                'created_at'          => now(),
-                'updated_at'          => now(),
-            ];
-
-            // Evitar choque si ya existe proyectos.id
-            $existe = DB::table('proyectos')->where('id', $row['id'])->exists();
-
-            if ($existe) {
-                $this->warn(" - Ya existe proyectos.id={$row['id']} — se omite");
-                continue;
-            }
-
-            if ($dry) {
-                $this->line(" + [DRY] Insertaría proyectos.id={$row['id']} usuario_id={$row['usuario_id']} estado={$row['estado']}");
-            } else {
-                DB::table('proyectos')->insert($row);
-                   $inserted = true;
-                $this->line(" + Insertado proyectos.id={$row['id']} usuario_id={$row['usuario_id']} estado={$row['estado']}");
-            }
+    foreach ($projects as $p) {
+        // usuario_id: si no existe ese user, usa fallback
+        $usuarioId = (int) $p->client_id;
+        $userExiste = DB::table('users')->where('id', $usuarioId)->exists();
+        if (!$userExiste) {
+            $this->warn(" - project_id={$p->project_id} sin users.id={$usuarioId}, usando fallback={$fallbackUserId}");
+            $usuarioId = $fallbackUserId;
         }
 
-        // Crear chat SOLO si el proyecto se insertó en esta corrida
-        if ($inserted) {
-            $chatFecha = $row['fecha_creacion'] ?? now()->toDateTimeString();
+        // nombre
+        $nombre = trim((string) $p->title);
+        if ($nombre === '') {
+            $nombre = 'Proyecto '.$p->project_id;
+        }
+        $nombre = mb_substr($nombre, 0, 255);
 
-            if ($dry) {
-                $this->line("   [DRY] Crearía chat para proyecto_id={$row['id']} fecha_creacion={$chatFecha}");
+        // descripcion
+        $descripcion = $p->description ?: null;
+
+        // estado
+        $estado = $this->mapEstado($p);
+
+        // fechas
+        [$fechaCreacionDT, $fechaProduccion, $fechaEmbarque, $fechaEntregaDT] = $this->mapFechas($p);
+        $minTS = Carbon::create(1970, 1, 1, 0, 0, 1, 'UTC');
+
+        $fechaCreacion = null;
+        if ($fechaCreacionDT && $fechaCreacionDT->greaterThanOrEqualTo($minTS)) {
+            $fechaCreacion = $fechaCreacionDT->toDateTimeString(); // YYYY-MM-DD HH:MM:SS
+        }
+        $fechaEntrega = $fechaEntregaDT ? $fechaEntregaDT->toDateString() : null;
+
+        $row = [
+            'id'                  => (int) $p->project_id,
+            'usuario_id'          => $usuarioId,
+            'direccion_fiscal_id' => null,
+            'direccion_fiscal'    => null,
+            'direccion_entrega_id'=> null,
+            'direccion_entrega'   => null,
+            'nombre'              => $nombre,
+            'descripcion'         => $descripcion,
+            'id_tipo_envio'       => null,
+            'tipo'                => 'PROYECTO',
+            'numero_muestras'     => 0,
+            'estado'              => $estado,
+            // 'fecha_creacion'    => (opcional si existe en tu esquema de proyectos),
+            'fecha_produccion'    => null,
+            'fecha_embarque'      => null,
+            'fecha_entrega'       => $fechaEntrega,
+            'categoria_sel'       => null,
+            'flag_armado'         => 1,
+            'producto_sel'        => null,
+            'caracteristicas_sel' => null,
+            'opciones_sel'        => null,
+            'total_piezas_sel'    => null,
+            'created_at'          => now(),
+            'updated_at'          => now(),
+        ];
+
+        // Evitar choque si ya existe proyectos.id
+        $existe = DB::table('proyectos')->where('id', $row['id'])->exists();
+        if ($existe) {
+            $this->warn(" - Ya existe proyectos.id={$row['id']} — se omite");
+            continue;
+        }
+
+        // INSERT PROYECTO
+        if ($dry) {
+            $this->line(" + [DRY] Insertaría proyectos.id={$row['id']} usuario_id={$row['usuario_id']} estado={$row['estado']}");
+        } else {
+            DB::table('proyectos')->insert($row);
+            $this->line(" + Insertado proyectos.id={$row['id']} usuario_id={$row['usuario_id']} estado={$row['estado']}");
+        }
+
+        // ====== NUEVO: Crear CHAT por proyecto (dentro del loop) ======
+        $chatFecha = $fechaCreacion ?? now()->toDateTimeString();
+        if ($dry) {
+            $this->line("   [DRY] Crearía chat para proyecto_id={$row['id']} fecha_creacion={$chatFecha}");
+        } else {
+            DB::table('chats')->insert([
+                'proyecto_id'    => $row['id'],
+                'fecha_creacion' => $chatFecha,
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]);
+            $this->line("   + Chat creado para proyecto_id={$row['id']}");
+        }
+
+        // ====== NUEVO: Crear PEDIDO por proyecto (producto 15, estado_id 9) ======
+        // Producto: (15, 9, 'Reconfigurar', 1, 1, '2025-10-09 18:14:15', '2025-10-09 18:14:15', 1)
+        // Estado:   (9, 'RECONFIGURAR', 'reconfigurar', 90, 'bg-purple-600 text-white', 1, NULL, NULL)
+        $pedidoRow = [
+            'proyecto_id'           => $row['id'],
+            'producto_id'           => 15,
+            'user_id'               => $row['usuario_id'],
+            'cliente_id'            => $row['usuario_id'], // si tu cliente es el mismo usuario creador
+            'fecha_creacion'        => now(),
+            'total'                 => 0,
+            'total_minutos'         => null,
+            'total_pasos'           => null,
+            'resumen_tiempos'       => null,
+            'estatus'               => 'PENDIENTE',
+            'direccion_fiscal_id'   => null,
+            'direccion_fiscal'      => null,
+            'direccion_entrega_id'  => null,
+            'direccion_entrega'     => null,
+            'tipo'                  => 'PEDIDO',
+            'estatus_entrega_muestra'=> null,
+            'estatus_muestra'       => null,
+            'estado'                => 'RECONFIGURAR',
+            'estado_id'             => 9,
+            'estado_produccion'     => 'POR APROBAR',
+            'fecha_produccion'      => null,
+            'fecha_embarque'        => null,
+            'fecha_entrega'         => null,
+            'id_tipo_envio'         => null,
+            'descripcion_pedido'    => 'Pedido generado automáticamente al migrar proyecto.',
+            'instrucciones_muestra' => null,
+            'flag_facturacion'      => 0,
+            'url'                   => null,
+            'last_uploaded_file_id' => null,
+            'flag_aprobar_sin_fechas'          => 0,
+            'flag_solicitud_aprobar_sin_fechas'=> 0,
+            'created_at'            => now(),
+            'updated_at'            => now(),
+        ];
+
+        if ($dry) {
+            $this->line("   [DRY] Crearía pedido para proyecto_id={$row['id']} producto_id=15 estado_id=9 (RECONFIGURAR)");
+        } else {
+            // ---- Validaciones defensivas (no truenan si falta la tabla) ----
+            // Productos
+            if (Schema::hasTable('productos')) {
+                $productoOk = DB::table('productos')->where('id', 15)->exists();
+                if (!$productoOk) {
+                    $this->warn("   ! Producto id=15 no existe en 'productos'; el insert de pedido seguirá si tus FKs lo permiten.");
+                }
             } else {
-                DB::table('chats')->insert([
-                    'proyecto_id'    => $row['id'],
-                    'fecha_creacion' => $chatFecha,
-                    'created_at'     => now(),
-                    'updated_at'     => now(),
-                ]);
-                $this->line("   + Chat creado para proyecto_id={$row['id']}");
+                $this->warn("   ! Tabla 'productos' no encontrada; continúo sin validar existencia de producto.");
             }
+
+            // Estados de pedido (acepta 'estados_pedido' ó 'estado_pedidos')
+            $estadoTable = null;
+            if (Schema::hasTable('estados_pedido')) {
+                $estadoTable = 'estados_pedido';
+            } elseif (Schema::hasTable('estado_pedidos')) {
+                $estadoTable = 'estado_pedidos';
+            }
+
+            if ($estadoTable) {
+                $estadoOk = DB::table($estadoTable)->where('id', 9)->exists();
+                if (!$estadoOk) {
+                    $this->warn("   ! Estado id=9 no existe en '{$estadoTable}'; verifica tu seed de estados. Se continúa.");
+                }
+            } else {
+                $this->warn("   ! Catálogo de estados no encontrado (ni 'estados_pedido' ni 'estado_pedidos'); se continúa sin validar.");
+            }
+
+            // ---- Insert del pedido ----
+            DB::table('pedido')->insert($pedidoRow);
+            $this->line("   + Pedido creado (proyecto_id={$row['id']}, producto_id=15, estado=RECONFIGURAR)");
         }
     }
+}
+
 
 
 

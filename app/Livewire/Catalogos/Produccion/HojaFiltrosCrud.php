@@ -29,17 +29,41 @@ class HojaFiltrosCrud extends Component
     public bool $modalOpen = false;
     public ?int $editId = null;
 
-    public array $form = [
-        'nombre' => '',
-        'slug'   => '',
-        'descripcion' => '',
-        'role_id' => null,
-        'estados_permitidos' => [],
-        'estados_diseno_permitidos' => [], // ← NUEVO
-        'base_columnas' => [],
-        'visible' => true,
-        'orden' => null,
+    public array $menusDisponibles = [
+    // key => label (puedes agregar más o renombrar)
+    // ['key' => 'principal.produccion', 'label' => 'Principal > Producción'],
+    // ['key' => 'principal.dashboard',  'label' => 'Principal > Dashboard'],
+    // ['key' => 'cliente.panel',        'label' => 'Panel del Cliente'],
+    // ['key' => 'staff.panel',          'label' => 'Panel del Staff'],
+    // ['key' => 'staff.panel',          'label' => 'Panel del Staff'],
+    ['key' => 'pedidos',          'label' => 'Pedidos'],
+    ['key' => 'diseño',           'label' => 'diseño'],
+    ['key' => 'produccion',       'label' => 'Producción'],
+    ['key' => 'entregas',         'label' => 'entregas'],
+    ['key' => 'facturacion',      'label' => 'facturacion'],
+    
+    ['key' => 'envios',           'label' => 'Envíos'],
+
     ];
+
+public array $form = [
+    'nombre' => '',
+    'slug'   => '',
+    'descripcion' => '',
+    'role_id' => null,
+    'estados_permitidos' => [],
+    'estados_diseno_permitidos' => [],
+    'base_columnas' => [],
+    'menu_config' => [ // 👇 estructura por defecto
+        'ubicaciones' => [],   // array de keys del catálogo $menusDisponibles
+        'etiqueta'    => null, // override del texto en menú (opcional)
+        'icono'       => null, // nombre de icono (lucide/heroicons…) (opcional)
+        'orden'       => null, // orden en el menú (opcional)
+        'activo'      => true, // flag rápido por si quieres desactivar sin borrar
+    ],
+    'visible' => true,
+    'orden' => null,
+];
 
     /** @var array<int> */
     public array $filtro_ids = []; // filtros incluidos en la hoja (ordenados)
@@ -101,6 +125,18 @@ class HojaFiltrosCrud extends Component
             'form.orden' => ['nullable','integer','min:0'],
             'filtro_ids' => ['array'],
             'filtro_ids.*' => ['integer','exists:filtros_produccion,id'],
+
+            // Validaciones para el nuevo campo menu_config
+            'form.menu_config' => ['array'],
+            'form.menu_config.ubicaciones' => ['array'],
+            'form.menu_config.ubicaciones.*' => [
+                'string',
+                Rule::in(collect($this->menusDisponibles)->pluck('key')->all()),
+            ],
+            'form.menu_config.etiqueta' => ['nullable','string','max:100'],
+            'form.menu_config.icono'    => ['nullable','string','max:100'],
+            'form.menu_config.orden'    => ['nullable','integer','min:0'],
+            'form.menu_config.activo'   => ['boolean'],
         ];
     }
 
@@ -172,16 +208,22 @@ class HojaFiltrosCrud extends Component
             'nombre'=>'','slug'=>'','descripcion'=>'','role_id'=>null,
             'estados_permitidos'=>[],
             'estados_diseno_permitidos'=>[],
-            'base_columnas'=>\App\Models\HojaFiltroProduccion::defaultBaseColumnas(),
+            'base_columnas'=>HojaFiltroProduccion::defaultBaseColumnas(),
+            'menu_config' => [
+                'ubicaciones' => [],
+                'etiqueta'    => null,
+                'icono'       => null,
+                'orden'       => null,
+                'activo'      => true,
+            ],
             'visible'=>true, 'orden'=>null,
         ];
         $this->ensureEstadoBaseCol();
-        $this->ensureFechasBaseCols(); 
+        $this->ensureFechasBaseCols();
         $this->ensureClienteBaseCol();
         $this->normalizeBaseCols();
         $this->filtro_ids = [];
         $this->modalOpen = true;
-        
         $this->dispatch('hojas-notify', message: 'Creando hoja…');
     }
 
@@ -197,33 +239,45 @@ class HojaFiltrosCrud extends Component
             'nombre'=>$hoja->nombre, 'slug'=>$hoja->slug, 'descripcion'=>$hoja->descripcion,
             'role_id'=>$hoja->role_id,
             'estados_permitidos'=>$hoja->estados_permitidos ?? [],
-            'estados_diseno_permitidos'=>$hoja->estados_diseno_permitidos ?? [], // 👈 NUEVO
+            'estados_diseno_permitidos'=>$hoja->estados_diseno_permitidos ?? [],
             'base_columnas'=>$hoja->base_columnas ?: HojaFiltroProduccion::defaultBaseColumnas(),
+            'menu_config' => array_merge([
+                'ubicaciones' => [],
+                'etiqueta'    => null,
+                'icono'       => null,
+                'orden'       => null,
+                'activo'      => true,
+            ], $hoja->menu_config ?? []), // 👈 carga/merge seguro
             'visible'=>(bool)$hoja->visible, 'orden'=>$hoja->orden,
         ];
 
         $this->ensureEstadoBaseCol();
-        $this->ensureEstadoDisenioBaseCol(); 
+        $this->ensureEstadoDisenioBaseCol();
         $this->ensureFechasBaseCols();
         $this->ensureClienteBaseCol();
         $this->normalizeBaseCols();
+
         $this->filtro_ids = $hoja->filtros()->pluck('filtros_produccion.id')->all();
         $this->modalOpen = true;
         $this->dispatch('hojas-notify', message: 'Editando hoja.');
     }
-
+    
     public function save(): void
     {
+        $this->normalizeBaseCols();
 
-         $this->normalizeBaseCols();
-         
-        $this->form['estados_permitidos'] = array_values(array_unique(
-            array_map('intval', $this->form['estados_permitidos'] ?? [])
-        ));
+        // Normalizaciones previas (ya las tenías)...
+        $this->form['estados_permitidos'] = array_values(array_unique(array_map('intval', $this->form['estados_permitidos'] ?? [])));
 
         $valid = $this->estadosDiseno;
         $this->form['estados_diseno_permitidos'] = array_values(array_unique(
             array_values(array_filter($this->form['estados_diseno_permitidos'] ?? [], fn($v) => in_array($v, $valid, true)))
+        ));
+
+        // Menú: limpia ubicaciones a válidas
+        $validMenuKeys = collect($this->menusDisponibles)->pluck('key')->all();
+        $this->form['menu_config']['ubicaciones'] = array_values(array_unique(
+            array_values(array_filter($this->form['menu_config']['ubicaciones'] ?? [], fn($k) => in_array($k, $validMenuKeys, true)))
         ));
 
         $this->validate();
@@ -245,8 +299,9 @@ class HojaFiltrosCrud extends Component
                 'descripcion'=>$this->form['descripcion'] ?: null,
                 'role_id'=>$this->form['role_id'],
                 'estados_permitidos'=>$this->form['estados_permitidos'] ?: [],
-                'estados_diseno_permitidos'=>$this->form['estados_diseno_permitidos'] ?: [], // 👈 NUEVO: ¡GUARDAR!
+                'estados_diseno_permitidos'=>$this->form['estados_diseno_permitidos'] ?: [],
                 'base_columnas'=>$this->form['base_columnas'] ?: HojaFiltroProduccion::defaultBaseColumnas(),
+                'menu_config' => $this->form['menu_config'] ?: ['ubicaciones'=>[],'etiqueta'=>null,'icono'=>null,'orden'=>null,'activo'=>true],
                 'visible'=>(bool)$this->form['visible'],
                 'orden'=>$this->form['orden'],
             ])->save();
@@ -265,6 +320,7 @@ class HojaFiltrosCrud extends Component
         $this->modalOpen = false;
         $this->resetPage();
     }
+
 
     /* Reordenar pestañas asignadas */
     public function moveUpAssign(int $index): void

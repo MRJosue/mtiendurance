@@ -85,6 +85,14 @@
                     <button :class="tab==='acceso' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'"
                             class="px-3 py-2 border-b-2 text-sm font-medium"
                             @click="tab='acceso'">Acceso</button>
+
+                    <button :class="tab==='Menu' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'"
+                            class="px-3 py-2 border-b-2 text-sm font-medium"
+                            @click="tab='menu'">Menu</button>
+
+                    <button :class="tab==='Menu' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-800'"
+                            class="px-3 py-2 border-b-2 text-sm font-medium"
+                            @click="tab='acciones'">Acciones</button>
                 </nav>
             </div>
 
@@ -344,6 +352,108 @@
                 </div>
             </div>
 
+
+            <!-- Contenido: MENÚ -->
+            <div x-show="tab==='menu'" class="mt-4 space-y-4">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <!-- Ubicaciones del menú -->
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">¿En qué menú(s) debe mostrarse?</label>
+                        <div class="mt-2 rounded-lg border p-3">
+                            @foreach($menusDisponibles as $m)
+                                <label class="flex items-center gap-2 py-1">
+                                    <input type="checkbox"
+                                        class="rounded border-gray-300"
+                                        value="{{ $m['key'] }}"
+                                        @checked(in_array($m['key'], $form['menu_config']['ubicaciones'] ?? []))
+                                        @change="
+                                            $event.target.checked
+                                            ? @this.form.menu_config.ubicaciones.push('{{ $m['key'] }}')
+                                            : @this.form.menu_config.ubicaciones = (@this.form.menu_config.ubicaciones || []).filter(k => k !== '{{ $m['key'] }}')
+                                        ">
+                                    <span class="text-sm text-gray-700">{{ $m['label'] }}</span>
+                                </label>
+                            @endforeach
+                            @error('form.menu_config.ubicaciones.*') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            @if(empty($menusDisponibles))
+                                <p class="text-sm text-gray-500">No hay ubicaciones de menú configuradas.</p>
+                            @endif
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            Puedes elegir varias ubicaciones. El backoffice usará esta configuración para construir el menú dinámicamente.
+                        </p>
+                    </div>
+
+                    <!-- Metadatos de menú -->
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Etiqueta en menú (opcional)</label>
+                            <input type="text"
+                                class="mt-1 w-full rounded-lg border-gray-300 focus:ring-blue-500"
+                                placeholder="Ej. Producción / Playeras"
+                                wire:model.live="form.menu_config.etiqueta">
+                            @error('form.menu_config.etiqueta') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Ícono (opcional)</label>
+                            <input type="text"
+                                class="mt-1 w-full rounded-lg border-gray-300 focus:ring-blue-500"
+                                placeholder="Ej. lucide-filter, heroicons:adjustments-vertical"
+                                wire:model.live="form.menu_config.icono">
+                            @error('form.menu_config.icono') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Orden en el menú</label>
+                            <input type="number" min="0"
+                                class="mt-1 w-32 rounded-lg border-gray-300 focus:ring-blue-500"
+                                wire:model.live="form.menu_config.orden">
+                            @error('form.menu_config.orden') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <input id="menu_activo" type="checkbox" class="rounded border-gray-300"
+                                wire:model.live="form.menu_config.activo">
+                            <label for="menu_activo" class="text-sm text-gray-700">Activo en menú</label>
+                            @error('form.menu_config.activo') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-lg border bg-gray-50 p-3">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">Vista previa</h4>
+                    <div class="flex flex-wrap gap-2">
+                        @forelse($form['menu_config']['ubicaciones'] ?? [] as $uk)
+                            @php
+                                $label = collect($menusDisponibles)->firstWhere('key',$uk)['label'] ?? $uk;
+                            @endphp
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                                {{ $label }}
+                            </span>
+                        @empty
+                            <span class="text-sm text-gray-500">Sin ubicaciones seleccionadas.</span>
+                        @endforelse
+                    </div>
+                    <div class="text-xs text-gray-500 mt-2">
+                        Etiqueta: <strong>{{ $form['menu_config']['etiqueta'] ?: '—' }}</strong> •
+                        Ícono: <strong>{{ $form['menu_config']['icono'] ?: '—' }}</strong> •
+                        Orden: <strong>{{ $form['menu_config']['orden'] ?? '—' }}</strong> •
+                        Activo: <strong>{{ ($form['menu_config']['activo'] ?? true) ? 'Sí' : 'No' }}</strong>
+                    </div>
+                </div>
+            </div>
+
+
+            <div x-show="tab==='acciones'" class="mt-4 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    
+                </div>
+
+            </div>
+
+
+
             {{-- Footer --}}
             <div class="mt-6 flex justify-end gap-2">
                 <button class="px-4 py-2 rounded-lg border" @click="open=false">Cancelar</button>
@@ -352,6 +462,8 @@
                     Guardar
                 </button>
             </div>
+
+
         </div>
     </div>
 
