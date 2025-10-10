@@ -72,6 +72,8 @@ class HojaViewer extends Component
         'filtro-produccion-actualizado' => '$refresh',
     ];
 
+    public array $idsPagina   = []; // <- nuevos IDs de la página actual
+
     /** Computed: catálogo de estados para el select */
     public function getEstadosProperty()
     {
@@ -273,6 +275,8 @@ class HojaViewer extends Component
             }
         }
 
+        
+
         // ---------- ORDENAMIENTO ----------
         $dir = $this->sortDirection === 'desc' ? 'desc' : 'asc';
 
@@ -325,6 +329,17 @@ class HojaViewer extends Component
         // Asegura que perPage sea válido al paginar
         $perPage = in_array($this->perPage, $this->perPageOptions, true) ? $this->perPage : 15;
         $pedidos = $q->paginate($perPage);
+
+                // 🔹 NUEVO: recalcula SIEMPRE los IDs de la página visible
+        $this->idsPagina = $pedidos
+            ->getCollection()               // del LengthAwarePaginator/AbstractPaginator
+            ->pluck('id')
+            ->map(fn ($i) => (int) $i)      // normaliza a enteros (evita mismatch num/string)
+            ->values()
+            ->all();
+        
+        $this->selectedIds = array_values(array_unique(array_map('intval', $this->selectedIds)));
+
 
         // Precalcular valores de características del filtro
         $valoresPorPedidoYCar = [];

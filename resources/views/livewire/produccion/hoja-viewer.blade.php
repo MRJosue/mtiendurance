@@ -13,7 +13,15 @@
             ];
         @endphp
         {{-- Header con búsqueda --}}
-    <div x-data="{ active: @entangle('activeFiltroId'), selected: @entangle('selectedIds') }" class="p-2 sm:p-3 h-full min-h-0 flex flex-col">
+    <div     x-data="{
+                active: @entangle('activeFiltroId'),
+                selected: @entangle('selectedIds').live,
+                idsPagina: @entangle('idsPagina').live
+            }"
+        class="p-2 sm:p-3 h-full min-h-0 flex flex-col">
+
+
+
         {{-- Header con búsqueda y acciones --}}
         <div class="mb-4 flex flex-wrap items-center gap-2">
             <h2 class="text-xl font-bold">Hoja: {{ $this->hoja->nombre }}</h2>
@@ -65,6 +73,8 @@
                     Rechazar seleccionados
                 </button>
             </div>
+            
+            
         </div>
 
 
@@ -100,7 +110,12 @@
             </span>
         </div>
 
-        
+        <div class="gap-2">
+            
+            @if(method_exists($pedidos,'links'))
+                <div class="mt-4">{{ $pedidos->links() }}</div>
+            @endif
+        </div>
 
 
         {{-- Tabla --}}
@@ -111,11 +126,17 @@
                         <th class="px-3 py-2">
                             <input
                                 type="checkbox"
+                                :checked="idsPagina.length && idsPagina.every(id => selected.includes(Number(id)))"
                                 @change="
-                                    const ids = @js(method_exists($pedidos,'pluck') ? $pedidos->pluck('id') : []);
-                                    selected = $event.target.checked ? ids : [];
-                                "
-                            >
+                                    const pagina = idsPagina.map(Number);
+                                    if ($event.target.checked) {
+                                    
+                                    selected = Array.from(new Set([...selected.map(Number), ...pagina]));
+                                    } else {
+                                    
+                                    selected = selected.map(Number).filter(i => !pagina.includes(i));
+                                    }"
+                            />
                         </th>
 
                         {{-- ID --}}
@@ -403,9 +424,9 @@
                                     <input
                                         type="checkbox"
                                         :value="{{ $pedido->id }}"
-                                        :checked="selected.includes({{ $pedido->id }})"
+                                        :checked="selected.includes(Number({{ $pedido->id }}))"
                                         @change="
-                                            const id={{ $pedido->id }};
+                                            const id = Number({{ $pedido->id }});
                                             if ($event.target.checked) {
                                                 if (!selected.includes(id)) selected.push(id)
                                             } else {
