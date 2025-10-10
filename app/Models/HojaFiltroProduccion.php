@@ -13,25 +13,21 @@ class HojaFiltroProduccion extends Model
     protected $table = 'hojas_filtros_produccion';
 
     protected $fillable = [
-        'nombre',
-        'slug',
-        'descripcion',
-        'role_id',
-        'estados_permitidos',
-        'estados_diseno_permitidos',
-        'base_columnas',
-        'menu_config',
-        'visible',
-        'orden',
+        'nombre','slug','descripcion','role_id',
+        'estados_permitidos','estados_diseno_permitidos',
+        'base_columnas','menu_config','acciones_config', 
+        'visible','orden',
     ];
 
     protected $casts = [
         'estados_permitidos' => 'array',
         'estados_diseno_permitidos' => 'array',
-        'base_columnas'      => 'array',
-        'menu_config'      => 'array',
-        'visible'            => 'boolean',
+        'base_columnas' => 'array',
+        'menu_config' => 'array',
+        'acciones_config' => 'array', 
+        'visible' => 'boolean',
     ];
+
 
     /** Filtros (pestañas) asignados a la hoja */
     public function filtros()
@@ -64,41 +60,41 @@ class HojaFiltroProduccion extends Model
     }
 
     /** Config por defecto de columnas base */
-public static function defaultBaseColumnas(): array
-{
-    // Siempre presentes
-        $base = [
-            ['key' => 'id',       'label' => 'ID',        'visible' => true,  'fixed' => true,  'orden' => 1],
-            ['key' => 'proyecto', 'label' => 'Proyecto',  'visible' => true,  'fixed' => false, 'orden' => 2],
-            ['key' => 'cliente',  'label' => 'Cliente',   'visible' => true,  'fixed' => false, 'orden' => 3],
-            ['key' => 'producto', 'label' => 'Producto',  'visible' => true,  'fixed' => false, 'orden' => 4],
-            ['key' => 'total',    'label' => 'Total',     'visible' => true,  'fixed' => false, 'orden' => 5],
-            ['key' => 'estado',   'label' => 'Estado',    'visible' => true,  'fixed' => false, 'orden' => 6],
-            ['key' => 'estado_disenio', 'label' => 'Estado Diseño', 'visible' => true, 'fixed' => false, 'orden' => 7],
-        ];
+    public static function defaultBaseColumnas(): array
+    {
+        // Siempre presentes
+            $base = [
+                ['key' => 'id',       'label' => 'ID',        'visible' => true,  'fixed' => true,  'orden' => 1],
+                ['key' => 'proyecto', 'label' => 'Proyecto',  'visible' => true,  'fixed' => false, 'orden' => 2],
+                ['key' => 'cliente',  'label' => 'Cliente',   'visible' => true,  'fixed' => false, 'orden' => 3],
+                ['key' => 'producto', 'label' => 'Producto',  'visible' => true,  'fixed' => false, 'orden' => 4],
+                ['key' => 'total',    'label' => 'Total',     'visible' => true,  'fixed' => false, 'orden' => 5],
+                ['key' => 'estado',   'label' => 'Estado',    'visible' => true,  'fixed' => false, 'orden' => 6],
+                ['key' => 'estado_disenio', 'label' => 'Estado Diseño', 'visible' => true, 'fixed' => false, 'orden' => 7],
+            ];
 
 
-    // Añade fechas si no existen
-        $maxOrden = (int) collect($base)->max('orden');
+        // Añade fechas si no existen
+            $maxOrden = (int) collect($base)->max('orden');
 
-        $add = function (&$arr, string $key, string $label) use (&$maxOrden) {
-            if (!collect($arr)->contains(fn($c) => ($c['key'] ?? null) === $key)) {
-                $arr[] = [
-                    'key'     => $key,
-                    'label'   => $label,
-                    'visible' => true,
-                    'fixed'   => false,
-                    'orden'   => ++$maxOrden,
-                ];
-            }
-        };
+            $add = function (&$arr, string $key, string $label) use (&$maxOrden) {
+                if (!collect($arr)->contains(fn($c) => ($c['key'] ?? null) === $key)) {
+                    $arr[] = [
+                        'key'     => $key,
+                        'label'   => $label,
+                        'visible' => true,
+                        'fixed'   => false,
+                        'orden'   => ++$maxOrden,
+                    ];
+                }
+            };
 
-        $add($base, 'fecha_produccion', 'F. Producción');
-        $add($base, 'fecha_embarque',   'F. Embarque');
-        $add($base, 'fecha_entrega',    'F. Entrega');
+            $add($base, 'fecha_produccion', 'F. Producción');
+            $add($base, 'fecha_embarque',   'F. Embarque');
+            $add($base, 'fecha_entrega',    'F. Entrega');
 
-        return $base;
-}
+            return $base;
+    }
 
     /** Columnas base normalizadas/ordenadas (Collection) */
     public function columnasBase(): \Illuminate\Support\Collection
@@ -126,4 +122,7 @@ public static function defaultBaseColumnas(): array
 
         return $cols->sortBy('orden')->values();
     }
+
+
+
 }

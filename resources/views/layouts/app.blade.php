@@ -12,19 +12,11 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     
-
-
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     @vite(['resources/css/app.css','resources/js/app.js'])
 
     @livewireStyles
     @wireUiScripts
-  
-
-    
-
-  
-    
 </head>
 
 <body class="font-sans antialiased bg-gray-100 dark:bg-gray-900 overflow-x-hidden">

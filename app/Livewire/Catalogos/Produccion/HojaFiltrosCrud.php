@@ -63,6 +63,8 @@ public array $form = [
     ],
     'visible' => true,
     'orden' => null,
+    'acciones' => [],
+
 ];
 
     /** @var array<int> */
@@ -104,6 +106,46 @@ public array $form = [
     public ?int $deleteId = null;
 
     public ?int $filtroEditId = null;
+    
+
+            protected function defaultAcciones(): array
+    {
+        return [
+            // General
+            'ver_detalle'        => true,
+            'seleccion_multiple' => true,
+            'abrir_chat'         => true,
+
+            // Pedidos
+            'crear_pedido'       => false,
+            'editar_pedido'      => true,
+            'eliminar_pedido'    => false,
+            'duplicar_pedido'    => true,
+            'exportar_excel'     => true,
+
+            // Flujo / Producción
+            'aprobar_pedido'     => true,
+            'programar_pedido'   => true,
+            'entregar_pedido'    => true,
+            'cancelar_pedido'    => false,
+
+            // Diseño
+            'aprobar_diseno'     => true,
+            'rechazar_diseno'    => true,
+            'subir_archivos'     => true,
+
+            // Tareas
+            'crear_tarea'        => true,
+            'editar_tarea'       => true,
+            'eliminar_tarea'     => false,
+
+            // Masivos (bulk)
+            'bulk_exportar'      => true,
+            'bulk_eliminar'      => false,
+            'bulk_programar'     => true,
+            'bulk_aprobar'       => true,
+        ];
+    }
 
     protected function rules(): array
     {
@@ -137,6 +179,9 @@ public array $form = [
             'form.menu_config.icono'    => ['nullable','string','max:100'],
             'form.menu_config.orden'    => ['nullable','integer','min:0'],
             'form.menu_config.activo'   => ['boolean'],
+
+            'form.acciones' => ['array'],
+            'form.acciones.*' => ['boolean'],
         ];
     }
 
@@ -175,6 +220,10 @@ public array $form = [
         $this->roles = \Spatie\Permission\Models\Role::query()->orderBy('name')->pluck('name','id')->toArray();
         $this->hydrateEstadosPermitidos();     // pedidos
         $this->estadosDiseno = Proyecto::estadosDiseno();
+
+        if (empty($this->form['acciones'])) {
+        $this->form['acciones'] = $this->defaultAcciones();
+        }
     }
 
     public function updatedFormNombre($v): void
@@ -217,6 +266,7 @@ public array $form = [
                 'activo'      => true,
             ],
             'visible'=>true, 'orden'=>null,
+            'acciones' => $this->defaultAcciones(),
         ];
         $this->ensureEstadoBaseCol();
         $this->ensureFechasBaseCols();
@@ -249,6 +299,7 @@ public array $form = [
                 'activo'      => true,
             ], $hoja->menu_config ?? []), // 👈 carga/merge seguro
             'visible'=>(bool)$hoja->visible, 'orden'=>$hoja->orden,
+            'acciones' => array_merge($this->defaultAcciones(), $hoja->acciones_config ?? []),
         ];
 
         $this->ensureEstadoBaseCol();
@@ -304,6 +355,7 @@ public array $form = [
                 'menu_config' => $this->form['menu_config'] ?: ['ubicaciones'=>[],'etiqueta'=>null,'icono'=>null,'orden'=>null,'activo'=>true],
                 'visible'=>(bool)$this->form['visible'],
                 'orden'=>$this->form['orden'],
+                'acciones_config' => $this->form['acciones'] ?: $this->defaultAcciones(),
             ])->save();
 
             // sync filtros...

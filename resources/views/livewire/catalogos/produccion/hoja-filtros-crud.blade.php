@@ -444,12 +444,134 @@
                 </div>
             </div>
 
-
+            {{-- Contenido: ACCIONES --}}
+            {{-- Contenido: ACCIONES (sin componentes) --}}
             <div x-show="tab==='acciones'" class="mt-4 space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    
+                <p class="text-sm text-gray-600">
+                    Define qué acciones estarán <strong>visibles/habilitadas</strong> en el HojaViewer para esta Hoja.
+                </p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    {{-- Grupo: General --}}
+                    <div class="rounded-lg border p-3">
+                        <h4 class="text-sm font-semibold text-gray-800 mb-2">General</h4>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Ver detalle</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.ver_detalle">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Selección múltiple</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.seleccion_multiple">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Abrir chat del proyecto</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.abrir_chat">
+                        </label>
+                    </div>
+
+                    {{-- Grupo: Pedidos --}}
+                    <div class="rounded-lg border p-3">
+                        <h4 class="text-sm font-semibold text-gray-800 mb-2">Pedidos</h4>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Crear pedido</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.crear_pedido">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Editar pedido</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.editar_pedido">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Eliminar pedido</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.eliminar_pedido">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Duplicar pedido</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.duplicar_pedido">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Exportar a Excel</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.exportar_excel">
+                        </label>
+                    </div>
+
+                    {{-- Grupo: Flujo / Producción --}}
+                    <div class="rounded-lg border p-3">
+                        <h4 class="text-sm font-semibold text-gray-800 mb-2">Flujo / Producción</h4>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Aprobar pedido</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.aprobar_pedido">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Programar pedido</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.programar_pedido">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Entregar pedido</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.entregar_pedido">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Cancelar pedido</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.cancelar_pedido">
+                        </label>
+                    </div>
+
+                    {{-- Grupo: Diseño --}}
+                    <div class="rounded-lg border p-3">
+                        <h4 class="text-sm font-semibold text-gray-800 mb-2">Diseño</h4>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Aprobar diseño</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.aprobar_diseno">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Rechazar diseño</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.rechazar_diseno">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Subir archivos</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.subir_archivos">
+                        </label>
+                    </div>
+
+                    {{-- Grupo: Tareas --}}
+                    <div class="rounded-lg border p-3">
+                        <h4 class="text-sm font-semibold text-gray-800 mb-2">Tareas</h4>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Crear tarea</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.crear_tarea">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Editar tarea</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.editar_tarea">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Eliminar tarea</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.eliminar_tarea">
+                        </label>
+                    </div>
+
+                    {{-- Grupo: Acciones masivas --}}
+                    <div class="rounded-lg border p-3">
+                        <h4 class="text-sm font-semibold text-gray-800 mb-2">Acciones masivas</h4>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Exportar selección</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.bulk_exportar">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Eliminar selección</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.bulk_eliminar">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Programar selección</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.bulk_programar">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Aprobar selección</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.bulk_aprobar">
+                        </label>
+                    </div>
                 </div>
 
+                <p class="text-xs text-gray-500">El componente <code>HojaViewer</code> debe leer <code>$hoja->acciones_config</code>.</p>
             </div>
 
 

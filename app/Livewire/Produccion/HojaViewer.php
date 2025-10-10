@@ -11,6 +11,8 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Proyecto;
 use Illuminate\Support\Arr;
+use Carbon\Carbon;
+
 
 class HojaViewer extends Component
 {
@@ -63,7 +65,7 @@ class HojaViewer extends Component
     public ?string $sortColumn = null;   // ej. 'id','proyecto','producto','cliente','estado','estado_disenio','total','fecha_*'
     public string $sortDirection = 'asc'; // 'asc'|'desc'
 
-
+    public array $selectedIds = [];
 
     protected $listeners = [
         'hoja-actualizada' => '$refresh',
@@ -157,6 +159,19 @@ class HojaViewer extends Component
             $this->perPage = 15;
         }
         $this->resetPage();
+    }
+
+    public function limpiarFiltros(): void
+    {
+        $this->reset([
+            'search',
+            'filters',
+            'filtersCar',
+            'sortColumn',
+            'sortDirection',
+            'selectedIds',
+        ]);
+        $this->dispatch('toast', message: 'Filtros limpiados', type: 'info');
     }
 
     public function render()
@@ -338,5 +353,63 @@ class HojaViewer extends Component
             'valoresPorPedidoYCar' => $valoresPorPedidoYCar,
             'chipEstados'          => $this->chipEstados,
         ]);
+    }
+
+
+
+        public function updateField(int $pedidoId, string $field, $value): void
+    {
+        $permitidos = ['total','fecha_produccion','fecha_embarque','fecha_entrega','estado_id'];
+        if (!in_array($field, $permitidos, true)) return;
+
+        $pedido = \App\Models\Pedido::query()->find($pedidoId);
+        if (!$pedido) return;
+
+        switch ($field) {
+            case 'total':
+                $value = is_numeric($value) ? round((float)$value, 2) : 0.0;
+                break;
+            case 'fecha_produccion':
+            case 'fecha_embarque':
+            case 'fecha_entrega':
+                $value = $value ? Carbon::parse($value)->toDateString() : null;
+                break;
+            case 'estado_id':
+                $value = (int) $value;
+                break;
+        }
+
+        $pedido->{$field} = $value;
+
+        // Si cambias estado_id y manejas también columna de apoyo 'estado' (string), sincronízala:
+        if ($field === 'estado_id') {
+            $nombre = \DB::table('estados_pedido')->where('id', $value)->value('nombre');
+            if ($nombre) $pedido->estado = $nombre;
+        }
+
+        $pedido->save();
+
+        $this->dispatch('toast', message: 'Guardado', type: 'success');
+    }
+
+    /**
+     * Acción en grupo: cambiar a CANCELADO/CANCELADA.
+     */
+
+
+    public function cambiarEstadoRechazado(array $ids): void
+    {
+        if (empty($ids)) return;
+
+        // Forzamos al catálogo conocido: id 7 = RECHAZADO
+        \App\Models\Pedido::query()
+            ->whereIn('id', $ids)
+            ->update([
+                'estado_id' => 7,
+                'estado'    => 'RECHAZADO',
+            ]);
+
+        $this->selectedIds = [];
+        $this->dispatch('toast', message: 'Pedidos marcados como RECHAZADO', type: 'success');
     }
 }
