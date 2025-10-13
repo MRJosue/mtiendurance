@@ -463,7 +463,7 @@
                                     @if(($bc['key'] ?? '') !== 'id' && ($bc['visible'] ?? true))
                                         <td class="px-3 py-2 text-sm text-gray-700">
                                             @switch($bc['key'])
-                                                @case('proyecto') {{ $pedido->proyecto->nombre ?? '—' }} @break
+                                                @case('proyecto') {{ $pedido->proyecto->nombre ?? '—' }} @break 
                                                 @case('producto') {{ $pedido->producto->nombre ?? '—' }} @break
                                                 @case('cliente'){{ $pedido->usuario->name ?? '—' }}@break
                                                 @case('estado')
