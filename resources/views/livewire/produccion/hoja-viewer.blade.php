@@ -66,7 +66,7 @@
                     <x-button
                         type="button"
                         label="Acciones"
-                        primary
+                        gray  
                         x-bind:disabled="selected.length === 0"
                         class="disabled:opacity-50 disabled:cursor-not-allowed"
                     />
