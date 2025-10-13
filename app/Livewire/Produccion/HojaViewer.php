@@ -58,7 +58,8 @@ class HojaViewer extends Component
     public array $chipEstados = [];
 
 
-    public array $allEstadosDiseno = [];     // catálogo (strings) para selects
+    public array $allEstadosDiseno = [];
+
     public array $chipEstadosDiseno = []; // para el chip informativo
 
     /** Ordenamiento */
@@ -90,6 +91,15 @@ class HojaViewer extends Component
         return $q->get();
     }
 
+    public function getEstadosAllProperty()
+    {
+        // Catálogo completo (sin filtrar por hoja)
+        return \DB::table('estados_pedido')
+            ->select('id', 'nombre')
+            ->orderByRaw('COALESCE(orden, 999999), nombre')
+            ->get();
+    }
+
     public function getEstadosDisenoProperty(): array
     {
         $todos = $this->allEstadosDiseno;
@@ -106,7 +116,6 @@ class HojaViewer extends Component
         // Devuelve SOLO los configurados, preservando orden y validando que existan en el catálogo base
         return array_values(array_intersect($permitidos, $todos));
     }
-
 
 
     /** Helper para acceder a la hoja actual */
@@ -140,9 +149,12 @@ class HojaViewer extends Component
             $this->perPage = 15;
         }
 
+
+
         $this->allEstadosDiseno = method_exists(Proyecto::class, 'estadosDiseno')
             ? Proyecto::estadosDiseno()
             : ['PENDIENTE','ASIGNADO','EN PROCESO','REVISION','DISEÑO APROBADO','DISEÑO RECHAZADO','CANCELADO'];
+
 
         $ids = is_array($this->hoja->estados_permitidos) ? $this->hoja->estados_permitidos : [];
         $this->chipEstados = empty($ids)
@@ -367,8 +379,7 @@ $q = Pedido::query()
 
         // Asegura que perPage sea válido al paginar
         $perPage = in_array($this->perPage, $this->perPageOptions, true) ? $this->perPage : 15;
-        //$pedidos = $q->simplePaginate($perPage);
-        $pedidos = $q->paginate($perPage);
+        $pedidos = $q->simplePaginate($perPage);
 
                 // 🔹 NUEVO: recalcula SIEMPRE los IDs de la página visible
         $this->idsPagina = $pedidos

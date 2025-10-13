@@ -481,7 +481,7 @@
                                                             <select x-model="value"
                                                                     @change="$wire.updateField({{ $pedido->id }}, 'estado_id', value); edit=false;"
                                                                     class="w-44 rounded-lg border-gray-300 focus:ring-blue-500 text-xs">
-                                                                @foreach($this->estados as $e)
+                                                                @foreach($this->estadosAll as $e)
                                                                     <option value="{{ $e->id }}">{{ $e->nombre }}</option>
                                                                 @endforeach
                                                             </select>
