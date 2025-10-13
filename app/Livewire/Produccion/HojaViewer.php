@@ -367,7 +367,8 @@ $q = Pedido::query()
 
         // Asegura que perPage sea válido al paginar
         $perPage = in_array($this->perPage, $this->perPageOptions, true) ? $this->perPage : 15;
-        $pedidos = $q->simplePaginate($perPage);
+        //$pedidos = $q->simplePaginate($perPage);
+        $pedidos = $q->paginate($perPage);
 
                 // 🔹 NUEVO: recalcula SIEMPRE los IDs de la página visible
         $this->idsPagina = $pedidos
