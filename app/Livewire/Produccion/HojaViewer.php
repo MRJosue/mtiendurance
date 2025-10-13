@@ -58,7 +58,7 @@ class HojaViewer extends Component
     public array $chipEstados = [];
 
 
-    public array $estadosDiseno = [];     // catálogo (strings) para selects
+    public array $allEstadosDiseno = [];     // catálogo (strings) para selects
     public array $chipEstadosDiseno = []; // para el chip informativo
 
     /** Ordenamiento */
@@ -77,17 +77,37 @@ class HojaViewer extends Component
     /** Computed: catálogo de estados para el select */
     public function getEstadosProperty()
     {
-        // Si tienes un modelo EstadoPedido, puedes usarlo en lugar de DB::
-        return DB::table('estados_pedido')
+        // ids permitidos configurados en la hoja (si vienen vacíos => mostrar todos)
+        $permitidos = is_array($this->hoja->estados_permitidos)
+            ? array_filter($this->hoja->estados_permitidos)
+            : [];
+
+        $q = \DB::table('estados_pedido')
             ->select('id', 'nombre')
-            ->orderByRaw('COALESCE(orden, 999999), nombre')
-            ->get();
+            ->when(!empty($permitidos), fn($qq) => $qq->whereIn('id', $permitidos))
+            ->orderByRaw('COALESCE(orden, 999999), nombre');
+
+        return $q->get();
     }
 
-    public function getEstadosDisenoProperty()
+    public function getEstadosDisenoProperty(): array
     {
-        return $this->estadosDiseno;
+        $todos = $this->allEstadosDiseno;
+
+        $permitidos = is_array($this->hoja->estados_diseno_permitidos)
+            ? array_values($this->hoja->estados_diseno_permitidos)
+            : [];
+
+        // Si no hay configurados en la hoja, regresa todos
+        if (empty($permitidos)) {
+            return $todos;
+        }
+
+        // Devuelve SOLO los configurados, preservando orden y validando que existan en el catálogo base
+        return array_values(array_intersect($permitidos, $todos));
     }
+
+
 
     /** Helper para acceder a la hoja actual */
     public function getHojaProperty(): HojaFiltroProduccion
@@ -120,7 +140,7 @@ class HojaViewer extends Component
             $this->perPage = 15;
         }
 
-        $this->estadosDiseno = method_exists(Proyecto::class, 'estadosDiseno')
+        $this->allEstadosDiseno = method_exists(Proyecto::class, 'estadosDiseno')
             ? Proyecto::estadosDiseno()
             : ['PENDIENTE','ASIGNADO','EN PROCESO','REVISION','DISEÑO APROBADO','DISEÑO RECHAZADO','CANCELADO'];
 
