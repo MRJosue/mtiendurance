@@ -60,20 +60,33 @@
 
             {{-- Acciones en grupo --}}
             <div class="w-full sm:w-auto flex items-center gap-2">
-                <button
-                    type="button"
-                    class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                    :disabled="selected.length === 0"
+
+            <x-dropdown>
+                <x-slot name="trigger">
+                    <x-button
+                        type="button"
+                        label="Acciones"
+                        primary
+                        x-bind:disabled="selected.length === 0"
+                        class="disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                </x-slot>
+
+                <x-dropdown.item
                     @click="
-                        if (selected.length && confirm('¿Marcar como RECHAZADO los pedidos seleccionados?')) {
+                        if (!selected.length) { alert('Selecciona al menos un pedido.'); return; }
+                        if (confirm('¿Marcar como RECHAZADO los pedidos seleccionados?')) {
                             $wire.cambiarEstadoRechazado(selected);
                         }
                     "
-                >
-                    Rechazar seleccionados
-                </button>
+                    label="Rechazar seleccionados"
+                />
+                <x-dropdown.item separator label="Aprobar" />
+                <x-dropdown.item separator label="Exportar" />
+            </x-dropdown>
+
             </div>
-            
+                        
             
         </div>
 
