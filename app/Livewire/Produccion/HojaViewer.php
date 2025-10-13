@@ -201,61 +201,82 @@ class HojaViewer extends Component
             $productoIds = $filtro?->productoIds() ?? collect();
         }
 
-        $q = Pedido::query()
-            ->with([
-                'producto:id,nombre',
-                'proyecto:id,nombre,estado',
-                'estadoPedido:id,nombre,color',
-                'usuario:id,name',
-            ])
-            ->from('pedido') // aseguramos alias correcto
-            ->soloPedidos()
-            ->when($productoIds->isNotEmpty(), fn($qq) => $qq->whereIn('producto_id', $productoIds))
-            ->when(!empty($hoja->estados_permitidos), fn($qq) => $qq->whereIn('estado_id', $hoja->estados_permitidos))
-            ->when(!empty($hoja->estados_diseno_permitidos), function ($qq) use ($hoja) {
-                $permitidos = array_map(fn ($s) => $s === 'RECHAZADO' ? 'DISEÑO RECHAZADO' : $s, $hoja->estados_diseno_permitidos);
-                $qq->whereHas('proyecto', fn($q) => $q->whereIn('estado', $permitidos));
-            })
-            ->when($this->search, function ($qq) {
-                $term = "%{$this->search}%";
-                $qq->where(function ($s) use ($term) {
-                    $s->whereHas('proyecto', fn($q) => $q->where('nombre', 'like', $term))
-                      ->orWhereHas('producto', fn($q) => $q->where('nombre', 'like', $term))
-                      ->orWhereHas('estadoPedido', fn($q) => $q->where('nombre', 'like', $term))
-                      ->orWhereHas('usuario',  fn($q) => $q->where('name',   'like', $term));
-                });
-            })
-            // filtros base
-            ->when(Arr::get($this->filters, 'id'), fn($qq, $id) => $qq->where('pedido.id', (int)$id))
-            ->when(($p = trim((string)Arr::get($this->filters, 'proyecto', ''))) !== '',
-                fn($qq) => $qq->whereHas('proyecto', fn($q) => $q->where('nombre', 'like', "%{$this->filters['proyecto']}%")))
-            ->when(($p = trim((string)Arr::get($this->filters, 'producto', ''))) !== '',
-                fn($qq) => $qq->whereHas('producto', fn($q) => $q->where('nombre', 'like', "%{$this->filters['producto']}%")))
-            ->when(($c = trim((string)Arr::get($this->filters, 'cliente', ''))) !== '',
-                fn($qq) => $qq->whereHas('usuario', fn($q) => $q->where('name', 'like', "%{$this->filters['cliente']}%")))
-            ->when(Arr::get($this->filters, 'estado_id'), fn($qq, $eid) => $qq->where('estado_id', (int)$eid))
-            ->when(($ed = trim((string) Arr::get($this->filters, 'estado_disenio', ''))) !== '',
-                fn($qq) => $qq->whereHas('proyecto', fn($q) => $q->where('estado', $ed)))
-            ->when(($t = trim((string)Arr::get($this->filters, 'total', ''))) !== '',
-                fn($qq) => $qq->where('total', $t))
+$q = Pedido::query()
+    ->from('pedido')
+    // JOINs tempranos y reutilizables para filtros/orden
+    ->leftJoin('proyectos as pr', 'pr.id', '=', 'pedido.proyecto_id')
+    ->leftJoin('productos as pd', 'pd.id', '=', 'pedido.producto_id')
+    ->leftJoin('users as us', 'us.id', '=', 'pedido.user_id')
+    ->leftJoin('estados_pedido as ep', 'ep.id', '=', 'pedido.estado_id')
+    ->select('pedido.*')
+    ->with([
+        'producto:id,nombre',
+        'proyecto:id,nombre,estado',
+        'estadoPedido:id,nombre,color',
+        'usuario:id,name',
+    ])
+     ->soloPedidos()
 
-            // fecha_produccion
-            ->when(Arr::get($this->filters,'fecha_produccion_from'),
-                fn($qq,$d)=>$qq->whereDate('fecha_produccion','>=',$d))
-            ->when(Arr::get($this->filters,'fecha_produccion_to'),
-                fn($qq,$d)=>$qq->whereDate('fecha_produccion','<=',$d))
+    // filtros por hoja/filtro
+    ->when($productoIds->isNotEmpty(), fn($qq) => $qq->whereIn('pedido.producto_id', $productoIds))
+    ->when(!empty($hoja->estados_permitidos), fn($qq) => $qq->whereIn('pedido.estado_id', $hoja->estados_permitidos))
+    ->when(!empty($hoja->estados_diseno_permitidos), function ($qq) use ($hoja) {
+        $permitidos = array_map(fn ($s) => $s === 'RECHAZADO' ? 'DISEÑO RECHAZADO' : $s, $hoja->estados_diseno_permitidos);
+        $qq->whereIn('pr.estado', $permitidos);
+    })
 
-            // fecha_embarque
-            ->when(Arr::get($this->filters,'fecha_embarque_from'),
-                fn($qq,$d)=>$qq->whereDate('fecha_embarque','>=',$d))
-            ->when(Arr::get($this->filters,'fecha_embarque_to'),
-                fn($qq,$d)=>$qq->whereDate('fecha_embarque','<=',$d))
+    // búsqueda global (prefijo indexable en columnas unidas)
+    ->when(($term = trim((string)$this->search)) !== '', function ($qq) use ($term) {
+        $prefix   = $term.'%';
+        $contains = '%'.$term.'%'; // para 'pedido_busqueda' si no tienes FULLTEXT
+        $qq->where(function ($s) use ($prefix, $contains) {
+            // Si tienes FULLTEXT en 'pedido.busqueda_concat' o similar, cambia esta línea a whereFullText
+            $s->where('pedido.pedido_busqueda', 'like', $contains)
+              ->orWhere('pr.nombre', 'like', $prefix)
+              ->orWhere('pd.nombre', 'like', $prefix)
+              ->orWhere('us.name',   'like', $prefix)
+              ->orWhere('ep.nombre', 'like', $prefix);
+        });
+    })
 
-            // fecha_entrega
-            ->when(Arr::get($this->filters,'fecha_entrega_from'),
-                fn($qq,$d)=>$qq->whereDate('fecha_entrega','>=',$d))
-            ->when(Arr::get($this->filters,'fecha_entrega_to'),
-                fn($qq,$d)=>$qq->whereDate('fecha_entrega','<=',$d));
+    // filtros base
+    ->when(Arr::get($this->filters, 'id'), fn($qq, $id) => $qq->where('pedido.id', (int)$id))
+
+    ->when(($p = trim((string)Arr::get($this->filters, 'proyecto', ''))) !== '',
+        fn($qq) => $qq->where('pr.nombre', 'like', $p.'%'))
+
+    ->when(($p = trim((string)Arr::get($this->filters, 'producto', ''))) !== '',
+        fn($qq) => $qq->where('pd.nombre', 'like', $p.'%'))
+
+    ->when(($c = trim((string)Arr::get($this->filters, 'cliente', ''))) !== '',
+        fn($qq) => $qq->where('us.name', 'like', $c.'%'))
+
+    ->when(Arr::get($this->filters, 'estado_id'),
+        fn($qq, $eid) => $qq->where('pedido.estado_id', (int)$eid))
+
+    ->when(($ed = trim((string)Arr::get($this->filters, 'estado_disenio', ''))) !== '',
+        fn($qq) => $qq->where('pr.estado', $ed))
+
+    ->when(($t = trim((string)Arr::get($this->filters, 'total', ''))) !== '',
+        fn($qq) => $qq->where('pedido.total', $t))
+
+    // fecha_produccion
+    ->when(($fpFrom = Arr::get($this->filters, 'fecha_produccion_from')),
+        fn($qq) => $qq->where('pedido.fecha_produccion', '>=', $fpFrom.' 00:00:00'))
+    ->when(($fpTo = Arr::get($this->filters, 'fecha_produccion_to')),
+        fn($qq) => $qq->where('pedido.fecha_produccion', '<=', $fpTo.' 23:59:59'))
+
+    // fecha_embarque (¡ojo! variables propias)
+    ->when(($feFrom = Arr::get($this->filters, 'fecha_embarque_from')),
+        fn($qq) => $qq->where('pedido.fecha_embarque', '>=', $feFrom.' 00:00:00'))
+    ->when(($feTo = Arr::get($this->filters, 'fecha_embarque_to')),
+        fn($qq) => $qq->where('pedido.fecha_embarque', '<=', $feTo.' 23:59:59'))
+
+    // fecha_entrega (¡ojo! variables propias)
+    ->when(($fentFrom = Arr::get($this->filters, 'fecha_entrega_from')),
+        fn($qq) => $qq->where('pedido.fecha_entrega', '>=', $fentFrom.' 00:00:00'))
+    ->when(($fentTo = Arr::get($this->filters, 'fecha_entrega_to')),
+        fn($qq) => $qq->where('pedido.fecha_entrega', '<=', $fentTo.' 23:59:59'));
 
         // Filtros por características
         if (!empty($this->filtersCar)) {
@@ -305,9 +326,7 @@ class HojaViewer extends Component
                       ->select('pedido.*');
                     break;
                 case 'estado_disenio':
-                            $q->orderByRaw(
-                                "(SELECT pr2.estado FROM proyectos pr2 WHERE pr2.id = pedido.proyecto_id) " . ($dir === 'desc' ? 'DESC' : 'ASC')
-                            )->orderBy('pedido.id', 'desc'); // desempate estable
+                    $q->orderBy('pr.estado', $dir)->orderBy('pedido.id', 'desc');
                     break;
                 case 'total':
                     $q->orderBy('pedido.total', $dir);
@@ -328,7 +347,7 @@ class HojaViewer extends Component
 
         // Asegura que perPage sea válido al paginar
         $perPage = in_array($this->perPage, $this->perPageOptions, true) ? $this->perPage : 15;
-        $pedidos = $q->paginate($perPage);
+        $pedidos = $q->simplePaginate($perPage);
 
                 // 🔹 NUEVO: recalcula SIEMPRE los IDs de la página visible
         $this->idsPagina = $pedidos

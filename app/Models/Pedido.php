@@ -418,9 +418,9 @@ class Pedido extends Model
     {
         return $q->where('tipo', 'MUESTRA');
     }
-    public function scopeSoloPedidos($q)
+    public function scopeSoloPedidos($query)
     {
-        return $q->where('tipo', 'PEDIDO');
+        return $query->where('pedido.tipo', 'PEDIDO'); // ✅ calificado
     }
     public function scopeEstatusMuestra($q, string $status)
     {

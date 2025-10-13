@@ -46,6 +46,10 @@ use App\Events\MessageSent;
 use App\Events\NewChatMessage;
 use App\Models\MensajeChat;
 
+use App\Models\User;
+use Illuminate\Http\Request;
+
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -179,6 +183,25 @@ Route::get('/usuarios/permisos',[permisoscontroller::class, 'index'])->middlewar
 
 Route::get('/users/appi', [UserController::class, 'getusersselect'])->name('api.users.index');
 Route::get('/users/appi/preproyecto', [UserController::class, 'getusersselectpreproyecto'])->name('api.users.preproyecto.index');
+Route::get('/api/users/index', function (Request $request) {
+    $search = (string) $request->input('search', '');
+
+    $q = User::query()->select('id','name','email');
+
+    if ($search !== '') {
+        $q->where(function($qq) use ($search) {
+            $qq->where('name', 'like', "%{$search}%")
+               ->orWhere('email', 'like', "%{$search}%");
+        });
+    }
+
+    return $q->limit(15)->get()
+        ->map(fn($u) => [
+            'id'   => $u->id,
+            'name' => "{$u->name} ({$u->email})",
+        ]);
+})->name('api.users.index')->middleware('auth');
+
 
 
 //Rutas Panel de diseño
