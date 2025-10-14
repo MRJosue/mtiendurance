@@ -471,7 +471,10 @@
                                                         $nombreEstado = $pedido->estadoPedido->nombre ?? '—';
                                                         $claseColor   = trim((string)($pedido->estadoPedido->color ?? '')) ?: 'bg-gray-200 text-gray-700';
                                                     @endphp
-                                                    <div x-data="{ edit:false, value:'{{ $pedido->estado_id }}' }" class="inline-flex items-center gap-2">
+
+                                                    <div x-data="{ edit:false, value:'{{ $pedido->estado_id }}' }"
+                                                        wire:key="cell-estado-{{ $pedido->id }}"
+                                                        class="inline-flex items-center gap-2">
                                                         <template x-if="!edit">
                                                             <span @dblclick="edit=true"
                                                                 class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[9rem] justify-center cursor-pointer {{ $claseColor }}"
@@ -486,7 +489,8 @@
                                                                 @endforeach
                                                             </select>
                                                         </template>
-                                                        <button type="button" class="text-xs text-blue-600 hover:underline" @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
+                                                        <button type="button" class="text-xs text-blue-600 hover:underline"
+                                                                @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
                                                     </div>
                                                 @break
                                                 @case('estado_disenio')
@@ -507,7 +511,9 @@
                                                             edit:false,
                                                             value:'{{ number_format((float)($pedido->total ?? 0), 2, '.', '') }}',
                                                             save(){ this.edit=false; $wire.updateField({{ $pedido->id }}, 'total', this.value); }
-                                                        }" class="inline-flex items-center gap-2">
+                                                        }"
+                                                        wire:key="cell-total-{{ $pedido->id }}"
+                                                        class="inline-flex items-center gap-2">
                                                         <template x-if="!edit">
                                                             <span @dblclick="edit=true" class="cursor-pointer select-none">
                                                                 {{ number_format((float)($pedido->total ?? 0), 2) }}
@@ -518,7 +524,8 @@
                                                                 @keydown.enter.prevent="save()" @blur="save()"
                                                                 class="w-28 rounded-lg border-gray-300 focus:ring-blue-500 text-sm">
                                                         </template>
-                                                        <button type="button" class="text-xs text-blue-600 hover:underline" @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
+                                                        <button type="button" class="text-xs text-blue-600 hover:underline"
+                                                                @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
                                                     </div>
                                                 @break
 
@@ -528,7 +535,9 @@
                                                             edit:false,
                                                             value:'{{ $pedido->fecha_produccion?->format('Y-m-d') }}',
                                                             save(){ this.edit=false; $wire.updateField({{ $pedido->id }}, 'fecha_produccion', this.value || null); }
-                                                        }" class="inline-flex items-center gap-2">
+                                                        }"
+                                                        wire:key="cell-fecha-produccion-{{ $pedido->id }}" 
+                                                        class="inline-flex items-center gap-2">
                                                         <template x-if="!edit">
                                                             <span @dblclick="edit=true" class="cursor-pointer select-none">
                                                                 {{ $pedido->fecha_produccion?->format('d/m/Y') ?? '—' }}
@@ -539,16 +548,22 @@
                                                                 @keydown.enter.prevent="save()" @blur="save()"
                                                                 class="w-40 rounded-lg border-gray-300 focus:ring-blue-500 text-sm">
                                                         </template>
-                                                        <button type="button" class="text-xs text-blue-600 hover:underline" @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
+                                                             
+                                                            <button type="button" class="text-xs text-blue-600 hover:underline"
+                                                                @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
                                                     </div>
                                                 @break
+   
+
 
                                                 @case('fecha_embarque')
                                                     <div x-data="{
                                                             edit:false,
                                                             value:'{{ $pedido->fecha_embarque?->format('Y-m-d') }}',
                                                             save(){ this.edit=false; $wire.updateField({{ $pedido->id }}, 'fecha_embarque', this.value || null); }
-                                                        }" class="inline-flex items-center gap-2">
+                                                        }"
+                                                        wire:key="cell-fecha-produccion-{{ $pedido->id }}"  
+                                                        class="inline-flex items-center gap-2">
                                                         <template x-if="!edit">
                                                             <span @dblclick="edit=true" class="cursor-pointer select-none">
                                                                 {{ $pedido->fecha_embarque?->format('d/m/Y') ?? '—' }}
@@ -559,7 +574,8 @@
                                                                 @keydown.enter.prevent="save()" @blur="save()"
                                                                 class="w-40 rounded-lg border-gray-300 focus:ring-blue-500 text-sm">
                                                         </template>
-                                                        <button type="button" class="text-xs text-blue-600 hover:underline" @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
+                                                        <button type="button" class="text-xs text-blue-600 hover:underline"
+                                                                @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
                                                     </div>
                                                 @break
 
@@ -568,7 +584,9 @@
                                                             edit:false,
                                                             value:'{{ $pedido->fecha_entrega?->format('Y-m-d') }}',
                                                             save(){ this.edit=false; $wire.updateField({{ $pedido->id }}, 'fecha_entrega', this.value || null); }
-                                                        }" class="inline-flex items-center gap-2">
+                                                        }"
+                                                        wire:key="cell-fecha-produccion-{{ $pedido->id }}"  
+                                                        class="inline-flex items-center gap-2">
                                                         <template x-if="!edit">
                                                             <span @dblclick="edit=true" class="cursor-pointer select-none">
                                                                 {{ $pedido->fecha_entrega?->format('d/m/Y') ?? '—' }}
@@ -579,7 +597,8 @@
                                                                 @keydown.enter.prevent="save()" @blur="save()"
                                                                 class="w-40 rounded-lg border-gray-300 focus:ring-blue-500 text-sm">
                                                         </template>
-                                                        <button type="button" class="text-xs text-blue-600 hover:underline" @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
+                                                          <button type="button" class="text-xs text-blue-600 hover:underline"
+                                                                @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
                                                     </div>
                                                 @break
 
