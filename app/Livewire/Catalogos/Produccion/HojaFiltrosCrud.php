@@ -116,34 +116,44 @@ public array $form = [
             'seleccion_multiple' => true,
             'abrir_chat'         => true,
 
-            // Pedidos
-            'crear_pedido'       => false,
-            'editar_pedido'      => true,
-            'eliminar_pedido'    => false,
-            'duplicar_pedido'    => true,
-            'exportar_excel'     => true,
+            // // Pedidos
+            // 'crear_pedido'       => false,
+            // 'editar_pedido'      => true,
+            // 'eliminar_pedido'    => false,
+            // 'duplicar_pedido'    => true,
+            // 'exportar_excel'     => true,
 
-            // Flujo / Producción
-            'aprobar_pedido'     => true,
-            'programar_pedido'   => true,
-            'entregar_pedido'    => true,
-            'cancelar_pedido'    => false,
+            // // Flujo / Producción
+            // 'aprobar_pedido'     => true,
+            // 'programar_pedido'   => true,
+            // 'entregar_pedido'    => true,
+            // 'cancelar_pedido'    => false,
 
-            // Diseño
-            'aprobar_diseno'     => true,
-            'rechazar_diseno'    => true,
-            'subir_archivos'     => true,
+            // // Diseño
+            // 'aprobar_diseno'     => true,
+            // 'rechazar_diseno'    => true,
+            // 'subir_archivos'     => true,
 
-            // Tareas
-            'crear_tarea'        => true,
-            'editar_tarea'       => true,
-            'eliminar_tarea'     => false,
+            // // Tareas
+            // 'crear_tarea'        => true,
+            // 'editar_tarea'       => true,
+            // 'eliminar_tarea'     => false,
 
             // Masivos (bulk)
             'bulk_exportar'      => true,
             'bulk_eliminar'      => false,
             'bulk_programar'     => true,
             'bulk_aprobar'       => true,
+
+            // Edicion en linea
+
+            'bulk_edit_total'   => true,
+            'bulk_edit_estado'  => true,
+            'bulk_edit_fecha_produccion'  => true,
+            'bulk_edit_fecha_embarque'  => true,
+            'bulk_edit_fecha_entrega'  => true,
+
+
         ];
     }
 

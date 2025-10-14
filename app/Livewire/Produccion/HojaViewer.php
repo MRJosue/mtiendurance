@@ -51,6 +51,39 @@ class HojaViewer extends Component
         'fecha_entrega_to'      => null,
     ];
 
+    public static function accionesDefaults(): array
+    {
+        return [
+            'abrir_chat' => false,
+            'crear_tarea' => false,
+            'ver_detalle' => true,
+            'bulk_aprobar' => false,
+            'crear_pedido' => false,
+            'editar_tarea' => false,
+            'bulk_eliminar' => false,
+            'bulk_exportar' => false,
+            'editar_pedido' => false,
+            'aprobar_diseno' => false,
+            'aprobar_pedido' => false,
+            'bulk_programar' => false,
+            'eliminar_tarea' => false,
+            'exportar_excel' => false,
+            'subir_archivos' => false,
+            'bulk_edit_total' => false,
+            'cancelar_pedido' => false,
+            'duplicar_pedido' => false,
+            'eliminar_pedido' => false,
+            'entregar_pedido' => false,
+            'rechazar_diseno' => false,
+            'bulk_edit_estado' => false,
+            'programar_pedido' => false,
+            'seleccion_multiple' => true,
+            'bulk_edit_fecha_entrega' => false,
+            'bulk_edit_fecha_embarque' => false,
+            'bulk_edit_fecha_produccion' => false,
+        ];
+    }
+
     /** Filtros por característica (dinámicos del filtro) */
     public array $filtersCar = [];
 
@@ -100,6 +133,33 @@ class HojaViewer extends Component
             ->get();
     }
 
+
+
+        public function getAccionesAttribute(): array
+    {
+        $cfg = $this->acciones_config ?? [];
+        if (is_string($cfg)) {
+            $cfg = json_decode($cfg, true) ?: [];
+        }
+
+        // Normaliza a boolean donde aplique (opcional, pero útil si vienen '1'/'0')
+        if (is_array($cfg)) {
+            foreach ($cfg as $k => $v) {
+                if (is_string($v) && ($v === '0' || $v === '1')) {
+                    $cfg[$k] = $v === '1';
+                }
+            }
+        }
+
+        return array_replace(static::accionesDefaults(), is_array($cfg) ? $cfg : []);
+    }
+    /** (Opcional) Helper de modelo para verificar una acción */
+    public function canAccion(string $key): bool
+    {
+        return (bool) data_get($this->acciones, $key, false);
+    }
+
+
     public function getEstadosDisenoProperty(): array
     {
         $todos = $this->allEstadosDiseno;
@@ -115,6 +175,22 @@ class HojaViewer extends Component
 
         // Devuelve SOLO los configurados, preservando orden y validando que existan en el catálogo base
         return array_values(array_intersect($permitidos, $todos));
+    }
+
+    /** Acceso normalizado a acciones_config de la hoja */
+    public function getAccionesProperty(): array
+    {
+        $cfg = $this->hoja->acciones_config ?? [];
+        if (is_string($cfg)) {
+            $cfg = json_decode($cfg, true) ?: [];
+        }
+        return array_merge($this->accionesDefaults(), is_array($cfg) ? $cfg : []);
+    }
+
+    /** Helper rápido */
+    public function can(string $key): bool
+    {
+        return (bool) Arr::get($this->acciones, $key, false);
     }
 
 
@@ -418,6 +494,7 @@ $q = Pedido::query()
             'pedidos'              => $pedidos,
             'valoresPorPedidoYCar' => $valoresPorPedidoYCar,
             'chipEstados'          => $this->chipEstados,
+            'acciones'             => $this->acciones,
         ]);
     }
 
@@ -427,7 +504,20 @@ $q = Pedido::query()
     {
         $permitidos = ['total','fecha_produccion','fecha_embarque','fecha_entrega','estado_id'];
         if (!in_array($field, $permitidos, true)) return;
+        
+        // Reglas por campo según permisos
+        $puedeEditar = $this->can('editar_pedido')
+            || ($field === 'total'           && $this->can('bulk_edit_total'))
+            || ($field === 'estado_id'       && $this->can('bulk_edit_estado'))
+            || ($field === 'fecha_produccion'&& $this->can('bulk_edit_fecha_produccion'))
+            || ($field === 'fecha_embarque'  && $this->can('bulk_edit_fecha_embarque'))
+            || ($field === 'fecha_entrega'   && $this->can('bulk_edit_fecha_entrega'));
 
+        if (!$puedeEditar) {
+            $this->dispatch('toast', message: 'No tienes permiso para editar este campo', type: 'error');
+            return;
+        }
+        
         $pedido = \App\Models\Pedido::query()->find($pedidoId);
         if (!$pedido) return;
 
@@ -467,7 +557,11 @@ $q = Pedido::query()
     {
         if (empty($ids)) return;
 
-        // Forzamos al catálogo conocido: id 7 = RECHAZADO
+        if (!$this->can('bulk_edit_estado')) {
+            $this->dispatch('toast', message: 'No tienes permiso para cambiar estado en lote', type: 'error');
+            return;
+        }
+
         \App\Models\Pedido::query()
             ->whereIn('id', $ids)
             ->update([
@@ -478,4 +572,31 @@ $q = Pedido::query()
         $this->selectedIds = [];
         $this->dispatch('toast', message: 'Pedidos marcados como RECHAZADO', type: 'success');
     }
+
+    public function toggleSelectAllOnPage(bool $checked): void
+    {
+        // Normaliza a enteros
+        $pagina   = array_map('intval', $this->idsPagina ?? []);
+        $selected = array_map('intval', $this->selectedIds ?? []);
+
+        if ($checked) {
+            // Unir y quitar duplicados
+            $this->selectedIds = array_values(array_unique(array_merge($selected, $pagina)));
+        } else {
+            // Quitar los de la página actual
+            $this->selectedIds = array_values(array_diff($selected, $pagina));
+        }
+    }
+
+    /** Útil si quieres consultarlo desde Blade (opcional) */
+    public function isPageFullySelected(): bool
+    {
+        $pagina   = array_map('intval', $this->idsPagina ?? []);
+        if (empty($pagina)) return false;
+
+        $selected = array_map('intval', $this->selectedIds ?? []);
+        // ¿Todos los de la página están en selected?
+        return empty(array_diff($pagina, $selected));
+    }
+
 }

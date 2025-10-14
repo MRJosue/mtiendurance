@@ -61,31 +61,71 @@
             {{-- Acciones en grupo --}}
             <div class="w-full sm:w-auto flex items-center gap-2">
 
-            <x-dropdown>
-                <x-slot name="trigger">
-                    <x-button
-                        type="button"
-                        label="Acciones"
-                        gray  
-                        x-bind:disabled="selected.length === 0"
-                        class="disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                </x-slot>
+                <div class="w-full sm:w-auto flex items-center gap-2" >
+                    <x-dropdown>
+                        <x-slot name="trigger">
+                            <x-button
+                                type="button"
+                                label="Acciones"
+                                gray
+                                x-bind:disabled="selected.length === 0"
+                                class="disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                        </x-slot>
 
-                <x-dropdown.item
-                    @click="
-                        if (!selected.length) { alert('Selecciona al menos un pedido.'); return; }
-                        if (confirm('¿Marcar como RECHAZADO los pedidos seleccionados?')) {
-                            $wire.cambiarEstadoRechazado(selected);
-                        }
-                    "
-                    label="Rechazar seleccionados"
-                />
-                <x-dropdown.item separator label="Aprobar" />
-                <x-dropdown.item separator label="Exportar" />
-            </x-dropdown>
+                        {{-- Solo renderiza opciones permitidas --}}
+                        @if($acciones['bulk_edit_estado'])
+                            <x-dropdown.item
+                                @click="
+                                    if (!selected.length) { alert('Selecciona al menos un pedido.'); return; }
+                                    if (confirm('¿Marcar como RECHAZADO los pedidos seleccionados?')) {
+                                        $wire.cambiarEstadoRechazado(selected);
+                                    }
+                                "
+                                label="Rechazar seleccionados"
+                            />
+                        @endif
 
+                        @if($acciones['bulk_aprobar'])
+                            <x-dropdown.item
+                                @click="
+                                    if (!selected.length) { alert('Selecciona al menos un pedido.'); return; }
+                                    $wire.dispatch('abrir-modal-aprobar', { ids: selected })
+                                "
+                                label="Aprobar seleccionados"
+                            />
+                        @endif
+
+                        @if($acciones['bulk_programar'])
+                            <x-dropdown.item
+                                @click="$wire.dispatch('abrir-modal-programar', { ids: selected })"
+                                label="Programar seleccionados"
+                            />
+                        @endif
+
+                        @if($acciones['bulk_exportar'])
+                            <x-dropdown.item separator
+                                @click="$wire.dispatch('exportar-seleccion', { ids: selected })"
+                                label="Exportar seleccionados"
+                            />
+                        @endif
+
+                        @if($acciones['bulk_eliminar'])
+                            <x-dropdown.item separator
+                                @click="
+                                    if (confirm('¿Eliminar definitivamente los pedidos seleccionados?')) {
+                                        $wire.dispatch('eliminar-seleccion', { ids: selected })
+                                    }
+                                "
+                                label="Eliminar seleccionados"
+                            />
+                        @endif
+                    </x-dropdown>
+                </div>
             </div>
+
+
+            
                         
             
         </div>
@@ -472,26 +512,28 @@
                                                         $claseColor   = trim((string)($pedido->estadoPedido->color ?? '')) ?: 'bg-gray-200 text-gray-700';
                                                     @endphp
 
-                                                    <div x-data="{ edit:false, value:'{{ $pedido->estado_id }}' }"
-                                                        wire:key="cell-estado-{{ $pedido->id }}"
-                                                        class="inline-flex items-center gap-2">
-                                                        <template x-if="!edit">
-                                                            <span @dblclick="edit=true"
-                                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[9rem] justify-center cursor-pointer {{ $claseColor }}"
-                                                                title="{{ $nombreEstado }}">{{ $nombreEstado }}</span>
-                                                        </template>
-                                                        <template x-if="edit">
-                                                            <select x-model="value"
-                                                                    @change="$wire.updateField({{ $pedido->id }}, 'estado_id', value); edit=false;"
-                                                                    class="w-44 rounded-lg border-gray-300 focus:ring-blue-500 text-xs">
-                                                                @foreach($this->estadosAll as $e)
-                                                                    <option value="{{ $e->id }}">{{ $e->nombre }}</option>
-                                                                @endforeach
-                                                            </select>
-                                                        </template>
-                                                        <button type="button" class="text-xs text-blue-600 hover:underline"
-                                                                @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
-                                                    </div>
+                                                    @if(   $acciones['bulk_edit_estado'])
+                                                        <div x-data="{ edit:false, value:'{{ $pedido->estado_id }}' }" class="inline-flex items-center gap-2">
+                                                            <template x-if="!edit">
+                                                                <span @dblclick="edit=true"
+                                                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[9rem] justify-center cursor-pointer {{ $claseColor }}"
+                                                                    title="{{ $nombreEstado }}">{{ $nombreEstado }}</span>
+                                                            </template>
+                                                            <template x-if="edit">
+                                                                <select x-model="value"
+                                                                        @change="$wire.updateField({{ $pedido->id }}, 'estado_id', value); edit=false;"
+                                                                        class="w-44 rounded-lg border-gray-300 focus:ring-blue-500 text-xs">
+                                                                    @foreach($this->estadosAll as $e)
+                                                                        <option value="{{ $e->id }}">{{ $e->nombre }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </template>
+                                                            <button type="button" class="text-xs text-blue-600 hover:underline" @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
+                                                        </div>
+                                                        @else
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[9rem] justify-center {{ $claseColor }}" title="{{ $nombreEstado }}">{{ $nombreEstado }}</span>
+                                                    @endif
+
                                                 @break
                                                 @case('estado_disenio')
                                                     @php
@@ -507,37 +549,41 @@
                                                     </span>
                                                 @break
                                                 @case('total')
-                                                    <div x-data="{
-                                                            edit:false,
-                                                            value:'{{ number_format((float)($pedido->total ?? 0), 2, '.', '') }}',
-                                                            save(){ this.edit=false; $wire.updateField({{ $pedido->id }}, 'total', this.value); }
-                                                        }"
-                                                        wire:key="cell-total-{{ $pedido->id }}"
-                                                        class="inline-flex items-center gap-2">
-                                                        <template x-if="!edit">
-                                                            <span @dblclick="edit=true" class="cursor-pointer select-none">
-                                                                {{ number_format((float)($pedido->total ?? 0), 2) }}
-                                                            </span>
-                                                        </template>
-                                                        <template x-if="edit">
-                                                            <input type="number" step="0.01" x-model="value"
-                                                                @keydown.enter.prevent="save()" @blur="save()"
-                                                                class="w-28 rounded-lg border-gray-300 focus:ring-blue-500 text-sm">
-                                                        </template>
-                                                        <button type="button" class="text-xs text-blue-600 hover:underline"
-                                                                @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
-                                                    </div>
+                                                    @if( $acciones['bulk_edit_total'])
+                                                        <div x-data="{
+                                                                edit:false,
+                                                                value:'{{ number_format((float)($pedido->total ?? 0), 2, '.', '') }}',
+                                                                save(){ this.edit=false; $wire.updateField({{ $pedido->id }}, 'total', this.value); }
+                                                            }"
+                                                            wire:key="cell-total-{{ $pedido->id }}"
+                                                            class="inline-flex items-center gap-2">
+                                                            <template x-if="!edit">
+                                                                <span @dblclick="edit=true" class="cursor-pointer select-none">
+                                                                    {{ number_format((float)($pedido->total ?? 0), 2) }}
+                                                                </span>
+                                                            </template>
+                                                            <template x-if="edit">
+                                                                <input type="number" step="0.01" x-model="value"
+                                                                    @keydown.enter.prevent="save()" @blur="save()"
+                                                                    class="w-28 rounded-lg border-gray-300 focus:ring-blue-500 text-sm">
+                                                            </template>
+                                                            <button type="button" class="text-xs text-blue-600 hover:underline"
+                                                                    @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
+                                                        </div>
+                                                    @else
+                                                        {{ number_format((float)($pedido->total ?? 0), 2) }}
+                                                    @endif
                                                 @break
 
-                                                {{-- NUEVOS: fechas (si tienes casts a date en el modelo Pedido, usa ->format) --}}
+                                                {{-- NUEVOS: fechas (si tienes casts a date en el modelo Pedido, usa ->format) $acciones['editar_pedido'] || --}}
                                                 @case('fecha_produccion')
+
+                                                @if(   $acciones['bulk_edit_fecha_produccion'])
                                                     <div x-data="{
                                                             edit:false,
                                                             value:'{{ $pedido->fecha_produccion?->format('Y-m-d') }}',
                                                             save(){ this.edit=false; $wire.updateField({{ $pedido->id }}, 'fecha_produccion', this.value || null); }
-                                                        }"
-                                                        wire:key="cell-fecha-produccion-{{ $pedido->id }}" 
-                                                        class="inline-flex items-center gap-2">
+                                                        }" class="inline-flex items-center gap-2">
                                                         <template x-if="!edit">
                                                             <span @dblclick="edit=true" class="cursor-pointer select-none">
                                                                 {{ $pedido->fecha_produccion?->format('d/m/Y') ?? '—' }}
@@ -548,58 +594,70 @@
                                                                 @keydown.enter.prevent="save()" @blur="save()"
                                                                 class="w-40 rounded-lg border-gray-300 focus:ring-blue-500 text-sm">
                                                         </template>
-                                                             
-                                                            <button type="button" class="text-xs text-blue-600 hover:underline"
-                                                                @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
+                                                        <button type="button" class="text-xs text-blue-600 hover:underline" @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
                                                     </div>
-                                                @break
-   
+                                                @else
+                                                    <span class="cursor-pointer select-none">
+                                                        {{ $pedido->fecha_produccion?->format('d/m/Y') ?? '—' }}
+                                                    </span>
+                                                @endif
 
+                                                @break
 
                                                 @case('fecha_embarque')
-                                                    <div x-data="{
+
+                                                    @if(   $acciones['bulk_edit_fecha_embarque'])
+                                                        <div x-data="{
                                                             edit:false,
                                                             value:'{{ $pedido->fecha_embarque?->format('Y-m-d') }}',
                                                             save(){ this.edit=false; $wire.updateField({{ $pedido->id }}, 'fecha_embarque', this.value || null); }
-                                                        }"
-                                                        wire:key="cell-fecha-produccion-{{ $pedido->id }}"  
-                                                        class="inline-flex items-center gap-2">
-                                                        <template x-if="!edit">
-                                                            <span @dblclick="edit=true" class="cursor-pointer select-none">
-                                                                {{ $pedido->fecha_embarque?->format('d/m/Y') ?? '—' }}
-                                                            </span>
-                                                        </template>
-                                                        <template x-if="edit">
-                                                            <input type="date" x-model="value"
-                                                                @keydown.enter.prevent="save()" @blur="save()"
-                                                                class="w-40 rounded-lg border-gray-300 focus:ring-blue-500 text-sm">
-                                                        </template>
-                                                        <button type="button" class="text-xs text-blue-600 hover:underline"
-                                                                @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
-                                                    </div>
+                                                        }" class="inline-flex items-center gap-2">
+                                                            <template x-if="!edit">
+                                                                <span @dblclick="edit=true" class="cursor-pointer select-none">
+                                                                    {{ $pedido->fecha_embarque?->format('d/m/Y') ?? '—' }}
+                                                                </span>
+                                                            </template>
+                                                            <template x-if="edit">
+                                                                <input type="date" x-model="value"
+                                                                    @keydown.enter.prevent="save()" @blur="save()"
+                                                                    class="w-40 rounded-lg border-gray-300 focus:ring-blue-500 text-sm">
+                                                            </template>
+                                                            <button type="button" class="text-xs text-blue-600 hover:underline" @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
+                                                        </div>
+                                                    @else
+                                                                    <span class="cursor-pointer select-none">
+                                                                    {{ $pedido->fecha_embarque?->format('d/m/Y') ?? '—' }}
+                                                                    </span>
+                                                    @endif
+
                                                 @break
 
                                                 @case('fecha_entrega')
-                                                    <div x-data="{
-                                                            edit:false,
-                                                            value:'{{ $pedido->fecha_entrega?->format('Y-m-d') }}',
-                                                            save(){ this.edit=false; $wire.updateField({{ $pedido->id }}, 'fecha_entrega', this.value || null); }
-                                                        }"
-                                                        wire:key="cell-fecha-produccion-{{ $pedido->id }}"  
-                                                        class="inline-flex items-center gap-2">
-                                                        <template x-if="!edit">
-                                                            <span @dblclick="edit=true" class="cursor-pointer select-none">
-                                                                {{ $pedido->fecha_entrega?->format('d/m/Y') ?? '—' }}
-                                                            </span>
-                                                        </template>
-                                                        <template x-if="edit">
-                                                            <input type="date" x-model="value"
-                                                                @keydown.enter.prevent="save()" @blur="save()"
-                                                                class="w-40 rounded-lg border-gray-300 focus:ring-blue-500 text-sm">
-                                                        </template>
-                                                          <button type="button" class="text-xs text-blue-600 hover:underline"
-                                                                @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
-                                                    </div>
+
+                                                    @if (   $acciones['bulk_edit_fecha_entrega'])
+                                                        <div x-data="{
+                                                                edit:false,
+                                                                value:'{{ $pedido->fecha_entrega?->format('Y-m-d') }}',
+                                                                save(){ this.edit=false; $wire.updateField({{ $pedido->id }}, 'fecha_entrega', this.value || null); }
+                                                            }" class="inline-flex items-center gap-2">
+                                                            <template x-if="!edit">
+                                                                <span @dblclick="edit=true" class="cursor-pointer select-none">
+                                                                    {{ $pedido->fecha_entrega?->format('d/m/Y') ?? '—' }}
+                                                                </span>
+                                                            </template>
+                                                            <template x-if="edit">
+                                                                <input type="date" x-model="value"
+                                                                    @keydown.enter.prevent="save()" @blur="save()"
+                                                                    class="w-40 rounded-lg border-gray-300 focus:ring-blue-500 text-sm">
+                                                            </template>
+                                                            <button type="button" class="text-xs text-blue-600 hover:underline" @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
+                                                        </div>
+                                                    @else
+                                                                <span  class="cursor-pointer select-none">
+                                                                    {{ $pedido->fecha_entrega?->format('d/m/Y') ?? '—' }}
+                                                                </span>
+                                                    @endif
+                                    
                                                 @break
 
                                                 @default — 
@@ -639,22 +697,86 @@
                                     </td>
                                 @endforeach
                                     {{-- Aqui irian las acciones --}}
-                                <td class="px-3 py-2 text-sm text-gray-700">
-                                    <x-dropdown>
-                                        <x-dropdown.item>
-                                            <b>Help Center</b>
-                                        </x-dropdown.item>
-                                    
-                                        <x-dropdown.item separator>
-                                            <b>Live Chat</b>
-                                        </x-dropdown.item>
-                                    
-                                        <x-dropdown.item separator>
-                                            <b>Logout</b>
-                                        </x-dropdown.item>
-                                    </x-dropdown>
-                                </td>
+                                        <td class="px-3 py-2 text-sm text-gray-700">
+                                            <x-dropdown>
+                                                @if($acciones['ver_detalle'])
+                                                    <x-dropdown.item
+                                                        @click="$wire.dispatch('ir-a-detalle', { id: {{ $pedido->id }} })"
+                                                        label="Ver detalle"
+                                                    />
+                                                @endif
 
+                                                @if($acciones['abrir_chat'])
+                                                    <x-dropdown.item
+                                                        @click="$wire.dispatch('abrir-chat', { proyecto_id: {{ $pedido->proyecto_id }} })"
+                                                        label="Abrir chat"
+                                                    />
+                                                @endif
+
+                                                @if($acciones['crear_tarea'])
+                                                    <x-dropdown.item
+                                                        @click="$wire.dispatch('abrir-modal-tarea', { pedido_id: {{ $pedido->id }} })"
+                                                        label="Crear tarea"
+                                                    />
+                                                @endif
+
+                                                @if($acciones['editar_pedido'])
+                                                    <x-dropdown.item
+                                                        @click="$wire.dispatch('editar-pedido', { id: {{ $pedido->id }} })"
+                                                        label="Editar pedido"
+                                                    />
+                                                @endif
+
+                                                @if($acciones['duplicar_pedido'])
+                                                    <x-dropdown.item
+                                                        @click="$wire.dispatch('duplicar-pedido', { id: {{ $pedido->id }} })"
+                                                        label="Duplicar pedido"
+                                                    />
+                                                @endif
+
+                                                @if($acciones['eliminar_pedido'])
+                                                    <x-dropdown.item separator
+                                                        @click="if (confirm('¿Eliminar este pedido?')) $wire.dispatch('eliminar-pedido', { id: {{ $pedido->id }} })"
+                                                        label="Eliminar pedido"
+                                                    />
+                                                @endif
+
+                                                @if($acciones['programar_pedido'])
+                                                    <x-dropdown.item
+                                                        @click="$wire.dispatch('programar-pedido', { id: {{ $pedido->id }} })"
+                                                        label="Programar pedido"
+                                                    />
+                                                @endif
+
+                                                @if($acciones['entregar_pedido'])
+                                                    <x-dropdown.item
+                                                        @click="$wire.dispatch('abrir-modal-entrega', { id: {{ $pedido->id }} })"
+                                                        label="Entregar pedido"
+                                                    />
+                                                @endif
+
+                                                @if($acciones['cancelar_pedido'])
+                                                    <x-dropdown.item
+                                                        @click="if (confirm('¿Cancelar este pedido?')) $wire.dispatch('cancelar-pedido', { id: {{ $pedido->id }} })"
+                                                        label="Cancelar pedido"
+                                                    />
+                                                @endif
+
+                                                @if($acciones['subir_archivos'])
+                                                    <x-dropdown.item
+                                                        @click="$wire.dispatch('subir-archivos', { id: {{ $pedido->id }} })"
+                                                        label="Subir archivos"
+                                                    />
+                                                @endif
+
+                                                @if($acciones['exportar_excel'])
+                                                    <x-dropdown.item separator
+                                                        @click="$wire.dispatch('exportar-excel-pedido', { id: {{ $pedido->id }} })"
+                                                        label="Exportar a Excel"
+                                                    />
+                                                @endif
+                                            </x-dropdown>
+                                        </td>
                             
                             </tr>
                         @endforeach

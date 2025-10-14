@@ -463,14 +463,14 @@
                             <span class="text-sm text-gray-700">Selección múltiple</span>
                             <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.seleccion_multiple">
                         </label>
-                        <label class="flex items-center justify-between py-1">
+                        {{-- <label class="flex items-center justify-between py-1">
                             <span class="text-sm text-gray-700">Abrir chat del proyecto</span>
                             <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.abrir_chat">
-                        </label>
+                        </label> --}}
                     </div>
 
                     {{-- Grupo: Pedidos --}}
-                    <div class="rounded-lg border p-3">
+                    {{-- <div class="rounded-lg border p-3">
                         <h4 class="text-sm font-semibold text-gray-800 mb-2">Pedidos</h4>
                         <label class="flex items-center justify-between py-1">
                             <span class="text-sm text-gray-700">Crear pedido</span>
@@ -492,10 +492,10 @@
                             <span class="text-sm text-gray-700">Exportar a Excel</span>
                             <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.exportar_excel">
                         </label>
-                    </div>
+                    </div> --}}
 
                     {{-- Grupo: Flujo / Producción --}}
-                    <div class="rounded-lg border p-3">
+                    {{-- <div class="rounded-lg border p-3">
                         <h4 class="text-sm font-semibold text-gray-800 mb-2">Flujo / Producción</h4>
                         <label class="flex items-center justify-between py-1">
                             <span class="text-sm text-gray-700">Aprobar pedido</span>
@@ -513,10 +513,10 @@
                             <span class="text-sm text-gray-700">Cancelar pedido</span>
                             <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.cancelar_pedido">
                         </label>
-                    </div>
+                    </div> --}}
 
                     {{-- Grupo: Diseño --}}
-                    <div class="rounded-lg border p-3">
+                    {{-- <div class="rounded-lg border p-3">
                         <h4 class="text-sm font-semibold text-gray-800 mb-2">Diseño</h4>
                         <label class="flex items-center justify-between py-1">
                             <span class="text-sm text-gray-700">Aprobar diseño</span>
@@ -530,10 +530,10 @@
                             <span class="text-sm text-gray-700">Subir archivos</span>
                             <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.subir_archivos">
                         </label>
-                    </div>
+                    </div> --}}
 
                     {{-- Grupo: Tareas --}}
-                    <div class="rounded-lg border p-3">
+                    {{-- <div class="rounded-lg border p-3">
                         <h4 class="text-sm font-semibold text-gray-800 mb-2">Tareas</h4>
                         <label class="flex items-center justify-between py-1">
                             <span class="text-sm text-gray-700">Crear tarea</span>
@@ -547,7 +547,7 @@
                             <span class="text-sm text-gray-700">Eliminar tarea</span>
                             <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.eliminar_tarea">
                         </label>
-                    </div>
+                    </div> --}}
 
                     {{-- Grupo: Acciones masivas --}}
                     <div class="rounded-lg border p-3">
@@ -567,6 +567,32 @@
                         <label class="flex items-center justify-between py-1">
                             <span class="text-sm text-gray-700">Aprobar selección</span>
                             <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.bulk_aprobar">
+                        </label>
+                    </div>
+
+
+                    <div class="rounded-lg border p-3">
+                        <h4 class="text-sm font-semibold text-gray-800 mb-2">Edicion en Linea</h4>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Total</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.bulk_edit_total">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Estado del Pedido</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.bulk_edit_estado">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Fecha de Producción</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.bulk_edit_fecha_produccion">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Fecha de Embarque</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.bulk_edit_fecha_embarque">
+                        </label>
+
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Fecha de Entrega</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.bulk_edit_fecha_entrega">
                         </label>
                     </div>
                 </div>
