@@ -337,19 +337,36 @@ class HojaViewer extends Component
     })
 
     // búsqueda global (prefijo indexable en columnas unidas)
-    ->when(($term = trim((string)$this->search)) !== '', function ($qq) use ($term) {
-        $prefix   = $term.'%';
-        $contains = '%'.$term.'%'; // para 'pedido_busqueda' si no tienes FULLTEXT
-        $qq->where(function ($s) use ($prefix, $contains) {
-            // Si tienes FULLTEXT en 'pedido.busqueda_concat' o similar, cambia esta línea a whereFullText
-            $s->where('pedido.pedido_busqueda', 'like', $contains)
-              ->orWhere('pr.nombre', 'like', $prefix)
-              ->orWhere('pd.nombre', 'like', $prefix)
-              ->orWhere('us.name',   'like', $prefix)
-              ->orWhere('ep.nombre', 'like', $prefix);
-        });
-    })
+->when(($term = trim((string)$this->search)) !== '', function ($qq) use ($term) {
+    $prefix   = $term.'%';      // empieza con
+    $contains = '%'.$term.'%';  // contiene
 
+    $qq->where(function ($s) use ($prefix, $contains, $term) {
+
+        // 1) Texto en columnas de los JOINs (case-insensitive en MySQL por defecto)
+        $s->where('pr.nombre', 'like', $prefix)   // Proyecto
+          ->orWhere('pd.nombre', 'like', $prefix) // Producto
+          ->orWhere('us.name',   'like', $prefix) // Cliente/Usuario
+          ->orWhere('ep.nombre', 'like', $prefix);// Estado (nombre del catálogo)
+
+        // 2) Si escriben "12-345", busca proyecto_id=12 y pedido.id=345
+        if (preg_match('/^\s*(\d+)\s*-\s*(\d+)\s*$/', $term, $m)) {
+            $proyectoId = (int)$m[1];
+            $pedidoId   = (int)$m[2];
+            $s->orWhere(function ($w) use ($proyectoId, $pedidoId) {
+                $w->where('pedido.proyecto_id', $proyectoId)
+                  ->where('pedido.id', $pedidoId);
+            });
+        }
+
+        // 3) Si el término es numérico, permite buscar por id del pedido o del proyecto
+        if (ctype_digit($term)) {
+            $n = (int)$term;
+            $s->orWhere('pedido.id', $n)
+              ->orWhere('pedido.proyecto_id', $n);
+        }
+    });
+})
     
 
     // filtros base
