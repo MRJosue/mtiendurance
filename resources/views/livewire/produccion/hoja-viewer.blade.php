@@ -117,7 +117,7 @@
                                         $wire.dispatch('eliminar-seleccion', { ids: selected })
                                     }
                                 "
-                                label="Eliminar seleccionados"
+                                label="Archivar seleccionados"
                             />
                         @endif
                     </x-dropdown>
@@ -175,10 +175,11 @@
         <div class="overflow-x-auto bg-white rounded-lg shadow">
             <table class="min-w-full border-collapse border border-gray-200">
                 <thead class="bg-gray-100">
-                    <tr>
+                    <tr >
                         <th class="px-3 py-2">
                             <input
                                 type="checkbox"
+                                
                                 :checked="idsPagina.length && idsPagina.every(id => selected.includes(Number(id)))"
                                 @change="
                                     const pagina = idsPagina.map(Number);
@@ -476,6 +477,7 @@
                                 <td class="px-3 py-2">
                                     <input
                                         type="checkbox"
+                                        
                                         :value="{{ $pedido->id }}"
                                         :checked="selected.includes(Number({{ $pedido->id }}))"
                                         @change="
@@ -486,6 +488,7 @@
                                                 selected = selected.filter(i => i !== id)
                                             }
                                         "
+                                        wire:key="chk-{{ $pedido->id }}"
                                     >
                                 </td>
 
@@ -513,23 +516,33 @@
                                                     @endphp
 
                                                     @if(   $acciones['bulk_edit_estado'])
-                                                        <div x-data="{ edit:false, value:'{{ $pedido->estado_id }}' }" class="inline-flex items-center gap-2">
-                                                            <template x-if="!edit">
-                                                                <span @dblclick="edit=true"
-                                                                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[9rem] justify-center cursor-pointer {{ $claseColor }}"
-                                                                    title="{{ $nombreEstado }}">{{ $nombreEstado }}</span>
-                                                            </template>
-                                                            <template x-if="edit">
-                                                                <select x-model="value"
-                                                                        @change="$wire.updateField({{ $pedido->id }}, 'estado_id', value); edit=false;"
-                                                                        class="w-44 rounded-lg border-gray-300 focus:ring-blue-500 text-xs">
-                                                                    @foreach($this->estadosAll as $e)
-                                                                        <option value="{{ $e->id }}">{{ $e->nombre }}</option>
-                                                                    @endforeach
-                                                                </select>
-                                                            </template>
+                                                            <div
+                                                            x-data="{ edit:false, value:'{{ $pedido->estado_id }}' }"
+                                                            wire:key="cell-estado-{{ $pedido->id }}"
+                                                            class="inline-flex items-center gap-2"
+                                                            >
+                                                            <span
+                                                                x-cloak
+                                                                x-show="!edit"
+                                                                @dblclick="edit=true"
+                                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[9rem] justify-center {{ $claseColor }} cursor-pointer"
+                                                                title="{{ $nombreEstado }}"
+                                                            >{{ $nombreEstado }}</span>
+
+                                                            <select
+                                                                x-cloak
+                                                                x-show="edit"
+                                                                x-model="value"
+                                                                @change="$wire.updateField({{ $pedido->id }}, 'estado_id', value); edit=false;"
+                                                                class="w-44 rounded-lg border-gray-300 focus:ring-blue-500 text-xs"
+                                                            >
+                                                                @foreach($this->estadosAll as $e)
+                                                                <option value="{{ $e->id }}">{{ $e->nombre }}</option>
+                                                                @endforeach
+                                                            </select>
+
                                                             <button type="button" class="text-xs text-blue-600 hover:underline" @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
-                                                        </div>
+                                                            </div>
                                                         @else
                                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[9rem] justify-center {{ $claseColor }}" title="{{ $nombreEstado }}">{{ $nombreEstado }}</span>
                                                     @endif
@@ -555,6 +568,7 @@
                                                                 value:'{{ number_format((float)($pedido->total ?? 0), 2, '.', '') }}',
                                                                 save(){ this.edit=false; $wire.updateField({{ $pedido->id }}, 'total', this.value); }
                                                             }"
+                                                            wire:key="cell-fecha-produccion-{{ $pedido->id }}"
                                                             wire:key="cell-total-{{ $pedido->id }}"
                                                             class="inline-flex items-center gap-2">
                                                             <template x-if="!edit">
@@ -583,7 +597,7 @@
                                                             edit:false,
                                                             value:'{{ $pedido->fecha_produccion?->format('Y-m-d') }}',
                                                             save(){ this.edit=false; $wire.updateField({{ $pedido->id }}, 'fecha_produccion', this.value || null); }
-                                                        }" class="inline-flex items-center gap-2">
+                                                        }" wire:key="cell-fecha-produccion-{{ $pedido->id }}" class="inline-flex items-center gap-2">
                                                         <template x-if="!edit">
                                                             <span @dblclick="edit=true" class="cursor-pointer select-none">
                                                                 {{ $pedido->fecha_produccion?->format('d/m/Y') ?? '—' }}
@@ -611,7 +625,7 @@
                                                             edit:false,
                                                             value:'{{ $pedido->fecha_embarque?->format('Y-m-d') }}',
                                                             save(){ this.edit=false; $wire.updateField({{ $pedido->id }}, 'fecha_embarque', this.value || null); }
-                                                        }" class="inline-flex items-center gap-2">
+                                                        }" wire:key="cell-fecha-produccion-{{ $pedido->id }}" class="inline-flex items-center gap-2">
                                                             <template x-if="!edit">
                                                                 <span @dblclick="edit=true" class="cursor-pointer select-none">
                                                                     {{ $pedido->fecha_embarque?->format('d/m/Y') ?? '—' }}
@@ -639,7 +653,7 @@
                                                                 edit:false,
                                                                 value:'{{ $pedido->fecha_entrega?->format('Y-m-d') }}',
                                                                 save(){ this.edit=false; $wire.updateField({{ $pedido->id }}, 'fecha_entrega', this.value || null); }
-                                                            }" class="inline-flex items-center gap-2">
+                                                            }" wire:key="cell-fecha-produccion-{{ $pedido->id }}" class="inline-flex items-center gap-2">
                                                             <template x-if="!edit">
                                                                 <span @dblclick="edit=true" class="cursor-pointer select-none">
                                                                     {{ $pedido->fecha_entrega?->format('d/m/Y') ?? '—' }}
@@ -737,7 +751,7 @@
                                                 @if($acciones['eliminar_pedido'])
                                                     <x-dropdown.item separator
                                                         @click="if (confirm('¿Eliminar este pedido?')) $wire.dispatch('eliminar-pedido', { id: {{ $pedido->id }} })"
-                                                        label="Eliminar pedido"
+                                                        label="Archivar pedido"
                                                     />
                                                 @endif
 
