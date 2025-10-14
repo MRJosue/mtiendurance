@@ -266,11 +266,11 @@
                         {{-- Filtro ID (exacto) --}}
                         <th class="px-3 py-2">
                             <input
-                                type="number"
+                                type="text"
                                 class="w-28 sm:w-32 rounded-lg border-gray-300 focus:ring-blue-500"
-                                placeholder="ID"
+                                placeholder="ID Pedido, ID Proyecto o 12-345"
                                 wire:model.live.debounce.400ms="filters.id"
-                            >
+                            />
                         </th>
 
                         {{-- Filtros para columnas base (según key) --}}

@@ -49,6 +49,9 @@ class HojaViewer extends Component
         'fecha_embarque_to'     => null,
         'fecha_entrega_from'    => null,
         'fecha_entrega_to'      => null,
+
+        // 👇 NUEVO: campo “proyecto-pedido” (formato 12-345)
+        'pp'               => '',
     ];
 
     public static function accionesDefaults(): array
@@ -309,7 +312,7 @@ class HojaViewer extends Component
             $productoIds = $filtro?->productoIds() ?? collect();
         }
 
-$q = Pedido::query()
+    $q = Pedido::query()
     ->from('pedido')
     // JOINs tempranos y reutilizables para filtros/orden
     ->leftJoin('proyectos as pr', 'pr.id', '=', 'pedido.proyecto_id')
@@ -347,9 +350,28 @@ $q = Pedido::query()
         });
     })
 
-    // filtros base
-    ->when(Arr::get($this->filters, 'id'), fn($qq, $id) => $qq->where('pedido.id', (int)$id))
+    
 
+    // filtros base
+    ->when(($idRaw = trim((string) Arr::get($this->filters, 'id', ''))) !== '', function ($qq) use ($idRaw) {
+        // Formato "proyecto-pedido" (e.g. "12-345")
+        if (preg_match('/^\s*(\d+)\s*-\s*(\d+)\s*$/', $idRaw, $m)) {
+            $proyectoId = (int) $m[1];
+            $pedidoId   = (int) $m[2];
+            $qq->where('pedido.proyecto_id', $proyectoId)
+            ->where('pedido.id', $pedidoId);
+            return;
+        }
+
+        // Solo dígitos: buscar por pedido.id O por pedido.proyecto_id
+        if (ctype_digit($idRaw)) {
+            $n = (int) $idRaw;
+            $qq->where(function ($w) use ($n) {
+                $w->where('pedido.id', $n)
+                ->orWhere('pedido.proyecto_id', $n);
+            });
+        }
+    })
     ->when(($p = trim((string)Arr::get($this->filters, 'proyecto', ''))) !== '',
         fn($qq) => $qq->where('pr.nombre', 'like', $p.'%'))
 
