@@ -265,206 +265,269 @@
                         <th class="px-3 py-2"></th>
 
                         {{-- Filtro ID (exacto) --}}
-                        <th class="px-3 py-2">
-                            <input
-                                type="text"
-                                class="w-28 sm:w-32 rounded-lg border-gray-300 focus:ring-blue-500"
-                                placeholder="ID Pedido, ID Proyecto o 12-345"
-                                wire:model.live.debounce.400ms="filters.id"
-                            />
+                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
+                            <div class="inline-flex items-center gap-1">
+
+
+                                {{-- Filtro ID en dropdown --}}
+                                <div x-data="{ open:false }" class="relative">
+                                    <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="Filtrar ID">
+                                        ⋮
+                                    </button>
+                                    <div
+                                        x-cloak x-show="open" @click.away="open=false" x-transition
+                                        class="absolute z-50 mt-1 w-56 rounded-lg border bg-white shadow p-3"
+                                    >
+                                        <label class="block text-xs text-gray-600 mb-1">ID Proyecto o 12-345</label>
+                                        <input
+                                            type="text"
+                                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                            placeholder="ID Proyecto o 12-345"
+                                            wire:model.live.debounce.400ms="filters.id"
+                                        />
+                                        <div class="mt-2 flex justify-end gap-2">
+                                            <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.id','')">Limpiar</button>
+                                            <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </th>
 
                         {{-- Filtros para columnas base (según key) --}}
                         @foreach($baseCols as $bc)
-                            @if(($bc['key'] ?? '') !== 'id' && ($bc['visible'] ?? true))
-                                <th class="px-3 py-2">
+                        @if(($bc['key'] ?? '') !== 'id' && ($bc['visible'] ?? true))
+                            <th class="px-3 py-2">
+                            <div x-data="{ open:false }" class="relative inline-flex items-center">
+                                <button
+                                @click="open = !open"
+                                class="px-2 py-1 rounded hover:bg-gray-200 text-sm"
+                                title="Filtrar {{ $bc['label'] ?? $bc['key'] }}"
+                                >
+                                ⋮
+                                </button>
+
+                                {{-- Indicador filtro activo por tipo --}}
+                                @switch($bc['key'])
+                                @case('proyecto')
+                                    <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600" x-show="$wire.get('filters.proyecto')?.length"></span>
+                                    @break
+                                @case('cliente')
+                                    <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600" x-show="$wire.get('filters.cliente')?.length"></span>
+                                    @break
+                                @case('producto')
+                                    <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600" x-show="$wire.get('filters.producto')?.length"></span>
+                                    @break
+                                @case('estado')
+                                    <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600" x-show="$wire.get('filters.estado_id')"></span>
+                                    @break
+                                @case('estado_disenio')
+                                    <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600" x-show="$wire.get('filters.estado_disenio')?.length"></span>
+                                    @break
+                                @case('total')
+                                    <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600" x-show="$wire.get('filters.total')?.length"></span>
+                                    @break
+                                @case('fecha_produccion')
+                                    <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600"
+                                        x-show="$wire.get('filters.fecha_produccion_from') || $wire.get('filters.fecha_produccion_to')"></span>
+                                    @break
+                                @case('fecha_embarque')
+                                    <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600"
+                                        x-show="$wire.get('filters.fecha_embarque_from') || $wire.get('filters.fecha_embarque_to')"></span>
+                                    @break
+                                @case('fecha_entrega')
+                                    <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600"
+                                        x-show="$wire.get('filters.fecha_entrega_from') || $wire.get('filters.fecha_entrega_to')"></span>
+                                    @break
+                                @default
+                                    <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600"
+                                        x-show="$wire.get('filters.{{ $bc['key'] }}')?.length"></span>
+                                @endswitch
+
+                                <div
+                                x-cloak x-show="open" @click.away="open=false" x-transition
+                                class="absolute z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
+                                >
+                                @switch($bc['key'])
+                                    @case('proyecto')
+                                    <label class="block text-xs text-gray-600 mb-1">Proyecto</label>
+                                    <input class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                            placeholder="Proyecto…"
+                                            wire:model.live.debounce.400ms="filters.proyecto">
+                                    @break
+
+                                    @case('cliente')
+                                    <label class="block text-xs text-gray-600 mb-1">Cliente</label>
+                                    <input class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                            placeholder="Cliente…"
+                                            wire:model.live.debounce.400ms="filters.cliente">
+                                    @break
+
+                                    @case('producto')
+                                    <label class="block text-xs text-gray-600 mb-1">Producto</label>
+                                    <input class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                            placeholder="Producto…"
+                                            wire:model.live.debounce.400ms="filters.producto">
+                                    @break
+
+                                    @case('estado')
+                                    <label class="block text-xs text-gray-600 mb-1">Estado</label>
+                                    <select class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                            wire:model.live.debounce.400ms="filters.estado_id">
+                                        <option value="">Todos</option>
+                                        @foreach($this->estados as $e)
+                                        <option value="{{ $e->id }}">{{ $e->nombre }}</option>
+                                        @endforeach
+                                    </select>
+                                    @break
+
+                                    @case('estado_disenio')
+                                    <label class="block text-xs text-gray-600 mb-1">Estado Diseño</label>
+                                    <select class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                            wire:model.live.debounce.400ms="filters.estado_disenio">
+                                        <option value="">Todos</option>
+                                        @foreach($this->estadosDiseno as $s)
+                                        <option value="{{ $s }}">{{ $s }}</option>
+                                        @endforeach
+                                    </select>
+                                    @break
+
+                                    @case('total')
+                                    <label class="block text-xs text-gray-600 mb-1">Total</label>
+                                    <input class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                            placeholder="Total…"
+                                            wire:model.live.debounce.400ms="filters.total">
+                                    @break
+
+                                    @case('fecha_produccion')
+                                    <label class="block text-xs text-gray-600 mb-1">Producción</label>
+                                    <div class="space-y-2">
+                                        <div>
+                                        <span class="text-xs text-gray-600">Desde</span>
+                                        <input type="date" class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                                wire:model.live.debounce.400ms="filters.fecha_produccion_from">
+                                        </div>
+                                        <div>
+                                        <span class="text-xs text-gray-600">Hasta</span>
+                                        <input type="date" class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                                wire:model.live.debounce.400ms="filters.fecha_produccion_to">
+                                        </div>
+                                    </div>
+                                    @break
+
+                                    @case('fecha_embarque')
+                                    <label class="block text-xs text-gray-600 mb-1">Embarque</label>
+                                    <div class="space-y-2">
+                                        <div>
+                                        <span class="text-xs text-gray-600">Desde</span>
+                                        <input type="date" class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                                wire:model.live.debounce.400ms="filters.fecha_embarque_from">
+                                        </div>
+                                        <div>
+                                        <span class="text-xs text-gray-600">Hasta</span>
+                                        <input type="date" class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                                wire:model.live.debounce.400ms="filters.fecha_embarque_to">
+                                        </div>
+                                    </div>
+                                    @break
+
+                                    @case('fecha_entrega')
+                                    <label class="block text-xs text-gray-600 mb-1">Entrega</label>
+                                    <div class="space-y-2">
+                                        <div>
+                                        <span class="text-xs text-gray-600">Desde</span>
+                                        <input type="date" class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                                wire:model.live.debounce.400ms="filters.fecha_entrega_from">
+                                        </div>
+                                        <div>
+                                        <span class="text-xs text-gray-600">Hasta</span>
+                                        <input type="date" class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                                wire:model.live.debounce.400ms="filters.fecha_entrega_to">
+                                        </div>
+                                    </div>
+                                    @break
+
+                                    @default
+                                    <label class="block text-xs text-gray-600 mb-1">{{ $bc['label'] ?? $bc['key'] }}</label>
+                                    <input class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                            placeholder="Filtrar…"
+                                            wire:model.live.debounce.400ms="filters.{{ $bc['key'] }}">
+                                @endswitch
+
+                                <div class="mt-3 flex justify-end gap-2">
                                     @switch($bc['key'])
-                                        @case('proyecto')
-                                            <input class="w-36 sm:w-44 rounded-lg border-gray-300 focus:ring-blue-500"
-                                                placeholder="Proyecto…" wire:model.live.debounce.400ms="filters.proyecto">
+                                    @case('proyecto')
+                                        <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.proyecto','')">Limpiar</button>
                                         @break
-                                        
-                                        @case('cliente')
-                                            <input class="w-36 sm:w-44 rounded-lg border-gray-300 focus:ring-blue-500"
-                                                placeholder="Cliente…"
-                                                wire:model.live.debounce.400ms="filters.cliente">
+                                    @case('cliente')
+                                        <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.cliente','')">Limpiar</button>
                                         @break
-
-                                        @case('producto')
-                                            <input class="w-36 sm:w-44 rounded-lg border-gray-300 focus:ring-blue-500"
-                                                placeholder="Producto…" wire:model.live.debounce.400ms="filters.producto">
+                                    @case('producto')
+                                        <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.producto','')">Limpiar</button>
                                         @break
-
-                                        @case('estado')
-                                            <select class="w-36 sm:w-44 rounded-lg border-gray-300 focus:ring-blue-500"
-                                                    wire:model.live.debounce.400ms="filters.estado_id">
-                                                <option value="">Todos</option>
-                                                @foreach($this->estados as $e)
-                                                    <option value="{{ $e->id }}">{{ $e->nombre }}</option>
-                                                @endforeach
-                                            </select>
+                                    @case('estado')
+                                        <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.estado_id',null)">Limpiar</button>
                                         @break
-
-                                        @case('estado_disenio')
-                                            <select class="w-36 sm:w-44 rounded-lg border-gray-300 focus:ring-blue-500"
-                                                    wire:model.live.debounce.400ms="filters.estado_disenio">
-                                                <option value="">Todos</option>
-                                                @foreach($this->estadosDiseno as $s)
-                                                    <option value="{{ $s }}">{{ $s }}</option>
-                                                @endforeach
-                                            </select>
+                                    @case('estado_disenio')
+                                        <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.estado_disenio','')">Limpiar</button>
                                         @break
-
-                                        @case('total')
-                                            <input class="w-28 sm:w-32 rounded-lg border-gray-300 focus:ring-blue-500"
-                                                placeholder="Total…" wire:model.live.debounce.400ms="filters.total">
+                                    @case('total')
+                                        <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.total','')">Limpiar</button>
                                         @break
-
-
-                                        @case('fecha_produccion')
-                                            <div x-data="{ open:false }" class="relative">
-                                                <button
-                                                    @click="open = !open"
-                                                    class="w-40 rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 hover:bg-gray-50"
-                                                >
-                                                    Producción…
-                                                </button>
-
-                                                <div
-                                                    x-cloak
-                                                    x-show="open"
-                                                    @click.away="open = false"
-                                                    x-transition
-                                                    class="absolute z-50 mt-1 w-56 rounded-lg border bg-white shadow p-2"
-                                                >
-                                                    <div class="flex flex-col gap-2" @click.stop @mousedown.stop>
-                                                        <label class="text-xs text-gray-600">Desde</label>
-                                                        <input type="date"
-                                                            class="w-48 rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                                            wire:model.live.debounce.400ms="filters.fecha_produccion_from">
-
-                                                        <label class="text-xs text-gray-600">Hasta</label>
-                                                        <input type="date"
-                                                            class="w-48 rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                                            wire:model.live.debounce.400ms="filters.fecha_produccion_to">
-
-                                                        <div class="pt-1 flex gap-2">
-                                                            <button type="button"
-                                                                    class="px-2 py-1 text-xs rounded-lg border bg-white hover:bg-gray-50"
-                                                                    @click="$wire.set('filters.fecha_produccion_from', null); $wire.set('filters.fecha_produccion_to', null)">
-                                                                Limpiar
-                                                            </button>
-                                                            <button type="button"
-                                                                    class="px-2 py-1 text-xs rounded-lg border bg-white hover:bg-gray-50"
-                                                                    @click="open=false">
-                                                                Aplicar
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                    @case('fecha_produccion')
+                                        <button type="button" class="px-2 py-1 text-xs rounded border"
+                                                @click="$wire.set('filters.fecha_produccion_from', null); $wire.set('filters.fecha_produccion_to', null)">Limpiar</button>
                                         @break
-
-                                        @case('fecha_embarque')
-                                            <div x-data="{ open:false }" class="relative">
-                                                <button
-                                                    @click="open = !open"
-                                                    class="w-40 rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 hover:bg-gray-50"
-                                                >
-                                                    Embarque…
-                                                </button>
-
-                                                <div x-cloak x-show="open" @click.away="open=false" x-transition
-                                                    class="absolute z-50 mt-1 w-56 rounded-lg border bg-white shadow p-2">
-                                                    <div class="flex flex-col gap-2" @click.stop @mousedown.stop>
-                                                        <label class="text-xs text-gray-600">Desde</label>
-                                                        <input type="date"
-                                                            class="w-48 rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                                            wire:model.live.debounce.400ms="filters.fecha_embarque_from">
-
-                                                        <label class="text-xs text-gray-600">Hasta</label>
-                                                        <input type="date"
-                                                            class="w-48 rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                                            wire:model.live.debounce.400ms="filters.fecha_embarque_to">
-
-                                                        <div class="pt-1 flex gap-2">
-                                                            <button type="button"
-                                                                    class="px-2 py-1 text-xs rounded-lg border bg-white hover:bg-gray-50"
-                                                                    @click="$wire.set('filters.fecha_embarque_from', null); $wire.set('filters.fecha_embarque_to', null)">
-                                                                Limpiar
-                                                            </button>
-                                                            <button type="button"
-                                                                    class="px-2 py-1 text-xs rounded-lg border bg-white hover:bg-gray-50"
-                                                                    @click="open=false">
-                                                                Aplicar
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                    @case('fecha_embarque')
+                                        <button type="button" class="px-2 py-1 text-xs rounded border"
+                                                @click="$wire.set('filters.fecha_embarque_from', null); $wire.set('filters.fecha_embarque_to', null)">Limpiar</button>
                                         @break
-
-                                        @case('fecha_entrega')
-                                            <div x-data="{ open:false }" class="relative">
-                                                <button
-                                                    @click="open = !open"
-                                                    class="w-40 rounded-lg border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 hover:bg-gray-50"
-                                                >
-                                                    Entrega…
-                                                </button>
-
-                                                <div x-cloak x-show="open" @click.away="open=false" x-transition
-                                                    class="absolute z-50 mt-1 w-56 rounded-lg border bg-white shadow p-2">
-                                                    <div class="flex flex-col gap-2" @click.stop @mousedown.stop>
-                                                        <label class="text-xs text-gray-600">Desde</label>
-                                                        <input type="date"
-                                                            class="w-48 rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                                            wire:model.live.debounce.400ms="filters.fecha_entrega_from">
-
-                                                        <label class="text-xs text-gray-600">Hasta</label>
-                                                        <input type="date"
-                                                            class="w-48 rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                                            wire:model.live.debounce.400ms="filters.fecha_entrega_to">
-
-                                                        <div class="pt-1 flex gap-2">
-                                                            <button type="button"
-                                                                    class="px-2 py-1 text-xs rounded-lg border bg-white hover:bg-gray-50"
-                                                                    @click="$wire.set('filters.fecha_entrega_from', null); $wire.set('filters.fecha_entrega_to', null)">
-                                                                Limpiar
-                                                            </button>
-                                                            <button type="button"
-                                                                    class="px-2 py-1 text-xs rounded-lg border bg-white hover:bg-gray-50"
-                                                                    @click="open=false">
-                                                                Aplicar
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                    @case('fecha_entrega')
+                                        <button type="button" class="px-2 py-1 text-xs rounded border"
+                                                @click="$wire.set('filters.fecha_entrega_from', null); $wire.set('filters.fecha_entrega_to', null)">Limpiar</button>
                                         @break
-    
-
-
-
-
-                                        @default
-                                            <input class="w-32 sm:w-40 rounded-lg border-gray-300 focus:ring-blue-500"
-                                                placeholder="Filtrar…" wire:model.live.debounce.400ms="filters.{{ $bc['key'] }}">
+                                    @default
+                                        <button type="button" class="px-2 py-1 text-xs rounded border"
+                                                @click="$wire.set('filters.{{ $bc['key'] }}','')">Limpiar</button>
                                     @endswitch
-                                </th>
-                            @endif
+                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
+                                </div>
+                                </div>
+                            </div>
+                            </th>
+                        @endif
                         @endforeach
+
 
                         {{-- Filtros para columnas dinámicas (características) --}}
                         @foreach($columnasFiltro as $col)
-                            <th class="px-3 py-2">
+                        @php $label = $col['label'] ?? $col['nombre']; @endphp
+                        <th class="px-3 py-2">
+                            <div x-data="{ open:false }" class="relative inline-flex items-center">
+                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="Filtrar {{ $label }}">⋮</button>
+                            <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600"
+                                    x-show="$wire.get('filtersCar.{{ $col['id'] }}')?.length"></span>
+
+                            <div
+                                x-cloak x-show="open" @click.away="open=false" x-transition
+                                class="absolute z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
+                            >
+                                <label class="block text-xs text-gray-600 mb-1">{{ $label }}</label>
                                 <input
-                                    class="w-32 sm:w-40 rounded-lg border-gray-300 focus:ring-blue-500"
-                                    placeholder="Buscar {{ $col['label'] ?? $col['nombre'] }}…"
-                                    wire:model.live.debounce.400ms="filtersCar.{{ $col['id'] }}"
+                                class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                placeholder="Buscar {{ $label }}…"
+                                wire:model.live.debounce.400ms="filtersCar.{{ $col['id'] }}"
                                 >
-                            </th>
+                                <div class="mt-3 flex justify-end gap-2">
+                                <button type="button" class="px-2 py-1 text-xs rounded border"
+                                        @click="$wire.set('filtersCar.{{ $col['id'] }}','')">Limpiar</button>
+                                <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
+                                </div>
+                            </div>
+                            </div>
+                        </th>
                         @endforeach
+
                         {{-- separaccion de acciones --}}
                     <th></th>
                     </tr>

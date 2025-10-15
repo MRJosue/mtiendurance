@@ -366,7 +366,7 @@ class HojaViewer extends Component
               ->orWhere('pedido.proyecto_id', $n);
         }
     });
-})
+})  
     
 
     // filtros base
@@ -458,19 +458,26 @@ class HojaViewer extends Component
                         ->orderBy('pedido.id', 'desc'); 
                     break;
                 case 'producto':
-                    $q->leftJoin('productos as pd', 'pd.id', '=', 'pedido.producto_id')
-                      ->orderBy('pd.nombre', $dir)
-                      ->select('pedido.*');
+                    $q->orderBy('pd.nombre', $dir)->orderBy('pedido.id', 'desc');
+            
+                    // $q->leftJoin('productos as pd', 'pd.id', '=', 'pedido.producto_id')
+                    //   ->orderBy('pd.nombre', $dir)
+                    //   ->select('pedido.*');
                     break;
                 case 'cliente':
-                    $q->leftJoin('users as us', 'us.id', '=', 'pedido.user_id')
-                      ->orderBy('us.name', $dir)
-                      ->select('pedido.*');
+                    $q->orderBy('us.name', $dir)->orderBy('pedido.id', 'desc');
+            
+                    // $q->leftJoin('users as us', 'us.id', '=', 'pedido.user_id')
+                    //   ->orderBy('us.name', $dir)
+                    //   ->select('pedido.*');
                     break;
                 case 'estado':
-                    $q->leftJoin('estados_pedido as ep', 'ep.id', '=', 'pedido.estado_id')
-                      ->orderBy('ep.nombre', $dir)
-                      ->select('pedido.*');
+                                // Usa el alias ya unido 'ep'
+                        $q->orderBy('ep.nombre', $dir)->orderBy('pedido.id', 'desc');
+                  
+                        // $q->leftJoin('estados_pedido as ep', 'ep.id', '=', 'pedido.estado_id')
+                        //   ->orderBy('ep.nombre', $dir)
+                        //   ->select('pedido.*');
                     break;
                 case 'estado_disenio':
                     $q->orderBy('pr.estado', $dir)->orderBy('pedido.id', 'desc');
