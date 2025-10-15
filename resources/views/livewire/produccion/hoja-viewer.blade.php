@@ -73,7 +73,7 @@
                             />
                         </x-slot>
 
-                        {{-- Solo renderiza opciones permitidas --}}
+                        {{-- Rechazar (ya existente) --}}
                         @if($acciones['bulk_edit_estado'])
                             <x-dropdown.item
                                 @click="
@@ -86,19 +86,28 @@
                             />
                         @endif
 
+                        {{-- ✅ Aprobar seleccionados (cambio de estado inmediato) --}}
                         @if($acciones['bulk_aprobar'])
                             <x-dropdown.item
                                 @click="
                                     if (!selected.length) { alert('Selecciona al menos un pedido.'); return; }
-                                    $wire.dispatch('abrir-modal-aprobar', { ids: selected })
+                                    if (confirm('¿Aprobar los pedidos seleccionados?')) {
+                                        $wire.aprobarSeleccion(selected);
+                                    }
                                 "
                                 label="Aprobar seleccionados"
                             />
                         @endif
 
+                        {{-- ✅ Programar seleccionados (cambio de estado inmediato) --}}
                         @if($acciones['bulk_programar'])
                             <x-dropdown.item
-                                @click="$wire.dispatch('abrir-modal-programar', { ids: selected })"
+                                @click="
+                                    if (!selected.length) { alert('Selecciona al menos un pedido.'); return; }
+                                    if (confirm('¿Programar los pedidos seleccionados?')) {
+                                        $wire.programarSeleccion(selected);
+                                    }
+                                "
                                 label="Programar seleccionados"
                             />
                         @endif
@@ -171,9 +180,9 @@
         </div>
 
 
-        {{-- Tabla --}}
+        {{-- Tabla table class min-w-full border-collapse border border-gray-200--}}
         <div class="overflow-x-auto bg-white rounded-lg shadow">
-            <table class="min-w-full border-collapse border border-gray-200">
+            <table class="w-full table-auto border-collapse border border-gray-200">
                 <thead class="bg-gray-100">
                     <tr >
                         <th class="px-3 py-2">
@@ -773,6 +782,8 @@
                                         @endif
                                     </td>
                                 @endforeach
+
+
                                     {{-- Aqui irian las acciones --}}
                                         <td class="px-3 py-2 text-sm text-gray-700">
                                             <x-dropdown>
@@ -780,6 +791,20 @@
                                                     <x-dropdown.item
                                                         @click="$wire.dispatch('ir-a-detalle', { id: {{ $pedido->id }} })"
                                                         label="Ver detalle"
+                                                    />
+                                                @endif
+
+                                                @if($acciones['programar_pedido'])
+                                                    <x-dropdown.item
+                                                        @click="if (confirm('¿Programar este pedido?')) $wire.programarPedido({{ $pedido->id }})"
+                                                        label="Programar pedido"
+                                                    />
+                                                @endif
+
+                                                @if($acciones['aprobar_pedido'])
+                                                    <x-dropdown.item
+                                                        @click="if (confirm('¿Aprobar este pedido?')) $wire.aprobarPedido({{ $pedido->id }})"
+                                                        label="Aprobar pedido"
                                                     />
                                                 @endif
 
@@ -818,12 +843,7 @@
                                                     />
                                                 @endif
 
-                                                @if($acciones['programar_pedido'])
-                                                    <x-dropdown.item
-                                                        @click="$wire.dispatch('programar-pedido', { id: {{ $pedido->id }} })"
-                                                        label="Programar pedido"
-                                                    />
-                                                @endif
+
 
                                                 @if($acciones['entregar_pedido'])
                                                     <x-dropdown.item

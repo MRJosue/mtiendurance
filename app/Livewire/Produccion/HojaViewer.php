@@ -104,6 +104,8 @@ class HojaViewer extends Component
 
     public array $selectedIds = [];
 
+    protected array $estadoIdCache = [];
+
     protected $listeners = [
         'hoja-actualizada' => '$refresh',
         'filtro-produccion-actualizado' => '$refresh',
@@ -125,6 +127,21 @@ class HojaViewer extends Component
             ->orderByRaw('COALESCE(orden, 999999), nombre');
 
         return $q->get();
+    }
+
+
+    protected function estadoId(string $nombre): ?int
+    {
+        $nombre = trim(mb_strtoupper($nombre));
+        if (!isset($this->estadoIdCache[$nombre])) {
+            $this->estadoIdCache[$nombre] = (int) DB::table('estados_pedido')
+                ->whereRaw('UPPER(nombre) = ?', [$nombre])
+                ->value('id');
+            if (!$this->estadoIdCache[$nombre]) {
+                $this->estadoIdCache[$nombre] = null;
+            }
+        }
+        return $this->estadoIdCache[$nombre];
     }
 
     public function getEstadosAllProperty()
@@ -618,6 +635,119 @@ class HojaViewer extends Component
         $this->selectedIds = [];
         $this->dispatch('toast', message: 'Pedidos marcados como RECHAZADO', type: 'success');
     }
+
+            // ✅ Aprobar en lote
+        public function aprobarSeleccion(array $ids): void
+        {
+            if (empty($ids)) return;
+
+            if (!$this->can('bulk_aprobar')) {
+                $this->dispatch('toast', message: 'No tienes permiso para aprobar en lote', type: 'error');
+                return;
+            }
+
+            $estadoId = $this->estadoId('APROBADO') ?? null;
+            if (!$estadoId) {
+                $this->dispatch('toast', message: 'No existe el estado "APROBADO" en el catálogo', type: 'error');
+                return;
+            }
+
+            \App\Models\Pedido::query()
+                ->whereIn('id', $ids)
+                ->update([
+                    'estado_id' => $estadoId,
+                    'estado'    => 'APROBADO',
+                ]);
+
+            $this->selectedIds = [];
+            $this->dispatch('toast', message: 'Pedidos aprobados', type: 'success');
+            $this->resetPage();
+        }
+
+        // ✅ Programar en lote
+        public function programarSeleccion(array $ids): void
+        {
+            if (empty($ids)) return;
+
+            if (!$this->can('bulk_programar')) {
+                $this->dispatch('toast', message: 'No tienes permiso para programar en lote', type: 'error');
+                return;
+            }
+
+            $estadoId = $this->estadoId('EN PRODUCCION') ?? null;
+            if (!$estadoId) {
+                $this->dispatch('toast', message: 'No existe el estado "EN PRODUCCION" en el catálogo', type: 'error');
+                return;
+            }
+
+            
+
+            \App\Models\Pedido::query()
+                ->whereIn('id', $ids)
+                ->update([
+                    'estado_id' => $estadoId,
+                    'estado'    => 'EN PRODUCCION',
+                ]);
+
+                
+
+            $this->selectedIds = [];
+            $this->dispatch('toast', message: 'Pedidos programados', type: 'success');
+            $this->resetPage();
+        }
+
+        // ✅ Aprobar individual
+        public function aprobarPedido(int $pedidoId): void
+        {
+            if (!$this->can('aprobar_pedido')) {
+                $this->dispatch('toast', message: 'No tienes permiso para aprobar pedidos', type: 'error');
+                return;
+            }
+
+            $estadoId = $this->estadoId('APROBADO') ?? null;
+            if (!$estadoId) {
+                $this->dispatch('toast', message: 'No existe el estado "APROBADO" en el catálogo', type: 'error');
+                return;
+            }
+
+            $pedido = \App\Models\Pedido::query()->find($pedidoId);
+            if (!$pedido) return;
+
+            $pedido->estado_id = $estadoId;
+            $pedido->estado    = 'APROBADO';
+            $pedido->save();
+
+            $this->dispatch('toast', message: "Pedido #{$pedidoId} aprobado", type: 'success');
+            $this->resetPage();
+        }
+
+        // ✅ Programar individual
+        public function programarPedido(int $pedidoId): void
+        {
+            if (!$this->can('programar_pedido')) {
+                $this->dispatch('toast', message: 'No tienes permiso para programar pedidos', type: 'error');
+                return;
+            }
+
+            $estadoId = $this->estadoId('EN PRODUCCION') ?? null;
+            if (!$estadoId) {
+                $this->dispatch('toast', message: 'No existe el estado "PROGRAMADO" en el catálogo', type: 'error');
+                return;
+            }
+
+            $pedido = \App\Models\Pedido::query()->find($pedidoId);
+            if (!$pedido) return;
+
+            $pedido->estado_id = $estadoId;
+            $pedido->estado    = 'EN PRODUCCION';
+            $pedido->save();
+
+            $this->dispatch('toast', message: "Pedido #{$pedidoId} programado", type: 'success');
+            $this->resetPage();
+        }
+
+
+
 
     public function toggleSelectAllOnPage(bool $checked): void
     {
