@@ -38,6 +38,7 @@ class EditProject extends Component
 
     public $ProyectoId;
 
+    public $proyecto;
 
     public $direccion_fiscal;
     public $direccion_entrega;
@@ -84,86 +85,73 @@ class EditProject extends Component
 
     public $producto_flag_armado;
 
-    public function mount($ProyectoId)
-    {
-        $this->ProyectoId = $ProyectoId;
-        
+public function mount($ProyectoId)
+{
+    $this->ProyectoId = $ProyectoId;
 
-        $preProyecto = Proyecto::findOrFail($ProyectoId);
+    $preProyecto = Proyecto::findOrFail($ProyectoId);
 
-        $this->nombre = $preProyecto->nombre;
-        $this->descripcion = $preProyecto->descripcion;
+    // Fechas seguras
+    $this->fecha_produccion = $preProyecto->fecha_produccion
+        ? Carbon::parse($preProyecto->fecha_produccion)->format('Y-m-d')
+        : null;
 
-       
-        $this->fecha_produccion = Carbon::parse($preProyecto->fecha_produccion)->format('Y-m-d');
-         Log::info('Este es un mensaje de información.'. $this->fecha_produccion);  
+    $this->fecha_embarque = $preProyecto->fecha_embarque
+        ? Carbon::parse($preProyecto->fecha_embarque)->format('Y-m-d')
+        : null;
 
-        $this->fecha_embarque = Carbon::parse($preProyecto->fecha_embarque)->format('Y-m-d');
-         Log::info('Este es un mensaje de información.'. $this->fecha_embarque);  
+    $this->fecha_entrega = $preProyecto->fecha_entrega
+        ? Carbon::parse($preProyecto->fecha_entrega)->format('Y-m-d')
+        : null;
 
-        $this->fecha_entrega = Carbon::parse($preProyecto->fecha_entrega)->format('Y-m-d');
-         Log::info('Este es un mensaje de información.'.$this->fecha_entrega);  
-         
+    $this->nombre      = $preProyecto->nombre;
+    $this->descripcion = $preProyecto->descripcion;
 
-        $this->categoria_id = json_decode($preProyecto->categoria_sel)->id;
-        $this->producto_id = json_decode($preProyecto->producto_sel)->id;
-        $this->total_piezas = json_decode($preProyecto->total_piezas_sel)->total ?? 0;
-        $this->direccion_fiscal = $preProyecto->direccion_fiscal;
-        $this->direccion_fiscal_id = $preProyecto->direccion_fiscal_id;
-        $this->direccion_entrega = $preProyecto->direccion_entrega;
-         $this->direccion_entrega_id = $preProyecto->direccion_entrega_id;
+    // JSONs seguros
+    $catSel   = json_decode($preProyecto->categoria_sel ?? '', true) ?: [];
+    $prodSel  = json_decode($preProyecto->producto_sel  ?? '', true) ?: [];
+    $totSel   = json_decode($preProyecto->total_piezas_sel ?? '', true) ?: [];
 
+    $this->categoria_id   = $catSel['id']   ?? null;
+    $this->producto_id    = $prodSel['id']  ?? null;
+    $this->total_piezas   = $totSel['total'] ?? 0;
 
-        // cargamos los tipos de envio
-        $this->cargarTiposEnvio();
+    $this->direccion_fiscal      = $preProyecto->direccion_fiscal;
+    $this->direccion_fiscal_id   = $preProyecto->direccion_fiscal_id;
+    $this->direccion_entrega     = $preProyecto->direccion_entrega;
+    $this->direccion_entrega_id  = $preProyecto->direccion_entrega_id;
 
-        $this->id_tipo_envio = $preProyecto->id_tipo_envio;
+    // Tipos de envío (no truena si no hay dirección)
+    $this->cargarTiposEnvio();
+    $this->id_tipo_envio = $preProyecto->id_tipo_envio;
 
-        // Cargar productos de la categoría seleccionada
-        $this->productos = Producto::where('categoria_id', $this->categoria_id)->get();
+    // Cargar productos solo si hay categoría válida
+    $this->productos = $this->categoria_id
+        ? Producto::where('categoria_id', $this->categoria_id)->get()
+        : collect();
 
-        $this->producto_flag_armado = Producto::where('id', $this->producto_id)->value('flag_armado');
-        Log::debug('producto_flag_armado', ['data' => $this->producto_flag_armado]);
+    // Flag armado del producto (seguro)
+    $this->producto_flag_armado = $this->producto_id
+        ? (int) Producto::where('id', $this->producto_id)->value('flag_armado')
+        : 0;
 
-        // Evaluamos si el producto seleccionado puede mostrar la pregunta de armado 
-        
-        // si si asignamos el valor del imput
-        if ( $this->producto_flag_armado == 1) {
-            Log::debug('if', ['data' => $this->producto_flag_armado]);
-            $this->mostrar_selector_armado = true;
-            // asignamos el valor del armado del select 
-            $this->seleccion_armado =  $preProyecto->flag_armado;
-        } else {
+    // Mostrar selector armado solo si aplica
+    $this->mostrar_selector_armado = ($this->producto_flag_armado === 1);
+    $this->seleccion_armado        = $this->mostrar_selector_armado ? (int) ($preProyecto->flag_armado ?? 0) : null;
 
-            Log::debug('Else ', ['data' => $this->producto_flag_armado]);
-            $this->mostrar_selector_armado = false;
-        }
+    // Construye características/opciones y tallas según selección actual
+    $this->despligaformopciones();
 
-        // Carga lascategorias
-        $this -> despligaformopciones();
+    // Reinyecta opciones previamente guardadas (si existen)
+    $this->enviarOpcionesSeleccionadas();
 
+    // Tallas por categoría "playeras" (no truena si no hay categoría)
+    $categoria = $this->categoria_id ? Categoria::find($this->categoria_id) : null;
+    $this->mostrarFormularioTallas = $categoria && strtolower($categoria->nombre) === 'playeras';
+    $this->tallas = Talla::all();
 
-        // // Carga lascategorias
-        // $this -> onProductoChange();
-
-
-        // Selecciona las opciones seleccionadas
-        $this->enviarOpcionesSeleccionadas();
-
-
-
-        // Cargar tallas si es "Playeras"
-        $categoria = Categoria::find($this->categoria_id);
-        $this->mostrarFormularioTallas = $categoria && strtolower($categoria->nombre) === 'playeras';
-        $this->tallas = Talla::all();
-        
-        $this->tallasSeleccionadas = json_decode($preProyecto->total_piezas_sel, true)['detalle_tallas'] ?? [];
-
-
-        // Log::debug('Valor de mostrar_selector_armado:', [$this->mostrar_selector_armado]);
-
-        // $this->mostrar_selector_armado = $preProyecto->flag_armado;
-    }
+    $this->tallasSeleccionadas = $totSel['detalle_tallas'] ?? [];
+}
 
     public function update()
     {
@@ -191,6 +179,9 @@ class EditProject extends Component
             'producto_sel' => json_encode(['id' => $this->producto_id, 'nombre' => Producto::find($this->producto_id)->nombre]),
             'caracteristicas_sel' => json_encode($this->caracteristicas_sel),
             'opciones_sel' => json_encode($this->opciones_sel),
+
+            'flag_reconfigurar'=> 0,
+            'flag_solicitud_reconfigurar'=> 0,
 
             'total_piezas_sel' => json_encode([
                 'total' => $totalPiezasFinal,
@@ -245,6 +236,11 @@ class EditProject extends Component
                     }
                 }
             }
+
+            // mensaje de chat 
+
+
+
             PedidoEstado::create([
                 'pedido_id' => $pedido->id,
                 'proyecto_id' => $this->ProyectoId,
@@ -256,13 +252,35 @@ class EditProject extends Component
 
         }
 
+        
+        
+        $this->registrarEventoEnChat('El Usuario genero la reconfiguración del proyecto.');
+
 
         // Insertamos al log de pedidos
 
         
 
         session()->flash('message', 'Preproyecto actualizado exitosamente.');
-        return redirect()->route('preproyectos.index');
+        return redirect()->route('proyecto.show', $this->ProyectoId);
+    }
+
+    protected function registrarEventoEnChat($mensaje)
+    {
+        $proyecto = Proyecto::find($this->ProyectoId); // <- P mayúscula
+        if (!$proyecto) return;
+
+        $chat = $proyecto->chat ?? $proyecto->chat()->create([
+            'proyecto_id' => $proyecto->id,
+            'fecha_creacion' => now(),
+        ]);
+
+        $chat->mensajes()->create([
+            'usuario_id' => Auth::id(),
+            'mensaje' => $mensaje,
+            'tipo' => 2,
+            'fecha_envio' => now(),
+        ]);
     }
     
    // Funciones
@@ -288,10 +306,11 @@ class EditProject extends Component
 
     public function onCategoriaChange()
     {
-
         $this->producto_id = null;
-        $this->productos = Producto::where('categoria_id', $this->categoria_id)->get();
-
+        $this->productos = $this->categoria_id
+            ? Producto::where('categoria_id', $this->categoria_id)->get()
+            : collect();
+        $this->despligaformopciones();
     }
 
     public function despliega_form_tallas()

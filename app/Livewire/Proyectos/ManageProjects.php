@@ -43,7 +43,7 @@ class ManageProjects extends Component
 
 
             /* ---------- Props UI ---------- */
-        public array  $tabs      = ['TODOS','PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION','DISEÑO RECHAZADO', 'DISEÑO APROBADO', 'CANCELADO'];
+        public array  $tabs      = ['TODOS','PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION','DISEÑO RECHAZADO', 'DISEÑO APROBADO', 'CANCELADO', 'REPROGRAMAR'];
         public string $activeTab = 'TODOS';              // tab inicial
     
 
@@ -68,10 +68,40 @@ class ManageProjects extends Component
             'taskDescription.min' => 'La descripción debe tener al menos 5 caracteres.',
         ];
 
+        
+        public array $filters = [
+            'id'      => null,
+            'nombre'  => null,
+            'cliente' => null,   // se aplica solo si el usuario puede ver la columna Cliente
+            'estado'  => null,   // útil si quieres sobre-filtrar dentro del tab actual
+        ];
+
 
         public function buscarPorFiltros()
         {
                 $this->resetPage();
+        }
+
+        public function applyFilters(): void
+        {
+            $this->resetPage();
+        }
+
+        public function clearFilters(): void
+        {
+            $this->filters = [
+                'id'      => null,
+                'nombre'  => null,
+                'cliente' => null,
+                'estado'  => null,
+            ];
+            $this->resetPage();
+            $this->dispatch('filters-cleared');
+        }
+
+        public function updatedFilters(): void
+        {
+            $this->resetPage();
         }
 
             
@@ -90,27 +120,36 @@ class ManageProjects extends Component
         }
 
 
-            public function updatedSelectAll(bool $value): void
-            {
-                $this->selectedProjects = [];
+        public function updatedSelectAll(bool $value): void
+        {
+            $this->selectedProjects = [];
 
-                if (!$value) {
-                    return;
-                }
-
-                $ids = Proyecto::query()
-                    ->when($this->activeTab !== 'TODOS', fn($q) => $q->where('estado_id', $this->activeTab))
-                    ->when($this->activeTab === 'DISEÑO APROBADO', function ($q) {
-                        $q->whereHas('pedidos', function ($sub) {
-                            $sub->where('tipo', 'PEDIDO')
-                                ->where('estado_id', '1');
-                        });
-                    })
-                    ->pluck('id')
-                    ->toArray();
-
-                $this->selectedProjects = $ids;
+            if (!$value) {
+                return;
             }
+
+            $ids = Proyecto::query()
+                // Caso especial: REPROGRAMAR
+                ->when($this->activeTab === 'REPROGRAMAR', function ($q) {
+                    $q->where('estado', 'DISEÑO APROBADO')
+                    ->where('flag_reconfigurar', 1);
+                })
+                // Estados “normales” (PENDIENTE, ASIGNADO, etc.)
+                ->when(in_array($this->activeTab, $this->estados, true), fn ($q) =>
+                    $q->where('estado', $this->activeTab)
+                )
+                // Filtro adicional ya existente para “DISEÑO APROBADO”
+                ->when($this->activeTab === 'DISEÑO APROBADO', function ($q) {
+                    $q->whereHas('pedidos', function ($sub) {
+                        $sub->where('tipo', 'PEDIDO')
+                            ->where('estado_id', '1');
+                    });
+                })
+                ->pluck('id')
+                ->toArray();
+
+            $this->selectedProjects = $ids;
+        }
 
 
         public function deleteSelected(): void
@@ -267,24 +306,54 @@ class ManageProjects extends Component
         {
             $query = Proyecto::query()
                 ->with([
-                    // evita 20 consultas a users → 1
                     'user:id,name',
-                    // evita 20 consultas a pedidos, productos y categorías → 1 cada una
-                    // 'pedidos:id,proyecto_id,producto_id',
                     'pedidos:id,proyecto_id,producto_id,total,estatus',
                     'pedidos.producto:id,nombre,categoria_id',
                     'pedidos.producto.categoria:id,nombre',
-                   // si muestras tareas en la tabla
-                    'tareas:id,proyecto_id,descripcion',
                     'tareas:id,proyecto_id,staff_id,descripcion,estado',
-     
                 ]);
 
-            if ($this->activeTab !== 'TODOS') {
+                // Filtros por columna
+                $query
+                    ->when($this->filters['id'], function ($q, $v) {
+                        // Soporta "123" exacto o "123,124" lista
+                        $ids = collect(preg_split('/[,;\s]+/', (string)$v, -1, PREG_SPLIT_NO_EMPTY))
+                            ->map(fn($i) => (int)trim($i))
+                            ->filter();
+                        if ($ids->count() === 1) {
+                            $q->where('id', $ids->first());
+                        } elseif ($ids->isNotEmpty()) {
+                            $q->whereIn('id', $ids->all());
+                        }
+                    })
+                    ->when($this->filters['nombre'], fn($q, $v) =>
+                        $q->where('nombre', 'like', '%'.$v.'%')
+                    )
+                    ->when($this->filters['cliente'] && \Illuminate\Support\Facades\Auth::user()->can('tablaProyectos-ver-todos-los-proyectos'), function ($q) {
+                        $v = trim((string)$this->filters['cliente']);
+                        $q->whereHas('user', fn($u) =>
+                            $u->where('name', 'like', '%'.$v.'%')
+                            ->orWhere('email', 'like', '%'.$v.'%')
+                        );
+                    })
+                    ->when($this->filters['estado'], fn($q, $v) =>
+                        $q->where('estado', $v)
+                    );
+
+            
+
+            // Caso especial: REPROGRAMAR => estado aprobado + flag_reconfigurar = 1
+            if ($this->activeTab === 'REPROGRAMAR') {
+                $query->where('estado', 'DISEÑO APROBADO')
+                    ->where('flag_reconfigurar', 1);
+            }
+
+            // Estados “normales” (aplica solo si el tab está en la lista de estados)
+            if (in_array($this->activeTab, $this->estados, true)) {
                 $query->where('estado', $this->activeTab);
             }
 
-                // 👇 Filtro permanente solo para el tab "DISEÑO APROBADO"
+            // Filtro permanente adicional para el tab “DISEÑO APROBADO”
             if ($this->activeTab === 'DISEÑO APROBADO') {
                 $query->whereHas('pedidos', function ($q) {
                     $q->where('tipo', 'PEDIDO')
@@ -292,13 +361,15 @@ class ManageProjects extends Component
                 });
             }
 
-            if (!Auth::user()->can('tablaProyectos-ver-todos-los-proyectos')) {
-                $query->where('usuario_id', Auth::id());
+            // Restricción por permisos (solo ve los suyos si no puede ver todos)
+            if (!\Illuminate\Support\Facades\Auth::user()->can('tablaProyectos-ver-todos-los-proyectos')) {
+                $query->where('usuario_id', \Illuminate\Support\Facades\Auth::id());
             }
 
             $projects = $query->paginate($this->perPage);
 
             return view('livewire.proyectos.manage-projects', compact('projects'));
         }
+
 
 }

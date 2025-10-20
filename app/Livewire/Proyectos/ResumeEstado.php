@@ -54,6 +54,7 @@ class ResumeEstado extends Component
     public function render()
     {
         return view('livewire.proyectos.resume-estado', [
+            
             'tieneAprobado'    => $this->tieneAprobado,
             'registro'         => $this->registro,
             'archivoProyecto'  => $this->archivoProyecto,   // ← Pasamos a la vista

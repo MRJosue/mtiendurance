@@ -72,6 +72,25 @@
         @endcan
 
     @endif
+
+
+    {{-- Botón Solicitar Reconfiguración --}}
+    @if ( (!$flag_solicitud_reconfigurar) && ($flag_reconfigurar || $proyectoIncompleto) )
+        <button wire:click="confirmarSolicitudReconfiguracion"
+                class="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition font-semibold shadow-sm">
+            Solicitar Reconfiguración
+        </button>
+    @endif
+
+    @if ($flag_solicitud_reconfigurar)
+        <button
+            wire:click="$set('modalreconfigurar', true)"
+            class="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition font-semibold shadow-sm"
+        >
+            Reconfigurar proyecto
+        </button>
+    @endif
+
 </div>
 
 <!-- Alertas -->
@@ -378,4 +397,53 @@
             </div>
         </div>
     @endif
+
+
+    @if($modalsolicitarreconfiguracion)
+        <div class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+            <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
+                <h2 class="text-lg font-semibold mb-3">Confirmar solicitud de reconfiguración</h2>
+                <p class="text-gray-600 mb-4">
+                    ¿Deseas solicitar la reconfiguración de este proyecto? Se notificará al equipo y se habilitará el proceso.
+                </p>
+
+                <div class="flex justify-end gap-2">
+                    <button
+                        wire:click="$set('modalsolicitarreconfiguracion', false)"
+                        class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800"
+                    >Cancelar</button>
+
+                    <button
+                        wire:click="confirmarSolicitudReconfiguracion"
+                        class="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white"
+                    >Confirmar</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    
+    @if($modalreconfigurar)
+        <div class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+            <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
+                <h2 class="text-lg font-semibold mb-3">Iniciar reconfiguración</h2>
+                <p class="text-gray-600 mb-4">
+                    Esto te llevará a la pantalla de reprogramación del proyecto. ¿Deseas continuar?
+                </p>
+
+                <div class="flex justify-end gap-2">
+                    <button
+                        wire:click="$set('modalreconfigurar', false)"
+                        class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800"
+                    >Cancelar</button>
+
+                    <button
+                        wire:click="confirmarReconfigurar"
+                        class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white"
+                    >Continuar</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
 </div>

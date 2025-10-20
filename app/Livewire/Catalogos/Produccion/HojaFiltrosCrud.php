@@ -112,9 +112,9 @@ public array $form = [
     {
         return [
             // General
-            'ver_detalle'        => true,
+            //'ver_detalle'        => true,
             'seleccion_multiple' => true,
-            'abrir_chat'         => true,
+            //'abrir_chat'         => true,
 
             // // Pedidos
             // 'crear_pedido'       => false,
@@ -144,6 +144,20 @@ public array $form = [
             'bulk_eliminar'      => false,
             'bulk_programar'     => true,
             'bulk_aprobar'       => true,
+
+            // Acciones individuales 
+            'ver_detalle' => true,
+            'programar_pedido' => true,
+            'aprobar_pedido' => true,
+            'abrir_chat' => true,
+            'crear_tarea' => true,
+            'editar_pedido' => true,
+            'duplicar_pedido' => true,
+            'eliminar_pedido' => true,
+            'entregar_pedido' => true,
+            'cancelar_pedido' => true,
+            'subir_archivos' => true,
+            'exportar_excel' => true,
 
             // Edicion en linea
 

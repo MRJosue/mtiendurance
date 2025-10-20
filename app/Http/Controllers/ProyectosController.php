@@ -13,6 +13,12 @@ class ProyectosController extends Controller
         return view('proyectos.index');
     }
 
+
+    public function reprogramar(){
+        return view('proyectos.reprogramar');
+    }
+
+
     public function show(Proyecto $Proyecto)
     {
 

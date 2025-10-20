@@ -549,6 +549,73 @@
                         </label>
                     </div> --}}
 
+                    {{-- Grupo: Acciones Individuales --}}
+                    <div class="rounded-lg border p-3">
+                        <h4 class="text-sm font-semibold text-gray-800 mb-2">Acciones individuales</h4>
+                        <label class="flex items items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">ver detalle</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.ver_detalle">
+                        </label>
+
+                        <label class="flex items items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">programar pedido</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.programar_pedido">
+                        </label>
+
+                        <label class="flex items items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">aprobar pedido</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.aprobar_pedido">
+                        </label>
+
+                        <label class="flex items items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">abrir chat</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.abrir_chat">
+                        </label>
+
+                        <label class="flex items items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">crear tarea</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.crear_tarea">
+                        </label>
+
+                        <label class="flex items items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">editar pedido</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.editar_pedido">
+                        </label>
+                        
+                        <label class="flex items items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">duplicar pedido</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.duplicar_pedido">
+                        </label>
+
+                        <label class="flex items items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">eliminar pedido</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.eliminar_pedido">
+                        </label>
+
+                        <label class="flex items items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">entregar pedido</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.entregar_pedido">
+                        </label>
+
+                        <label class="flex items items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">cancelar pedido</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.cancelar_pedido">
+                        </label>
+
+                        <label class="flex items items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">subir archivos</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.subir_archivos">
+                        </label>
+
+
+                        <label class="flex items items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">exportar excel</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.exportar_excel">
+                        </label>
+                        
+       
+                    </div>
+
                     {{-- Grupo: Acciones masivas --}}
                     <div class="rounded-lg border p-3">
                         <h4 class="text-sm font-semibold text-gray-800 mb-2">Acciones masivas</h4>

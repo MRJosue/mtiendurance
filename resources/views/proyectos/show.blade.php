@@ -25,6 +25,9 @@
 
 
                             <livewire:proyectos.resume-estado :proyecto-id="$proyecto->id" />
+                                
+
+
                         </div>
                         <!-- Lado derecho: pestañas Detalles / Chat -->
                         <div x-data="{ tab: 'detalles' }" class="text-gray-900 dark:text-gray-100">
@@ -90,46 +93,50 @@
                                         ? $proyecto->caracteristicas_sel
                                         : json_decode($proyecto->caracteristicas_sel, true);
                                 @endphp
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3">
-                                    <div>
-                                        <p class="text-lg font-semibold">Categoría:</p>
-                                        <p>{{ $categoria['nombre'] ?? 'Sin categoría' }}</p>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3">
+                                        <div>
+                                            <p class="text-lg font-semibold">Categoría:</p>
+                                            <p>{{ $categoria['nombre'] ?? 'Sin categoría' }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-lg font-semibold">Producto:</p>
+                                            <p>{{ $producto['nombre'] ?? 'Sin producto' }}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p class="text-lg font-semibold">Producto:</p>
-                                        <p>{{ $producto['nombre'] ?? 'Sin producto' }}</p>
-                                    </div>
-                                </div>
-                          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-3">
-                                    @forelse(($caracteristicas ?? []) as $caracteristica)
-                                        @php
-                                            // Asegura estructura esperada
-                                            $caracteristica = is_array($caracteristica) ? $caracteristica : (array) $caracteristica;
-                                            $opciones = $caracteristica['opciones'] ?? [];
-                                            if (!is_array($opciones)) {
-                                                $opciones = (array) $opciones;
-                                            }
-                                        @endphp
-                                        <div class="p-4 border rounded-lg shadow bg-gray-50 dark:bg-gray-700">
-                                            <h3 class="text-lg font-semibold">{{ $caracteristica['nombre'] ?? 'Sin nombre' }}</h3>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-3">
+                                        @forelse(($caracteristicas ?? []) as $caracteristica)
+                                            @php
+                                                // Asegura estructura esperada
+                                                $caracteristica = is_array($caracteristica) ? $caracteristica : (array) $caracteristica;
+                                                $opciones = $caracteristica['opciones'] ?? [];
+                                                if (!is_array($opciones)) {
+                                                    $opciones = (array) $opciones;
+                                                }
+                                            @endphp
+                                            <div class="p-4 border rounded-lg shadow bg-gray-50 dark:bg-gray-700">
+                                                <h3 class="text-lg font-semibold">{{ $caracteristica['nombre'] ?? 'Sin nombre' }}</h3>
 
-                                            @if(!empty($opciones))
-                                                <ul class="mt-2 list-disc list-inside">
-                                                    @foreach($opciones as $opcion)
-                                                        @php $opcion = is_array($opcion) ? $opcion : (array) $opcion; @endphp
-                                                        <li><span class="font-medium">{{ $opcion['nombre'] ?? '—' }}</span></li>
-                                                    @endforeach
-                                                </ul>
-                                            @else
-                                                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Sin opciones</p>
-                                            @endif
-                                        </div>
-                                    @empty
-                                        <div class="sm:col-span-2 lg:col-span-3">
-                                            <p class="text-sm text-gray-600 dark:text-gray-300">Sin características seleccionadas.</p>
-                                        </div>
-                                    @endforelse
-                                </div>
+                                                @if(!empty($opciones))
+                                                    <ul class="mt-2 list-disc list-inside">
+                                                        @foreach($opciones as $opcion)
+                                                            @php $opcion = is_array($opcion) ? $opcion : (array) $opcion; @endphp
+                                                            <li><span class="font-medium">{{ $opcion['nombre'] ?? '—' }}</span></li>
+                                                        @endforeach
+                                                    </ul>
+                                                @else
+                                                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Sin opciones</p>
+                                                @endif
+                                            </div>
+                                        @empty
+                                            <div class="sm:col-span-2 lg:col-span-3">
+                                                <p class="text-sm text-gray-600 dark:text-gray-300">Sin características seleccionadas.</p>
+                                            </div>
+                                        @endforelse
+                                    </div>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-3">
+
+                                    </div>
                             </div>
                             <!-- Contenido Chat -->
                             <div x-show="tab === 'chat'" x-cloak class="flex flex-col flex-1 min-h-0 p-5">

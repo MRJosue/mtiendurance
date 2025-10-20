@@ -95,6 +95,12 @@ class PedidosCrudProyecto extends Component
     public function abrirModal($pedidoId = null)
     {
 
+        if (is_null($pedidoId) && $this->proyectoIncompleto()) {
+            $this->modal_reconfigurar_proyecto = true;
+            $this->modal = false; // asegurar cerrado el modal de pedido
+            return;
+        }
+
             // catálogo (solo activos, ordenados)
             $this->estados = EstadoPedido::where('ind_activo', 1)
             ->orderByRaw('COALESCE(orden, 999999), id')
@@ -705,32 +711,54 @@ class PedidosCrudProyecto extends Component
 
         return true;
     }
+  
 
-    public function solicitarReconfiguracion( $id_pedido)
+    public function solicitarReconfiguracion(?int $id_pedido = null)
     {
-        $proyecto = Proyecto::find($this->proyectoId);
-        $this->pedidoId = $id_pedido;
-        $pedido = Pedido::findOrFail($this->pedidoId);
-        
-
-        if ($pedido) {
-            // Aquí puedes usar una notificación, email, log, o evento personalizado
-            Log::warning("🛠 Se ha solicitado reconfiguración para el proyecto ID {$proyecto->id}");
-
-
-            $this->setEstado($pedido, 'POR REPROGRAMAR', [
-                'estado_produccion' => 'POR PROGRAMAR',
-            ]);
-
-    
-            session()->flash('message', '🔧 Se ha solicitado la reconfiguración del proyecto.');
-
-
-
+        $proyecto = \App\Models\Proyecto::find($this->proyectoId);
+        if (!$proyecto) {
+            session()->flash('error', 'Proyecto no encontrado.');
+            $this->modal_reconfigurar_proyecto = false;
+            return;
         }
-    
+
+        // Si viene un pedido (cuando NO es “nuevo”), puedes marcarlo POR REPROGRAMAR
+        if (!is_null($id_pedido)) {
+            if ($pedido = \App\Models\Pedido::find($id_pedido)) {
+                $pedido->update([
+                    'estado' => 'POR REPROGRAMAR',
+                    'estado_produccion' => 'POR PROGRAMAR',
+                ]);
+            }
+        }
+
+        // Marca la solicitud en el proyecto
+        $proyecto->update(['flag_solicitud_reconfigurar' => 1]);
+
+        // 🔔 Notifica a otros componentes Livewire (v3 -> dispatch)
+        $this->dispatch('reconfiguracionSolicitada', proyectoId: $this->proyectoId);
+        // (opcional) también puedes mantener tu evento genérico
+        $this->dispatch('estadoActualizado');
+
         $this->modal_reconfigurar_proyecto = false;
+        session()->flash('message', '🔧 Se ha solicitado la reconfiguración del proyecto.');
+        $this->dispatch('ActualizarTablaPedido');
     }
+
+
+    private function proyectoIncompleto(): bool
+    {
+        $proyecto = \App\Models\Proyecto::find($this->proyectoId);
+        if (!$proyecto) return true;
+
+        $producto  = is_string($proyecto->producto_sel)  ? json_decode($proyecto->producto_sel,  true) : ($proyecto->producto_sel  ?? []);
+        $categoria = is_string($proyecto->categoria_sel) ? json_decode($proyecto->categoria_sel, true) : ($proyecto->categoria_sel ?? []);
+
+        return empty($producto['id']) || empty($categoria['id']);
+    }
+
+
+
     
     public function render()
     {
@@ -752,4 +780,6 @@ class PedidosCrudProyecto extends Component
                 ->paginate(6),
         ]);
     }
+
+
 }

@@ -280,7 +280,7 @@ class EditProject extends Component
             'tiposEnvio' => $this->tipos_envio,
             'mostrarFormularioTallas'=> $this->mostrarFormularioTallas,
             'mostrar_selector_armado' => $this->mostrar_selector_armado,
-              'mostrarFormularioTallas'=> $this->mostrarFormularioTallas,
+            'mostrarFormularioTallas'=> $this->mostrarFormularioTallas,
             'direccionesFiscales' => DireccionFiscal::where('usuario_id', Auth::id())->get(),
             'direccionesEntrega' => DireccionEntrega::where('usuario_id', Auth::id())->get(),
         ]);

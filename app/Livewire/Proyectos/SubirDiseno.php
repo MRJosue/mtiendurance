@@ -22,11 +22,18 @@ use App\Notifications\NuevaNotificacion;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
 
+use Livewire\Attributes\On;
+
 class SubirDiseno extends Component
 {
     use WithFileUploads;
 
     public $proyectoId;
+    public $flag_reconfigurar;
+
+    public $flag_solicitud_reconfigurar;
+
+
     public $archivo;
     public $comentario;
     public $modalOpen = false;
@@ -59,7 +66,13 @@ class SubirDiseno extends Component
     public ?string $archivoNombre = null;    // nombre original
     public ?string $archivoNombreFinal = null; // nombre con sello de tiempo que se usará en el guardado
 
-     public bool $bloqueadoPorMuestras = false;
+    public bool $bloqueadoPorMuestras = false;
+
+    public $modalsolicitarreconfiguracion = false;
+
+    public $modalreconfigurar = false;
+
+    public bool $proyectoIncompleto = false;
 
 
 
@@ -74,8 +87,19 @@ class SubirDiseno extends Component
     public function mount($proyectoId)
     {
         $this->proyectoId = $proyectoId;
+        $proyecto = Proyecto::find($proyectoId);
+
+        $this->flag_reconfigurar = $proyecto?->flag_reconfigurar ?? 0;
+        $this->flag_solicitud_reconfigurar = $proyecto?->flag_solicitud_reconfigurar ?? 0;
+
+        // Detectar si está incompleto (sin categoría o producto)
+        $producto = is_string($proyecto?->producto_sel) ? json_decode($proyecto->producto_sel, true) : ($proyecto?->producto_sel ?? []);
+        $categoria = is_string($proyecto?->categoria_sel) ? json_decode($proyecto->categoria_sel, true) : ($proyecto?->categoria_sel ?? []);
+
+        $this->proyectoIncompleto = empty($producto['id']) || empty($categoria['id']);
+
         $this->cargarEstado();
-         $this->actualizarBloqueoMuestras();
+        $this->actualizarBloqueoMuestras();
     }
 
     public function cargarEstado()
@@ -717,6 +741,72 @@ class SubirDiseno extends Component
             })
             ->exists();
     }
+
+    public function confirmarSolicitudReconfiguracion(): void
+    {
+        $proyecto = Proyecto::find($this->proyectoId);
+        if (!$proyecto) {
+            session()->flash('error', 'Proyecto no encontrado.');
+            $this->modalsolicitarreconfiguracion = false;
+            return;
+        }
+
+        // Actualiza el flag en BD
+        $proyecto->update(['flag_solicitud_reconfigurar' => 1]);
+
+        // Refleja en el estado del componente para el render
+        $this->flag_solicitud_reconfigurar = 1;
+
+        // Cierra modal y notifica
+        $this->modalsolicitarreconfiguracion = false;
+
+        // Opcional: registrar en chat/historial
+        $this->registrarEventoEnChat('El cliente solicitó la reconfiguración del proyecto.');
+
+        // Livewire v3: eventos con dispatch
+        $this->dispatch('estadoActualizado');
+        session()->flash('message', 'Solicitud de reconfiguración enviada correctamente.');
+    }
+
+
+    #[On('reconfiguracionSolicitada')]
+    public function actualizarReconfiguracion($proyectoId)
+    {
+        if ($proyectoId != $this->proyectoId) {
+            return; // ignorar si no es este proyecto
+        }
+
+        $p = \App\Models\Proyecto::find($this->proyectoId);
+        if (!$p) return;
+
+        $this->flag_reconfigurar = $p->flag_reconfigurar ?? 0;
+        $this->flag_solicitud_reconfigurar = $p->flag_solicitud_reconfigurar ?? 0;
+
+        // Si manejas visibilidad del botón o estado visual
+        $this->cargarEstado();
+
+        // Opcional: notificación visual
+        session()->flash('message', 'Proyecto actualizado tras solicitud de reconfiguración.');
+    }
+
+
+    public function confirmarReconfigurar()
+    {
+        // Cierra modal
+        $this->modalreconfigurar = false;
+
+        // Redirige a la ruta solicitada
+        return $this->redirectRoute(
+            'reprogramacion.reprogramacionproyectopedido',
+            ['proyecto' => $this->proyectoId]
+        );
+    }
+
+    public function solicitarReconfiguracion(): void
+    {
+        $this->confirmarSolicitudReconfiguracion();
+    }
+
 
     private function actualizarBloqueoMuestras(): void
     {

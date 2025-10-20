@@ -21,6 +21,8 @@ class ArchivoPedido extends Model
         'usuario_id',
         'descripcion',
         'version',
+        'flag_reconfigurar',
+        'activo'
     ];
 
     /** Relaciones */

@@ -140,10 +140,9 @@
                     <span class="text-red-600 text-sm">Nota: Al guardar este formulario habras reconfigurado la solicitud original </span>
                 </div>
 
-
                 <!-- Botones -->
                 <div class="flex justify-end gap-4 mt-6">
-                    <a href="{{ route('reprogramacion.reprogramacionproyectopedido', ['proyecto' => $ProyectoId]) }}"
+                    <a href="{{ route('proyecto.show',$ProyectoId) }}"
                     class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded">
                         Cancelar
                     </a>

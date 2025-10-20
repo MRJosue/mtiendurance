@@ -1,5 +1,5 @@
 <div> 
-    @if (!$tieneAprobado)
+    @if (!$tieneAprobado || is_null($registro))
         <div class="p-4 text-gray-500 text-center">
             El proyecto aún no ha sido aprobado.
         </div>
