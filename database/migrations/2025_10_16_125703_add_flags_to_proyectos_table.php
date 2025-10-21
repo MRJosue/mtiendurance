@@ -28,7 +28,7 @@ return new class extends Migration
             // Añadir el flag activo
             $table->boolean('activo')
                 ->default(1)
-                ->after('')
+                ->after('flag_solicitud_reconfigurar')
                 ->comment('1 = Activo, 0 = Inactivo');
         });
     }
