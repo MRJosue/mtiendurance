@@ -346,6 +346,29 @@
                         </div>
                     </div>
 
+
+                    <div>
+                        <button
+                            @click="toggleSection('config_importacion')"
+                            :class="openSections.config_importacion ? 'underline text-blue-400' : ''"
+                            class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
+                        >
+                            <span> importacion </span>
+                            <svg :class="openSections.config_importacion ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
+                                 class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
+                                 viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                        <div x-show="openSections.config_importacion" x-transition class="pl-6 mt-1 space-y-1">
+                            <a href="{{ route('importacion.proyectos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                Importa proyecto legacy
+                            </a>
+
+                        </div>
+                    </div>
+
+
                     {{-- Usuarios --}}
                     @can('asideusuariosdesplegable')
                     <div>

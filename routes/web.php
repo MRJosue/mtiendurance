@@ -18,7 +18,7 @@ use App\Http\Controllers\tipoenviocontroller;
 use App\Http\Controllers\estadoscontroller;
 use App\Http\Controllers\paisescontroller;
 use App\Http\Controllers\PedidosController;
-
+use App\Http\Controllers\importacioncontroller;
 
 use App\Http\Controllers\ProyectosController;
 use App\Http\Controllers\PreproyectosController;
@@ -178,6 +178,9 @@ Route::get('/usuarios/crear',[UserController::class, 'create'])->middleware(['au
 Route::get('/usuarios/detalles/{user}',[UserController::class, 'show'])->middleware(['auth','verified'])->name('usuarios.show');
 Route::get('/usuarios/modal',[UserController::class, 'actions'])->middleware(['auth','verified'])->name('usuarios.actions');
 
+// Importacion 
+Route::get('/importacion/proyectos',[importacioncontroller::class, 'index'])->middleware(['auth','verified'])->name('importacion.proyectos.index');
+
 // permisos
 Route::get('/usuarios/permisos',[permisoscontroller::class, 'index'])->middleware(['auth','verified'])->name('permisos.index');
 
@@ -299,6 +302,8 @@ Route::get('/produccion/entrega',[tareasproduccion::class, 'entrega'])->middlewa
         Route::get('/produccion/hojas/{key}', [HojasViewerController::class, 'show'])
             ->name('produccion.hojas.show');
     });
+
+
 
 // Prueba data tables
 
