@@ -13,7 +13,11 @@
 
 
     <!-- Contenido -->
-    <div x-show="abierto" x-transition class="p-4">
+    <div
+        x-show="abierto"
+        x-transition
+        class="p-4 max-h-[90vh] overflow-y-auto"
+    >
         @if (session()->has('message'))
             <div class="bg-green-100 text-green-800 p-2 rounded mb-4 text-sm">
                 {{ session('message') }}
