@@ -1,4 +1,4 @@
-<div>
+<div >
     
     @can('dashboardclientepreproyectos')
         @livewire('preproyectos.manage-preprojects')

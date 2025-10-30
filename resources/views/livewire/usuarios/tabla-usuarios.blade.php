@@ -8,12 +8,21 @@
     @endif
 
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
-        <button wire:click="crear" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">
-            Nuevo Usuario
-        </button>
+        @if($isPrivileged)
+            <button wire:click="crear" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">
+                Nuevo Usuario
+            </button>
+        @else
+            <div></div>
+        @endif
 
         <div class="flex flex-wrap gap-2">
-            <input type="text" wire:model.lazy="search" placeholder="Buscar por nombre o correo..." class="border border-gray-300 rounded px-4 py-2 w-full sm:w-64">
+            <input
+                type="text"
+                wire:model.debounce.500ms="search"
+                placeholder="Buscar por nombre o correo..."
+                class="border border-gray-300 rounded px-4 py-2 w-full sm:w-64"
+            >
             <button wire:click="$refresh" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded">
                 Buscar
             </button>
@@ -26,7 +35,6 @@
                 <tr>
                     <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Nombre</th>
                     <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Correo Electrónico</th>
-                  
                     <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Roles</th>
                     <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Acciones</th>
                 </tr>
@@ -36,7 +44,6 @@
                     <tr class="hover:bg-gray-50">
                         <td class="border border-gray-300 px-4 py-2">{{ $usuario->name }}</td>
                         <td class="border border-gray-300 px-4 py-2">{{ $usuario->email }}</td>
-
                         <td class="border border-gray-300 px-4 py-2">
                             @foreach($usuario->roles as $rol)
                                 <span class="inline-block bg-gray-200 text-gray-800 text-xs font-semibold mr-1 mb-1 px-2 py-1 rounded">
@@ -45,8 +52,21 @@
                             @endforeach
                         </td>
                         <td class="border border-gray-300 px-4 py-2 text-center space-x-2">
-                            <a href="{{ route('usuarios.show', $usuario->id) }}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded inline-block">Detalles</a>
-                            <button wire:click="editarRoles({{ $usuario->id }})" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded inline-block">Roles</button>
+                            <a
+                                href="{{ route('usuarios.show', $usuario->id) }}"
+                                class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded inline-block"
+                            >
+                                Detalles
+                            </a>
+
+                            @if($isPrivileged)
+                                <button
+                                    wire:click="editarRoles({{ $usuario->id }})"
+                                    class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded inline-block"
+                                >
+                                    Roles
+                                </button>
+                            @endif
                         </td>
                     </tr>
                 @empty
@@ -62,7 +82,7 @@
         {{ $usuarios->links() }}
     </div>
 
-    @if($modal)
+    @if($modal && $isPrivileged)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div class="bg-white rounded shadow-lg w-full max-w-md">
                 <div class="flex items-center justify-between border-b border-gray-200 p-4">

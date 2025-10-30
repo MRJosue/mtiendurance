@@ -40,6 +40,10 @@ class User extends Authenticatable
         'password',
         'config',
         'user_can_sel_preproyectos',
+        'user_legacy',
+        'company_legacy',
+        'super_legacy',
+        'super_id_legacy',
     ];
 
 

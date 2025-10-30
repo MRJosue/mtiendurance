@@ -132,14 +132,7 @@
                     </x-dropdown>
                 </div>
             </div>
-
-
-            
-                        
-            
         </div>
-
-
         {{-- Tabs de filtros --}}
         <div class="mb-4 overflow-x-auto">
             <div class="inline-flex gap-2">
@@ -179,8 +172,6 @@
             @endif
         </div>
 
-
-        {{-- Tabla table class min-w-full border-collapse border border-gray-200--}}
         <div class="overflow-x-auto bg-white rounded-lg shadow">
             <table class="w-full table-auto border-collapse border border-gray-200">
                 <thead class="bg-gray-100">

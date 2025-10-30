@@ -251,7 +251,7 @@
                 </div>
             </div>
 
-            @hasanyrole('admin')
+         
             {{-- Configuración --}}
             <div>
                 <button
@@ -268,6 +268,7 @@
                 </button>
 
                 <div x-show="openSections.configuracion" x-transition class="pl-6 mt-1 space-y-2">
+                       @hasanyrole('admin')
                     {{-- Envío --}}
                     <div>
                         <button
@@ -297,8 +298,9 @@
                             </a>
                         </div>
                     </div>
-
+                          @endhasanyrole
                     {{-- Productos --}}
+                     @hasanyrole('admin')
                     <div>
                         <button
                             @click="toggleSection('config_productos')"
@@ -345,8 +347,9 @@
                             </a>
                         </div>
                     </div>
-
-
+                    @endhasanyrole
+                     @hasanyrole('admin')
+                    {{-- Importación --}}
                     <div>
                         <button
                             @click="toggleSection('config_importacion')"
@@ -367,10 +370,10 @@
 
                         </div>
                     </div>
-
+                    @endhasanyrole
 
                     {{-- Usuarios --}}
-                    @can('asideusuariosdesplegable')
+                    {{-- @can('asideusuariosdesplegable') --}}
                     <div>
                         <button
                             @click="toggleSection('config_usuarios')"
@@ -388,15 +391,18 @@
                             <a href="{{ route('usuarios.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                                 {{ __('menu.users_list') }}
                             </a>
+
+                             @hasanyrole('admin')
                             <a href="{{ route('permisos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                                 {{ __('menu.permissions') }}
                             </a>
+                            @endhasanyrole
                         </div>
                     </div>
-                    @endcan
+                    {{-- @endcan --}}
                 </div>
             </div>
-            @endhasanyrole
+      
 
             {{-- Perfil --}}
             <div class="mt-6 border-t border-gray-700 pt-4 px-4">

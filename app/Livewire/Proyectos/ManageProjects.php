@@ -4,12 +4,14 @@ namespace App\Livewire\Proyectos;
 
 
 use Livewire\Component;
-use Livewire\WithPagination; // Importar el trait para paginación
+use Livewire\WithPagination; 
 use App\Models\Proyecto;
 use App\Models\User;
 use App\Models\Tarea;
 use App\Models\proyecto_estados;
 use App\Notifications\NuevaNotificacion;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Arr;
 
 use Illuminate\Support\Facades\Auth;
 class ManageProjects extends Component
@@ -40,6 +42,17 @@ class ManageProjects extends Component
         public $ultimosPedidos;
         /** @var \App\Models\Proyecto|null */
         public $proyectoResumen = null;
+
+         public array $subordinateIds = [];
+        public bool  $isClientePrincipalConSub = false;
+
+
+            // ORDENAMIENTO
+            public string $sortField = 'id';
+            public string $sortDir   = 'desc';
+            protected array $sortable = ['id','nombre','estado']; // whitelist
+            
+
 
 
             /* ---------- Props UI ---------- */
@@ -75,6 +88,21 @@ class ManageProjects extends Component
             'cliente' => null,   // se aplica solo si el usuario puede ver la columna Cliente
             'estado'  => null,   // útil si quieres sobre-filtrar dentro del tab actual
         ];
+
+
+        public function sortBy(string $field): void
+        {
+            if (!in_array($field, $this->sortable, true)) return;
+
+            // toggle dirección si es el mismo campo
+            if ($this->sortField === $field) {
+                $this->sortDir = $this->sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                $this->sortField = $field;
+                $this->sortDir   = 'asc';
+            }
+            $this->resetPage();
+        }
 
 
         public function buscarPorFiltros()
@@ -123,32 +151,38 @@ class ManageProjects extends Component
         public function updatedSelectAll(bool $value): void
         {
             $this->selectedProjects = [];
+            if (!$value) return;
 
-            if (!$value) {
-                return;
-            }
-
-            $ids = Proyecto::query()
-                // Caso especial: REPROGRAMAR
-                ->when($this->activeTab === 'REPROGRAMAR', function ($q) {
-                    $q->where('estado', 'DISEÑO APROBADO')
-                    ->where('flag_reconfigurar', 1);
-                })
-                // Estados “normales” (PENDIENTE, ASIGNADO, etc.)
-                ->when(in_array($this->activeTab, $this->estados, true), fn ($q) =>
+            $idsQuery = Proyecto::query()
+                // Tab REPROGRAMAR
+                ->when($this->activeTab === 'REPROGRAMAR', fn($q) =>
+                    $q->where('estado', 'DISEÑO APROBADO')->where('flag_reconfigurar', 1)
+                )
+                // Estados normales
+                ->when(in_array($this->activeTab, $this->estados, true), fn($q) =>
                     $q->where('estado', $this->activeTab)
                 )
-                // Filtro adicional ya existente para “DISEÑO APROBADO”
+                // Filtro adicional para DISEÑO APROBADO
                 ->when($this->activeTab === 'DISEÑO APROBADO', function ($q) {
-                    $q->whereHas('pedidos', function ($sub) {
-                        $sub->where('tipo', 'PEDIDO')
-                            ->where('estado_id', '1');
-                    });
-                })
-                ->pluck('id')
-                ->toArray();
+                    $q->whereHas('pedidos', fn($sub) =>
+                        $sub->where('tipo', 'PEDIDO')->where('estado_id', '1')
+                    );
+                });
 
-            $this->selectedProjects = $ids;
+            // Restricción por rol también aquí
+            $user = Auth::user();
+            if ($user->hasRole('admin')) {
+                // sin restricción extra
+            } elseif ($user->hasRole('cliente_principal')) {
+                $idsUsuarios = array_values(array_unique(array_merge([$user->id], $this->subordinateIds)));
+                $idsQuery->whereIn('usuario_id', $idsUsuarios);
+            } elseif ($user->hasAnyRole(['cliente_subordinado','estaf'])) {
+                $idsQuery->where('usuario_id', $user->id);
+            } else {
+                $idsQuery->where('usuario_id', $user->id);
+            }
+
+            $this->selectedProjects = $idsQuery->pluck('id')->toArray();
         }
 
 
@@ -168,8 +202,23 @@ class ManageProjects extends Component
                 $this->activeTab = $this->tabs[0];
             }
 
-            // Leemos los diseñadores solo 1 vez
+            // Diseñadores una vez
             $this->designers = User::whereHas('roles', fn($q) => $q->where('name','diseñador'))->get();
+
+            // Cargar subordinados desde el JSON del usuario autenticado
+            $user = Auth::user();
+
+            if ($user->hasRole('cliente_principal')) {
+                // Asegura enteros y filtra null/strings vacíos
+                $this->subordinateIds = collect($user->subordinados ?? [])
+                    ->map(fn($id) => (int) $id)
+                    ->filter(fn($id) => $id > 0)
+                    ->values()
+                    ->all();
+
+                $this->isClientePrincipalConSub = count($this->subordinateIds) > 0;
+            }
+
         }
 
         
@@ -313,59 +362,60 @@ class ManageProjects extends Component
                     'tareas:id,proyecto_id,staff_id,descripcion,estado',
                 ]);
 
-                // Filtros por columna
-                $query
-                    ->when($this->filters['id'], function ($q, $v) {
-                        // Soporta "123" exacto o "123,124" lista
-                        $ids = collect(preg_split('/[,;\s]+/', (string)$v, -1, PREG_SPLIT_NO_EMPTY))
-                            ->map(fn($i) => (int)trim($i))
-                            ->filter();
-                        if ($ids->count() === 1) {
-                            $q->where('id', $ids->first());
-                        } elseif ($ids->isNotEmpty()) {
-                            $q->whereIn('id', $ids->all());
-                        }
-                    })
-                    ->when($this->filters['nombre'], fn($q, $v) =>
-                        $q->where('nombre', 'like', '%'.$v.'%')
-                    )
-                    ->when($this->filters['cliente'] && \Illuminate\Support\Facades\Auth::user()->can('tablaProyectos-ver-todos-los-proyectos'), function ($q) {
-                        $v = trim((string)$this->filters['cliente']);
-                        $q->whereHas('user', fn($u) =>
-                            $u->where('name', 'like', '%'.$v.'%')
-                            ->orWhere('email', 'like', '%'.$v.'%')
-                        );
-                    })
-                    ->when($this->filters['estado'], fn($q, $v) =>
-                        $q->where('estado', $v)
+            // --- Filtros por columna ---
+            $query
+                ->when($this->filters['id'], function ($q, $v) {
+                    $ids = collect(preg_split('/[,;\s]+/', (string)$v, -1, PREG_SPLIT_NO_EMPTY))
+                        ->map(fn($i) => (int)trim($i))
+                        ->filter();
+                    if ($ids->count() === 1) $q->where('id', $ids->first());
+                    elseif ($ids->isNotEmpty()) $q->whereIn('id', $ids->all());
+                })
+                ->when($this->filters['nombre'], fn($q, $v) =>
+                    $q->where('nombre', 'like', '%'.$v.'%')
+                )
+                ->when($this->filters['cliente'] && Auth::user()->can('tablaProyectos-ver-todos-los-proyectos'), function ($q) {
+                    $v = trim((string)$this->filters['cliente']);
+                    $q->whereHas('user', fn($u) =>
+                        $u->where('name', 'like', '%'.$v.'%')->orWhere('email', 'like', '%'.$v.'%')
                     );
+                })
+                ->when($this->filters['estado'], fn($q, $v) =>
+                    $q->where('estado', $v)
+                );
 
-            
-
-            // Caso especial: REPROGRAMAR => estado aprobado + flag_reconfigurar = 1
+            // --- Tabs ---
             if ($this->activeTab === 'REPROGRAMAR') {
-                $query->where('estado', 'DISEÑO APROBADO')
-                    ->where('flag_reconfigurar', 1);
+                $query->where('estado', 'DISEÑO APROBADO')->where('flag_reconfigurar', 1);
             }
-
-            // Estados “normales” (aplica solo si el tab está en la lista de estados)
             if (in_array($this->activeTab, $this->estados, true)) {
                 $query->where('estado', $this->activeTab);
             }
-
-            // Filtro permanente adicional para el tab “DISEÑO APROBADO”
             if ($this->activeTab === 'DISEÑO APROBADO') {
-                $query->whereHas('pedidos', function ($q) {
-                    $q->where('tipo', 'PEDIDO')
-                    ->where('estado_id', '1');
-                });
+                $query->whereHas('pedidos', fn($q) =>
+                    $q->where('tipo','PEDIDO')->where('estado_id','1')
+                );
             }
 
-            // Restricción por permisos (solo ve los suyos si no puede ver todos)
-            if (!\Illuminate\Support\Facades\Auth::user()->can('tablaProyectos-ver-todos-los-proyectos')) {
-                $query->where('usuario_id', \Illuminate\Support\Facades\Auth::id());
+            // --- Restricción por rol/permiso (UNA sola vez) ---
+            $user = Auth::user();
+            if ($user->hasRole('admin') || $user->can('tablaProyectos-ver-todos-los-proyectos')) {
+                // ve todo
+            } elseif ($user->hasRole('cliente_principal')) {
+                $idsUsuarios = array_values(array_unique(array_merge([$user->id], $this->subordinateIds)));
+                $query->whereIn('usuario_id', $idsUsuarios);
+            } else {
+                // cliente_subordinado, estaf, u otros
+                $query->where('usuario_id', $user->id);
             }
 
+            // --- Order by (seguro) ---
+            if (!in_array($this->sortField, $this->sortable, true)) {
+                $this->sortField = 'id';
+            }
+            $query->orderBy($this->sortField, $this->sortDir);
+
+            // --- Paginar solo una vez ---
             $projects = $query->paginate($this->perPage);
 
             return view('livewire.proyectos.manage-projects', compact('projects'));

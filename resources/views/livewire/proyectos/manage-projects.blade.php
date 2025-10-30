@@ -39,396 +39,401 @@
                 </ul>
 
                 <div x-data="{ selectedProjects: @entangle('selectedProjects') }" class="container mx-auto p-6">
-                    {{-- <!-- Botones de acción -->
+
+{{-- === TABLA estilo hoja-viewer para manage-projects === --}}
+@php
+    $arrow = function(string $field) use ($sortField, $sortDir) {
+        if ($sortField !== $field) return '⇵';
+        return $sortDir === 'asc' ? '▲' : '▼';
+    };
+
+    $coloresEstadoDiseno = [
+        'PENDIENTE'        => 'bg-yellow-400 text-black',
+        'ASIGNADO'         => 'bg-blue-500 text-white',
+        'EN PROCESO'       => 'bg-orange-500 text-white',
+        'REVISION'         => 'bg-purple-600 text-white',
+        'DISEÑO APROBADO'  => 'bg-emerald-600 text-white',
+        'DISEÑO RECHAZADO' => 'bg-red-600 text-white',
+        'CANCELADO'        => 'bg-gray-500 text-white',
+    ];
+@endphp
+
+        <div
+            x-data="{
+                selected: @entangle('selectedProjects').live,
+                idsPagina: @entangle('idsPagina').live
+            }"
+            class="overflow-x-auto bg-white rounded-lg shadow"
+        >
+            <table class="w-full table-auto border-collapse border border-gray-200">
+            <thead class="bg-gray-100">
+                <tr>
+                    {{-- Checkbox maestro (solo para roles permitidos) --}}
                     @hasanyrole('admin|estaf')
-                            <div class="mb-4 flex flex-wrap gap-2">
-                                <button
-                                    class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    :disabled="selectedProjects.length === 0"
-                                    wire:click="exportSelected"
-                                >
-                                    Exportar
-                                </button>
-
-                                <button
-                                    class="px-3 py-1.5 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    :disabled="selectedProjects.length === 0"
-                                    wire:click="deleteSelected"
-                                >
-                                    Eliminar
-                                </button>
-                            </div>
+                        <th class="px-3 py-2">
+                            <input
+                                type="checkbox"
+                                :checked="idsPagina.length && idsPagina.every(id => selected.includes(Number(id)))"
+                                @change="
+                                    const pagina = idsPagina.map(Number);
+                                    if ($event.target.checked) {
+                                        selected = Array.from(new Set([...selected.map(Number), ...pagina]));
+                                    } else {
+                                        selected = selected.map(Number).filter(i => !pagina.includes(i));
+                                    }
+                                "
+                            />
+                        </th>
+                    @else
+                        @role('cliente_principal')
+                            @if($isClientePrincipalConSub)
+                                <th class="px-3 py-2">
+                                    <input
+                                        type="checkbox"
+                                        :checked="idsPagina.length && idsPagina.every(id => selected.includes(Number(id)))"
+                                        @change="
+                                            const pagina = idsPagina.map(Number);
+                                            if ($event.target.checked) {
+                                                selected = Array.from(new Set([...selected.map(Number), ...pagina]));
+                                            } else {
+                                                selected = selected.map(Number).filter(i => !pagina.includes(i));
+                                            }
+                                        "
+                                    />
+                                </th>
+                            @endif
+                        @endrole
                     @endhasanyrole
- --}}
 
+                        {{-- ID --}}
+                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
+<div class="flex items-center justify-between gap-2 min-w-[10rem]">
+    <button
+        class="inline-flex items-center gap-1 hover:text-blue-600"
+        wire:click="sortBy('id')"
+        title="Ordenar por ID"
+    >
+        <span>ID</span>
+        <span class="text-xs">{!! $arrow('id') !!}</span>
+    </button>
 
-                        @if($mostrarFiltros)
-                            {{-- <div 
-                                x-data="{ abierto: @entangle('mostrarFiltros') }" 
-                                class="mb-6"
-                            >
-                            <template x-if="abierto">
-                                <div 
-                                    x-show="abierto" 
-                                    x-transition:enter="transition ease-out duration-300"
-                                    x-transition:enter-start="opacity-0 transform scale-95"
-                                    x-transition:enter-end="opacity-100 transform scale-100"
-                                    x-transition:leave="transition ease-in duration-200"
-                                    x-transition:leave-start="opacity-100 transform scale-100"
-                                    x-transition:leave-end="opacity-0 transform scale-95"
-                                    class="w-full bg-white border border-gray-200 shadow-md rounded-lg"
+    {{-- Filtro ID en dropdown (teleport al body) --}}
+    <div x-data="dropdownTeleport()" class="relative shrink-0">
+        <button x-ref="btn" @click="toggle" class="p-1 rounded hover:bg-gray-200" title="Filtrar ID">⋮</button>
+
+        <template x-teleport="body">
+            <div
+                x-show="open"
+                x-transition
+                @click.outside="close"
+                :style="style"
+                class="fixed z-50 w-64 rounded-lg border bg-white shadow p-3"
+            >
+                <label class="block text-xs text-gray-600 mb-1">
+                    ID Proyecto (ej. 101 ó 101,102)
+                </label>
+                <input
+                    type="text"
+                    class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                    placeholder="ID…"
+                    wire:model.live.debounce.400ms="filters.id"
+                />
+                <div class="mt-2 flex justify-end gap-2">
+                    <button type="button" class="px-2 py-1 text-xs rounded border"
+                            @click="$wire.set('filters.id','')">Limpiar</button>
+                    <button type="button" class="px-2 py-1 text-xs rounded border"
+                            @click="close">Cerrar</button>
+                </div>
+            </div>
+        </template>
+    </div>
+</div>
+
+                        </th>
+
+                        {{-- Nombre --}}
+                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
+                            <div class="flex items-center justify-between gap-2 min-w-[14rem]">
+                                <button
+                                    class="inline-flex items-center gap-1 hover:text-blue-600"
+                                    wire:click="sortBy('nombre')"
+                                    title="Ordenar por Nombre"
                                 >
-                                    <div class="flex justify-between items-center p-4 border-b">
-                                        <h2 class="text-lg font-bold text-gray-700">Filtros</h2>
-                                        <div class="flex items-center gap-2">
-                                            <button 
-                                                wire:click="buscarPorFiltros"
-                                                class="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-100 text-sm"
-                                            >
-                                                Filtrar
-                                            </button>
-                                            <button 
-                                                @click="abierto = false" 
-                                                class="text-gray-500 hover:text-gray-700 text-xl leading-none"
-                                            >
-                                                ✕
-                                            </button>
+                                    <span>Nombre del Proyecto</span>
+                                    <span class="text-xs">{!! $arrow('nombre') !!}</span>
+                                </button>
+
+                                <div x-data="{ open:false }" class="relative shrink-0">
+                                    <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="Filtrar Nombre">⋮</button>
+                                    <div
+                                        x-cloak x-show="open" @click.away="open=false" x-transition
+                                        class="absolute right-0 z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
+                                    >
+                                        <label class="block text-xs text-gray-600 mb-1">Nombre contiene</label>
+                                        <input
+                                            type="text"
+                                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                            placeholder="Buscar…"
+                                            wire:model.live.debounce.400ms="filters.nombre"
+                                        />
+                                        <div class="mt-2 flex justify-end gap-2">
+                                            <button type="button" class="px-2 py-1 text-xs rounded border"
+                                                    @click="$wire.set('filters.nombre','')">Limpiar</button>
+                                            <button type="button" class="px-2 py-1 text-xs rounded border"
+                                                    @click="open=false">Cerrar</button>
                                         </div>
                                     </div>
-
-                                    <div class="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                        <x-select
-                                            label="Estado del Proyecto"
-                                            placeholder="Selecciona estados"
-                                            multiselect
-                                            :options="collect($this->estados)->map(fn($estado) => ['id' => $estado, 'name' => $estado])->toArray()"
-                                            option-value="id"
-                                            option-label="name"
-                                            wire:model="estadosSeleccionados"
-                                            autocomplete="off"
-                                        />
-                                    </div>
                                 </div>
-                            </template>
-                                <template x-if="!abierto">
-                                    <div class="mb-4">
-                                        <button @click="abierto = true" class="text-sm text-blue-600 hover:underline">
-                                            Mostrar Filtros
-                                        </button>
-                                    </div>
-                                </template>
-                            </div> --}}
-                        @else
-                            {{-- <div class="mb-4">
-                                <button wire:click="$set('mostrarFiltros', true)" class="text-sm text-blue-600 hover:underline">
-                                    Mostrar Filtros
-                                </button>
-                            </div> --}}
-                        @endif
-
-                    <!-- Tabla -->
-                    <div class="overflow-x-auto bg-white rounded-lg shadow">
-
-                            @if (session()->has('message'))
-                                <div class="bg-green-100 text-green-800 p-3 rounded mb-3">
-                                    {{ session('message') }}
-                                </div>
-                            @endif
-                        <table class="min-w-full border-collapse border border-gray-200 rounded-lg">
-<thead class="bg-gray-100 text-sm">
-    <tr>
-        {{-- Checkbox maestro --}}
-        @hasanyrole('admin|estaf')
-            <th class="border-b px-4 py-2 text-left text-gray-700 font-medium">
-                <input
-                    type="checkbox"
-                    wire:model="selectAll"
-                    @change="selectedProjects = $event.target.checked ? @js($projects->pluck('id')) : []"
-                />
-            </th>
-        @endhasanyrole
-
-        {{-- Columna: ID con filtro compacto --}}
-        <th class="border-b px-4 py-2 text-left text-gray-700 font-medium">
-            <div class="flex items-center justify-between">
-                <span>ID</span>
-
-                <div x-data="{ open:false }" class="relative">
-                    <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="Filtrar ID">⋮</button>
-                    <div
-                        x-cloak x-show="open" @click.away="open=false" x-transition
-                        class="absolute z-50 mt-1 w-56 rounded-lg border bg-white shadow p-3"
-                    >
-                        <label class="block text-xs text-gray-600 mb-1">ID Proyecto</label>
-                        <input
-                            type="text"
-                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                            placeholder="Ej. 101 o 101,102"
-                            wire:model.live.debounce.400ms="filters.id"
-                        />
-                        <div class="mt-2 flex justify-end gap-2">
-                            <button
-                                type="button"
-                                class="px-2 py-1 text-xs rounded border"
-                                @click="$wire.set('filters.id','')"
-                            >Limpiar</button>
-                            <button
-                                type="button"
-                                class="px-2 py-1 text-xs rounded border"
-                                @click="open=false"
-                            >Cerrar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </th>
-
-        {{-- Columna: Nombre del Proyecto con filtro compacto --}}
-        <th class="border-b px-4 py-2 text-left text-gray-700 font-medium">
-            <div class="flex items-center justify-between">
-                <span>Nombre del Proyecto</span>
-
-                <div x-data="{ open:false }" class="relative">
-                    <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="Filtrar Nombre">⋮</button>
-                    <div
-                        x-cloak x-show="open" @click.away="open=false" x-transition
-                        class="absolute z-50 mt-1 w-56 rounded-lg border bg-white shadow p-3"
-                    >
-                        <label class="block text-xs text-gray-600 mb-1">Nombre contiene</label>
-                        <input
-                            type="text"
-                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                            placeholder="Buscar..."
-                            wire:model.live.debounce.400ms="filters.nombre"
-                        />
-                        <div class="mt-2 flex justify-end gap-2">
-                            <button
-                                type="button"
-                                class="px-2 py-1 text-xs rounded border"
-                                @click="$wire.set('filters.nombre','')"
-                            >Limpiar</button>
-                            <button
-                                type="button"
-                                class="px-2 py-1 text-xs rounded border"
-                                @click="open=false"
-                            >Cerrar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </th>
-
-        {{-- Columna: Cliente con filtro compacto --}}
-        @can('tablaProyectos-ver-todos-los-proyectos')
-            <th class="border-b px-4 py-2 text-left text-gray-700 font-medium">
-                <div class="flex items-center justify-between">
-                    <span>Cliente</span>
-
-                    <div x-data="{ open:false }" class="relative">
-                        <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="Filtrar Cliente">⋮</button>
-                        <div
-                            x-cloak x-show="open" @click.away="open=false" x-transition
-                            class="absolute z-50 mt-1 w-56 rounded-lg border bg-white shadow p-3"
-                        >
-                            <label class="block text-xs text-gray-600 mb-1">Nombre o correo</label>
-                            <input
-                                type="text"
-                                class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                placeholder="Cliente..."
-                                wire:model.live.debounce.400ms="filters.cliente"
-                            />
-                            <div class="mt-2 flex justify-end gap-2">
-                                <button
-                                    type="button"
-                                    class="px-2 py-1 text-xs rounded border"
-                                    @click="$wire.set('filters.cliente','')"
-                                >Limpiar</button>
-                                <button
-                                    type="button"
-                                    class="px-2 py-1 text-xs rounded border"
-                                    @click="open=false"
-                                >Cerrar</button>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </th>
-        @endcan
+                        </th>
 
-        {{-- Columna: Pedidos (sin filtro) --}}
-        @can('tablaProyectos-ver-columna-pedidos')
-            <th class="border-b px-4 py-2 text-left text-gray-700 font-medium">
-                Pedidos
-            </th>
-        @endcan
+                        {{-- Cliente --}}
+                        @role('admin|estaf|jefediseñador|cliente_principal')
+                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
+                            <div class="flex items-center justify-between gap-2 min-w-[12rem]">
+                                <span>Cliente</span>
+                                <div x-data="{ open:false }" class="relative shrink-0">
+                                    <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="Filtrar Cliente">⋮</button>
+                                    <div
+                                        x-cloak x-show="open" @click.away="open=false" x-transition
+                                        class="absolute right-0 z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
+                                    >
+                                        <label class="block text-xs text-gray-600 mb-1">Nombre o correo</label>
+                                        <input
+                                            type="text"
+                                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                            placeholder="Cliente…"
+                                            wire:model.live.debounce.400ms="filters.cliente"
+                                        />
+                                        <div class="mt-2 flex justify-end gap-2">
+                                            <button type="button" class="px-2 py-1 text-xs rounded border"
+                                                    @click="$wire.set('filters.cliente','')">Limpiar</button>
+                                            <button type="button" class="px-2 py-1 text-xs rounded border"
+                                                    @click="open=false">Cerrar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </th>
+                        @endrole
 
-        {{-- Columna: Estado del Diseño con filtro compacto --}}
-        <th class="border-b px-4 py-2 text-left text-gray-700 font-medium whitespace-nowrap">
-            <div class="flex items-center justify-between">
-                <span>Estado Diseño</span>
+                        {{-- Pedidos (solo si aplica permiso) --}}
+                        @can('tablaProyectos-ver-columna-pedidos')
+                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Pedidos</th>
+                        @endcan
 
+                        {{-- Estado Diseño --}}
+                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
+                            <div class="flex items-center gap-2 min-w-[12rem]">
+                                <button
+                                    class="inline-flex items-center gap-1 hover:text-blue-600"
+                                    wire:click="sortBy('estado')"
+                                    title="Ordenar por Estado Diseño"
+                                >
+                                    <span>Estado Diseño</span>
+                                    <span class="text-xs">{!! $arrow('estado') !!}</span>
+                                </button>
 
-            </div>
-        </th>
+                                {{-- Filtro estado en dropdown (opcional) --}}
+                                <div x-data="{ open:false }" class="relative">
+                                    <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="Filtrar Estado">⋮</button>
+                                    <div
+                                        x-cloak x-show="open" @click.away="open=false" x-transition
+                                        class="absolute z-50 mt-1 w-60 rounded-lg border bg-white shadow p-3"
+                                    >
+                                        <label class="block text-xs text-gray-600 mb-1">Estado Diseño</label>
+                                        <select
+                                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                            wire:model.live.debounce.400ms="filters.estado"
+                                        >
+                                            <option value="">Todos</option>
+                                            @foreach(array_keys($coloresEstadoDiseno) as $est)
+                                                <option value="{{ $est }}">{{ $est }}</option>
+                                            @endforeach
+                                        </select>
+                                        <div class="mt-2 flex justify-end gap-2">
+                                            <button type="button" class="px-2 py-1 text-xs rounded border"
+                                                    @click="$wire.set('filters.estado','')">Limpiar</button>
+                                            <button type="button" class="px-2 py-1 text-xs rounded border"
+                                                    @click="open=false">Cerrar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </th>
 
-        {{-- Columnas adicionales según permisos --}}
-        @can('dashboardjefediseñadorproyectos')
-            <th class="border-b px-4 py-2 text-gray-700 font-medium">Tareas</th>
-            <th class="border-b px-4 py-2 text-gray-700 font-medium">Historial</th>
-        @endcan
+                        {{-- Extras (si aplica) --}}
+                        @can('dashboardjefediseñadorproyectos')
+                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Tareas</th>
+                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Historial</th>
+                        @endcan
 
-        {{-- Acciones --}}
-        <th class="border-b px-4 py-2 text-left text-gray-700 font-medium">Acciones</th>
-    </tr>
-</thead>
+                        {{-- Acciones --}}
+                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
+                    </tr>
+                </thead>
 
-                            <tbody>
-                                @foreach($projects as $project)
-                                    <tr class="hover:bg-gray-50">
-                                        @hasanyrole('admin|estaf')
-                                        <td class="border-b px-4 py-2 text-gray-700 text-sm">
+                <tbody>
+                    @forelse($projects as $project)
+                        <tr class="hover:bg-gray-50">
+                            {{-- Checkbox fila --}}
+                            @hasanyrole('admin|estaf')
+                                <td class="px-3 py-2">
+                                    <input
+                                        type="checkbox"
+                                        :value="{{ $project->id }}"
+                                        :checked="selected.includes(Number({{ $project->id }}))"
+                                        @change="
+                                            const id = Number({{ $project->id }});
+                                            if ($event.target.checked) {
+                                                if (!selected.includes(id)) selected.push(id)
+                                            } else {
+                                                selected = selected.filter(i => i !== id)
+                                            }
+                                        "
+                                        wire:key="chk-{{ $project->id }}"
+                                    />
+                                </td>
+                            @else
+                                @role('cliente_principal')
+                                    @if($isClientePrincipalConSub)
+                                        <td class="px-3 py-2">
                                             <input
                                                 type="checkbox"
-                                                wire:model="selectedProjects"
-                                                value="{{ $project->id }}"
+                                                :value="{{ $project->id }}"
+                                                :checked="selected.includes(Number({{ $project->id }}))"
+                                                @change="
+                                                    const id = Number({{ $project->id }});
+                                                    if ($event.target.checked) {
+                                                        if (!selected.includes(id)) selected.push(id)
+                                                    } else {
+                                                        selected = selected.filter(i => i !== id)
+                                                    }
+                                                "
+                                                wire:key="chk-{{ $project->id }}"
                                             />
                                         </td>
-                                        @endhasanyrole
-                                        <td
-                                            class="border-b px-4 py-2 text-gray-700  font-semibold min-w-[6rem]"
-                                            title="{{ $project->nombre ?? 'Proyecto #'.$project->id }}"
-                                        >
-                                            {!! $project->proyecto_link !!}
-                                            {{-- Si prefieres sin accessor, usa:
-                                            <a href="{{ route('proyecto.show', $project->id) }}" class="text-blue-600 font-semibold hover:underline">
-                                                Proyecto #{{ $project->id }}
-                                            </a>
-                                            --}}
-                                        </td>
-                                    
-                                        <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->nombre }}</td>
-                                    
-                                        @can('tablaProyectos-ver-todos-los-proyectos')
-                                        <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->user->name ?? 'Sin Cliente' }}</td>
-                                        @endcan
+                                    @endif
+                                @endrole
+                            @endhasanyrole
 
-                                        @can('tablaProyectos-ver-columna-pedidos')
-                                            <td class="border-b px-4 py-2 text-gray-700 text-sm">
-                                                @if($project->pedidos->isNotEmpty())
-                                               
-                                                    @php
-                                                        $ultimoPedido = \App\Models\Pedido::where('proyecto_id', $project->id)
-                                                            ->where('tipo', 'PEDIDO')
-                                                            ->where('estado_id', '1')
-                                                            ->latest('id')
-                                                            ->first();
-                                                    @endphp
-                                                    @if($ultimoPedido)
-                                                        
-                                                            {{-- <span class="font-semibold">Categoría:</span> {{ $ultimoPedido->producto->categoria->nombre ?? 'Sin categoría' }}, --}}
-                                                            {{-- <span class="font-semibold">Producto:</span> {{ $ultimoPedido->producto->nombre ?? 'Sin producto' }}, --}}
-                                                            {{-- <span class="font-semibold">Total:</span> {{ $ultimoPedido->total }}, --}}
-                                                            {{-- <span class="font-semibold">Estatus:</span> {{ $ultimoPedido->estado }} --}}
-                                                 
-                                                                <button  wire:click="abrirResumenPedidos({{ $project->id }})" class="text-blue-500 hover:underline text-xs mt-1">
-                                                                    Ver más
-                                                            </button>
-                                                    @else
-                                                        <span class="text-gray-500">Sin pedidos</span>
-                                                    @endif
+                            {{-- ID con link --}}
+                            <td class="px-3 py-2 text-sm font-semibold min-w-[6rem]" title="{{ $project->nombre ?? 'Proyecto #'.$project->id }}">
+                                {!! $project->proyecto_link !!}
+                            </td>
 
+                            {{-- Nombre --}}
+                            <td class="px-3 py-2 text-sm text-gray-700">{{ $project->nombre }}</td>
 
-                                                
+                            {{-- Cliente --}}
+                            @role('admin|estaf|jefediseñador|cliente_principal')
+                                <td class="px-3 py-2 text-sm text-gray-700">{{ $project->user->name ?? 'Sin Cliente' }}</td>
+                            @endrole
 
-                                                @else
-                                                    <span class="text-gray-500">Sin pedidos</span>
-                                                @endif
-                                            </td> 
-                                        @endcan
+                            {{-- Pedidos --}}
+                            @can('tablaProyectos-ver-columna-pedidos')
+                                <td class="px-3 py-2 text-sm text-gray-700">
+                                    @php
+                                        $ultimoPedido = \App\Models\Pedido::where('proyecto_id', $project->id)
+                                            ->where('tipo', 'PEDIDO')
+                                            ->where('estado_id', '1')
+                                            ->latest('id')
+                                            ->first();
+                                    @endphp
+                                    @if($ultimoPedido)
+                                        <button wire:click="abrirResumenPedidos({{ $project->id }})"
+                                                class="text-blue-600 hover:underline text-xs">Ver más</button>
+                                    @else
+                                        <span class="text-gray-500">Sin pedidos</span>
+                                    @endif
+                                </td>
+                            @endcan
 
-                                        @php
-                                            $estado = $project->estado ?? 'Sin estado';
-                                            $colores = [
-                                                'PENDIENTE'         => 'bg-yellow-400 text-black',
-                                                'ASIGNADO'          => 'bg-blue-500 text-white',
-                                                'EN PROCESO'        => 'bg-orange-500 text-white',
-                                                'REVISION'          => 'bg-purple-600 text-white',
-                                                'DISEÑO APROBADO'   => 'bg-emerald-600 text-white',
-                                                'DISEÑO RECHAZADO'  => 'bg-red-600 text-white',
-                                                'CANCELADO'         => 'bg-gray-500 text-white',
-                                            ];
-                                        @endphp
-                                        <td class="border-b px-4 py-2 text-sm whitespace-nowrap min-w-[10rem]">
-                                            <span class="inline-block px-2 py-1 rounded-full text-xs font-semibold
-                                                        {{ $colores[$estado] ?? 'bg-gray-300 text-gray-700' }}">
-                                                {{ $estado }}
-                                            </span>
-                                        </td>
+                            {{-- Estado Diseño con badge --}}
+                            @php
+                                $estado = $project->estado ?? 'Sin estado';
+                                $badge  = $coloresEstadoDiseno[$estado] ?? 'bg-gray-300 text-gray-700';
+                            @endphp
+                            <td class="px-3 py-2 text-sm whitespace-nowrap min-w-[10rem]">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[10rem] justify-center {{ $badge }}">
+                                    {{ $estado }}
+                                </span>
+                            </td>
 
+                            {{-- Tareas / Historial (opcional) --}}
+                            @can('dashboardjefediseñadorproyectos')
+                                <td class="px-3 py-2 text-sm">
+                                    @if($project->tareas->isNotEmpty())
+                                        <ul class="list-disc list-inside space-y-1 text-xs text-gray-700">
+                                            @foreach($project->tareas as $tarea)
+                                                <li>{{ $tarea->descripcion }}</li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        <span class="text-gray-500">Sin tareas</span>
+                                    @endif
+                                </td>
+                                <td class="px-3 py-2 text-sm">
+                                    @if($project->estados->isNotEmpty())
+                                        @foreach($project->estados->sortByDesc('id')->take(1) as $e)
+                                            <div class="text-xs text-gray-700">
+                                                <strong>{{ $e->estado }}</strong>
+                                                ({{ \Carbon\Carbon::parse($e->fecha_inicio)->format('d-m-Y H:i') }})
+                                                por {{ $e->usuario->name ?? '—' }}
+                                            </div>
+                                        @endforeach
+                                        @if($project->estados->count() > 2)
+                                            <button wire:click="verMas({{ $project->id }})"
+                                                    class="text-blue-600 hover:underline text-xs">Ver más</button>
+                                        @endif
+                                    @else
+                                        <span class="text-gray-500 text-sm">Sin historial</span>
+                                    @endif
+                                </td>
+                            @endcan
 
-
-                                        @can('dashboardjefediseñadorproyectos')
-                                            <td class="px-4 py-3 border">                                                  
-                                                @if($project->tareas->isNotEmpty())
-                                                            <ul class="list-disc list-inside space-y-1">
-                                                                @foreach($project->tareas as $tarea)
-                                                                    <li class="text-xs">
-                                                                        {{-- <strong>Usuario:</strong> {{ $tarea->staff->name ?? 'No asignado' }}<br> --}}
-                                                                        <strong>Descripción:</strong> {{ $tarea->descripcion }}<br>
-                                                                        {{-- <strong>Estado:</strong> {{ $tarea->estado }} --}}
-                                                                    </li>
-                                                                @endforeach
-                                                            </ul>
-                                                        @else
-                                                            <span class="text-gray-500 text-sm">Sin tareas</span>
-                                                        @endif
-                                            </td>
-                                            <td class="px-4 py-3 border">                                                    
-                                                @if($project->estados->isNotEmpty())
-                                                            <ul class="list-disc list-inside text-gray-600 space-y-1 text-xs">
-                                                                @foreach($project->estados->sortByDesc('id')->take(1) as $estado)
-                                                                    <li>
-                                                                        <strong>{{ $estado->estado }}</strong> 
-                                                                        ({{ \Carbon\Carbon::parse($estado->fecha_inicio)->format('d-m-Y H:i') }})
-                                                                        por {{ $estado->usuario->name ?? 'Desconocido' }}
-                                                                    </li>
-                                                                @endforeach
-                                                            </ul>
-                                                            @if($project->estados->count() > 2)
-                                                                <button wire:click="verMas({{ $project->id }})" class="text-blue-500 hover:underline text-xs mt-1">
-                                                                    Ver más
-                                                                </button>
-                                                            @endif
-                                                        @else
-                                                            <span class="text-gray-500 text-sm">Sin historial</span>
-                                                        @endif
-                                            </td>  
-                                        @endcan
-
-                                        
-                                        <td class="px-4 py-2 border text-center space-y-1">
-                                        <x-dropdown>
-                                                <x-dropdown.item
-                                                    
-                                                    :href="route('proyecto.show', $project->id)"
-                                                    label="Ver detalles"
-                                                />
-                                                @can('dashboardjefediseñadorproyectos')
-                                                    @if($project->tareas->isEmpty()) 
-                                                    <x-dropdown.item separator>
-                                                        <b wire:click="abrirModalAsignacion({{ $project->id }})" >Asignar Tarea</b>
-                                                    </x-dropdown.item>
-
-                                                    @endif 
-                                                @endcan
-                                        </x-dropdown>
-
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                            {{-- Acciones --}}
+                            <td class="px-3 py-2 text-sm">
+                                <x-dropdown>
+                                    <x-dropdown.item
+                                        :href="route('proyecto.show', $project->id)"
+                                        label="Ver detalles"
+                                    />
+                                    @can('dashboardjefediseñadorproyectos')
+                                        @if($project->tareas->isEmpty())
+                                            <x-dropdown.item separator
+                                                @click="$wire.dispatch('abrir-modal-asignacion', { id: {{ $project->id }} })"
+                                                label="Asignar Tarea"
+                                            />
+                                        @endif
+                                    @endcan
+                                    @can('tablaProyectos-ver-columna-pedidos')
+                                        <x-dropdown.item
+                                            @click="$wire.dispatch('abrir-resumen', { id: {{ $project->id }} })"
+                                            label="Resumen de pedidos"
+                                        />
+                                    @endcan>
+                                </x-dropdown>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            @php
+                                // columnas visibles según roles/permiso
+                                $cols = 1 /* ID */ + 1 /* Nombre */ + 1 /* Estado */ + 1 /* Acciones */;
+                                if(auth()->user()->hasAnyRole(['admin','estaf','jefediseñador','cliente_principal'])) $cols++;
+                                if(auth()->user()->can('tablaProyectos-ver-columna-pedidos')) $cols++;
+                                // checkbox maestro visible?
+                                if(auth()->user()->hasAnyRole(['admin','estaf']) || (auth()->user()->hasRole('cliente_principal') && ($isClientePrincipalConSub ?? false))) $cols++;
+                            @endphp
+                            <td colspan="{{ $cols }}" class="px-4 py-6 text-center text-sm text-gray-500">
+                                No hay proyectos para mostrar.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
                     <!-- Paginación -->
                     <div class="mt-4">
@@ -610,5 +615,38 @@
         </div>
     </div>
     @endif
+
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+  window.dropdownTeleport = () => ({
+    open: false,
+    style: '',
+    toggle() {
+      this.open = !this.open;
+      if (this.open) this.reposition();
+    },
+    close() { this.open = false; },
+    reposition() {
+      const btn = this.$refs.btn;
+      if (!btn) return;
+      const r = btn.getBoundingClientRect();
+      const panelW = 256; // w-64
+      const gap = 6;
+      // Posición base: debajo del botón, alineado a su borde derecho
+      let left = r.right - panelW;
+      const top  = r.bottom + gap;
+
+      // Correcciones para no salirte de la ventana
+      const vw = window.innerWidth;
+      const margin = 8;
+      if (left < margin) left = margin;                 // clamp izquierda
+      if (left + panelW > vw - margin) left = vw - margin - panelW; // clamp derecha
+
+      this.style = `top:${top}px;left:${left}px`;
+    }
+  });
+});
+</script>
+
 
 </div>
