@@ -26,14 +26,14 @@
 
 
     @if($estado === 'REVISION' )
-        {{-- @can('notificaralclienteproyecto') --}}
+        @can('notificaralclienteproyecto')
             <button
                 wire:click="notificarEstatus"
                 class="px-4 py-2 rounded-md bg-yellow-300 text-yellow-900 hover:bg-yellow-400 transition font-semibold shadow-sm"
             >
                 Notificar Estatus
             </button>
-        {{-- @endcan --}}
+        @endcan
     @endif
 
 
@@ -76,19 +76,27 @@
 
     {{-- Botón Solicitar Reconfiguración --}}
     @if ( (!$flag_solicitud_reconfigurar) && ($flag_reconfigurar || $proyectoIncompleto) )
-        <button wire:click="confirmarSolicitudReconfiguracion"
+
+        @can('proyectodiseñoconfirmarSolicitudReconfiguracion')
+            <button wire:click="confirmarSolicitudReconfiguracion"
                 class="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition font-semibold shadow-sm">
-            Solicitar Reconfiguración
-        </button>
+                Solicitar Reconfiguración
+            </button>
+        @endcan
+
     @endif
 
     @if ($flag_solicitud_reconfigurar)
-        <button
-            wire:click="$set('modalreconfigurar', true)"
-            class="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition font-semibold shadow-sm"
-        >
-            Reconfigurar proyecto
-        </button>
+
+        @can('proyectodiseñoreconfigurarproyecto')
+                    <button
+                wire:click="$set('modalreconfigurar', true)"
+                class="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition font-semibold shadow-sm"
+            >
+                Reconfigurar proyecto
+            </button>
+        @endcan
+
     @endif
 
 </div>

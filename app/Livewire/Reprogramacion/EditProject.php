@@ -32,6 +32,11 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\On;
 
+use App\Models\User;
+use Illuminate\Validation\Rule;
+
+
+
 class EditProject extends Component
 {
     use WithFileUploads;
@@ -77,19 +82,21 @@ class EditProject extends Component
 
     public $mensaje_produccion; 
 
-
-
-
     public $seleccion_armado = null;
     public $mostrar_selector_armado = false;
-
     public $producto_flag_armado;
+
+    public string $usuarioQuery = '';
+    public ?int $usuario_id_nuevo = null;  // id elegido en el selector
+    public array $usuariosSugeridos = [];  // resultados para el dropdown
 
 public function mount($ProyectoId)
 {
     $this->ProyectoId = $ProyectoId;
 
     $preProyecto = Proyecto::findOrFail($ProyectoId);
+
+    $this->usuario_id_nuevo = Proyecto::where('id', $this->ProyectoId)->value('usuario_id');
 
     // Fechas seguras
     $this->fecha_produccion = $preProyecto->fecha_produccion
@@ -165,30 +172,41 @@ public function mount($ProyectoId)
             'producto_id' => 'required|exists:productos,id',
         ]);
 
+        // --- VALIDACIÓN del usuario seleccionado (si viene) ---
+        if (!is_null($this->usuario_id_nuevo)) {
+            $this->validate([
+                'usuario_id_nuevo' => ['integer', Rule::exists('users','id')],
+            ]);
+        }
+
         $this->total_piezas = 0;
 
          $totalPiezasFinal = $this->mostrarFormularioTallas ? array_sum($this->tallasSeleccionadas) : $this->total_piezas;
          $totalPiezasFinal = $this->mostrarFormularioTallas ? array_sum((array) $this->tallasSeleccionadas) : $this->total_piezas;
         // Actualizar el preproyecto
-        $preProyecto = Proyecto::findOrFail($this->ProyectoId);
-        $preProyecto->update([
-            'nombre' => $this->nombre,
-            'descripcion' => $this->descripcion,
-            
-            'categoria_sel' => json_encode(['id' => $this->categoria_id, 'nombre' => Categoria::find($this->categoria_id)->nombre]),
-            'producto_sel' => json_encode(['id' => $this->producto_id, 'nombre' => Producto::find($this->producto_id)->nombre]),
-            'caracteristicas_sel' => json_encode($this->caracteristicas_sel),
-            'opciones_sel' => json_encode($this->opciones_sel),
+            $preProyecto = Proyecto::findOrFail($this->ProyectoId);
 
-            'flag_reconfigurar'=> 0,
-            'flag_solicitud_reconfigurar'=> 0,
+            $updateData = [
+                'nombre' => $this->nombre,
+                'descripcion' => $this->descripcion,
+                'categoria_sel' => json_encode(['id' => $this->categoria_id, 'nombre' => Categoria::find($this->categoria_id)->nombre]),
+                'producto_sel' => json_encode(['id' => $this->producto_id, 'nombre' => Producto::find($this->producto_id)->nombre]),
+                'caracteristicas_sel' => json_encode($this->caracteristicas_sel),
+                'opciones_sel' => json_encode($this->opciones_sel),
+                'flag_reconfigurar'=> 0,
+                'flag_solicitud_reconfigurar'=> 0,
+                'total_piezas_sel' => json_encode([
+                    'total' => $totalPiezasFinal,
+                    'detalle_tallas' => $this->mostrarFormularioTallas ? $this->tallasSeleccionadas : null
+                ]),
+            ];
 
-            'total_piezas_sel' => json_encode([
-                'total' => $totalPiezasFinal,
-                'detalle_tallas' => $this->mostrarFormularioTallas ? $this->tallasSeleccionadas : null
-            ]),
+            // Si se eligió un nuevo usuario, actualizar también el proyecto
+            if (!is_null($this->usuario_id_nuevo)) {
+                $updateData['usuario_id'] = $this->usuario_id_nuevo;
+            }
 
-        ]);
+            $preProyecto->update($updateData);
 
 
         // Actualizar pedidos relacionados
@@ -212,6 +230,15 @@ public function mount($ProyectoId)
                     'pedido_id' => $pedido->id,
                     'caracteristica_id' => $caracteristica['id'],
                 ]);
+
+                // --- Si se cambió el usuario del proyecto, propágalo a los pedidos del proyecto ---
+                if (!is_null($this->usuario_id_nuevo)) {
+                    Pedido::where('proyecto_id', $this->ProyectoId)
+                            ->whereIn('estado', ['POR APROBAR', 'POR REPROGRAMAR'])
+                            ->update(['usuario_id' => $this->usuario_id_nuevo]);
+                }
+
+
 
                 if (!empty($caracteristica['opciones'])) {
                     foreach ($caracteristica['opciones'] as $opcion) {
@@ -626,6 +653,33 @@ public function mount($ProyectoId)
 
 
     }
+
+    public function updatedUsuarioQuery($value): void
+    {
+        $term = trim($value);
+
+        if ($term === '') {
+            $this->usuariosSugeridos = [];
+            return;
+        }
+
+        $this->usuariosSugeridos = User::query()
+            ->select('id','name','email')
+            ->where(function($q) use ($term){
+                $q->where('name', 'like', "%{$term}%")
+                ->orWhere('email', 'like', "%{$term}%");
+            })
+            ->orderBy('name')
+            ->limit(15)
+            ->get()
+            ->toArray();
+    }
+
+    public function selectUsuario(int $id): void
+    {
+        $this->usuario_id_nuevo = $id;
+    }
+
     
 
     public function setReadOnlyMode()

@@ -12,6 +12,72 @@
     @endif
 
     <form wire:submit.prevent="update">
+
+
+    <div 
+        x-data="{
+            open:false,
+            search: @entangle('usuarioQuery').live,
+            selectedId: @entangle('usuario_id_nuevo'),
+            get hasResults(){ return (this.$wire.usuariosSugeridos || []).length > 0 },
+            select(id){ this.selectedId = id; this.open = false; },
+        }"
+        class="mb-6"
+    >
+    <label class="block mb-1 font-medium text-gray-700">Seleccionar Usuario</label>
+
+    <!-- Campo de búsqueda (debounced con Livewire 3) -->
+    <input
+        x-model="search"
+        @focus="open = true"
+        @click.outside="open = false"
+        placeholder="Buscar por nombre o email…"
+        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
+        type="text"
+    />
+
+    <!-- Dropdown de resultados -->
+    <div
+        x-show="open"
+        x-transition
+        class="relative"
+    >
+        <div
+            class="absolute z-50 w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-56 overflow-y-auto shadow"
+        >
+            <template x-for="user in ($wire.usuariosSugeridos || [])" :key="user.id">
+                <div
+                    @click="select(user.id)"
+                    class="px-3 py-2 cursor-pointer hover:bg-blue-100 text-sm flex items-center justify-between"
+                    :class="{'bg-blue-50': user.id === selectedId}"
+                >
+                    <div class="truncate">
+                        <span class="font-medium" x-text="user.name"></span>
+                        <span class="text-gray-500 text-xs ml-1" x-text="'(' + user.email + ')'"></span>
+                    </div>
+                    <template x-if="user.id === {{ auth()->id() }}">
+                        <span class="text-blue-500 text-xs ml-2 shrink-0">— Actual</span>
+                    </template>
+                </div>
+            </template>
+
+            <div
+                x-show="!hasResults"
+                class="px-3 py-2 text-gray-500 text-sm italic"
+            >
+                No se encontraron usuarios
+            </div>
+        </div>
+    </div>
+
+    <!-- Píldora del seleccionado -->
+    <div class="mt-2" x-show="selectedId">
+        <span class="inline-flex items-center gap-2 text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
+            Usuario seleccionado:
+            <span x-text="( ($wire.usuariosSugeridos || []).find(u => u.id === selectedId)?.name ) || 'ID '+selectedId"></span>
+        </span>
+    </div>
+</div>
                 <!-- Nombre y Descripción -->
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Nombre</label>
@@ -155,18 +221,19 @@
     @push('scripts')
     {{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            Livewire.on('setReadOnlyMode', function () {
-                setTimeout(function () {
-                    $("input, textarea").attr("readonly", "readonly"); // Hacer los inputs de solo lectura
-                    $("select, button").attr("disabled", "disabled"); // Deshabilitar select y botones
-                }, 100); // Se ejecuta después de 100ms para evitar que Livewire lo sobrescriba
-            });
-
-            Livewire.on('redirect', function (url) {
-                     window.location.href = url;
-             });
+    document.addEventListener('DOMContentLoaded', () => {
+        // Eventos de Livewire v3 usando dispatch/On
+        Livewire.on('setReadOnlyMode', () => {
+            setTimeout(function () {
+                $("input, textarea").attr("readonly", "readonly");
+                $("select, button").attr("disabled", "disabled");
+            }, 100);
         });
+
+        Livewire.on('redirect', (url) => {
+            window.location.href = url;
+        });
+    });
     </script>
     @endpush
 </div>
