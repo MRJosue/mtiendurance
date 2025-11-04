@@ -9,8 +9,9 @@ use Spatie\Permission\Models\Permission;
 class GrupoOrden extends Model
 {
     protected $table = 'grupos_orden';
-    protected $fillable = ['nombre'];
-    
+
+    // <-- Agrega slug y orden
+    protected $fillable = ['nombre', 'slug', 'orden'];
 
     public function permissions()
     {

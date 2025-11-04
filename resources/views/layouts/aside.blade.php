@@ -85,19 +85,23 @@
                 <div x-show="openSections.disenio" x-transition class="pl-6 mt-1 space-y-1">
 
 
-                    @can('asideproyectos')
-                    <a href="{{ route('proyectos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                        {{ __('menu.designs') }}
-                    </a>
+                    @can('asidediseniodesplegable')
+                        <a href="{{ route('proyectos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                            {{ __('menu.designs') }}
+                        </a>
                     @endcan
                     
-                    <a href="{{ route('disenio.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                        {{ __('menu.design_admin') }}
-                    </a>
-                    
-                    <a href="{{ route('disenio.admin_tarea') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                        {{ __('menu.design_tasks') }}
-                    </a>
+                    @can('asidedisenioAdministracion')
+                        <a href="{{ route('disenio.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                            {{ __('menu.design_admin') }}
+                        </a>
+                    @endcan
+
+                    @can('asidedisenioTareas')
+                        <a href="{{ route('disenio.admin_tarea') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                            {{ __('menu.design_tasks') }}
+                        </a>
+                    @endcan
 
                     @can('asideAdministraciónMuestras')
                         <a href="{{ route('produccion.adminmuestras') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
@@ -105,8 +109,7 @@
                         </a>
                     @endcan
 
-                    
-                    @can('asideAdministraciónMuestras')
+                    @can('asideAdministraciónReconfiguracion')
                         <a href="{{ route('proyectos.reprogramar') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                             {{ __('menu.solicitudes_reconfiguracion') }}
                         </a>
@@ -119,6 +122,7 @@
             @endcan
 
             {{-- Pedidos --}}
+            
             <div>
                 <button
                     @click="toggleSection('pedidos')"
@@ -207,49 +211,54 @@
             @endcan
 
             {{-- Entregas --}}
-            <div>
-                <button
-                    @click="toggleSection('entregas')"
-                    :class="openSections.entregas ? 'underline text-blue-400' : ''"
-                    class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
-                >
-                    <span>{{ __('menu.deliveries') }}</span>
-                    <svg :class="openSections.entregas ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
-                         class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
-                         viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </button>
-                <div x-show="openSections.entregas" x-transition class="pl-6 mt-1 space-y-1">
-                    <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                        {{ __('menu.deliveries_admin') }}
-                    </a>
+            @can('asideEntrega')
+                <div>
+                    <button
+                        @click="toggleSection('entregas')"
+                        :class="openSections.entregas ? 'underline text-blue-400' : ''"
+                        class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
+                    >
+                        <span>{{ __('menu.deliveries') }}</span>
+                        <svg :class="openSections.entregas ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
+                            class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                    <div x-show="openSections.entregas" x-transition class="pl-6 mt-1 space-y-1">
+                        <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                            {{ __('menu.deliveries_admin') }}
+                        </a>
 
-                      @livewire('aside-hojas', ['ubicacion' => 'entregas'])
+                        @livewire('aside-hojas', ['ubicacion' => 'entregas'])
+                    </div>
                 </div>
-            </div>
+            @endcan
+
 
             {{-- Facturación --}}
-            <div>
-                <button
-                    @click="toggleSection('facturacion')"
-                    :class="openSections.facturacion ? 'underline text-blue-400' : ''"
-                    class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
-                >
-                    <span>{{ __('menu.invoicing') }}</span>
-                    <svg :class="openSections.facturacion ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
-                         class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
-                         viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
-                </button>
-                <div x-show="openSections.facturacion" x-transition class="pl-6 mt-1 space-y-1">
-                    <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                        {{ __('menu.invoicing_admin') }}
-                    </a>
-                    @livewire('aside-hojas', ['ubicacion' => 'facturacion'])
+            @can('asideFacturacion')
+                <div>
+                    <button
+                        @click="toggleSection('facturacion')"
+                        :class="openSections.facturacion ? 'underline text-blue-400' : ''"
+                        class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
+                    >
+                        <span>{{ __('menu.invoicing') }}</span>
+                        <svg :class="openSections.facturacion ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
+                            class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                    <div x-show="openSections.facturacion" x-transition class="pl-6 mt-1 space-y-1">
+                        <a href="{{ route('produccion.tareas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                            {{ __('menu.invoicing_admin') }}
+                        </a>
+                        @livewire('aside-hojas', ['ubicacion' => 'facturacion'])
+                    </div>
                 </div>
-            </div>
+            @endcan
 
          
             {{-- Configuración --}}
@@ -269,111 +278,113 @@
 
                 <div x-show="openSections.configuracion" x-transition class="pl-6 mt-1 space-y-2">
                        @hasanyrole('admin')
-                    {{-- Envío --}}
-                    <div>
-                        <button
-                            @click="toggleSection('config_envio')"
-                            :class="openSections.config_envio ? 'underline text-blue-400' : ''"
-                            class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
-                        >
-                            <span>{{ __('menu.shipping') }}</span>
-                            <svg :class="openSections.config_envio ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
-                                 class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
-                                 viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                        </button>
-                        <div x-show="openSections.config_envio" x-transition class="pl-6 mt-1 space-y-1">
-                            <a href="{{ route('catalogos.paises.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{ __('menu.countries') }}
-                            </a>
-                            <a href="{{ route('catalogos.estados.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{ __('menu.states') }}
-                            </a>
-                            <a href="{{ route('catalogos.ciudades.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{ __('menu.cities') }}
-                            </a>
-                            <a href="{{ route('catalogos.tipoenvio.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{ __('menu.shipping_types') }}
-                            </a>
-                        </div>
-                    </div>
-                          @endhasanyrole
-                    {{-- Productos --}}
-                     @hasanyrole('admin')
-                    <div>
-                        <button
-                            @click="toggleSection('config_productos')"
-                            :class="openSections.config_productos ? 'underline text-blue-400' : ''"
-                            class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
-                        >
-                            <span>{{ __('menu.products') }}</span>
-                            <svg :class="openSections.config_productos ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
-                                 class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
-                                 viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                        </button>
-                        <div x-show="openSections.config_productos" x-transition class="pl-6 mt-1 space-y-1">
-                            <a href="{{ route('catalogos.categorias.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{ __('menu.categories') }}
-                            </a>
-                            <a href="{{ route('catalogos.producto.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{ __('menu.products_list') }}
-                            </a>
-                            <a href="{{ route('catalogos.caracteristica.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{ __('menu.features') }}
-                            </a>
-                            <a href="{{ route('catalogos.opciones.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{ __('menu.options') }}
-                            </a>
-                            <a href="{{ route('catalogos.producto.layout') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{ __('menu.layout') }}
-                            </a>
-                            <a href="{{ route('catalogos.tallas.tallas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{ __('menu.sizes') }}
-                            </a>
-                            <a href="{{ route('catalogos.tallas.grupos') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{ __('menu.groups') }}
-                            </a>
-                            <a href="{{ route('catalogos.flujoProduccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{ __('menu.flow') }}
-                            </a>
-                            <a href="{{ route('catalogos.hojaFiltrosProduccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{ __('menu.sheets') }}
-                            </a>
-                            <a href="{{ route('catalogos.flujoFiltrosProduccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{ __('menu.filters') }}
-                            </a>
-                        </div>
-                    </div>
-                    @endhasanyrole
-                     @hasanyrole('admin')
-                    {{-- Importación --}}
-                    <div>
-                        <button
-                            @click="toggleSection('config_importacion')"
-                            :class="openSections.config_importacion ? 'underline text-blue-400' : ''"
-                            class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
-                        >
-                            <span> importacion </span>
-                            <svg :class="openSections.config_importacion ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
-                                 class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
-                                 viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                        </button>
-                        <div x-show="openSections.config_importacion" x-transition class="pl-6 mt-1 space-y-1">
-                            <a href="{{ route('importacion.proyectos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                Importa proyecto legacy
-                            </a>
+                            {{-- Envío --}}
+                            <div>
+                                <button
+                                    @click="toggleSection('config_envio')"
+                                    :class="openSections.config_envio ? 'underline text-blue-400' : ''"
+                                    class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
+                                >
+                                    <span>{{ __('menu.shipping') }}</span>
+                                    <svg :class="openSections.config_envio ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
+                                        class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </button>
+                                <div x-show="openSections.config_envio" x-transition class="pl-6 mt-1 space-y-1">
+                                    <a href="{{ route('catalogos.paises.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{ __('menu.countries') }}
+                                    </a>
+                                    <a href="{{ route('catalogos.estados.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{ __('menu.states') }}
+                                    </a>
+                                    <a href="{{ route('catalogos.ciudades.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{ __('menu.cities') }}
+                                    </a>
+                                    <a href="{{ route('catalogos.tipoenvio.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{ __('menu.shipping_types') }}
+                                    </a>
+                                </div>
+                            </div>
+                        @endhasanyrole
+                    
+                            {{-- Productos --}}
+                        @hasanyrole('admin')
+                            <div>
+                                <button
+                                    @click="toggleSection('config_productos')"
+                                    :class="openSections.config_productos ? 'underline text-blue-400' : ''"
+                                    class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
+                                >
+                                    <span>{{ __('menu.products') }}</span>
+                                    <svg :class="openSections.config_productos ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
+                                        class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </button>
+                                <div x-show="openSections.config_productos" x-transition class="pl-6 mt-1 space-y-1">
+                                    <a href="{{ route('catalogos.categorias.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{ __('menu.categories') }}
+                                    </a>
+                                    <a href="{{ route('catalogos.producto.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{ __('menu.products_list') }}
+                                    </a>
+                                    <a href="{{ route('catalogos.caracteristica.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{ __('menu.features') }}
+                                    </a>
+                                    <a href="{{ route('catalogos.opciones.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{ __('menu.options') }}
+                                    </a>
+                                    <a href="{{ route('catalogos.producto.layout') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{ __('menu.layout') }}
+                                    </a>
+                                    <a href="{{ route('catalogos.tallas.tallas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{ __('menu.sizes') }}
+                                    </a>
+                                    <a href="{{ route('catalogos.tallas.grupos') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{ __('menu.groups') }}
+                                    </a>
+                                    <a href="{{ route('catalogos.flujoProduccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{ __('menu.flow') }}
+                                    </a>
+                                    <a href="{{ route('catalogos.hojaFiltrosProduccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{ __('menu.sheets') }}
+                                    </a>
+                                    <a href="{{ route('catalogos.flujoFiltrosProduccion') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{ __('menu.filters') }}
+                                    </a>
+                                </div>
+                            </div>
+                        @endhasanyrole
+                        
+                        @hasanyrole('admin')
+                        {{-- Importación --}}
+                        <div>
+                            <button
+                                @click="toggleSection('config_importacion')"
+                                :class="openSections.config_importacion ? 'underline text-blue-400' : ''"
+                                class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
+                            >
+                                <span> importacion </span>
+                                <svg :class="openSections.config_importacion ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
+                                    class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </button>
+                            <div x-show="openSections.config_importacion" x-transition class="pl-6 mt-1 space-y-1">
+                                <a href="{{ route('importacion.proyectos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                    Importa proyecto legacy
+                                </a>
 
+                            </div>
                         </div>
-                    </div>
-                    @endhasanyrole
+                        @endhasanyrole
 
                     {{-- Usuarios --}}
-                    {{-- @can('asideusuariosdesplegable') --}}
+                    @can('asideusuariosdesplegable') 
                     <div>
                         <button
                             @click="toggleSection('config_usuarios')"
@@ -399,7 +410,7 @@
                             @endhasanyrole
                         </div>
                     </div>
-                    {{-- @endcan --}}
+                    @endcan
                 </div>
             </div>
       

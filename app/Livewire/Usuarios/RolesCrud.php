@@ -8,6 +8,7 @@ use Spatie\Permission\Models\Role;
 use App\Models\GrupoOrden;
 use App\Models\Permission; // TU modelo extendido
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\On;
 
 class RolesCrud extends Component
 {
@@ -51,27 +52,70 @@ class RolesCrud extends Component
     public $grupo_slug = '';
     public $grupo_orden = null;
 
+
+
+    // Nuevas: selección/orden de permisos dentro del grupo
+    public $grupo_permisos_sel = [];     // [permission_id, ...]
+    public $grupo_permisos_orden = [];   // [permission_id => orden]
+
+
     // ====== Listeners (v3 usa ->dispatch desde Blade/JS) ======
     protected $listeners = ['togglePermiso' => 'togglePermiso'];
 
-    public function render()
-    {
-        $roles = Role::query();
-        if ($this->search) {
-            $roles->where('name', 'like', '%' . $this->search . '%');
-        }
+public function render()
+{
+    // Sincroniza search con query (debounce desde Blade)
+    $this->search = trim($this->query ?? '');
 
-        $grupos = GrupoOrden::with(['permissions' => function ($q) {
-            $q->orderBy('grupo_orden_permission.orden');
-        }])->orderBy('nombre')->get();
+    $roles = Role::query()
+        ->select(['id', 'name', 'guard_name'])
+        ->when($this->search, fn($q) =>
+            $q->where('name', 'like', '%' . $this->search . '%')
+        )
+        ->orderBy('name');
 
-        return view('livewire.usuarios.roles-crud', [
-            'rolesList' => $roles->orderBy('name')->paginate(10),
-            'grupos'    => $grupos,
-            'permisos'  => Permission::with('type')->orderBy('orden')->orderBy('name')->get(),
-            'types'     => \DB::table('permission_types')->orderBy('orden')->get(),
-        ]);
+    // Permisos-id por rol para checkboxes rápidos (sin cargar pivots completos)
+    $rolesList = $roles
+        ->with(['permissions:id,name']) // sólo lo necesario
+        ->paginate(10); // si quieres aún más rápido: ->simplePaginate(10)
+
+    // Grupos: pre-carga permisos *ordenados* pero sólo lo que necesitas
+    $grupos = GrupoOrden::query()
+        ->select(['id','nombre','slug','orden'])
+        ->withCount('permissions')
+        ->with(['permissions' => function ($q) {
+            $q->select('permissions.id','permissions.name','permissions.nombre')
+              ->orderBy('grupo_orden_permission.orden')
+              ->orderBy('permissions.name');
+        }])
+        ->orderBy('orden')->orderBy('nombre')
+        ->get();
+
+    // Permisos por tipo (para modales). Si esto es pesado, puedes cachearlo en propiedad y refrescar sólo al abrir modal.
+    $permisos = Permission::select(['id','name','nombre','orden','permission_type_id'])
+        ->with(['type:id,nombre'])
+        ->orderByRaw('CASE WHEN permission_type_id IS NULL THEN 1 ELSE 0 END')
+        ->orderByRaw('COALESCE(permission_type_id, 999999)')
+        ->orderByRaw('CASE WHEN orden IS NULL THEN 1 ELSE 0 END')
+        ->orderBy('orden')->orderBy('name')
+        ->get();
+
+    $permisosByType = $permisos->groupBy(fn($p) => $p->type->nombre ?? '— Sin tipo —');
+
+    // Map rápido: ids de permisos por rol (para el checked sin computar en Blade)
+    foreach ($rolesList as $rol) {
+        $rol->permissions_ids = $rol->permissions->pluck('id')->all();
     }
+
+    return view('livewire.usuarios.roles-crud', [
+        'rolesList'      => $rolesList,
+        'grupos'         => $grupos,
+        'permisos'       => $permisos,     // para modales
+        'types'          => \DB::table('permission_types')->select(['id','nombre','orden'])->orderBy('orden')->get(),
+        'permisosByType' => $permisosByType,
+    ]);
+}
+
 
     // ====== Búsqueda ======
     public function buscar()
@@ -245,16 +289,25 @@ class RolesCrud extends Component
     public function nuevoGrupo()
     {
         $this->resetGrupoForm();
+        $this->grupo_permisos_sel = [];
+        $this->grupo_permisos_orden = [];
         $this->modalGrupo = true;
     }
 
     public function editarGrupo($id)
     {
-        $g = GrupoOrden::findOrFail($id);
-        $this->grupo_id = $g->id;
-        $this->grupo_nombre = $g->nombre;
-        $this->grupo_slug = $g->slug;
+        $g = GrupoOrden::with('permissions')->findOrFail($id);
+
+        $this->grupo_id    = $g->id;
+        $this->grupo_nombre= $g->nombre;
+        $this->grupo_slug  = $g->slug;
         $this->grupo_orden = $g->orden;
+
+        $this->grupo_permisos_sel   = $g->permissions->pluck('id')->toArray(); // ids marcados
+        $this->grupo_permisos_orden = $g->permissions
+            ->mapWithKeys(fn ($p) => [$p->id => (int)($p->pivot->orden ?? 0)])
+            ->toArray();
+
         $this->modalGrupo = true;
     }
 
@@ -262,19 +315,28 @@ class RolesCrud extends Component
     {
         $this->validate([
             'grupo_nombre' => ['required','string','max:255'],
-            'grupo_slug'   => ['required','string','max:255', Rule::unique('grupo_orden','slug')->ignore($this->grupo_id)],
+            'grupo_slug'   => ['required','string','max:255', Rule::unique('grupos_orden','slug')->ignore($this->grupo_id)],
             'grupo_orden'  => ['nullable','integer','min:0'],
         ]);
 
         $g = $this->grupo_id ? GrupoOrden::findOrFail($this->grupo_id) : new GrupoOrden();
         $g->nombre = $this->grupo_nombre;
-        $g->slug = $this->grupo_slug;
-        $g->orden = $this->grupo_orden;
+        $g->slug   = $this->grupo_slug;
+        $g->orden  = $this->grupo_orden;
         $g->save();
+
+        // Sync permisos del grupo con orden en el pivot
+        $sync = [];
+        foreach ($this->grupo_permisos_sel as $pid) {
+            $sync[(int)$pid] = ['orden' => (int)($this->grupo_permisos_orden[$pid] ?? 0)];
+        }
+        $g->permissions()->sync($sync); // adjunta/detach con orden
 
         $this->dispatch('toast', ['type' => 'success', 'msg' => 'Grupo guardado correctamente.']);
         $this->modalGrupo = false;
         $this->resetGrupoForm();
+        $this->grupo_permisos_sel = [];
+        $this->grupo_permisos_orden = [];
     }
 
     public function confirmarEliminarGrupo($id)
@@ -308,26 +370,52 @@ class RolesCrud extends Component
         $this->grupo_nombre = '';
         $this->grupo_slug = '';
         $this->grupo_orden = null;
+
+        $this->grupo_permisos_sel = [];
+        $this->grupo_permisos_orden = [];
     }
 
     // ====== Asignación rápida de permisos rol<->permiso (checkbox) ======
-    public function togglePermiso($role_id, $permiso_id, $checked)
+    public function togglePermiso(int $role_id, int $permiso_id, bool $checked): void
     {
         $role = Role::find($role_id);
         $permiso = Permission::find($permiso_id);
-        if ($role && $permiso) {
-            if ($checked) {
-                if (!$role->hasPermissionTo($permiso->name)) {
-                    $role->givePermissionTo($permiso->name);
-                }
-            } else {
-                if ($role->hasPermissionTo($permiso->name)) {
-                    $role->revokePermissionTo($permiso->name);
-                }
+
+        if (!$role || !$permiso) return;
+
+        if ($checked) {
+            if (!$role->hasPermissionTo($permiso->name)) {
+                $role->givePermissionTo($permiso->name);
+            }
+        } else {
+            if ($role->hasPermissionTo($permiso->name)) {
+                $role->revokePermissionTo($permiso->name);
             }
         }
-        $this->resetPage();
+
+        // No resetees la página; menor “salto” visual:
+        // $this->resetPage();
+        $this->dispatch('toast', ['type' => 'success', 'msg' => 'Permiso actualizado.']);
     }
+
+    public function syncGrupoConRol(int $roleId, int $grupoId, bool $assign = true): void
+    {
+        $role  = Role::findOrFail($roleId);
+        $grupo = GrupoOrden::with(['permissions:id,name'])->findOrFail($grupoId);
+
+        $permNames = $grupo->permissions->pluck('name')->all();
+
+        if ($assign) {
+            // Asignar todos los del grupo
+            $role->givePermissionTo($permNames);
+            $this->dispatch('toast', ['type' => 'success', 'msg' => 'Permisos del grupo asignados al rol.']);
+        } else {
+            // Quitar todos los del grupo
+            $role->revokePermissionTo($permNames);
+            $this->dispatch('toast', ['type' => 'success', 'msg' => 'Permisos del grupo quitados del rol.']);
+        }
+    }
+
 
 
         public function editarPermisoDeGrupo(int $grupoId, int $permisoId): void
