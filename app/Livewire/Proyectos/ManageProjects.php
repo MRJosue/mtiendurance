@@ -19,6 +19,9 @@ class ManageProjects extends Component
         use WithPagination;
 
         public $perPage = 20;
+        public array $perPageOptions = [10, 20, 30, 50, 100];
+
+
         public $selectedProjects = [];
         public $selectedProject;
         public $selectAll = false;
@@ -89,6 +92,16 @@ class ManageProjects extends Component
             'estado'  => null,   // útil si quieres sobre-filtrar dentro del tab actual
         ];
 
+
+        public function updatedPerPage($value): void
+        {
+            $value = (int) $value;
+            if (! in_array($value, $this->perPageOptions, true)) {
+                $value = 20;
+            }
+            $this->perPage = $value;
+            $this->resetPage();
+        }
 
         public function sortBy(string $field): void
         {

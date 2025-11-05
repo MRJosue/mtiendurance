@@ -276,52 +276,63 @@
 
         <!-- Fechas -->
         <div class="grid grid-cols-3 gap-4 mb-4">
-            @hasanyrole('admin')
 
-            <div>
+             @can('edit-pre-project-fecha-produccion')
+                <div>
                 <label class="block text-sm font-medium text-gray-700">Fecha Producción</label>
                 <input type="date" wire:model="fecha_produccion" class="w-full mt-1 border rounded-lg p-2" readonly>
-            </div>
-            <div>
+                </div>
+             @endcan
+
+
+             @can('edit-pre-project-fecha-embarque')
+                <div>
                 <label class="block text-sm font-medium text-gray-700">Fecha Embarque</label>
                 <input type="date" wire:model="fecha_embarque" class="w-full mt-1 border rounded-lg p-2" readonly>
-            </div>
-             @endhasanyrole
+                </div>
+             @endcan
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Fecha Entrega</label>
-                {{-- <input wire:change="on_Calcula_Fechas_Entrega" type="date" wire:model="fecha_entrega" class="w-full mt-1 border rounded-lg p-2"> --}}
-                <input 
-                wire:change="validarFechaEntrega"
-                wire:model="fecha_entrega"
-                type="date" 
-                class="w-full mt-1 border rounded-lg p-2"
-                min="{{ date('Y-m-d') }}"
-                id="fechaEntrega"  @if($modoLectura) readonly @endif>
-
-            </div>
-
+             @can('edit-pre-project-fecha-entrega')
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fecha Entrega</label>
+                    {{-- <input wire:change="on_Calcula_Fechas_Entrega" type="date" wire:model="fecha_entrega" class="w-full mt-1 border rounded-lg p-2"> --}}
+                    <input 
+                    wire:change="validarFechaEntrega"
+                    wire:model="fecha_entrega"
+                    type="date" 
+                    class="w-full mt-1 border rounded-lg p-2"
+                    min="{{ date('Y-m-d') }}"
+                    id="fechaEntrega"  @if($modoLectura) readonly @endif>
+                </div>
+             @endcan
             @error('error') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
 
 
-        @hasanyrole('admin|cliente|cliente_principal|cliente_subordinado')
         <!-- Botón de Guardar Cambios -->
-        <button type="submit" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-            Guardar Cambios
-        </button>
-        @endhasanyrole
-       @hasanyrole('admin|estaf')
-        <button type="button" 
-            wire:click="preAprobarProyecto" 
-            class="mt-4 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
-            Pre aprobar proyecto
-        </button>
-       @endhasanyrole
+
+         @can('edit-pre-project--boton-guardar-cambios')
+        
+            <button type="submit" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                Guardar Cambios
+            </button>
+
+         @endcan
+
+       
+         @can('edit-pre-project--Pre-Aprobar-proyecto')
+            <button type="button" 
+                wire:click="preAprobarProyecto" 
+                class="mt-4 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                Pre aprobar proyecto
+            </button>
+         @endcan
+
+     
     </form>
 
     @push('scripts')
-    {{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> --}}
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             Livewire.on('setReadOnlyMode', function () {
@@ -336,6 +347,7 @@
              });
         });
     </script>
+
     @endpush
 </div>
 

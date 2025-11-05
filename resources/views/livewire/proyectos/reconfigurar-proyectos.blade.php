@@ -40,7 +40,7 @@
 
                 <div x-data="{ selectedProjects: @entangle('selectedProjects') }" class="container mx-auto p-6">
 
-                    <div class="overflow-x-auto bg-white rounded-lg shadow">
+                    <div class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8">
 
                             @if (session()->has('message'))
                                 <div class="bg-green-100 text-green-800 p-3 rounded mb-3">
@@ -134,7 +134,7 @@
                                     </th>
 
                                     {{-- Columna: Cliente con filtro compacto --}}
-                                    @can('tablaProyectos-ver-todos-los-proyectos')
+                                    @can('tablaReconfigurarar-ver-todos-los-proyectos')
                                         <th class="border-b px-4 py-2 text-left text-gray-700 font-medium">
                                             <div class="flex items-center justify-between">
                                                 <span>Cliente</span>
@@ -171,7 +171,7 @@
                                     @endcan
 
                                     {{-- Columna: Pedidos (sin filtro) --}}
-                                    @can('tablaProyectos-ver-columna-pedidos')
+                                    @can('tablaReconfigurarar-ver-columna-pedidos')
                                         <th class="border-b px-4 py-2 text-left text-gray-700 font-medium">
                                             Pedidos
                                         </th>
@@ -187,8 +187,10 @@
                                     </th>
 
                                     {{-- Columnas adicionales según permisos --}}
-                                    @can('dashboardjefediseñadorproyectos')
+                                    @can('tablaReconfigurarar-columna-tareas')
                                         <th class="border-b px-4 py-2 text-gray-700 font-medium">Tareas</th>
+                                    @endcan
+                                    @can('tablaReconfigurarar-columna-historial')
                                         <th class="border-b px-4 py-2 text-gray-700 font-medium">Historial</th>
                                     @endcan
 
@@ -223,11 +225,11 @@
                                     
                                         <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->nombre }}</td>
                                     
-                                        @can('tablaProyectos-ver-todos-los-proyectos')
+                                        @can('tablaReconfigurarar-ver-todos-los-proyectos')
                                         <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->user->name ?? 'Sin Cliente' }}</td>
                                         @endcan
 
-                                        @can('tablaProyectos-ver-columna-pedidos')
+                                        @can('tablaReconfigurarar-ver-columna-pedidos')
                                             <td class="border-b px-4 py-2 text-gray-700 text-sm">
                                                 @if($project->pedidos->isNotEmpty())
                                                
@@ -282,7 +284,7 @@
 
 
 
-                                        @can('dashboardjefediseñadorproyectos')
+                                        @can('tablaReconfigurarar-columna-tareas')
                                             <td class="px-4 py-3 border">                                                  
                                                 @if($project->tareas->isNotEmpty())
                                                             <ul class="list-disc list-inside space-y-1">
@@ -298,6 +300,8 @@
                                                             <span class="text-gray-500 text-sm">Sin tareas</span>
                                                         @endif
                                             </td>
+                                        @endcan
+                                        @can('tablaReconfigurarar-columna-historial')
                                             <td class="px-4 py-3 border">                                                    
                                                 @if($project->estados->isNotEmpty())
                                                             <ul class="list-disc list-inside text-gray-600 space-y-1 text-xs">
@@ -328,14 +332,7 @@
                                                     :href="route('proyecto.show', $project->id)"
                                                     label="Ver detalles"
                                                 />
-                                                @can('dashboardjefediseñadorproyectos')
-                                                    @if($project->tareas->isEmpty()) 
-                                                    <x-dropdown.item separator>
-                                                        <b wire:click="abrirModalAsignacion({{ $project->id }})" >Asignar Tarea</b>
-                                                    </x-dropdown.item>
 
-                                                    @endif 
-                                                @endcan
                                         </x-dropdown>
 
                                         </td>

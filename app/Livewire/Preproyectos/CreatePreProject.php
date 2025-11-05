@@ -84,6 +84,32 @@ class CreatePreProject extends Component
     public $direccionesFiscales = [];
     public $direccionesEntrega = [];
 
+    // Modal direcciones
+    public bool $mostrarModalDireccion = false;
+    public string $tipoDireccion = 'entrega'; // 'fiscal' | 'entrega'
+
+    
+    // Form genérico de dirección
+    public array $formDireccion = [
+        'rfc'            => '',
+        'nombre_contacto'=> '',
+        'nombre_empresa' => '',
+        'calle'          => '',
+        'pais_id'        => null,
+        'estado_id'      => null,
+        'ciudad_id'      => null,
+        'codigo_postal'  => '',
+        'telefono'       => '',
+        'flag_default'   => false,
+    ];
+
+
+        
+    // Catálogos para selects del modal
+    public $paises = [];
+    public $estados = [];
+    public $ciudades = [];
+
     // Propiedades para crear un nuevo cliente
     public $nuevoCliente = [
         'nombre_empresa' => '',
@@ -117,8 +143,8 @@ class CreatePreProject extends Component
             'fecha_entrega' => 'nullable|date',
             'categoria_id' => 'required|exists:categorias,id',
             'producto_id' => 'required|exists:productos,id',
-            'direccion_fiscal_id' => 'required|exists:direcciones_entrega,id',
-            'direccion_entrega_id' => 'required|exists:direcciones_entrega,id',
+            // 'direccion_fiscal_id'  => 'required|exists:direcciones_fiscales,id', // <-- corrección
+            // 'direccion_entrega_id' => 'required|exists:direcciones_entrega,id',
             'id_tipo_envio'=> 'required',
 
             'total_piezas' => $this->mostrarFormularioTallas ? 'required|integer|min:1' : 'required|integer|min:1',
@@ -277,6 +303,12 @@ class CreatePreProject extends Component
     $this->UsuarioSeleccionado = $puedeSeleccionar ? null : $user->id;
     $this->direccionesFiscales = collect();
     $this->direccionesEntrega = collect();
+
+  
+    // Catálogos iniciales del modal
+    $this->paises = Pais::orderBy('nombre')->get();
+    $this->estados = [];
+    $this->ciudades = [];
 
 
         $this->tallasSeleccionadas = [];
@@ -753,50 +785,204 @@ public function usuarioSeleccionadoCambio($usuarioId)
     $this->cargarDirecciones();
 }
 
-public function cargarDirecciones()
-{
-    Log::debug('Carga Direcciones');
 
-    if ($this->UsuarioSeleccionado) {
-        $this->direccionesFiscales = DireccionFiscal::where('usuario_id', $this->UsuarioSeleccionado)->get();
-        $this->direccionesEntrega = DireccionEntrega::where('usuario_id', $this->UsuarioSeleccionado)->get();
-
-        // Opcional: asignar automáticamente la primera dirección si no hay una seleccionada
-        // if (!$this->direccion_fiscal_id && $this->direccionesFiscales->isNotEmpty()) {
-        //     $this->direccion_fiscal_id = $this->direccionesFiscales->first()->id;
-        // }
-
-        // if (!$this->direccion_entrega_id && $this->direccionesEntrega->isNotEmpty()) {
-        //     $this->direccion_entrega_id = $this->direccionesEntrega->first()->id;
-        // }
-
-    } else {
-        $this->direccionesFiscales = collect();
-        $this->direccionesEntrega = collect();
+    public function abrirModalDireccion(string $tipo = 'entrega')
+    {
+        $this->tipoDireccion = in_array($tipo, ['fiscal','entrega']) ? $tipo : 'entrega';
+        // reset form
+        $this->formDireccion = [
+            'rfc'            => '',
+            'nombre_contacto'=> '',
+            'nombre_empresa' => '',
+            'calle'          => '',
+            'pais_id'        => null,
+            'estado_id'      => null,
+            'ciudad_id'      => null,
+            'codigo_postal'  => '',
+            'telefono'       => '',
+            'flag_default'   => false,
+        ];
+        $this->estados = [];
+        $this->ciudades = [];
+        $this->mostrarModalDireccion = true;
     }
-}
 
-public function updatedDireccionFiscalId($value)
-{
-    $this->direccion_fiscal_id = (int) $value;
-}
+    public function cerrarModalDireccion()
+    {
+        $this->mostrarModalDireccion = false;
+    }
 
-public function updatedDireccionEntregaId($value)
-{
+    // Livewire v3: updated{Property} para keys anidadas
+    public function updatedFormDireccionPaisId($value)
+    {
+        $this->formDireccion['estado_id'] = null;
+        $this->formDireccion['ciudad_id'] = null;
+        $this->estados = $value ? \App\Models\Estado::where('pais_id', $value)->orderBy('nombre')->get() : [];
+        $this->ciudades = [];
+    }
+
+    public function updatedFormDireccionEstadoId($value)
+    {
+        $this->formDireccion['ciudad_id'] = null;
+        $this->ciudades = $value ? \App\Models\Ciudad::where('estado_id', $value)->orderBy('nombre')->get() : [];
+    }
+
+
+    public function guardarDireccion()
+    {
+        // Reglas comunes
+        $rules = [
+            'formDireccion.calle'         => 'required|string|max:255',
+            'formDireccion.pais_id'       => 'required|exists:paises,id',
+            'formDireccion.estado_id'     => 'required|exists:estados,id',
+            'formDireccion.ciudad_id'     => 'required|exists:ciudades,id',
+            'formDireccion.codigo_postal' => 'required|string|max:10',
+            'formDireccion.flag_default'  => 'boolean',
+        ];
+
+        if ($this->tipoDireccion === 'fiscal') {
+            $rules = array_merge($rules, [
+                'formDireccion.rfc' => 'required|string|max:20',
+            ]);
+        } else {
+            $rules = array_merge($rules, [
+                'formDireccion.nombre_contacto' => 'required|string|max:255',
+                'formDireccion.nombre_empresa'  => 'nullable|string|max:255',
+                'formDireccion.telefono'        => 'nullable|string|max:20',
+            ]);
+        }
+
+        $this->validate($rules);
+
+        if (!$this->UsuarioSeleccionado) {
+            // En tu flujo, si permites elegir usuario, asegúrate de que esté seteado.
+            // Si no, asume el usuario actual:
+            $this->UsuarioSeleccionado = Auth::id();
+        }
+
+        if ($this->tipoDireccion === 'fiscal') {
+            // Si se marca default, limpia los demás del usuario
+            if ($this->formDireccion['flag_default']) {
+                \App\Models\DireccionFiscal::where('usuario_id', $this->UsuarioSeleccionado)->update(['flag_default' => false]);
+            }
+
+            $dir = \App\Models\DireccionFiscal::create([
+                'usuario_id'    => $this->UsuarioSeleccionado,
+                'rfc'           => $this->formDireccion['rfc'],
+                'calle'         => $this->formDireccion['calle'],
+                'pais_id'       => $this->formDireccion['pais_id'],
+                'estado_id'     => $this->formDireccion['estado_id'],
+                'ciudad_id'     => $this->formDireccion['ciudad_id'],
+                'codigo_postal' => $this->formDireccion['codigo_postal'],
+                'flag_default'  => (bool)$this->formDireccion['flag_default'],
+            ]);
+
+            $this->cargarDirecciones();
+            $this->direccion_fiscal_id = $dir->id;
+
+        } else { // entrega
+            if ($this->formDireccion['flag_default']) {
+                \App\Models\DireccionEntrega::where('usuario_id', $this->UsuarioSeleccionado)->update(['flag_default' => false]);
+            }
+
+            $dir = \App\Models\DireccionEntrega::create([
+                'usuario_id'     => $this->UsuarioSeleccionado,
+                'nombre_contacto'=> $this->formDireccion['nombre_contacto'],
+                'nombre_empresa' => $this->formDireccion['nombre_empresa'],
+                'calle'          => $this->formDireccion['calle'],
+                'pais_id'        => $this->formDireccion['pais_id'],
+                'estado_id'      => $this->formDireccion['estado_id'],
+                'ciudad_id'      => $this->formDireccion['ciudad_id'],
+                'codigo_postal'  => $this->formDireccion['codigo_postal'],
+                'telefono'       => $this->formDireccion['telefono'],
+                'flag_default'   => (bool)$this->formDireccion['flag_default'],
+            ]);
+
+            $this->cargarDirecciones();
+            $this->direccion_entrega_id = $dir->id;
+            $this->cargarTiposEnvio(); // refresca tipos de envío para la nueva dirección
+        }
+
+        $this->mostrarModalDireccion = false;
+        session()->flash('message', 'Dirección creada correctamente.');
+        // Si quieres notificación para Alpine/JS:
+        // $this->dispatch('direccion-creada');
+    }
+
+    public function onPaisChange(): void
+    {
+        $paisId = (int) ($this->formDireccion['pais_id'] ?? 0);
+
+        // Limpia dependencias
+        $this->formDireccion['estado_id'] = null;
+        $this->formDireccion['ciudad_id'] = null;
+
+        $this->estados = $paisId
+            ? Estado::where('pais_id', $paisId)->orderBy('nombre')->get()
+            : collect();
+
+        $this->ciudades = collect();
+    }
+
+    public function onEstadoChange(): void
+    {
+        $estadoId = (int) ($this->formDireccion['estado_id'] ?? 0);
+
+        // Limpia ciudad al cambiar estado
+        $this->formDireccion['ciudad_id'] = null;
+
+        $this->ciudades = $estadoId
+            ? Ciudad::where('estado_id', $estadoId)->orderBy('nombre')->get()
+            : collect();
+    }
+
+
+
+    public function cargarDirecciones()
+    {
+        Log::debug('Carga Direcciones');
+
+        if ($this->UsuarioSeleccionado) {
+            $this->direccionesFiscales = DireccionFiscal::where('usuario_id', $this->UsuarioSeleccionado)->get();
+            $this->direccionesEntrega = DireccionEntrega::where('usuario_id', $this->UsuarioSeleccionado)->get();
+
+            // Opcional: asignar automáticamente la primera dirección si no hay una seleccionada
+            // if (!$this->direccion_fiscal_id && $this->direccionesFiscales->isNotEmpty()) {
+            //     $this->direccion_fiscal_id = $this->direccionesFiscales->first()->id;
+            // }
+
+            // if (!$this->direccion_entrega_id && $this->direccionesEntrega->isNotEmpty()) {
+            //     $this->direccion_entrega_id = $this->direccionesEntrega->first()->id;
+            // }
+
+        } else {
+            $this->direccionesFiscales = collect();
+            $this->direccionesEntrega = collect();
+        }
+    }
+
+    public function updatedDireccionFiscalId($value)
+    {
+        $this->direccion_fiscal_id = (int) $value;
+    }
+
+    public function updatedDireccionEntregaId($value)
+    {
     $this->direccion_entrega_id = (int) $value;
+    $this->id_tipo_envio = null; // limpia selección previa
     $this->cargarTiposEnvio();
-}
+    }
 
 
-public function uploadStarted()
-{
-    $this->isUploading = true;
-}
+    public function uploadStarted()
+    {
+        $this->isUploading = true;
+    }
 
-public function uploadFinished()
-{
-    $this->isUploading = false;
-}
+    public function uploadFinished()
+    {
+        $this->isUploading = false;
+    }
 
 
 }
