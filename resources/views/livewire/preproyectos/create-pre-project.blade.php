@@ -13,7 +13,7 @@
 
     <form wire:submit.prevent="create">
 
-        @php
+        {{-- @php
             $config = auth()->user()->config ?? [];
             $puedeSeleccionarUsuarios = $config['flag-can-user-sel-preproyectos'] ?? false;
         @endphp
@@ -30,7 +30,103 @@
                 onchange="usuarioSeleccionadoCambio"
             />
          
-        @endif
+        @endif --}}
+
+
+<div 
+    x-data="{
+        open: false,
+        search: @entangle('usuarioQuery').live,
+        selectedId: @entangle('usuario_id_nuevo'),
+        puedeBuscar: @js($puedeBuscarUsuarios),
+        get hasResults(){ return (this.$wire.usuariosSugeridos || []).length > 0 },
+        select(id){
+            this.selectedId = id;
+            const user = (this.$wire.usuariosSugeridos || []).find(u => u.id === id);
+            this.search = user ? user.name + ' (' + user.email + ')' : '';
+            this.open = false;
+        },
+        init(){
+            // Mostrar usuario actual por defecto al entrar
+            if(!this.selectedId){
+                this.selectedId = {{ auth()->id() }};
+                this.search = '{{ auth()->user()->name }} ({{ auth()->user()->email }})';
+            } else {
+                const user = (this.$wire.usuariosSugeridos || []).find(u => u.id === this.selectedId);
+                if(user){
+                    this.search = user.name + ' (' + user.email + ')';
+                }
+            }
+        }
+    }"
+    class="mb-6"
+>
+    <label class="block mb-1 font-medium text-gray-700">Seleccionar Usuario</label>
+
+    <!-- Campo de búsqueda -->
+    <input
+        x-model="search"
+        @focus="open = puedeBuscar"
+        @click.outside="open = false"
+        placeholder="Buscar por nombre o email…"
+        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
+        :readonly="!puedeBuscar"
+        :class="{'bg-gray-100 text-gray-500 cursor-not-allowed': !puedeBuscar}"
+        type="text"
+    />
+
+    <!-- Dropdown de resultados -->
+    <div
+        x-show="open && puedeBuscar"
+        x-transition
+        class="relative"
+    >
+        <div
+            class="absolute z-50 w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-56 overflow-y-auto shadow"
+        >
+            <template x-for="user in ($wire.usuariosSugeridos || [])" :key="user.id">
+                <div
+                    @click="select(user.id)"
+                    class="px-3 py-2 cursor-pointer hover:bg-blue-100 text-sm flex items-center justify-between"
+                    :class="{'bg-blue-50': user.id === selectedId}"
+                >
+                    <div class="truncate">
+                        <span class="font-medium" x-text="user.name"></span>
+                        <span class="text-gray-500 text-xs ml-1" x-text="'(' + user.email + ')'"></span>
+                    </div>
+                    <template x-if="user.id === {{ auth()->id() }}">
+                        <span class="text-blue-500 text-xs ml-2 shrink-0">— Actual</span>
+                    </template>
+                </div>
+            </template>
+
+            <div
+                x-show="!hasResults"
+                class="px-3 py-2 text-gray-500 text-sm italic"
+            >
+                No se encontraron usuarios
+            </div>
+        </div>
+    </div>
+
+    <!-- Píldora del seleccionado -->
+        <!-- Píldora del seleccionado (nombre + email) -->
+        <div class="mt-2" x-show="selectedId">
+            <span class="inline-flex items-center gap-2 text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
+                Usuario seleccionado:
+                <span
+                    x-text="(() => {
+                        const lista = ($wire.usuariosSugeridos || []);
+                        const u = lista.find(u => u.id === selectedId);
+                        // Si no está en sugeridos, usa el texto del input (que ya formateamos como 'Nombre (email)')
+                        return u ? `${u.name} (${u.email})` : (search || `ID ${selectedId}`);
+                    })()"
+                ></span>
+            </span>
+        </div>
+</div>
+
+
 
         <!-- Nombre y Descripción -->
         <div class="mb-4">
@@ -530,7 +626,26 @@
     </div>
     @endif
 
+    @push('scripts')
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Ejemplos de listeners en v3 con dispatch:
+        Livewire.on('usuario-cambiado', ({ id }) => {
+            // si necesitas side-effects locales
+            // console.log('Nuevo usuario seleccionado:', id);
+        });
 
+        Livewire.on('setReadOnlyMode', () => {
+            setTimeout(function () {
+                $("input, textarea").attr("readonly", "readonly");
+                $("select, button").attr("disabled", "disabled");
+            }, 100);
+        });
+
+        Livewire.on('redirect', (url) => { window.location.href = url; });
+    });
+    </script>
+    @endpush
 
 
     {{-- @if ($producto_id)

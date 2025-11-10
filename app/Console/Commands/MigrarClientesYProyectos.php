@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
+use Illuminate\Support\Facades\File;
+
 
 class MigrarClientesYProyectos extends Command
 {
@@ -20,8 +22,14 @@ class MigrarClientesYProyectos extends Command
 
     protected $description = 'Migra tabla client -> users (conservando IDs y deduplicando emails) y project -> proyectos.';
 
+    protected string $logFilePath = '';
+
     public function handle()
     {
+
+        // Reiniciar el log
+        $this->initMigrationLog(true);
+
         $dry = $this->option('dry-run');
         $adminId = (int) $this->option('adminId');
 
@@ -32,7 +40,7 @@ class MigrarClientesYProyectos extends Command
         $rolPrincipal   = Role::where('name', 'cliente_principal')->first();
         $rolSubordinado = Role::where('name', 'cliente_subordinado')->first();
 
-           $rolStaff       = Role::where('name', 'estaf')->first();
+          $rolStaff = Role::where('name', 'staff')->first();
 
 
         if (!$rolPrincipal || !$rolSubordinado) {
@@ -1108,4 +1116,73 @@ class MigrarClientesYProyectos extends Command
     }
 
 
+       /** Inicializa el archivo de log. Si $truncate = true, lo resetea. */
+    protected function initMigrationLog(bool $truncate = true): void
+    {
+        $this->logFilePath = storage_path('logs/migracion_clientes_proyectos.log');
+
+        // Asegura el directorio
+        $dir = dirname($this->logFilePath);
+        if (!File::exists($dir)) {
+            File::makeDirectory($dir, 0755, true);
+        }
+
+        // Encabezado y truncado
+        $header  = "==== MIGRACIÓN clientes-proyectos ====\n";
+        $header .= 'Fecha de ejecución: ' . now()->toDateTimeString() . "\n";
+        $header .= "=====================================\n";
+
+        if ($truncate) {
+            File::put($this->logFilePath, $header);
+        } else {
+            File::append($this->logFilePath, "\n".$header);
+        }
+    }
+
+        /** Escribe líneas en el log (acepta mensajes multi-línea) */
+    protected function appendToMigrationLog(string $level, string $message): void
+    {
+        if ($this->logFilePath === '') {
+            // fallback por si no se inicializó
+            $this->initMigrationLog(false);
+        }
+
+        // Divide por líneas para mantener formato prolijo
+        $lines = preg_split("/\\r\\n|\\r|\\n/", $message);
+        foreach ($lines as $line) {
+            File::append(
+                $this->logFilePath,
+                '['.now()->toDateTimeString()."] {$level}: {$line}\n"
+            );
+        }
+    }
+
+
+        // ==== Overrides para duplicar a archivo cada salida de consola ====
+
+    public function info($string, $verbosity = null)
+    {
+        $this->appendToMigrationLog('INFO', (string) $string);
+        return parent::info($string, $verbosity);
+    }
+
+    public function warn($string, $verbosity = null)
+    {
+        $this->appendToMigrationLog('WARN', (string) $string);
+        return parent::warn($string, $verbosity);
+    }
+
+    public function error($string, $verbosity = null)
+    {
+        $this->appendToMigrationLog('ERROR', (string) $string);
+        return parent::error($string, $verbosity);
+    }
+
+    public function line($string, $style = null, $verbosity = null)
+    {
+        // Usa el estilo como nivel cuando exista; por defecto "LINE"
+        $level = $style ? strtoupper((string) $style) : 'LINE';
+        $this->appendToMigrationLog($level, (string) $string);
+        return parent::line($string, $style, $verbosity);
+    }
 }

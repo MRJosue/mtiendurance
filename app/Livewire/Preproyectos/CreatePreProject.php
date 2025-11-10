@@ -30,6 +30,11 @@ use Livewire\Attributes\On;
 
 use Illuminate\Support\Facades\Log;
 
+
+use Illuminate\Database\Eloquent\Builder;
+
+
+
 class CreatePreProject extends Component
 {
     use WithFileUploads;
@@ -86,7 +91,18 @@ class CreatePreProject extends Component
 
     // Modal direcciones
     public bool $mostrarModalDireccion = false;
-    public string $tipoDireccion = 'entrega'; // 'fiscal' | 'entrega'
+    public string $tipoDireccion = 'entrega';
+
+    // en la cabecera de la clase
+    public string $usuarioQuery = '';
+    public ?int $usuario_id_nuevo = null;
+    public array $usuariosSugeridos = [];
+
+
+    public bool $puedeBuscarUsuarios = false;
+
+
+
 
     
     // Form genérico de dirección
@@ -243,6 +259,12 @@ class CreatePreProject extends Component
                 $this->seleccion_armado = 1;
             }
 
+
+            if (!$this->UsuarioSeleccionado) {
+                $this->UsuarioSeleccionado = Auth::id();
+            }
+
+
         $preProyecto = PreProyecto::create([
             'usuario_id' => $this->UsuarioSeleccionado,
             'nombre' => $this->nombre,
@@ -297,8 +319,15 @@ class CreatePreProject extends Component
     {
 
     $user = Auth::user();
+
+    $this->setupUsuarioSelector();
+    $this->refreshUsuariosSugeridos(true);
     $config = $user->config ?? [];
     $puedeSeleccionar = $config['flag-can-user-sel-preproyectos'] ?? false;
+
+    // en mount(), al principio o después de $user = Auth::user();
+
+
 
     $this->UsuarioSeleccionado = $puedeSeleccionar ? null : $user->id;
     $this->direccionesFiscales = collect();
@@ -337,10 +366,7 @@ class CreatePreProject extends Component
                 'mostrarFormularioTallas'=> $this->mostrarFormularioTallas,
                 'direccionesFiscales' => $this->direccionesFiscales,
                 'direccionesEntrega' => $this->direccionesEntrega,
-                'todosLosUsuarios' => User::query()
-                    ->whereIn('id', auth()->user()->user_can_sel_preproyectos ?? [])
-                    ->whereJsonContains('config->flag-user-sel-preproyectos', true)
-                    ->get(),
+
             ]);
         }
 
@@ -985,4 +1011,114 @@ public function usuarioSeleccionadoCambio($usuarioId)
     }
 
 
+  
+
+
+        // métodos nuevos dentro de la clase
+    protected function setupUsuarioSelector(): void
+    {
+        
+    $user = Auth::user();
+
+    $puedeTodos = $user->can('preproyectos_seleccionar_todos_usuarios');
+    $subIds     = $this->currentUserSubordinateIds();
+
+    // <- esta bandera la usará la vista
+    $this->puedeBuscarUsuarios = $puedeTodos || count($subIds) > 0;
+
+        if ($puedeTodos || count($subIds) > 0) {
+            // Deja elegir; no fijes usuario por default
+            $this->UsuarioSeleccionado = null;
+        } else {
+            // Sin permiso y sin subordinados → se fija el autenticado
+            $this->UsuarioSeleccionado = $user->id;
+        }
+    }
+
+    /**
+     * Intenta obtener los IDs de subordinados por varias fuentes
+     * (relación, config o campo auxiliar usado en tu proyecto).
+     */
+    protected function currentUserSubordinateIds(): array
+    {
+        $user = Auth::user();
+        $ids = [];
+
+        if (method_exists($user, 'subordinates')) {
+            $ids = $user->subordinates()->pluck('id')->all();
+        } elseif (is_array(data_get($user, 'config.subordinates'))) {
+            $ids = array_values(array_filter($user->config['subordinates']));
+        } elseif (is_array(data_get($user, 'user_can_sel_preproyectos'))) {
+            $ids = array_values(array_filter($user->user_can_sel_preproyectos));
+        }
+
+        // normaliza a enteros únicos
+        return array_values(array_unique(array_map('intval', $ids)));
+    }
+
+    /**
+     * Refresca el arreglo $usuariosSugeridos según permiso, subordinados y query.
+     * $bootstrap=true fuerza sugerir 5 subordinados al inicio (sin query).
+     */
+    public function refreshUsuariosSugeridos(bool $bootstrap = false): void
+    {
+        $user = Auth::user();
+        $q = trim($this->usuarioQuery);
+        $puedeTodos = $user->can('preproyectos_seleccionar_todos_usuarios');
+        $subIds = $this->currentUserSubordinateIds();
+
+        $builder = \App\Models\User::query();
+
+        if (!$puedeTodos) {
+            if (count($subIds) === 0) {
+                // No hay de dónde sugerir
+                $this->usuariosSugeridos = [];
+                return;
+            }
+            $builder->whereIn('id', $subIds);
+        }
+
+        if ($q !== '') {
+            $builder->where(function ($qq) use ($q) {
+                $qq->where('name', 'like', "%{$q}%")
+                ->orWhere('email', 'like', "%{$q}%");
+            });
+        }
+
+        $limit = $puedeTodos ? 10 : 5;
+
+        $this->usuariosSugeridos = $builder
+            // prioriza mostrar al usuario actual arriba si aparece en la lista
+            ->orderByRaw('id = ? desc', [$user->id])
+            ->orderBy('name')
+            ->limit($limit)
+            ->get(['id', 'name', 'email'])
+            ->toArray();
+
+        // primer pintado: si no hay query y no salió nada, sugiere 5 subordinados
+        if ($bootstrap && empty($this->usuariosSugeridos) && !$puedeTodos && count($subIds) > 0) {
+            $this->usuariosSugeridos = \App\Models\User::whereIn('id', $subIds)
+                ->orderBy('name')
+                ->limit(5)
+                ->get(['id','name','email'])
+                ->toArray();
+        }
+    }
+
+    // Livewire v3: cuando cambia el texto de búsqueda
+    public function updatedUsuarioQuery(): void
+    {
+        $this->refreshUsuariosSugeridos();
+    }
+
+    // Livewire v3: cuando Alpine asigna el seleccionado
+    public function updatedUsuarioIdNuevo($value): void
+    {
+        $id = (int) $value;
+        $this->usuarioSeleccionadoCambio($id);
+        // eventos Livewire v3 → dispatch
+        $this->dispatch('usuario-cambiado', id: $id);
+    }
+
+    
 }

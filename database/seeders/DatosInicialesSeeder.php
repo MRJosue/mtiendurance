@@ -20,6 +20,7 @@ class DatosInicialesSeeder extends Seeder
         DB::unprepared(file_get_contents(database_path('seeders/SQL/nuevopermisos.sql')));
         DB::unprepared(file_get_contents(database_path('seeders/SQL/LEGACY.sql')));
         DB::unprepared(file_get_contents(database_path('seeders/SQL/LastProyect.sql')));
+        DB::unprepared(file_get_contents(database_path('seeders/SQL/ProjectFiles.sql')));
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
