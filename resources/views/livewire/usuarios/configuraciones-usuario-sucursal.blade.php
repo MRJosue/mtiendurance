@@ -45,8 +45,9 @@
                 <thead class="bg-gray-100">
                     <tr>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">ID</th>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Nombre</th>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Empresa</th>
+                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Tipo</th>
+                        {{-- <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Empresa</th> --}}
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Teléfono</th>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Dirección</th>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Usuarios Asignados</th>
@@ -58,7 +59,8 @@
                         <tr class="hover:bg-gray-50">
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->id }}</td>
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->nombre }}</td>
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->empresa->nombre ?? '-' }}</td>
+                            <td class="border-b px-4 py-2 text-gray-700 text-sm"</td>
+                            {{-- <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->empresa->nombre ?? '-' }}</td> --}}
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->telefono }}</td>
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->direccion }}</td>
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">
@@ -146,7 +148,7 @@
                     <div class="flex flex-wrap gap-2 mt-4">
                         <button type="submit"
                             class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                            {{ $editingId ? 'Actualizar' : 'Crear' }} Sucursal
+                            {{ $editingId ? 'Actualizar' : 'Crear' }} Empresa
                         </button>
                         <button type="button" wire:click="closeSucursalModal"
                             class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400">
@@ -166,7 +168,7 @@
             class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40"
         >
             <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl mx-auto">
-                <h2 class="text-lg font-bold mb-4 text-gray-700">Asignar usuarios a la sucursal</h2>
+                <h2 class="text-lg font-bold mb-4 text-gray-700">Asignar usuarios a la Empresa</h2>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <!-- Columna: Asignados -->

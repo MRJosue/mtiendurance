@@ -12,7 +12,7 @@
         @click="toggle()"
         class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
     >
-        Mis empresas
+        Organizacion Principal
         <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
     </h2>
 
@@ -28,7 +28,7 @@
                 class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 wire:click="nuevaEmpresa"
             >
-                + Nueva Empresa
+                + Nueva Principal
             </button>
         </div>
 
