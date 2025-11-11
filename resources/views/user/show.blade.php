@@ -45,7 +45,7 @@
 
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <div >
-                           {{-- @livewire('configuraciones-usuario', ['userId' => $user->id]) --}}
+                           @livewire('configuraciones-usuario', ['userId' => $user->id])
         
                     </div>
 
@@ -65,7 +65,7 @@
 
                     {{-- @livewire('usuarios.tabla-usuarios') --}}
 
-                     {{-- @livewire('usuarios.direcciones-fiscales-crud',['userId'=>$user->id]) --}}
+                     @livewire('usuarios.direcciones-fiscales-crud',['userId'=>$user->id])
                     
 
                 </div>
@@ -82,7 +82,7 @@
 
                     {{-- @livewire('users-table') --}}
 
-                    {{-- @livewire('usuarios.direcciones-entrega-crud',['userId'=>$user->id]) --}}
+                    @livewire('usuarios.direcciones-entrega-crud',['userId'=>$user->id])
 
 
                 </div>
