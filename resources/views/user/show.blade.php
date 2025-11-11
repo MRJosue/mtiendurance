@@ -38,7 +38,7 @@
 
 
                     <div>
-                        {{-- @livewire('usuarios.configuraciones-usuario-makeuser', ['userId' => $user->id]) --}}
+                        @livewire('usuarios.configuraciones-usuario-makeuser', ['userId' => $user->id])
 
                     </div>
                 </div>

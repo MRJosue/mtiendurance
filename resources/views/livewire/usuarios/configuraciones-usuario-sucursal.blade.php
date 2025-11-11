@@ -59,7 +59,7 @@
                         <tr class="hover:bg-gray-50">
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->id }}</td>
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->nombre }}</td>
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm"</td>
+                            <td class="border-b px-4 py-2 text-gray-700 text-sm"></td>
                             {{-- <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->empresa->nombre ?? '-' }}</td> --}}
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->telefono }}</td>
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->direccion }}</td>
