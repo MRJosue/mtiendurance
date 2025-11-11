@@ -8,19 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 
 class Empresa extends Model
 {
     use HasFactory;  // ← Debe existir este “use”
 
-    protected $fillable = [
-        'nombre',
-        'rfc',
-        'telefono',
-        'direccion',
-    ];
+    protected $fillable = ['nombre','rfc','telefono','direccion'];
 
     public function sucursales()
     {
@@ -34,4 +29,11 @@ class Empresa extends Model
                 $q->where('name', 'cliente_principal');
             });
     }
+
+        public function propietario(): HasOne
+    {
+        // Usuario único que tiene esta empresa asignada
+        return $this->hasOne(User::class, 'empresa_id');
+    }
+
 }

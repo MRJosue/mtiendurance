@@ -38,14 +38,14 @@
 
 
                     <div>
-                        @livewire('usuarios.configuraciones-usuario-makeuser', ['userId' => $user->id])
+                        {{-- @livewire('usuarios.configuraciones-usuario-makeuser', ['userId' => $user->id]) --}}
 
                     </div>
                 </div>
 
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <div >
-                           @livewire('configuraciones-usuario', ['userId' => $user->id])
+                           {{-- @livewire('configuraciones-usuario', ['userId' => $user->id]) --}}
         
                     </div>
 
@@ -65,7 +65,7 @@
 
                     {{-- @livewire('usuarios.tabla-usuarios') --}}
 
-                     @livewire('usuarios.direcciones-fiscales-crud',['userId'=>$user->id])
+                     {{-- @livewire('usuarios.direcciones-fiscales-crud',['userId'=>$user->id]) --}}
                     
 
                 </div>
@@ -82,7 +82,7 @@
 
                     {{-- @livewire('users-table') --}}
 
-                    @livewire('usuarios.direcciones-entrega-crud',['userId'=>$user->id])
+                    {{-- @livewire('usuarios.direcciones-entrega-crud',['userId'=>$user->id]) --}}
 
 
                 </div>
@@ -97,7 +97,7 @@
                 <div class="bg-white dark:bg-gray-800   shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         <h1 class="text-2xl font-bold mb-4">Permisos y roles del usuario</h1>
-                        @livewire('usuarios.user-roles-permissions', ['userId' => $user->id])
+                        {{-- @livewire('usuarios.user-roles-permissions', ['userId' => $user->id]) --}}
 
                     </div>
                 </div>

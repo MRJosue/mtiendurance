@@ -44,6 +44,8 @@ class User extends Authenticatable
         'company_legacy',
         'super_legacy',
         'super_id_legacy',
+        'empresa_id',
+        'sucursal_id',
     ];
 
 
