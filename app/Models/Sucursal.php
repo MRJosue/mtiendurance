@@ -20,11 +20,17 @@ class Sucursal extends Model
         'nombre',
         'telefono',
         'direccion',
+          'tipo',
     ];
 
     public function empresa(): BelongsTo
     {
         return $this->belongsTo(Empresa::class);
+    }
+
+    public function getTipoLabelAttribute(): string
+    {
+        return (int) $this->tipo === 1 ? 'Principal' : 'Secundaria';
     }
 
     public function clientesSubordinados(): HasMany

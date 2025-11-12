@@ -47,7 +47,6 @@
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">ID</th>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Empresa</th>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Tipo</th>
-                        {{-- <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Empresa</th> --}}
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Teléfono</th>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Dirección</th>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Usuarios Asignados</th>
@@ -59,13 +58,18 @@
                         <tr class="hover:bg-gray-50">
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->id }}</td>
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->nombre }}</td>
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm"></td>
-                            {{-- <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->empresa->nombre ?? '-' }}</td> --}}
+                            <td class="border-b px-4 py-2 text-gray-700 text-sm">
+                                <span class="px-2 py-1 rounded text-xs
+                                    {{ $sucursal->tipo == 1 ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
+                                    {{ $sucursal->tipo == 1 ? 'Principal' : 'Secundaria' }}
+                                </span>
+                            </td>
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->telefono }}</td>
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->direccion }}</td>
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">
                                 <span class="inline-block bg-blue-100 text-blue-800 rounded px-2 py-1 text-xs">
-                                    {{ $sucursal->usuarios->count() }}
+                                    {{-- Contar por campo sucursal_id --}}
+                                    {{ \App\Models\User::where('sucursal_id', $sucursal->id)->count() }}
                                 </span>
                                 <button
                                     wire:click="openUserModal({{ $sucursal->id }})"
@@ -73,7 +77,15 @@
                                 >
                                     Editar
                                 </button>
+                                <button
+                                    wire:click="openAssignedOnlyModal({{ $sucursal->id }})"
+                                    class="ml-1 px-2 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 text-xs"
+                                    title="Ver solo asignados"
+                                >
+                                    Asignados
+                                </button>
                             </td>
+
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">
                                 <button
                                     wire:click="openEditModal({{ $sucursal->id }})"
@@ -129,6 +141,15 @@
                         </div>
 
                         <div class="sm:col-span-2">
+                            <label class="block mb-1 text-gray-700">Tipo</label>
+                            <select wire:model="tipo" class="w-full border rounded-lg px-3 py-2">
+                                <option value="1">Principal</option>
+                                <option value="2">Secundaria</option>
+                            </select>
+                            @error('tipo') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="sm:col-span-2">
                             <label class="block mb-1 text-gray-700">Nombre</label>
                             <input type="text" wire:model="nombre" class="w-full border rounded-lg px-3 py-2" />
                             @error('nombre') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
@@ -159,7 +180,6 @@
             </div>
         </div>
 
-        <!-- MODAL: Usuarios asignados -->
         <!-- MODAL: Usuarios asignados / disponibles -->
         <div
             x-data="{ open: @entangle('showUserModal') }"
@@ -168,17 +188,22 @@
             class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40"
         >
             <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl mx-auto">
-                <h2 class="text-lg font-bold mb-4 text-gray-700">Asignar usuarios a la Empresa</h2>
+                <h2 class="text-lg font-bold mb-4 text-gray-700">Asignar usuarios a la Sucursal</h2>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <!-- Columna: Asignados -->
+                    <!-- Columna: Asignados (por sucursal_id) -->
                     <div class="border rounded-lg">
                         <div class="px-4 py-2 border-b bg-gray-50 rounded-t-lg">
                             <span class="font-semibold text-gray-700">Usuarios asignados</span>
                         </div>
                         <div class="max-h-80 overflow-y-auto divide-y">
                             @php
-                                $asignados = collect($usuariosDisponibles)->filter(fn($u) => in_array($u->id, $selectedUsers));
+                                $asignados = $selectedSucursal
+                                    ? \App\Models\User::where('empresa_id', $selectedSucursal->empresa_id)
+                                        ->where('sucursal_id', $selectedSucursal->id)
+                                        ->orderBy('name')
+                                        ->get()
+                                    : collect();
                             @endphp
 
                             @forelse($asignados as $u)
@@ -201,17 +226,13 @@
                         </div>
                     </div>
 
-                    <!-- Columna: Disponibles (pendientes) -->
+                    <!-- Columna: Disponibles (misma empresa, sucursal_id = null) -->
                     <div class="border rounded-lg">
                         <div class="px-4 py-2 border-b bg-gray-50 rounded-t-lg">
                             <span class="font-semibold text-gray-700">Usuarios disponibles</span>
                         </div>
                         <div class="max-h-80 overflow-y-auto divide-y">
-                            @php
-                                $pendientes = collect($usuariosDisponibles)->reject(fn($u) => in_array($u->id, $selectedUsers));
-                            @endphp
-
-                            @forelse($pendientes as $u)
+                            @forelse($usuariosDisponibles as $u)
                                 <div class="flex items-center justify-between px-4 py-3">
                                     <div>
                                         <div class="text-sm font-medium text-gray-800">{{ $u->name }}</div>
@@ -233,7 +254,6 @@
                 </div>
 
                 <div class="flex flex-wrap gap-2 mt-6 justify-end">
-                    {{-- Botón opcional si quieres cerrar sin más --}}
                     <button
                         wire:click="closeUserModal"
                         class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
@@ -245,16 +265,56 @@
         </div>
 
     </div>
+
+    <!-- MODAL: Solo usuarios asignados -->
+    <div
+        x-data="{ open: @entangle('showAssignedOnlyModal') }"
+        x-show="open"
+        style="display: none"
+        class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40"
+    >
+        <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-3xl mx-auto">
+            <h2 class="text-lg font-bold mb-4 text-gray-700">
+                Usuarios asignados a: {{ $selectedSucursal->nombre ?? '' }}
+            </h2>
+
+            <div class="max-h-96 overflow-y-auto divide-y rounded border">
+                @php
+                    $asignadosSolo = $selectedSucursal
+                        ? \App\Models\User::where('sucursal_id', $selectedSucursal->id)->orderBy('name')->get()
+                        : collect();
+                @endphp
+
+                @forelse($asignadosSolo as $u)
+                    <div class="flex items-center justify-between px-4 py-3">
+                        <div>
+                            <div class="text-sm font-medium text-gray-800">{{ $u->name }}</div>
+                            <div class="text-xs text-gray-500">{{ $u->email }}</div>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded bg-emerald-100 text-emerald-700">Asignado</span>
+                    </div>
+                @empty
+                    <div class="px-4 py-6 text-sm text-gray-500">Sin usuarios asignados.</div>
+                @endforelse
+            </div>
+
+            <div class="flex justify-end mt-4">
+                <button
+                    wire:click="closeAssignedOnlyModal"
+                    class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
+                >
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 {{-- Scripts encapsulados --}}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Toast simple para eventos de Livewire v3 -> dispatch('notify', message: '...')
     window.addEventListener('notify', (e) => {
         const msg = e.detail?.message || e.detail || 'Acción realizada';
-        // Puedes reemplazar este alert por tu sistema global de toasts
-        // Ejemplo minimal:
         const toast = document.createElement('div');
         toast.textContent = msg;
         toast.className = 'fixed top-4 right-4 bg-emerald-600 text-white px-4 py-2 rounded-lg shadow z-[100]';

@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 
+
+
 /**
  * @method \Illuminate\Database\Eloquent\Collection getRoleNames()
  * @method \Illuminate\Database\Eloquent\Collection getAllPermissions()
@@ -139,4 +141,7 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Sucursal::class, 'sucursal_user');
     }
+
+
+
 }

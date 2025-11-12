@@ -77,36 +77,48 @@
                         <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="calle">
                         @error('calle') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">País</label>
-                        <select wire:model="pais_id" class="w-full border border-gray-300 rounded p-2">
-                            <option value="">Seleccione un País</option>
-                            @foreach($paises as $pais)
-                                <option value="{{ $pais->id }}">{{ $pais->nombre }}</option>
-                            @endforeach
-                        </select>
-                        @error('pais_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Estado</label>
-                        <select wire:model="estado_id" class="w-full border border-gray-300 rounded p-2">
-                            <option value="">Seleccione un Estado</option>
-                            @foreach($estados as $estado)
-                                <option value="{{ $estado->id }}">{{ $estado->nombre }}</option>
-                            @endforeach
-                        </select>
-                        @error('estado_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Ciudad</label>
-                        <select wire:model="ciudad_id" class="w-full border border-gray-300 rounded p-2">
-                            <option value="">Seleccione una Ciudad</option>
-                            @foreach($ciudades as $ciudad)
-                                <option value="{{ $ciudad->id }}">{{ $ciudad->nombre }}</option>
-                            @endforeach
-                        </select>
-                        @error('ciudad_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+<div class="mb-4">
+    <label class="block text-gray-700 mb-1">País</label>
+    <select wire:model.live="pais_id" class="w-full border border-gray-300 rounded p-2">
+        <option value="">Seleccione un País</option>
+        @foreach($paises as $pais)
+            <option value="{{ $pais->id }}">{{ $pais->nombre }}</option>
+        @endforeach
+    </select>
+    @error('pais_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+</div>
+
+<div class="mb-4">
+    <label class="block text-gray-700 mb-1">Estado</label>
+    <select
+        wire:key="estado-{{ $pais_id ?? 'x' }}"
+        wire:model.live="estado_id"
+        class="w-full border border-gray-300 rounded p-2"
+        @disabled(!$pais_id)
+    >
+        <option value="">Seleccione un Estado</option>
+        @foreach($estados as $estado)
+            <option value="{{ $estado->id }}">{{ $estado->nombre }}</option>
+        @endforeach
+    </select>
+    @error('estado_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+</div>
+
+<div class="mb-4">
+    <label class="block text-gray-700 mb-1">Ciudad</label>
+    <select
+        wire:key="ciudad-{{ $estado_id ?? 'x' }}"
+        wire:model.live="ciudad_id"
+        class="w-full border border-gray-300 rounded p-2"
+        @disabled(!$estado_id)
+    >
+        <option value="">Seleccione una Ciudad</option>
+        @foreach($ciudades as $ciudad)
+            <option value="{{ $ciudad->id }}">{{ $ciudad->nombre }}</option>
+        @endforeach
+    </select>
+    @error('ciudad_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+</div>
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-1">Código Postal</label>
                         <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="codigo_postal">

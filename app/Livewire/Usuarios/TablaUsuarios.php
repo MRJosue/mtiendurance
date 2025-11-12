@@ -2,10 +2,9 @@
 
 namespace App\Livewire\Usuarios;
 
-
 use Livewire\Component;
-use App\Models\User;
 use Livewire\WithPagination;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 
@@ -18,15 +17,29 @@ class TablaUsuarios extends Component
     public $modal = false;
     public $usuario_id;
     public $rolesSeleccionados = [];
+
+    /** búsqueda global */
     public $search = '';
+
+    /** ordenación */
+    public string $sortField = 'id';
+    public string $sortDir   = 'desc';
+
+    /** filtros por columna */
+    public array $filters = [
+        'id'    => '',   // "1" o "1,2,3"
+        'name'  => '',
+        'email' => '',
+        'role'  => '',   // nombre del rol exacto
+    ];
 
     public function render()
     {
         $isPrivileged = $this->isPrivileged();
 
-        $query = User::with('roles');
+        $query = User::query()->with('roles');
 
-        // Filtro por búsqueda
+        // Filtro global (nombre o email)
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
@@ -34,31 +47,65 @@ class TablaUsuarios extends Component
             });
         }
 
-        // Si NO es admin ni staff, solo su usuario
+        // Filtros por columna
+        // ID (soporta lista separada por coma)
+        if (!empty($this->filters['id'])) {
+            $ids = collect(explode(',', $this->filters['id']))
+                ->map(fn($v) => (int) trim($v))
+                ->filter(); // elimina vacíos y ceros
+            if ($ids->count() > 1) {
+                $query->whereIn('id', $ids->all());
+            } elseif ($ids->count() === 1) {
+                $query->where('id', $ids->first());
+            }
+        }
+
+        // Nombre
+        if (!empty($this->filters['name'])) {
+            $query->where('name', 'like', '%' . $this->filters['name'] . '%');
+        }
+
+        // Email
+        if (!empty($this->filters['email'])) {
+            $query->where('email', 'like', '%' . $this->filters['email'] . '%');
+        }
+
+        // Rol (por nombre)
+        if (!empty($this->filters['role'])) {
+            $roleName = $this->filters['role'];
+            $query->whereHas('roles', function ($q) use ($roleName) {
+                $q->where('name', $roleName);
+            });
+        }
+
+        // Visibilidad según privilegio (no admin/staff: solo su propio usuario)
         if (!$isPrivileged) {
             $query->where('id', Auth::id());
         }
 
+        // Orden
+        $query->orderBy($this->sortField, $this->sortDir);
+
         return view('livewire.usuarios.tabla-usuarios', [
-            'usuarios' => $query->orderBy('id')->paginate(10),
-            // Solo cargamos roles si los puede asignar
-            'roles'    => $isPrivileged ? Role::orderBy('name')->get() : collect(),
-            'isPrivileged' => $isPrivileged,
+            'usuarios'       => $query->paginate(10),
+            'roles'          => $isPrivileged ? Role::orderBy('name')->get() : collect(), // para modal
+            'rolesListado'   => Role::orderBy('name')->get(), // para filtro por rol
+            'isPrivileged'   => $isPrivileged,
+            'sortField'      => $this->sortField,
+            'sortDir'        => $this->sortDir,
         ]);
     }
 
+    /* ===== Acciones ===== */
 
-        public function crear()
-        {
-            // Solo admin/staff pueden crear
-            abort_unless($this->isPrivileged(), 403);
-            return redirect()->route('usuarios.create');
-        }
-
+    public function crear()
+    {
+        abort_unless($this->isPrivileged(), 403);
+        return redirect()->route('usuarios.create');
+    }
 
     public function editarRoles($id)
     {
-        // Solo admin/staff pueden editar roles
         abort_unless($this->isPrivileged(), 403);
 
         $usuario = User::findOrFail($id);
@@ -69,7 +116,6 @@ class TablaUsuarios extends Component
 
     public function guardarRoles()
     {
-        // Solo admin/staff pueden guardar roles
         abort_unless($this->isPrivileged(), 403);
 
         $usuario = User::findOrFail($this->usuario_id);
@@ -77,25 +123,8 @@ class TablaUsuarios extends Component
         $usuario->syncRoles($nombresRoles);
 
         session()->flash('message', 'Roles actualizados correctamente.');
-
         $this->cerrarModal();
     }
-
-        // Reset de página al escribir en la búsqueda
-    public function updatedSearch()
-    {
-        $this->resetPage();
-    }
-
-    protected function isPrivileged(): bool
-    {
-        $user = Auth::user();
-        if (!$user) return false;
-
-        // Ajusta los nombres si en tu app son distintos
-        return $user->hasAnyRole(['admin', 'staff']);
-    }
-
 
     public function cerrarModal()
     {
@@ -103,5 +132,36 @@ class TablaUsuarios extends Component
         $this->usuario_id = null;
         $this->rolesSeleccionados = [];
     }
+
+    /* ===== Orden y filtros ===== */
+
+    public function sortBy(string $field): void
+    {
+        if ($this->sortField === $field) {
+            $this->sortDir = $this->sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sortDir   = 'asc';
+        }
+        $this->resetPage();
+    }
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilters(): void
+    {
+        $this->resetPage();
+    }
+
+    /* ===== Helpers ===== */
+
+    protected function isPrivileged(): bool
+    {
+        $user = Auth::user();
+        if (!$user) return false;
+        return $user->hasAnyRole(['admin', 'staff']);
+    }
 }
-//livewire.usuarios.tabla-usuarios
