@@ -12,6 +12,7 @@ class DireccionFiscal extends Model
     protected $table = 'direcciones_fiscales';
     protected $fillable = [
         'usuario_id',
+        'razon_social', // <-- NUEVO
         'rfc',
         'calle',
         'ciudad_id',

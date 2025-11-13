@@ -144,4 +144,35 @@ class User extends Authenticatable
 
 
 
+    // ...
+    protected $appends = [
+        'tooltip_sucursal_empresa', // opcional: para acceder directo como atributo
+    ];
+
+    // Nombre legible de la sucursal (si existe)
+    public function getSucursalNombreAttribute(): ?string
+    {
+        return $this->sucursal->nombre ?? null;
+    }
+
+    // Nombre de la empresa principal (por empresa directa o la de la sucursal)
+    public function getEmpresaPrincipalNombreAttribute(): ?string
+    {
+        if ($this->empresa && $this->empresa->nombre) {
+            return $this->empresa->nombre;
+        }
+        return $this->sucursal->empresa->nombre ?? null;
+    }
+
+    /**
+     * Tooltip genérico para tablas.
+     * Formato: "Sucursal: {Sucursal} — Empresa: {Empresa}"
+     */
+    public function getTooltipSucursalEmpresaAttribute(): string
+    {
+        $sucursal = $this->sucursal_nombre ?? 'Sin Empresa';
+        $empresa  = $this->empresa_principal_nombre ?? 'Sin Organización Principal';
+        return "Empresa: {$sucursal} — O.Principal: {$empresa}";
+    }
+
 }

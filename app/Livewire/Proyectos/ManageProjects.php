@@ -368,7 +368,13 @@ class ManageProjects extends Component
         {
             $query = Proyecto::query()
                 ->with([
-                    'user:id,name',
+
+                    'user:id,name,empresa_id,sucursal_id',
+                    'user.empresa:id,nombre',
+                    'user.sucursal:id,nombre,empresa_id',
+                    'user.sucursal.empresa:id,nombre',
+
+                    
                     'pedidos:id,proyecto_id,producto_id,total,estatus',
                     'pedidos.producto:id,nombre,categoria_id',
                     'pedidos.producto.categoria:id,nombre',

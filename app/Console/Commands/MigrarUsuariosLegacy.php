@@ -633,6 +633,7 @@ protected function backfillEmpresasYSucursales(Role $rolPrincipal, Role $rolSubo
                 } else {
                     DB::table('sucursales')->where('id', $sucursalMatrizId)->update([
                         'nombre'     => $sucursalDefaultNombre,
+                         'tipo'       => 1,
                         'updated_at' => now(),
                     ]);
                     $sucursalDefaultId = $sucursalMatrizId;
@@ -649,6 +650,7 @@ protected function backfillEmpresasYSucursales(Role $rolPrincipal, Role $rolSubo
                 $sucursalDefaultId = DB::table('sucursales')->insertGetId([
                     'empresa_id' => $empresaId,
                     'nombre'     => $sucursalDefaultNombre,
+                    'tipo'       => 1, 
                     'telefono'   => null,
                     'direccion'  => null,
                     'created_at' => now(),
@@ -715,6 +717,7 @@ protected function backfillEmpresasYSucursales(Role $rolPrincipal, Role $rolSubo
                                     'nombre'     => $nombreSucursalSub,
                                     'telefono'   => null,
                                     'direccion'  => null,
+                                    'tipo'       => 2,
                                     'created_at' => now(),
                                     'updated_at' => now(),
                                 ]);

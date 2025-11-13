@@ -15,6 +15,10 @@ class DireccionesFiscalesCrud extends Component
     use WithPagination;
 
     public $userId;
+
+    public $razon_social;
+
+
     public $rfc;
     public $calle;
     public $pais_id;
@@ -27,6 +31,7 @@ class DireccionesFiscalesCrud extends Component
     public $query = '';
 
     protected $rules = [
+         'razon_social' => 'required|string|max:255', 
         'rfc' => 'required|string|max:13',
         'calle' => 'required|string|max:255',
         'pais_id' => 'required|exists:paises,id',
@@ -81,6 +86,7 @@ class DireccionesFiscalesCrud extends Component
     public function limpiar()
     {
         $this->rfc = '';
+        $this->razon_social = '';
         $this->calle = '';
         $this->pais_id = null;
         $this->estado_id = null;
@@ -95,6 +101,7 @@ class DireccionesFiscalesCrud extends Component
 
         $data = [
             'usuario_id' => $this->userId,
+            'razon_social' => $this->razon_social, 
             'rfc' => $this->rfc,
             'calle' => $this->calle,
             'pais_id' => $this->pais_id,
@@ -120,6 +127,7 @@ class DireccionesFiscalesCrud extends Component
     {
         $direccion = DireccionFiscal::with(['ciudad', 'ciudad.estado', 'ciudad.estado.pais'])->findOrFail($id);
         $this->direccion_id = $direccion->id;
+        $this->razon_social = $direccion->razon_social;
         $this->rfc = $direccion->rfc;
         $this->calle = $direccion->calle;
         $this->pais_id = $direccion->pais_id;

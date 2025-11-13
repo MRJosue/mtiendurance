@@ -352,7 +352,18 @@
 
                                 {{-- Cliente --}}
                                 @role('admin|estaf|jefediseñador|cliente_principal')
-                                    <td class="px-3 py-2 text-sm text-gray-700">{{ $project->user->name ?? 'Sin Cliente' }}</td>
+                                    <td class="px-3 py-2 text-sm text-gray-700">
+                                        @if($project->user)
+                                            <span
+                                                class="inline-block cursor-help"
+                                                title="{{ $project->user->tooltip_sucursal_empresa }}"
+                                            >
+                                                {{ $project->user->name }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-500">Sin Cliente</span>
+                                        @endif
+                                    </td>
                                 @endrole
 
                                 {{-- Pedidos --}}

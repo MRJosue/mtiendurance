@@ -188,7 +188,7 @@ INSERT INTO `client` (`client_id`, `name`, `email`, `user`, `password`, `tipo`, 
 INSERT INTO `client` (`client_id`, `name`, `email`, `user`, `password`, `tipo`, `credito`, `plazos`, `address`, `phone`, `company`, `website`, `skype_id`, `facebook_profile_link`, `linkedin_profile_link`, `twitter_profile_link`, `short_note`, `chat_status`, `super`, `super_id`, `aprobar`) VALUES
 	(95, 'Don Jose Grassano', 'ingg@mtiendurance.com', '', 'e7d537e128158790157ea057bb883e0292a84930', '0', '0', '0', '', '', 'Jefe Arte Emblematico', '', '', '', '', '', '', 'offline', 0, 0, 0);
 INSERT INTO `client` (`client_id`, `name`, `email`, `user`, `password`, `tipo`, `credito`, `plazos`, `address`, `phone`, `company`, `website`, `skype_id`, `facebook_profile_link`, `linkedin_profile_link`, `twitter_profile_link`, `short_note`, `chat_status`, `super`, `super_id`, `aprobar`) VALUES
-	(96, 'Test Parent Account ', 'Dup_carlos@mtiendurance.com', 'Test', 'e4980ff0b57cddcba1b6fc1899de99f613952c0e', '0', '0', '0', '11', '', '', '', '', '', '', '', '', 'offline', 1, 0, 0);
+	(96, 'Test Parent Account ', 'carlos@mtiendurance.com', 'Test', 'e4980ff0b57cddcba1b6fc1899de99f613952c0e', '0', '0', '0', '11', '', '', '', '', '', '', '', '', 'offline', 1, 0, 0);
 INSERT INTO `client` (`client_id`, `name`, `email`, `user`, `password`, `tipo`, `credito`, `plazos`, `address`, `phone`, `company`, `website`, `skype_id`, `facebook_profile_link`, `linkedin_profile_link`, `twitter_profile_link`, `short_note`, `chat_status`, `super`, `super_id`, `aprobar`) VALUES
 	(97, 'Juan José González Pérez', 'gersolcentro@gmail.com', 'juan', '266994cbb890a2aa774d2d70c4bf04c16a25b1f6', '0', '0', '0', 'Aguascalientes', '045 (449) 151-2898', 'Sol de Aguascalientes', '', '', '', '', '', '', 'offline', 0, 0, 0);
 INSERT INTO `client` (`client_id`, `name`, `email`, `user`, `password`, `tipo`, `credito`, `plazos`, `address`, `phone`, `company`, `website`, `skype_id`, `facebook_profile_link`, `linkedin_profile_link`, `twitter_profile_link`, `short_note`, `chat_status`, `super`, `super_id`, `aprobar`) VALUES
@@ -2147,29 +2147,3 @@ INSERT INTO `client` (`client_id`, `name`, `email`, `user`, `password`, `tipo`, 
 	(1093, 'Alejandra Morales ', 'alejandramt03@gmail.com', 'alejandra', '216abfccd9e76b56924b4da818cc64ad2d983b1f', '0', '0', '0', '', '', 'Smart Fit', '', '', '', '', '', '', 'offline', 0, 0, 0);
 
 
-
-
-INSERT INTO `staff` (`staff_id`, `name`, `email`, `user`, `password`, `account_role_id`, `phone`, `skype_id`, `facebook_profile_link`, `twitter_profile_link`, `linkedin_profile_link`, `chat_status`) VALUES
-	(1, 'Ing. Rina Nehmad', 'rinans05@hotmail.com', 'Rina', 'fa31710e05655500963341849c4b85035e296bb6', 2, '5553309519', '', '', '', '', 'offline'),
-	(2, 'German Silva', 'gsilva@infinitum.com.mx', 'gsilva', '1b094838338d7dbe7aec30c565c72ed616e12924', 3, '5552906161', '', '', '', '', 'offline'),
-	(4, 'Yolanda Cruz', 'yocu2@hotmail.com', 'Missnumeros', '17452750ea20a3aac5308c6ce54af51df2e96cdd', 5, '5552906161', '', '', '', '', 'offline'),
-	(5, 'Carlos Salmun', 'casalmun@outlook.com', 'casalmun', '6d3d3848e73a03f123107ab50cab115cf27ba743', 4, '5553312080', '', '', '', '', 'offline'),
-	(14, 'Ruth Salmun', 'rsalmun42@gmail.com', 'ruthsn', '42d9d2622f862cd803d4395be2c1edd362213525', 2, '', '', '', '', '', 'offline'),
-	(9, 'Said', 'saidmti0201@gmail.com', 'said', '012f19431158ba6c6991b3d1b844fffd1618575f', 10, '', '', '', '', '', 'offline'),
-	(11, 'Hector Aguilar', 'hector@mtiendurance.com', 'recepcion', 'f173d3cf863617799d0d868b9a6bcfbba5e96fb5', 8, '', '', '', '', '', 'offline'),
-	(13, 'provi', 'rinans05@gmail.com', 'casalmun1', '6d3d3848e73a03f123107ab50cab115cf27ba743', 4, '', '', '', '', '', 'offline'),
-	(16, 'Liquidweb Temporal', 'casalmun@msn.com', 'liquidweb', '42d9d2622f862cd803d4395be2c1edd362213525', 4, '', '', '', '', '', 'offline'),
-	(17, 'Alberto Moreno', 'alberto@mtiendurance.com', 'beto84', '9fa27a1e6d254152ba86b9f834468e4d10260586', 2, '', '', '', '', '', 'offline'),
-	(18, 'Carlos Alberto Garcia Davila', 'carlosagd@mtiendurance.com', 'carlosagd', '49739066e18edc836dc9eb0d03b21318e92baaa8', 11, '5531050000', '', '', '', '', 'offline'),
-	(19, 'Marco Martinez', 'marcoamcfa@gmail.com', 'marcom', 'b59ae1cd0377dbe7734052018fdb0a2bb3bf8531', 9, '', '', '', '', '', 'offline'),
-	(20, 'Gabriela Corona', 'gcorona@mtiendurance.com', 'gcorona', '2456a26f2e3bd31f0646757fd23074e04da41ed1', 9, '', '', '', '', '', 'offline');
-
-
-INSERT INTO `clientsup` (`clientsup_id`, `name`, `email`, `user`, `password`, `tipo`, `credito`, `plazos`, `address`, `phone`, `company`, `website`, `skype_id`, `facebook_profile_link`, `linkedin_profile_link`, `twitter_profile_link`, `short_note`, `chat_status`, `super`, `super_id`, `aprobar`) VALUES
-	(1, 'Pendiente Asignar', 'rinans05@gmail.com', 'provedor', '7c5a950b4a02998eda8c2844f064a041379f5499', '0', '0', '0', 'a', 'a', 'Proveedor', 'a', 'a', 'a', 'a', 'a', '', 'offline', 0, 0, 0),
-	(2, 'Reconocimientos Creativos', 'rcreativos@mtiendurance.com', 'rcreativos', '9f82a9e8c93e69a1a6276a738d0b30626a7ca38e', '0', '0', '0', '', '', 'Reconocimientos Creativos', '', '', '', '', '', '', 'offline', 0, 0, 0),
-	(3, 'Arte Emblematico', 'aemblematico@mtiendurance.com', 'arteproveedor', '9f82a9e8c93e69a1a6276a738d0b30626a7ca38e', '0', '0', '0', '', '', 'Arte Emblematico', '', '', '', '', '', '', 'offline', 0, 0, 0),
-	(4, 'Proveedor Aaron', 'aaronm@mtiendurance.com', 'proveaaron', 'c297be68397d0eaef82e618649ee68a1a4c5bf1d', '0', '0', '0', '', '', 'Vitali Joyeria y Medallas', '', '', '', '', '', '', 'offline', 0, 0, 0),
-	(5, 'Oscar Avendaño', 'oscar@chronostart.com.mx', 'Yoscale', '11daf3ea2e8ef5575c454553708dcc256aa8ff65', '0', '0', '0', '', '5537074515', 'Chronostart', '', '', '', '', '', '', 'offline', 0, 0, 0),
-	(6, 'Moises Motola', 'demaprod1@gmail.com', 'motolita', '7c5a950b4a02998eda8c2844f064a041379f5499', '0', '0', '0', 'a', 'a', 'Motola Pedos SA', 'a', 'a', 'a', 'a', 'a', '', 'offline', 0, 0, 0),
-	(7, 'Medallas Cesar del Valle', 'cesar_delvalle_2006@hotmail.com', 'cesarvalle', '28ad36a83d4fee0fbc160663fe95f0a2b622452a', '0', '0', '0', '', '', 'Medallas Cesar Del Valle', '', '', '', '', '', '', 'offline', 0, 0, 0);

@@ -20,7 +20,7 @@ class Sucursal extends Model
         'nombre',
         'telefono',
         'direccion',
-          'tipo',
+        'tipo',
     ];
 
     public function empresa(): BelongsTo

@@ -21,6 +21,7 @@
         <table class="min-w-full border-collapse border border-gray-300">
             <thead>
                 <tr class="bg-gray-100">
+                    <th class="border border-gray-300 px-4 py-2 text-left">Razon Social</th>
                     <th class="border border-gray-300 px-4 py-2 text-left">RFC</th>
                     <th class="border border-gray-300 px-4 py-2 text-left">Calle</th>
                     <th class="border border-gray-300 px-4 py-2 text-left">Ciudad</th>
@@ -33,6 +34,7 @@
             <tbody>
                 @foreach($direcciones as $dir)
                     <tr class="hover:bg-gray-50">
+                        <td class="border border-gray-300 px-4 py-2">{{ $dir->razon_social }}</td>
                         <td class="border border-gray-300 px-4 py-2">{{ $dir->rfc }}</td>
                         <td class="border border-gray-300 px-4 py-2">{{ $dir->calle }}</td>
                         <td class="border border-gray-300 px-4 py-2">{{ $dir->ciudad->nombre ?? '-' }}</td>
@@ -66,7 +68,19 @@
                     <h5 class="text-xl font-bold">{{ $direccion_id ? 'Editar Dirección Fiscal' : 'Crear Nueva Dirección Fiscal' }}</h5>
                     <button class="text-gray-500 hover:text-gray-700" wire:click="cerrarModal">&times;</button>
                 </div>
+
+
+
+
                 <div class="p-4">
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">Razón social</label>
+                        <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="razon_social">
+                        @error('razon_social') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+
+
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-1">RFC</label>
                         <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="rfc">
@@ -77,16 +91,18 @@
                         <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="calle">
                         @error('calle') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
-<div class="mb-4">
-    <label class="block text-gray-700 mb-1">País</label>
-    <select wire:model.live="pais_id" class="w-full border border-gray-300 rounded p-2">
-        <option value="">Seleccione un País</option>
-        @foreach($paises as $pais)
-            <option value="{{ $pais->id }}">{{ $pais->nombre }}</option>
-        @endforeach
-    </select>
-    @error('pais_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-</div>
+
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">País</label>
+                        <select wire:model.live="pais_id" class="w-full border border-gray-300 rounded p-2">
+                            <option value="">Seleccione un País</option>
+                            @foreach($paises as $pais)
+                                <option value="{{ $pais->id }}">{{ $pais->nombre }}</option>
+                            @endforeach
+                        </select>
+                        @error('pais_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
 
 <div class="mb-4">
     <label class="block text-gray-700 mb-1">Estado</label>

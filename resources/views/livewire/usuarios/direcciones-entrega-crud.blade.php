@@ -61,77 +61,95 @@
         {{ $direcciones->links() }}
     </div>
 
-    @if($modal)
-        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div class="bg-white rounded shadow-lg w-full max-w-md">
-                <div class="flex items-center justify-between border-b border-gray-200 p-4">
-                    <h5 class="text-xl font-bold">{{ $direccion_id ? 'Editar Dirección' : 'Crear Nueva Dirección' }}</h5>
-                    <button class="text-gray-500 hover:text-gray-700" wire:click="cerrarModal">&times;</button>
-                </div>
-                <div class="p-4">
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Nombre de Contacto</label>
-                        <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="nombre_contacto">
-                        @error('nombre_contacto') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+@if($modal)
+<div class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-3xl">
+        {{-- Header --}}
+        <div class="flex items-center justify-between border-b border-gray-200 p-4">
+            <h5 class="text-xl font-bold">
+                {{ $direccion_id ? 'Editar Dirección' : 'Crear Nueva Dirección' }}
+            </h5>
+            <button class="text-gray-500 hover:text-gray-700" wire:click="cerrarModal">&times;</button>
+        </div>
 
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Nombre de Empresa</label>
-                        <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="nombre_empresa">
-                        @error('nombre_empresa') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+        {{-- Body scrollable con grid responsivo --}}
+        <div class="p-4 max-h-[75vh] overflow-y-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Calle</label>
-                        <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="calle">
-                        @error('calle') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">País</label>
-                        <select wire:model="pais_id" class="w-full border border-gray-300 rounded p-2">
-                            <option value="">Seleccione un País</option>
-                            @foreach($paises as $pais)
-                                <option value="{{ $pais->id }}">{{ $pais->nombre }}</option>
-                            @endforeach
-                        </select>
-                        @error('pais_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Estado</label>
-                        <select wire:model="estado_id" class="w-full border border-gray-300 rounded p-2">
-                            <option value="">Seleccione un Estado</option>
-                            @foreach($estados as $estado)
-                                <option value="{{ $estado->id }}">{{ $estado->nombre }}</option>
-                            @endforeach
-                        </select>
-                        @error('estado_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Ciudad</label>
-                        <select wire:model="ciudad_id" class="w-full border border-gray-300 rounded p-2">
-                            <option value="">Seleccione una Ciudad</option>
-                            @foreach($ciudades as $ciudad)
-                                <option value="{{ $ciudad->id }}">{{ $ciudad->nombre }}</option>
-                            @endforeach
-                        </select>
-                        @error('ciudad_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Código Postal</label>
-                        <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="codigo_postal">
-                        @error('codigo_postal') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-1">Teléfono</label>
-                        <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="telefono">
-                        @error('telefono') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+                <div>
+                    <label class="block text-gray-700 mb-1">Nombre de Contacto</label>
+                    <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model.defer="nombre_contacto">
+                    @error('nombre_contacto') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
-                <div class="flex items-center justify-end border-t border-gray-200 p-4 space-x-2">
-                    <button wire:click="cerrarModal" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">Cancelar</button>
-                    <button wire:click="guardar" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">Guardar</button>
+
+                <div>
+                    <label class="block text-gray-700 mb-1">Nombre de Empresa</label>
+                    <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model.defer="nombre_empresa">
+                    @error('nombre_empresa') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
+
+                <div class="md:col-span-2 lg:col-span-3">
+                    <label class="block text-gray-700 mb-1">Calle</label>
+                    <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model.defer="calle">
+                    @error('calle') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                {{-- Cascada País -> Estado -> Ciudad --}}
+                <div>
+                    <label class="block text-gray-700 mb-1">País</label>
+                    <select wire:model.live="pais_id" class="w-full border border-gray-300 rounded p-2">
+                        <option value="">Seleccione un País</option>
+                        @foreach($paisesList as $pais)
+                            <option value="{{ $pais->id }}">{{ $pais->nombre }}</option>
+                        @endforeach
+                    </select>
+                    @error('pais_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 mb-1">Estado</label>
+                    <select wire:model.live="estado_id" class="w-full border border-gray-300 rounded p-2" @disabled(!$pais_id)>
+                        <option value="">Seleccione un Estado</option>
+                        @foreach($estadosList as $estado)
+                            <option value="{{ $estado->id }}">{{ $estado->nombre }}</option>
+                        @endforeach
+                    </select>
+                    @error('estado_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 mb-1">Ciudad</label>
+                    <select wire:model.live="ciudad_id" class="w-full border border-gray-300 rounded p-2" @disabled(!$estado_id)>
+                        <option value="">Seleccione una Ciudad</option>
+                        @foreach($ciudadesList as $ciudad)
+                            <option value="{{ $ciudad->id }}">{{ $ciudad->nombre }}</option>
+                        @endforeach
+                    </select>
+                    @error('ciudad_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 mb-1">Código Postal</label>
+                    <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model.defer="codigo_postal">
+                    @error('codigo_postal') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 mb-1">Teléfono</label>
+                    <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model.defer="telefono">
+                    @error('telefono') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
             </div>
         </div>
-    @endif
+
+        {{-- Footer --}}
+        <div class="flex items-center justify-end border-t border-gray-200 p-4 space-x-2">
+            <button wire:click="cerrarModal" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">Cancelar</button>
+            <button wire:click="guardar" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">Guardar</button>
+        </div>
+    </div>
+</div>
+@endif
+
 </div>

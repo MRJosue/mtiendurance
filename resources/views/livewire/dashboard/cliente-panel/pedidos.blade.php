@@ -457,7 +457,14 @@
                         <td class="px-3 py-2 font-semibold">{{ $pedido->proyecto->nombre }}</td>
 
                         {{-- Cliente --}}
-                        <td class="px-3 py-2 font-semibold">{{ $pedido->usuario->name ?? 'Sin cliente' }}</td>
+                        <td class="px-3 py-2 font-semibold">
+                            <span
+                                title="{{ $pedido->usuario?->tooltip_sucursal_empresa }}"
+                                class="inline-block cursor-help"
+                            >
+                                {{ $pedido->usuario->name ?? 'Sin cliente' }}
+                            </span>
+                        </td>
 
                         {{-- Producto / Categoría --}}
                         <td class="px-3 py-2">

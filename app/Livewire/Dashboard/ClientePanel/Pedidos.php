@@ -125,6 +125,11 @@ $proyecto = \App\Models\Proyecto::with([
         $query = Pedido::with([
             'producto.categoria',
             'proyecto.user',
+                'usuario:id,name,empresa_id,sucursal_id',
+                'usuario.empresa:id,nombre',
+                'usuario.sucursal:id,nombre,empresa_id',
+                'usuario.sucursal.empresa:id,nombre',
+
             'pedidoCaracteristicas.caracteristica',
             'pedidoOpciones.opcion.caracteristicas',
             'usuario:id,name',
