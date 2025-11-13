@@ -33,11 +33,13 @@ class MigrarUsuariosLegacy extends Command
         $rolPrincipal   = Role::where('name', 'cliente_principal')->first();
         $rolSubordinado = Role::where('name', 'cliente_subordinado')->first();
         $rolStaff       = Role::where('name', 'staff')->first();
+        $rolProveedor   = Role::where('name', 'proveedor')->first();
 
-        if (!$rolPrincipal || !$rolSubordinado) {
+        if (!$rolPrincipal || !$rolSubordinado || !$rolProveedor) {
             $faltan = [];
             if (!$rolPrincipal)   $faltan[] = 'cliente_principal';
             if (!$rolSubordinado) $faltan[] = 'cliente_subordinado';
+            if (!$rolProveedor)   $faltan[] = 'proveedor';
             $this->error("Faltan roles: ".implode(', ', $faltan));
             return self::FAILURE;
         }
@@ -50,7 +52,7 @@ class MigrarUsuariosLegacy extends Command
         $this->migrarClientesAUsers($dry, $rolPrincipal, $rolSubordinado);
 
         $this->info('===> Paso 1.1: CLIENTSUP -> USERS (espacio 700000 + id)');
-        $this->migrarClientsUpAUsers($dry, $rolPrincipal, $rolSubordinado);
+        $this->migrarClientsUpAUsers($dry, $rolProveedor);
 
         $this->info('===> Paso 1.2: STAFF -> USERS (espacio 800000 + id)');
         $this->migrarStaffAUsers($dry, $rolStaff);
@@ -124,6 +126,13 @@ class MigrarUsuariosLegacy extends Command
             ? $rolPrincipal
             : $rolSubordinado;
 
+
+            // NUEVO: config por rol
+            $configArr = ($rolDestino->name === 'cliente_principal')
+                ? ['flag-user-sel-preproyectos' => false, 'flag-can-user-sel-preproyectos' => true]
+                : ['flag-user-sel-preproyectos' => true,  'flag-can-user-sel-preproyectos' => false];      
+
+
             // Fila para INSERT (sin role_id)
             $row = [
                 'id'                => (int) $c->client_id,
@@ -132,9 +141,12 @@ class MigrarUsuariosLegacy extends Command
                 'email_verified_at' => null,
                 'password'          => $password,
                 'remember_token'    => null,
-                'config'            => null,
-                'user_can_sel_preproyectos' => null,
-                'subordinados'      => null,
+
+                // 👇 ya no dupliques estas claves
+                'config'                       => json_encode($configArr),
+                'user_can_sel_preproyectos'    => null, // se poblará en backfill
+                'subordinados'                 => null,
+
                 'empresa_id'        => null,
                 'sucursal_id'       => null,
                 'created_at'        => now(),
@@ -154,7 +166,7 @@ class MigrarUsuariosLegacy extends Command
 
                 // Backfill NO destructivo solo de legacy
                 $existente = DB::table('users')->where('id', $row['id'])
-                    ->select('user_legacy','company_legacy','super_legacy','super_id_legacy')
+                    ->select('user_legacy','company_legacy','super_legacy','super_id_legacy','config') // <- agrega 'config'
                     ->first();
 
                 $toUpdate = [];
@@ -169,6 +181,9 @@ class MigrarUsuariosLegacy extends Command
                 }
                 if (is_null($existente->super_id_legacy) && !is_null($row['super_id_legacy'])) {
                     $toUpdate['super_id_legacy'] = $row['super_id_legacy'];
+                }
+                if (is_null($existente->config)) {
+                    $toUpdate['config'] = json_encode($configArr);
                 }
 
                 if (!empty($toUpdate)) {
@@ -199,8 +214,10 @@ class MigrarUsuariosLegacy extends Command
             }
         }
     }
-    protected function migrarClientsUpAUsers(bool $dry, Role $rolPrincipal, Role $rolSubordinado) { 
-                // Dedupe por email (mantener el menor clientsup_id)
+
+    protected function migrarClientsUpAUsers(bool $dry, Role $rolProveedor)
+    {
+        // Dedupe por email (mantener el menor clientsup_id)
         $dedup = DB::table('clientsup')
             ->select(DB::raw('MIN(clientsup_id) as keep_id'), 'email')
             ->groupBy('email')
@@ -235,7 +252,7 @@ class MigrarUsuariosLegacy extends Command
                 $password = bcrypt($plain);
             }
 
-            // Nombre
+            // Nombre para el usuario
             $name = trim((string)($r->name ?: $r->user ?: 'ClienteSup '.$r->clientsup_id));
             $name = mb_substr($name, 0, 255);
 
@@ -245,10 +262,8 @@ class MigrarUsuariosLegacy extends Command
             $superLegacy   = isset($r->super) ? (int)$r->super : null;
             $superIdLegacy = isset($r->super_id) ? (int)$r->super_id : null;
 
-            // Regla rol (misma que clients): super_id > 0 => principal; else subordinado
-            $rolDestino = $this->esPrincipalDesdeLegacy($superIdLegacy)
-            ? $rolPrincipal
-            : $rolSubordinado;
+            // Fuerza ROL proveedor
+            $rolDestino = $rolProveedor;
 
             // Espacio de IDs para evitar colisión con client_id
             $idDestino = 700000 + (int) $r->clientsup_id;
@@ -274,10 +289,10 @@ class MigrarUsuariosLegacy extends Command
                 'super_id_legacy'   => $superIdLegacy,
             ];
 
-            // Si ya existe usuario con MISMO email, no dupliques: sólo backfill legacy y roles
+            // ¿Ya existe por email?
             $userByEmail = DB::table('users')->where('email', $row['email'])->first();
             if ($userByEmail) {
-                $this->warn(" - Ya existe users.email={$row['email']} (id={$userByEmail->id}). Backfill legacy + rol.");
+                $this->warn(" - Ya existe users.email={$row['email']} (id={$userByEmail->id}). Backfill legacy + rol proveedor + Empresa/Sucursal.");
                 $toUpdate = [];
                 foreach (['user_legacy','company_legacy','super_legacy','super_id_legacy'] as $f) {
                     if (is_null($userByEmail->$f) && !is_null($row[$f])) {
@@ -293,29 +308,43 @@ class MigrarUsuariosLegacy extends Command
                         $this->line("   + Legacy actualizado en users.id={$userByEmail->id}");
                     }
                 }
+                // Rol proveedor
                 $this->asignarRolSpatiePorId((int)$userByEmail->id, $rolDestino, $dry);
+
+                // Empresa/Sucursal con nombre de usuario
+                $baseName = $userLegacy && trim($userLegacy) !== '' ? trim($userLegacy) : $name;
+                $this->crearEmpresaSucursalParaUsuario((int)$userByEmail->id, $baseName, $dry);
                 continue;
             }
 
-            // Si existe el idDestino (raro), sólo rol y backfill legacy
+            // ¿Ya existe el idDestino?
             $existeId = DB::table('users')->where('id', $idDestino)->exists();
             if ($existeId) {
-                $this->warn(" - Ya existe users.id={$idDestino} — se asigna rol destino y backfill legacy si aplica");
+                $this->warn(" - Ya existe users.id={$idDestino} — rol proveedor + Empresa/Sucursal (si falta).");
                 $this->asignarRolSpatiePorId($idDestino, $rolDestino, $dry);
+                $baseName = $userLegacy && trim($userLegacy) !== '' ? trim($userLegacy) : $name;
+                $this->crearEmpresaSucursalParaUsuario($idDestino, $baseName, $dry);
                 continue;
             }
 
             $emailsYaInsertados[$email] = true;
 
             if ($dry) {
-                $this->line(" + [DRY] Insertaría users.id={$row['id']} email={$row['email']} (clientsup) y rol={$rolDestino->name}");
+                $this->line(" + [DRY] Insertaría users.id={$row['id']} email={$row['email']} (clientsup) y rol=proveedor");
+               $this->line('   [DRY] Crearía Empresa/Sucursal con nombre=\'' . $baseName . '\' y asignaría al usuario');
             } else {
                 DB::table('users')->insert($row);
                 $this->asignarRolSpatiePorId((int)$row['id'], $rolDestino, $dry);
-                $this->line(" + Insertado users.id={$row['id']} email={$row['email']} (clientsup) y rol={$rolDestino->name}");
+
+                // Empresa/Sucursal con nombre de usuario
+                $baseName = $userLegacy && trim($userLegacy) !== '' ? trim($userLegacy) : $name;
+                $this->crearEmpresaSucursalParaUsuario((int)$row['id'], $baseName, $dry);
+
+                $this->line(" + Insertado users.id={$row['id']} email={$row['email']} (clientsup) con rol=proveedor");
             }
         }
     }
+
     protected function migrarStaffAUsers(bool $dry, ?Role $rolStaff) { 
             $dedup = DB::table('staff')
             ->select(DB::raw('MIN(staff_id) as keep_id'), 'email')
@@ -510,12 +539,18 @@ class MigrarUsuariosLegacy extends Command
 
             $subIds = $hijos->pluck('id')->map(fn($v) => (int)$v)->values()->all();
 
+            $principalConfig = ['flag-user-sel-preproyectos' => false, 'flag-can-user-sel-preproyectos' => true];
+
             if ($dry) {
                 $this->line("   [DRY] users.id={$padreId} subordinados=" . json_encode($subIds));
+                $this->line("   [DRY] users.id={$padreId} user_can_sel_preproyectos=" . json_encode($subIds));
+                $this->line("   [DRY] users.id={$padreId} config=" . json_encode($principalConfig));
             } else {
                 DB::table('users')->where('id', $padreId)->update([
-                    'subordinados' => json_encode($subIds),
-                    'updated_at'   => now(),
+                    'subordinados'               => json_encode($subIds),
+                    'user_can_sel_preproyectos'  => json_encode($subIds), // <-- IGUAL que subordinados
+                    'config'                     => json_encode($principalConfig),
+                    'updated_at'                 => now(),
                 ]);
             }
 
@@ -523,12 +558,23 @@ class MigrarUsuariosLegacy extends Command
             $this->syncRolSpatieUnico((int)$padreId, $rolPrincipal, $rolSubordinado, $dry);
         }
 
-        // 4) Asegurar rol de cada hijo: subordinado
+        // 4) Hijos (subordinados)
         $todosHijosIds = $hijosPorPadre->flatten(1)->pluck('id')->unique()->map(fn($v) => (int)$v)->values();
+        $subConfig = ['flag-user-sel-preproyectos' => true, 'flag-can-user-sel-preproyectos' => false]; // <-- AQUI
 
         foreach ($todosHijosIds as $hijoId) {
-            // Si quieres dejar limpio 'subordinados' en los hijos, podría ponerse null (no requerido)
             $this->syncRolSpatieUnico((int)$hijoId, $rolSubordinado, $rolPrincipal, $dry);
+
+            if ($dry) {
+                $this->line("   [DRY] users.id={$hijoId} config=" . json_encode($subConfig));
+                $this->line("   [DRY] users.id={$hijoId} user_can_sel_preproyectos=null");
+            } else {
+                DB::table('users')->where('id', $hijoId)->update([
+                    'config'                    => json_encode($subConfig),
+                    'user_can_sel_preproyectos' => null, // hijos no tienen subordinados
+                    'updated_at'                => now(),
+                ]);
+            }
         }
 
         $this->line('   + Jerarquía aplicada: padres con subordinados y roles sincronizados.');
@@ -811,6 +857,109 @@ protected function backfillEmpresasYSucursales(Role $rolPrincipal, Role $rolSubo
 
     $this->line('   + Empresas/Sucursales: sucursal principal renombrada al nombre de la empresa y subordinados asignados correctamente.');
 }
+
+/**
+ * Crea (si no existen) Empresa y Sucursal con el mismo nombre ($baseName)
+ * y asigna empresa_id / sucursal_id al usuario. También inserta en el
+ * pivot sucursal_user si dicha tabla existe.
+ */
+protected function crearEmpresaSucursalParaUsuario(int $userId, string $baseName, bool $dry): void
+{
+    if (!Schema::hasTable('empresas') || !Schema::hasTable('sucursales')) {
+        $this->warn("   ! No existen tablas empresas/sucursales. Se omite creación para user {$userId}.");
+        return;
+    }
+
+    $baseName = mb_substr(trim($baseName) !== '' ? trim($baseName) : "Empresa de Usuario {$userId}", 0, 255);
+    $tienePivot = Schema::hasTable('sucursal_user');
+
+    // Si ya tiene empresa/sucursal, evitar trabajo innecesario
+    $userRow = DB::table('users')->where('id', $userId)->select('empresa_id','sucursal_id')->first();
+    if ($userRow && $userRow->empresa_id && $userRow->sucursal_id) {
+        $this->line("   = Usuario {$userId} ya tiene empresa_id={$userRow->empresa_id} y sucursal_id={$userRow->sucursal_id}");
+        return;
+    }
+
+    // Empresa: buscar por nombre
+    $empresaId = DB::table('empresas')->where('nombre', $baseName)->value('id');
+
+    if (!$empresaId) {
+        if ($dry) {
+            $this->line("   [DRY] Crear empresa(nombre='{$baseName}')");
+        } else {
+            $empresaId = DB::table('empresas')->insertGetId([
+                'nombre'     => $baseName,
+                'rfc'        => null,
+                'telefono'   => null,
+                'direccion'  => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $this->line("   + Empresa creada id={$empresaId} nombre='{$baseName}'");
+        }
+    } else {
+        $this->line("   = Empresa existente id={$empresaId} nombre='{$baseName}'");
+    }
+
+    // Sucursal: mismo nombre que la empresa/baseName, tipo=1
+    $sucursalId = null;
+    if (!$dry) {
+        $sucursalId = DB::table('sucursales')
+            ->where('empresa_id', $empresaId)
+            ->where('nombre', $baseName)
+            ->value('id');
+    }
+
+    if (!$sucursalId) {
+        if ($dry) {
+            $this->line("   [DRY] Crear sucursal(nombre='{$baseName}', empresa_id={$empresaId}, tipo=1)");
+        } else {
+            $sucursalId = DB::table('sucursales')->insertGetId([
+                'empresa_id' => $empresaId,
+                'nombre'     => $baseName,
+                'tipo'       => 1, // principal
+                'telefono'   => null,
+                'direccion'  => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $this->line("   + Sucursal creada id={$sucursalId} ('{$baseName}')");
+        }
+    } else {
+        $this->line("   = Sucursal existente id={$sucursalId} ('{$baseName}')");
+    }
+
+    // Asignar al usuario
+    if ($dry) {
+        $this->line("   [DRY] users.id={$userId} -> empresa_id={$empresaId}, sucursal_id={$sucursalId}");
+    } else {
+        DB::table('users')->where('id', $userId)->update([
+            'empresa_id'  => $empresaId,
+            'sucursal_id' => $sucursalId,
+            'updated_at'  => now(),
+        ]);
+    }
+
+    // Pivot sucursal_user (si existe)
+    if ($tienePivot && !$dry) {
+        $ya = DB::table('sucursal_user')
+            ->where('sucursal_id', $sucursalId)
+            ->where('user_id', $userId)
+            ->exists();
+        if (!$ya) {
+            DB::table('sucursal_user')->insert([
+                'sucursal_id' => $sucursalId,
+                'user_id'     => $userId,
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+            $this->line("   + Pivot sucursal_user: sucursal={$sucursalId}, user={$userId}");
+        } else {
+            $this->line("   = Pivot sucursal_user ya existente: sucursal={$sucursalId}, user={$userId}");
+        }
+    }
+}
+
 
 
     protected function ajustarAutoIncrement(string $table, string $pk, bool $dry)

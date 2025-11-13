@@ -27,23 +27,32 @@ class TablaUsuarios extends Component
 
     /** filtros por columna */
     public array $filters = [
-        'id'    => '',   // "1" o "1,2,3"
-        'name'  => '',
-        'email' => '',
-        'role'  => '',   // nombre del rol exacto
+        'id'       => '',
+        'name'     => '',
+        'email'    => '',
+        'role'     => '',
+        'empresa'  => '',   
+        'sucursal' => '',   
     ];
+
 
     public function render()
     {
         $isPrivileged = $this->isPrivileged();
 
-        $query = User::query()->with('roles');
+        $query = User::query()->with([
+            'roles',
+            // relaciones necesarias para columnas y tooltip
+            'empresa:id,nombre',
+            'sucursal:id,nombre,empresa_id',
+            'sucursal.empresa:id,nombre',
+        ]);
 
         // Filtro global (nombre o email)
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('email', 'like', '%' . $this->search . '%');
+                $q->where('name', 'like', '%'.$this->search.'%')
+                  ->orWhere('email', 'like', '%'.$this->search.'%');
             });
         }
 
@@ -78,6 +87,20 @@ class TablaUsuarios extends Component
             });
         }
 
+        if (!empty($this->filters['empresa'])) {
+            $v = trim($this->filters['empresa']);
+            $query->where(function($w) use ($v) {
+                $w->whereHas('empresa', fn($e) => $e->where('nombre', 'like', "%{$v}%"))
+                  ->orWhereHas('sucursal.empresa', fn($e) => $e->where('nombre', 'like', "%{$v}%"));
+            });
+        }
+
+        if (!empty($this->filters['sucursal'])) {
+            $v = trim($this->filters['sucursal']);
+            $query->whereHas('sucursal', fn($s) => $s->where('nombre', 'like', "%{$v}%"));
+        }
+
+
         // Visibilidad según privilegio (no admin/staff: solo su propio usuario)
         if (!$isPrivileged) {
             $query->where('id', Auth::id());
@@ -94,6 +117,8 @@ class TablaUsuarios extends Component
             'sortField'      => $this->sortField,
             'sortDir'        => $this->sortDir,
         ]);
+
+        
     }
 
     /* ===== Acciones ===== */

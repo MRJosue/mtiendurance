@@ -25,7 +25,7 @@
                 wire:click="openCreateModal"
                 class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-                + Crear Sucursal
+                + Crear Empresa
             </button>
         </div>
 

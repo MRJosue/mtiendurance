@@ -67,6 +67,8 @@
                         <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Nombre</th>
                         <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Correo Electrónico</th>
                         <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Roles</th>
+                        <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Empresa</th>
+                        <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Organizacion</th>
                         <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Acciones</th>
                     </tr>
 
@@ -153,6 +155,44 @@
                             </div>
                         </th>
 
+        {{-- ← NUEVO: Filtro Sucursal --}}
+        <th class="border border-gray-300 px-2 py-2">
+            <div x-data="{ open:false }" class="relative inline-flex items-center">
+                <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="Filtrar Sucursal">⋮</button>
+                <div x-cloak x-show="open" @click.away="open=false" x-transition class="absolute z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3">
+                    <label class="block text-xs text-gray-600 mb-1">Sucursal (nombre)</label>
+                    <input
+                        class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                        placeholder="Sucursal…"
+                        wire:model.live.debounce.300ms="filters.sucursal"
+                    >
+                    <div class="mt-2 flex justify-end gap-2">
+                        <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.sucursal','')">Limpiar</button>
+                        <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </th>
+
+        {{-- ← NUEVO: Filtro Empresa --}}
+        <th class="border border-gray-300 px-2 py-2">
+            <div x-data="{ open:false }" class="relative inline-flex items-center">
+                <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="Filtrar Empresa">⋮</button>
+                <div x-cloak x-show="open" @click.away="open=false" x-transition class="absolute z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3">
+                    <label class="block text-xs text-gray-600 mb-1">Empresa (nombre)</label>
+                    <input
+                        class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                        placeholder="Empresa…"
+                        wire:model.live.debounce.300ms="filters.empresa"
+                    >
+                    <div class="mt-2 flex justify-end gap-2">
+                        <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.empresa','')">Limpiar</button>
+                        <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </th>
+
                         {{-- Acciones (sin filtro) --}}
                         <th class="border border-gray-300 px-2 py-2"></th>
                     </tr>
@@ -171,6 +211,17 @@
                                     </span>
                                 @endforeach
                             </td>
+
+                            <td class="border border-gray-300 px-4 py-2">
+                                {{ $usuario->sucursal_nombre ?? '—' }}
+                            </td>
+
+                            {{-- ← NUEVO: Empresa (empresa directa o la de la sucursal) --}}
+                            <td class="border border-gray-300 px-4 py-2">
+                                {{ $usuario->empresa_principal_nombre ?? '—' }}
+                            </td>
+
+
                             <td class="border border-gray-300 px-4 py-2 text-center space-x-2">
                                 <a
                                     href="{{ route('usuarios.show', $usuario->id) }}"

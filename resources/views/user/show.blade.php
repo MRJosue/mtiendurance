@@ -45,7 +45,10 @@
 
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <div >
+
+                        @role('admin')
                            @livewire('configuraciones-usuario', ['userId' => $user->id])
+                        @endrole
         
                     </div>
 
