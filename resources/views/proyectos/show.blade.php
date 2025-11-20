@@ -72,25 +72,25 @@
                                     </div>
                                     <div>
                                         <p class="text-lg">
-                                            <span class="font-semibold">Cliente:</span> {{ $proyecto->user->name }}
+                                            <span class="font-semibold">Cliente  : </span> {{ $proyecto->user->name }}
                                         </p>
 
-<p class="text-lg">
-    <span class="font-semibold">Empresa:</span>
-    <span
-        class="inline-flex items-center gap-1 align-middle"
-        title="{{ $proyecto->user->tooltip_sucursal_empresa }}"
-    >
-        {{ $proyecto->user->sucursal_nombre ?? 'Sin empresa' }}
+                                        <p class="text-lg">
+                                            <span class="font-semibold">Empresa:</span>
+                                            <span
+                                                class="inline-flex items-center gap-1 align-middle"
+                                                title="{{ $proyecto->user->tooltip_sucursal_empresa }}"
+                                            >
+                                                {{ $proyecto->user->sucursal_nombre ?? 'Sin empresa' }}
 
-        <!-- Icono info (opcional, solo visual) -->
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24"
-             stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M11.25 11.25l.041-.02a.75.75 0 011.06.69v3.83m0-8.25h.008v.008H12V7.5zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-    </span>
-</p>
+                                                <!-- Icono info (opcional, solo visual) -->
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24"
+                                                    stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M11.25 11.25l.041-.02a.75.75 0 011.06.69v3.83m0-8.25h.008v.008H12V7.5zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                            </span>
+                                        </p>
                                     </div>
 
                                     <div class="sm:col-span-2">

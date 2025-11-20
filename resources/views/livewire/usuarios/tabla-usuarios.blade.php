@@ -167,6 +167,8 @@
                         wire:model.live.debounce.300ms="filters.sucursal"
                     >
                     <div class="mt-2 flex justify-end gap-2">
+
+                        
                         <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.sucursal','')">Limpiar</button>
                         <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
                     </div>
@@ -223,7 +225,25 @@
 
 
                             <td class="border border-gray-300 px-4 py-2 text-center space-x-2">
-                                <a
+
+
+                                        <x-dropdown>
+                                                <x-dropdown.item
+                                                    
+                                                    :href="route('usuarios.show', $usuario->id)"
+                                                    label="Ver detalles"
+                                                />
+                                                @if($isPrivileged)
+                                                
+                                                    <x-dropdown.item separator>
+                                                        <b wire:click="editarRoles({{ $usuario->id }})" >Editar Rol</b>
+                                                    </x-dropdown.item>
+                                                 
+                                                @endif
+                                        </x-dropdown>
+
+
+                                {{-- <a
                                     href="{{ route('usuarios.show', $usuario->id) }}"
                                     class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded inline-block"
                                 >
@@ -236,8 +256,8 @@
                                         class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded inline-block"
                                     >
                                         Roles
-                                    </button>
-                                @endif
+                                    </button> --}}
+                                {{-- @endif --}}
                             </td>
                         </tr>
                     @empty

@@ -40,7 +40,7 @@
         </div>
 
         <!-- Listado -->
-        <div class="overflow-x-auto bg-white rounded-lg shadow">
+        <div class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8">
             <table class="min-w-full border-collapse border border-gray-200 rounded-lg">
                 <thead class="bg-gray-100">
                     <tr>
@@ -212,13 +212,13 @@
                                         <div class="text-sm font-medium text-gray-800">{{ $u->name }}</div>
                                         <div class="text-xs text-gray-500">{{ $u->email }}</div>
                                     </div>
-                                    <button
+                                    {{-- <button
                                         wire:click="removeUserFromSucursal({{ $u->id }})"
                                         class="px-3 py-1 text-xs rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
                                         title="Quitar de la sucursal"
                                     >
                                         Quitar
-                                    </button>
+                                    </button> --}}
                                 </div>
                             @empty
                                 <div class="px-4 py-6 text-sm text-gray-500">Sin usuarios asignados.</div>

@@ -399,15 +399,39 @@
                             </svg>
                         </button>
                         <div x-show="openSections.config_usuarios" x-transition class="pl-6 mt-1 space-y-1">
-                            <a href="{{ route('usuarios.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+
+
+                            {{-- <a href="{{ route('usuarios.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                                 {{ __('menu.users_list') }}
+                            </a> --}}
+
+                            <a href="{{ route('usuarios.clientes') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                {{-- {{ __('menu.permissions') }} --}}
+                                Clientes
                             </a>
 
-                             @hasanyrole('admin')
+                            <a href="{{ route('usuarios.proveedor') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                {{-- {{ __('menu.permissions') }} --}}
+                                Proveedor
+                            </a>
+
+                            <a href="{{ route('usuarios.staff') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                {{-- {{ __('menu.permissions') }} --}}
+                                Staff
+                            </a>
+
+                            <a href="{{ route('usuarios.admin') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                {{-- {{ __('menu.permissions') }} --}}
+                                Admin
+                            </a>
+
+                           @hasanyrole('admin')
                             <a href="{{ route('permisos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                                 {{ __('menu.permissions') }}
                             </a>
                             @endhasanyrole
+
+
                         </div>
                     </div>
                     @endcan

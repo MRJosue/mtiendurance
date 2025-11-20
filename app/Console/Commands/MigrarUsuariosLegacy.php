@@ -132,6 +132,7 @@ class MigrarUsuariosLegacy extends Command
                 ? ['flag-user-sel-preproyectos' => false, 'flag-can-user-sel-preproyectos' => true]
                 : ['flag-user-sel-preproyectos' => true,  'flag-can-user-sel-preproyectos' => false];      
 
+             $tipo = 1; // 1 = CLIENTE
 
             // Fila para INSERT (sin role_id)
             $row = [
@@ -141,6 +142,8 @@ class MigrarUsuariosLegacy extends Command
                 'email_verified_at' => null,
                 'password'          => $password,
                 'remember_token'    => null,
+
+                'tipo'                        => $tipo,       
 
                 // 👇 ya no dupliques estas claves
                 'config'                       => json_encode($configArr),
@@ -268,6 +271,10 @@ class MigrarUsuariosLegacy extends Command
             // Espacio de IDs para evitar colisión con client_id
             $idDestino = 700000 + (int) $r->clientsup_id;
 
+            $tipo = 2;
+
+
+
             $row = [
                 'id'                => $idDestino,
                 'name'              => $name,
@@ -282,6 +289,7 @@ class MigrarUsuariosLegacy extends Command
                 'sucursal_id'       => null,
                 'created_at'        => now(),
                 'updated_at'        => now(),
+                'tipo'              => $tipo,  
                 // Legacy
                 'user_legacy'       => $userLegacy,
                 'company_legacy'    => $companyLegacy,
@@ -393,6 +401,8 @@ class MigrarUsuariosLegacy extends Command
             // Espacio de IDs
             $idDestino = 800000 + (int) $s->staff_id;
 
+               $tipo = 3; // 3 = STAFF
+
             $row = [
                 'id'                => $idDestino,
                 'name'              => $name,
@@ -400,6 +410,7 @@ class MigrarUsuariosLegacy extends Command
                 'email_verified_at' => null,
                 'password'          => $password,
                 'remember_token'    => null,
+                  'tipo'              => $tipo,  
                 'config'            => null,
                 'user_can_sel_preproyectos' => null,
                 'subordinados'      => null,

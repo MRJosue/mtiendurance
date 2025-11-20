@@ -2,8 +2,7 @@
 
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-         <a href="{{route('usuarios.index')}}">{{ __('Usuarios') }}</a>   /
-            {{ __('Crear') }}
+            {{ __('Usuarios') }}
         </h2>
     </x-slot>
 
@@ -11,10 +10,15 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
+                    <h1 class="text-2xl font-bold mb-4">Lista de STAFF</h1>
 
-                    {{-- 1 = CLIENTE, 2 = PROVEEDOR, 3 = STAFF, 4 = ADMIN --}}
-                   @livewire('usuarios.crear-usuarios', ['tipo' => $tipo])
-
+                    @livewire('usuarios.tabla-usuarios', ['tipo' => 3])
+                    {{-- 
+                        1 = CLIENTE
+                        2 = PROVEEDOR
+                        3 = STAFF
+                        4 = ADMIN
+                    --}}
                 </div>
             </div>
         </div>

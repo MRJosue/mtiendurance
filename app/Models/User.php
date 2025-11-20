@@ -36,10 +36,20 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
+
+    
+    const TIPOS = [
+        1 => 'CLIENTE',
+        2 => 'PROVEEDOR',
+        3 => 'STAFF',
+        4 => 'ADMIN',
+    ];
+
     protected $fillable = [
         'name',
         'email',
         'password',
+        'tipo', 
         'config',
         'user_can_sel_preproyectos',
         'user_legacy',
@@ -49,6 +59,8 @@ class User extends Authenticatable
         'empresa_id',
         'sucursal_id',
     ];
+
+
 
 
     /**
@@ -77,6 +89,8 @@ class User extends Authenticatable
 
 
 
+
+
     //     /**
     //  * La relación con el modelo Role.
     public function role()
@@ -101,10 +115,6 @@ class User extends Authenticatable
     }
 
 
-    public function esTipoUsuario(string $tipo): bool
-    {
-        return $this->tipo_usuario === $tipo;
-    }
 
     public function cliente()
     {
@@ -173,6 +183,22 @@ class User extends Authenticatable
         $sucursal = $this->sucursal_nombre ?? 'Sin Empresa';
         $empresa  = $this->empresa_principal_nombre ?? 'Sin Organización Principal';
         return "Empresa: {$sucursal} — O.Principal: {$empresa}";
+    }
+
+
+        public function esTipoUsuario(int|string $tipo): bool
+    {
+        // Permite validar por número o texto
+        if (is_numeric($tipo)) {
+            return (int)$this->tipo === (int)$tipo;
+        }
+
+        return strtolower(self::TIPOS[$this->tipo] ?? '') === strtolower($tipo);
+    }
+
+    public function getTipoTextoAttribute(): string
+    {
+        return self::TIPOS[$this->tipo] ?? 'DESCONOCIDO';
     }
 
 }

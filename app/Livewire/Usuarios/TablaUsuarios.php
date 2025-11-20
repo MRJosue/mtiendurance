@@ -18,37 +18,50 @@ class TablaUsuarios extends Component
     public $usuario_id;
     public $rolesSeleccionados = [];
 
-    /** búsqueda global */
+    /** Búsqueda global */
     public $search = '';
 
-    /** ordenación */
+    /** Ordenación */
     public string $sortField = 'id';
     public string $sortDir   = 'desc';
 
-    /** filtros por columna */
+    /** Filtros por columna */
     public array $filters = [
         'id'       => '',
         'name'     => '',
         'email'    => '',
         'role'     => '',
-        'empresa'  => '',   
-        'sucursal' => '',   
+        'empresa'  => '',
+        'sucursal' => '',
     ];
 
+    /** ⭐ Nuevo: filtro de tipo (1=CLIENTE,2=PROVEEDOR,3=STAFF,4=ADMIN) */
+    public ?int $tipo = null;
+
+    /** Livewire recibe el tipo desde la llamada en Blade */
+    public function mount(?int $tipo = null): void
+    {
+        $this->tipo = $tipo;
+    }
 
     public function render()
     {
         $isPrivileged = $this->isPrivileged();
 
-        $query = User::query()->with([
-            'roles',
-            // relaciones necesarias para columnas y tooltip
-            'empresa:id,nombre',
-            'sucursal:id,nombre,empresa_id',
-            'sucursal.empresa:id,nombre',
-        ]);
+        $query = User::query()
+            ->with([
+                'roles',
+                'empresa:id,nombre',
+                'sucursal:id,nombre,empresa_id',
+                'sucursal.empresa:id,nombre',
+            ]);
 
-        // Filtro global (nombre o email)
+        /** ⭐ Aplicar filtro por tipo si fue enviado desde Blade */
+        if (!is_null($this->tipo)) {
+            $query->where('tipo', $this->tipo);
+        }
+
+        /** Filtro global (nombre o correo) */
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('name', 'like', '%'.$this->search.'%')
@@ -56,12 +69,12 @@ class TablaUsuarios extends Component
             });
         }
 
-        // Filtros por columna
-        // ID (soporta lista separada por coma)
+        /** Filtro ID (permite 1,5,8) */
         if (!empty($this->filters['id'])) {
             $ids = collect(explode(',', $this->filters['id']))
                 ->map(fn($v) => (int) trim($v))
-                ->filter(); // elimina vacíos y ceros
+                ->filter();
+
             if ($ids->count() > 1) {
                 $query->whereIn('id', $ids->all());
             } elseif ($ids->count() === 1) {
@@ -69,17 +82,17 @@ class TablaUsuarios extends Component
             }
         }
 
-        // Nombre
+        /** Filtro por nombre */
         if (!empty($this->filters['name'])) {
             $query->where('name', 'like', '%' . $this->filters['name'] . '%');
         }
 
-        // Email
+        /** Filtro por email */
         if (!empty($this->filters['email'])) {
             $query->where('email', 'like', '%' . $this->filters['email'] . '%');
         }
 
-        // Rol (por nombre)
+        /** Filtro por rol */
         if (!empty($this->filters['role'])) {
             $roleName = $this->filters['role'];
             $query->whereHas('roles', function ($q) use ($roleName) {
@@ -87,46 +100,53 @@ class TablaUsuarios extends Component
             });
         }
 
+        /** Filtro por empresa (empresa directa o empresa de la sucursal) */
         if (!empty($this->filters['empresa'])) {
-            $v = trim($this->filters['empresa']);
-            $query->where(function($w) use ($v) {
-                $w->whereHas('empresa', fn($e) => $e->where('nombre', 'like', "%{$v}%"))
-                  ->orWhereHas('sucursal.empresa', fn($e) => $e->where('nombre', 'like', "%{$v}%"));
+            $value = trim($this->filters['empresa']);
+
+            $query->where(function($w) use ($value) {
+                $w->whereHas('empresa', fn($e) => $e->where('nombre', 'like', "%{$value}%"))
+                  ->orWhereHas('sucursal.empresa', fn($e) => $e->where('nombre', 'like', "%{$value}%"));
             });
         }
 
+        /** Filtro por sucursal */
         if (!empty($this->filters['sucursal'])) {
-            $v = trim($this->filters['sucursal']);
-            $query->whereHas('sucursal', fn($s) => $s->where('nombre', 'like', "%{$v}%"));
+            $value = trim($this->filters['sucursal']);
+            $query->whereHas('sucursal', fn($s) => $s->where('nombre', 'like', "%{$value}%"));
         }
 
-
-        // Visibilidad según privilegio (no admin/staff: solo su propio usuario)
+        /** Visibilidad según privilegio */
         if (!$isPrivileged) {
             $query->where('id', Auth::id());
         }
 
-        // Orden
+        /** Ordenamiento */
         $query->orderBy($this->sortField, $this->sortDir);
 
         return view('livewire.usuarios.tabla-usuarios', [
             'usuarios'       => $query->paginate(10),
-            'roles'          => $isPrivileged ? Role::orderBy('name')->get() : collect(), // para modal
-            'rolesListado'   => Role::orderBy('name')->get(), // para filtro por rol
+            'roles'          => $isPrivileged ? Role::orderBy('name')->get() : collect(),
+            'rolesListado'   => Role::orderBy('name')->get(),
             'isPrivileged'   => $isPrivileged,
             'sortField'      => $this->sortField,
             'sortDir'        => $this->sortDir,
         ]);
-
-        
     }
 
-    /* ===== Acciones ===== */
+
+    /* ===============================
+     *   ACCIONES
+     * =============================== */
 
     public function crear()
     {
         abort_unless($this->isPrivileged(), 403);
-        return redirect()->route('usuarios.create');
+
+        // Si por alguna razón no viene tipo, que por default sea CLIENTE (1)
+        $tipo = $this->tipo ?? 1;
+
+        return redirect()->route('usuarios.create', ['tipo' => $tipo]);
     }
 
     public function editarRoles($id)
@@ -144,7 +164,10 @@ class TablaUsuarios extends Component
         abort_unless($this->isPrivileged(), 403);
 
         $usuario = User::findOrFail($this->usuario_id);
-        $nombresRoles = Role::whereIn('id', $this->rolesSeleccionados)->pluck('name')->toArray();
+        $nombresRoles = Role::whereIn('id', $this->rolesSeleccionados)
+                            ->pluck('name')
+                            ->toArray();
+
         $usuario->syncRoles($nombresRoles);
 
         session()->flash('message', 'Roles actualizados correctamente.');
@@ -158,7 +181,9 @@ class TablaUsuarios extends Component
         $this->rolesSeleccionados = [];
     }
 
-    /* ===== Orden y filtros ===== */
+    /* ===============================
+     *   ORDEN & FILTROS
+     * =============================== */
 
     public function sortBy(string $field): void
     {
@@ -168,6 +193,7 @@ class TablaUsuarios extends Component
             $this->sortField = $field;
             $this->sortDir   = 'asc';
         }
+
         $this->resetPage();
     }
 
@@ -181,12 +207,15 @@ class TablaUsuarios extends Component
         $this->resetPage();
     }
 
-    /* ===== Helpers ===== */
+    /* ===============================
+     *   HELPERS
+     * =============================== */
 
     protected function isPrivileged(): bool
     {
         $user = Auth::user();
         if (!$user) return false;
+
         return $user->hasAnyRole(['admin', 'staff']);
     }
 }

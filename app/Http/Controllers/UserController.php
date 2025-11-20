@@ -28,12 +28,39 @@ class UserController extends Controller
          return view('user.show',['user' => $user]);
     }
 
-    public function create(){
-        
-        if (!auth()->user()->hasRole('admin')) {
-            return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
+
+    public function create(Request $request)
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return redirect()->route('login');
         }
-        return view('user.create');
+
+        // 1 = CLIENTE, 2 = PROVEEDOR, 3 = STAFF, 4 = ADMIN
+        $tipo = (int) $request->get('tipo', 1);
+        if (!in_array($tipo, [1, 2, 3, 4], true)) {
+            $tipo = 1;
+        }
+
+        // Mapea tipo → permiso requerido
+        $permisoPorTipo = [
+            1 => 'usuarios.crear.cliente',
+            2 => 'usuarios.crear.proveedor',
+            3 => 'usuarios.crear.staff',
+            4 => 'usuarios.crear.admin',
+        ];
+
+        $permisoNecesario = $permisoPorTipo[$tipo] ?? null;
+
+        // Si no hay permiso mapeado o no lo tiene, lo regresas a la lista
+        if (!$permisoNecesario || !$user->can($permisoNecesario)) {
+            return redirect()
+                ->route('usuarios.index')
+                ->with('error', 'No tienes permiso para crear este tipo de usuario.');
+        }
+
+        return view('user.create', compact('tipo'));
     }
 
     public function actions(){
@@ -94,6 +121,46 @@ class UserController extends Controller
             ->limit(15)
             ->get();
     }
+
+
+    public function showclientes(){
+
+                // if (!auth()->user()->hasRole('admin')) {
+                //     return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
+                // }
+
+        return view('user.show.clientes');
+    }
+
+    public function showcproveedor(){
+
+                // if (!auth()->user()->hasRole('admin')) {
+                //     return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
+                // }
+
+        return view('user.show.proveedor');
+    }
+
+    public function showstaff(){
+
+                // if (!auth()->user()->hasRole('admin')) {
+                //     return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
+                // }
+
+        return view('user.show.staff');
+    }
+
+
+    public function showadmin(){
+
+                // if (!auth()->user()->hasRole('admin')) {
+                //     return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
+                // }
+
+        return view('user.show.admin');
+    }
+
+
 
 
 }

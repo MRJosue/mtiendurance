@@ -11,9 +11,21 @@ use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+
 
 class CrearUsuarios extends Component
 {
+    /** Tipo de usuario según entrada:
+     *  1 → CLIENTE
+     *  2 → PROVEEDOR
+     *  3 → STAFF
+     *  4 → ADMIN
+     */
+    public ?int $tipo = 1;
+
+
+
     // --- Campos base ---
     public string $name = '';
     public string $email = '';
@@ -42,14 +54,83 @@ class CrearUsuarios extends Component
     public $sucursalesDeEmpresa;                      // Collection
     public ?int   $sucursal_id_sub = null;
 
-    public function mount(): void
+    
+
+    /* ===================== MOUNT ===================== */
+
+    public function mount(int $tipo = 1): void
     {
-        $this->rolesDisponibles    = Role::pluck('name')->toArray();
+        // Normalizas el tipo
+        $this->tipo = in_array($tipo, [1,2,3,4], true) ? $tipo : 1;
+
+        // 🔐 Revalidar permisos aquí también
+        $user = Auth::user();
+
+        $permisoPorTipo = [
+            1 => 'usuarios.crear.cliente',
+            2 => 'usuarios.crear.proveedor',
+            3 => 'usuarios.crear.staff',
+            4 => 'usuarios.crear.admin',
+        ];
+
+        $permisoNecesario = $permisoPorTipo[$this->tipo] ?? null;
+
+        if (!$user || !$permisoNecesario || !$user->can($permisoNecesario)) {
+            // Livewire 3: redirección desde componente
+            $this->redirectRoute('usuarios.index');
+            return;
+        }
+
+        // Si llega aquí, sí tiene permiso → carga roles según tipo
+        $this->cargarRolesDisponibles();
+
         $this->empresasSugeridas   = [];
         $this->sucursalesDeEmpresa = collect();
-        // Si quieres condicionar permisos de búsqueda:
-        // $this->puedeBuscarEmpresas = auth()->user()?->hasRole('admin') ?? true;
     }
+
+    /**
+     * Carga los roles disponibles según el tipo de usuario que se va a crear.
+     *
+     * 1 → CLIENTE:  solo 'cliente_principal' (tipo=1)
+     * 2 → PROVEEDOR: roles tipo=2
+     * 3 → STAFF:     roles tipo=3
+     * 4 → ADMIN:     roles tipo=4
+     */
+    protected function cargarRolesDisponibles(): void
+    {
+        $query = Role::query();
+
+        switch ($this->tipo) {
+            case 1: // CLIENTE
+                $query->where('tipo', 1)
+                      ->where('name', 'cliente_principal');
+                break;
+
+            case 2: // PROVEEDOR
+                $query->where('tipo', 2);
+                break;
+
+            case 3: // STAFF
+                $query->where('tipo', 3);
+                break;
+
+            case 4: // ADMIN
+                $query->where('tipo', 4);
+                break;
+
+            default:
+                // fallback de seguridad: no mostrar roles
+                $query->whereRaw('1 = 0');
+                break;
+        }
+
+        $this->rolesDisponibles = $query
+            ->orderBy('name')
+            ->pluck('name')
+            ->toArray();
+    }
+
+    /* ===================== VALIDACIÓN ===================== */
 
     protected function rules(): array
     {
@@ -104,10 +185,8 @@ class CrearUsuarios extends Component
         }
     }
 
-    /**
-     * Autocompletar de empresas: se dispara al escribir en $empresaQuery
-     * (Gracias a wire:model.live en el input x-model="search")
-     */
+    /* ===================== AUTOCOMPLETAR EMPRESAS ===================== */
+
     public function updatedEmpresaQuery(): void
     {
         $term = trim($this->empresaQuery);
@@ -143,19 +222,22 @@ class CrearUsuarios extends Component
             : collect();
     }
 
+    /* ===================== CREAR USUARIO ===================== */
+
     public function createUser(): void
     {
         $this->validate();
 
         DB::transaction(function () {
-            // 1) Crear usuario
+            // 1) Crear usuario con tipo (1–4) según entrada
             $user = User::create([
                 'name'     => $this->name,
                 'email'    => $this->email,
                 'password' => Hash::make($this->password),
+                'tipo'     => $this->tipo ?? 1,
             ]);
 
-            // 2) Rol
+            // 2) Asignar rol Spatie
             $user->assignRole($this->role);
             Log::debug('Asignando rol', ['rol' => $this->role, 'user_id' => $user->id]);
 
@@ -178,7 +260,7 @@ class CrearUsuarios extends Component
                     'tipo'       => 1,
                 ]);
 
-                // Asignar
+                // Asignar al usuario
                 $user->empresa_id  = $empresa->id;
                 $user->sucursal_id = $sucursal->id;
                 $user->save();
@@ -205,9 +287,11 @@ class CrearUsuarios extends Component
         $this->dispatch('notify', message: 'Usuario creado exitosamente');
     }
 
+    /* ===================== RENDER ===================== */
+
     public function render()
     {
-        // Puedes calcular permisos de búsqueda aquí si lo necesitas dinámico
+        // Aquí podrías recalcular permisos dinámicamente si quieres
         $this->puedeBuscarEmpresas = true;
 
         return view('livewire.usuarios.crear-usuarios', [

@@ -174,6 +174,13 @@ Route::post('/preproyecto/upload-temporal', [PreproyectoUploadController::class,
 
 //Administracion de usuarios
 Route::get('/usuarios',[UserController::class, 'index'])->middleware(['auth','verified'])->name('usuarios.index');
+
+Route::get('/usuarios/clientes',[UserController::class, 'showclientes'])->middleware(['auth','verified'])->name('usuarios.clientes');
+Route::get('/usuarios/proveedor',[UserController::class, 'showcproveedor'])->middleware(['auth','verified'])->name('usuarios.proveedor');
+Route::get('/usuarios/staff',[UserController::class, 'showstaff'])->middleware(['auth','verified'])->name('usuarios.staff');
+Route::get('/usuarios/admin',[UserController::class, 'showadmin'])->middleware(['auth','verified'])->name('usuarios.admin');
+
+Route::get('/usuarios',[UserController::class, 'index'])->middleware(['auth','verified'])->name('usuarios.index');
 Route::get('/usuarios/crear',[UserController::class, 'create'])->middleware(['auth','verified'])->name('usuarios.create');
 Route::get('/usuarios/detalles/{user}',[UserController::class, 'show'])->middleware(['auth','verified'])->name('usuarios.show');
 Route::get('/usuarios/modal',[UserController::class, 'actions'])->middleware(['auth','verified'])->name('usuarios.actions');
