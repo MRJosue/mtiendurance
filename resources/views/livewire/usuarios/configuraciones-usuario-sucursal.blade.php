@@ -8,6 +8,7 @@
     }"
     class="container mx-auto p-6"
 >
+
     <h2 
         @click="toggle()"
         class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
@@ -20,13 +21,17 @@
     <div x-show="abierto" x-transition>
         <!-- Acciones -->
         <div class="mb-6 flex flex-wrap gap-2">
-            <button
-                type="button"
-                wire:click="openCreateModal"
-                class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-                + Crear Empresa
-            </button>
+
+            @can('usuarios.configuracion.crear.empresa')
+                <button
+                    type="button"
+                    wire:click="openCreateModal"
+                    class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                    + Crear Empresa
+                </button> 
+            @endcan
+
         </div>
 
         <!-- Filtro de búsqueda -->
@@ -71,12 +76,16 @@
                                     {{-- Contar por campo sucursal_id --}}
                                     {{ \App\Models\User::where('sucursal_id', $sucursal->id)->count() }}
                                 </span>
-                                <button
-                                    wire:click="openUserModal({{ $sucursal->id }})"
-                                    class="ml-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-700 text-xs"
-                                >
-                                    Editar
-                                </button>
+
+                                @can('usuarios.configuracion.editar.empresa.asignados')
+                                    <button
+                                        wire:click="openUserModal({{ $sucursal->id }})"
+                                        class="ml-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-700 text-xs"
+                                    >
+                                        Editar
+                                    </button>
+                                @endcan
+
                                 <button
                                     wire:click="openAssignedOnlyModal({{ $sucursal->id }})"
                                     class="ml-1 px-2 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 text-xs"
@@ -87,19 +96,27 @@
                             </td>
 
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">
-                                <button
-                                    wire:click="openEditModal({{ $sucursal->id }})"
-                                    class="px-2 py-1 bg-yellow-400 text-gray-800 rounded hover:bg-yellow-500 text-xs"
-                                >
-                                    Editar
-                                </button>
-                                <button
-                                    wire:click="delete({{ $sucursal->id }})"
-                                    onclick="return confirm('¿Eliminar sucursal?')"
-                                    class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700 text-xs ml-1"
-                                >
-                                    Eliminar
-                                </button>
+
+                                @can('usuarios.configuracion.editar.empresa')
+                                    <button
+                                        wire:click="openEditModal({{ $sucursal->id }})"
+                                        class="px-2 py-1 bg-yellow-400 text-gray-800 rounded hover:bg-yellow-500 text-xs"
+                                    >
+                                        Editar
+                                    </button>
+                                @endcan
+
+                                @can('usuarios.configuracion.eliminar.empresa')
+                                    <button
+                                        wire:click="delete({{ $sucursal->id }})"
+                                        onclick="return confirm('¿Eliminar sucursal?')"
+                                        class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700 text-xs ml-1"
+                                    >
+                                        Eliminar
+                                    </button>
+                                @endcan
+
+
                             </td>
                         </tr>
                     @empty
@@ -130,30 +147,77 @@
                 <form wire:submit.prevent="{{ $editingId ? 'update' : 'store' }}" class="space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <div class="sm:col-span-2">
-                            <label class="block mb-1 text-gray-700">Empresa</label>
-                            <select wire:model="empresa_id" class="w-full border rounded-lg px-3 py-2">
-                                <option value="">Seleccione...</option>
-                                @foreach($empresas as $empresa)
-                                    <option value="{{ $empresa->id }}">{{ $empresa->nombre }}</option>
-                                @endforeach
-                            </select>
+                            <label class="block mb-1 text-gray-700">Organización (tabla empresas)</label>
+
+                            @if($empresa_id)
+                                <p class="text-xs text-gray-500 mb-1">
+                                    Organización seleccionada:
+                                    <span class="font-semibold">
+                                        {{ optional($empresas->firstWhere('id', $empresa_id))->nombre ?? 'Sin organización' }}
+                                    </span>
+                                </p>
+                            @endif
+
                             @error('empresa_id') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="sm:col-span-2">
                             <label class="block mb-1 text-gray-700">Tipo</label>
-                            <select wire:model="tipo" class="w-full border rounded-lg px-3 py-2">
-                                <option value="1">Principal</option>
-                                <option value="2">Secundaria</option>
-                            </select>
+
+                            @if($editingId)
+                                {{-- En edición se muestra el select pero siempre bloqueado --}}
+                                <select
+                                    wire:model="tipo"
+                                    class="w-full border rounded-lg px-3 py-2 bg-gray-100 text-gray-600"
+                                    disabled
+                                >
+                                    <option value="1">Principal</option>
+                                    <option value="2">Secundaria</option>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500">
+                                    El tipo de empresa no se puede modificar una vez creada.
+                                </p>
+                            @else
+                                {{-- En creación SIEMPRE será Secundaria --}}
+                                <input
+                                    type="text"
+                                    value="Secundaria"
+                                    class="w-full border rounded-lg px-3 py-2 bg-gray-100 text-gray-600"
+                                    disabled
+                                />
+                            @endif
+
                             @error('tipo') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                         </div>
 
+
                         <div class="sm:col-span-2">
                             <label class="block mb-1 text-gray-700">Nombre</label>
-                            <input type="text" wire:model="nombre" class="w-full border rounded-lg px-3 py-2" />
+
+                            @if($editingId && !auth()->user()->hasRole('admin'))
+                                {{-- No admin + edición => bloqueado --}}
+                                <input
+                                    type="text"
+                                    wire:model="nombre"
+                                    class="w-full border rounded-lg px-3 py-2 bg-gray-100 text-gray-600 cursor-not-allowed"
+                                    disabled
+                                />
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Solo un administrador puede cambiar el nombre de la empresa.
+                                </p>
+                            @else
+                                {{-- Admin o creación => editable --}}
+                                <input
+                                    type="text"
+                                    wire:model="nombre"
+                                    class="w-full border rounded-lg px-3 py-2"
+                                />
+                            @endif
+
                             @error('nombre') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                         </div>
+
+                        
 
                         <div class="sm:col-span-2">
                             <label class="block mb-1 text-gray-700">Teléfono</label>
@@ -212,13 +276,6 @@
                                         <div class="text-sm font-medium text-gray-800">{{ $u->name }}</div>
                                         <div class="text-xs text-gray-500">{{ $u->email }}</div>
                                     </div>
-                                    {{-- <button
-                                        wire:click="removeUserFromSucursal({{ $u->id }})"
-                                        class="px-3 py-1 text-xs rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
-                                        title="Quitar de la sucursal"
-                                    >
-                                        Quitar
-                                    </button> --}}
                                 </div>
                             @empty
                                 <div class="px-4 py-6 text-sm text-gray-500">Sin usuarios asignados.</div>

@@ -20,12 +20,15 @@
 
         <h2 class="text-xl font-semibold mb-4">Usuarios subordinados de: {{ $jefe->name }}</h2>
 
-        <button
-            class="mb-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            wire:click="showCreateForm"
-        >
-            + Nuevo Usuario Subordinado
-        </button>
+        @can('usuarios.configuracion.crear.subordinado')
+                    <button
+                    class="mb-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    wire:click="showCreateForm"
+                >
+                    + Nuevo Usuario Subordinado
+                </button>
+        @endcan
+
 
         <div class="overflow-x-auto bg-white rounded-lg shadow">
             <table class="min-w-full border-collapse border border-gray-200 rounded-lg">
@@ -52,19 +55,28 @@
                                 @endif
                             </td>
                             <td class="border-b px-4 py-2 space-x-2">
-                                <button
-                                    class="px-2 py-1 bg-yellow-400 rounded hover:bg-yellow-500"
-                                    wire:click="showEditForm({{ $user->id }})"
-                                >
-                                    Editar
-                                </button>
-                                <button
+
+                                @can('usuarios.configuracion.editar.subordinado')
+                                    <button
+                                        class="px-2 py-1 bg-yellow-400 rounded hover:bg-yellow-500"
+                                        wire:click="showEditForm({{ $user->id }})"
+                                    >
+                                        Editar
+                                    </button> 
+                                @endcan
+
+
+                                @can('usuarios.configuracion.eliminar.subordinado')
+                                                                    <button
                                     class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700"
                                     wire:click="deleteUser({{ $user->id }})"
                                     onclick="return confirm('¿Eliminar usuario subordinado?')"
                                 >
                                     Eliminar
                                 </button>
+                                @endcan
+
+
                             </td>
                         </tr>
                     @empty

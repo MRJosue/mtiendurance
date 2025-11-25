@@ -8,34 +8,34 @@ use App\Models\Sucursal;
 use App\Models\User;
 use App\Models\Empresa;
 use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\On;
-
 
 class ConfiguracionesUsuarioSucursal extends Component
 {
     use WithPagination;
 
     public $empresa_id, $nombre, $telefono, $direccion, $tipo = 2, $editingId = null;
-    public $showUserModal = false;         // Modal asignación usuarios
-    public $showSucursalModal = false;     // Modal crear/editar sucursal
+
+    public $showUserModal = false;            // Modal asignación usuarios
+    public $showSucursalModal = false;        // Modal crear/editar sucursal
+    public $showAssignedOnlyModal = false;    // Modal "Asignados"
+
     public $selectedSucursal = null;
-    public $selectedUsers = [];            // ids asignados (estado actual)
+    public $selectedUsers = [];               // ids asignados (estado actual)
     public $search = '';
     public $userId;
-    public $usuariosDisponibles = [];      // universo permitido (subordinados)
+    public $usuariosDisponibles = [];         // universo permitido (subordinados)
 
     protected $rules = [
         'empresa_id' => 'required|exists:empresas,id',
         'nombre'     => 'required|string|max:255',
         'telefono'   => 'nullable|string|max:30',
         'direccion'  => 'nullable|string|max:255',
-         'tipo'       => 'required|in:1,2',
+        'tipo'       => 'required|in:1,2',
     ];
 
     public function mount($userId)
     {
         $this->userId = $userId;
-        // Se cargan al abrir el modal según la empresa de la sucursal
         $this->usuariosDisponibles = collect();
     }
 
@@ -44,20 +44,22 @@ class ConfiguracionesUsuarioSucursal extends Component
         $this->resetPage();
     }
 
+    /**
+     * Usuarios disponibles = los que pertenecen a la organización (empresa_id)
+     * pero todavía NO tienen sucursal asignada (sucursal_id = null).
+     */
     protected function cargarUsuariosDisponiblesPorEmpresa(?int $empresaId): void
     {
         if (empty($empresaId)) {
-            $this->usuariosDisponibles = collect(); // nada si no hay empresa
+            $this->usuariosDisponibles = collect();
             return;
         }
 
         $this->usuariosDisponibles = User::where('empresa_id', $empresaId)
+         
             ->orderBy('name')
             ->get();
     }
-
-
-
 
     public function render()
     {
@@ -84,6 +86,7 @@ class ConfiguracionesUsuarioSucursal extends Component
             'empresas'   => $empresasQuery->get(),
         ]);
     }
+
     public function resetInput()
     {
         $this->empresa_id = null;
@@ -99,6 +102,15 @@ class ConfiguracionesUsuarioSucursal extends Component
     public function openCreateModal()
     {
         $this->resetInput();
+        // En creación siempre será Secundaria
+        $this->tipo = 2;
+
+        // Preseleccionar empresa por defecto según el usuario actual
+        $user = User::find($this->userId);
+        if ($user && $user->empresa_id) {
+            $this->empresa_id = $user->empresa_id;
+        }
+
         $this->showSucursalModal = true;
     }
 
@@ -121,6 +133,9 @@ class ConfiguracionesUsuarioSucursal extends Component
 
     public function store()
     {
+        // En creación el tipo SIEMPRE será Secundaria
+        $this->tipo = 2;
+
         $this->validate();
 
         Sucursal::create([
@@ -138,15 +153,23 @@ class ConfiguracionesUsuarioSucursal extends Component
 
     public function update()
     {
-        $this->validate();
+        // Validamos sólo campos editables; 'tipo' NO se valida ni se toma desde el formulario
+        $this->validate([
+            'empresa_id' => 'required|exists:empresas,id',
+            'nombre'     => 'required|string|max:255',
+            'telefono'   => 'nullable|string|max:30',
+            'direccion'  => 'nullable|string|max:255',
+        ]);
 
         $sucursal = Sucursal::findOrFail($this->editingId);
+
         $sucursal->update([
             'empresa_id' => $this->empresa_id,
             'nombre'     => $this->nombre,
             'telefono'   => $this->telefono,
             'direccion'  => $this->direccion,
-            'tipo'       => $this->tipo,
+            // El tipo NO se toca; se conserva el que ya tiene en BD
+            'tipo'       => $sucursal->tipo,
         ]);
 
         $this->resetInput();
@@ -165,30 +188,35 @@ class ConfiguracionesUsuarioSucursal extends Component
     public function openUserModal($sucursalId)
     {
         $this->selectedSucursal = Sucursal::with('usuarios')->findOrFail($sucursalId);
+
+        // Aquí se pasa la organización de la sucursal
         $this->cargarUsuariosDisponiblesPorEmpresa($this->selectedSucursal->empresa_id);
 
         $this->selectedUsers = $this->selectedSucursal
             ->usuarios()
-            ->pluck('users.id')
+            ->pluck('id')
             ->toArray();
 
         $this->showUserModal = true;
     }
 
-
-    // Asignación inmediata (desde "pendientes" -> "asignados")
+    // Asignación inmediata (desde "disponibles" -> "asignados")
     public function assignUserToSucursal(int $userId): void
     {
-        if (!$this->selectedSucursal) return;
+        if (!$this->selectedSucursal) {
+            return;
+        }
 
-        // Asegura que viene de la misma empresa y sin sucursal asignada (como se cargó)
-        if (!$this->usuariosDisponibles->contains('id', $userId)) return;
+        // Asegura que viene de la misma empresa y sin sucursal asignada
+        if (!$this->usuariosDisponibles->contains('id', $userId)) {
+            return;
+        }
 
         User::whereKey($userId)->update(['sucursal_id' => $this->selectedSucursal->id]);
 
         // Refresca listas
         $this->selectedSucursal->load('usuarios');
-        $this->selectedUsers = $this->selectedSucursal->usuarios()->pluck('users.id')->toArray();
+        $this->selectedUsers = $this->selectedSucursal->usuarios()->pluck('id')->toArray();
 
         // Recalcula disponibles (los que quedan con sucursal_id null)
         $this->cargarUsuariosDisponiblesPorEmpresa($this->selectedSucursal->empresa_id);
@@ -197,81 +225,73 @@ class ConfiguracionesUsuarioSucursal extends Component
         $this->dispatch('refreshMakeuser');
     }
 
-
-        // NUEVO: Modal SOLO de asignados (lectura)
+    // Modal SOLO de asignados (lectura)
     public function openAssignedOnlyModal($sucursalId)
     {
         $this->selectedSucursal = Sucursal::with('usuarios')->findOrFail($sucursalId);
         $this->selectedUsers = $this->selectedSucursal
             ->usuarios()
-            ->pluck('users.id')
+            ->pluck('id')
             ->toArray();
 
         $this->showAssignedOnlyModal = true;
     }
 
-        public function closeAssignedOnlyModal()
+    public function closeAssignedOnlyModal()
     {
         $this->showAssignedOnlyModal = false;
         $this->selectedSucursal = null;
         $this->selectedUsers = [];
     }
 
-    // Remoción inmediata
+    // Remoción inmediata de la sucursal (sin pivote)
     public function removeUserFromSucursal(int $userId): void
     {
-        if (!$this->selectedSucursal) return;
+        if (!$this->selectedSucursal) {
+            return;
+        }
 
         DB::transaction(function () use ($userId) {
-            // 1) Quita en pivote
-            $this->selectedSucursal->usuarios()->detach($userId);
-
-            // 2) Solo nulifica si el users.sucursal_id coincide con la sucursal actual
             User::whereKey($userId)
                 ->where('sucursal_id', $this->selectedSucursal->id)
                 ->update(['sucursal_id' => null]);
         });
 
-        // Refresca estado local del modal
-        $this->selectedUsers = $this->selectedSucursal->usuarios()->pluck('users.id')->toArray();
         $this->selectedSucursal->load('usuarios');
+        $this->selectedUsers = $this->selectedSucursal->usuarios()->pluck('id')->toArray();
 
-        // Notifica UI
         $this->dispatch('notify', message: 'Usuario removido de la sucursal');
-
-        // Actualiza el otro componente
         $this->dispatch('refreshMakeuser');
     }
 
-    // (Opcional) Guardado masivo si usaras checkboxes – lo dejamos por compatibilidad
+    // Guardado masivo usando sucursal_id directo (por si algún día usas checkboxes)
     public function saveUsersToSucursal()
     {
-        if (!$this->selectedSucursal) return;
+        if (!$this->selectedSucursal) {
+            return;
+        }
 
         DB::transaction(function () {
-            // Sincroniza pivote a la lista seleccionada
-            $this->selectedSucursal->usuarios()->sync($this->selectedUsers);
+            // Usuarios que ya estaban asignados antes
+            $antes = $this->selectedSucursal->usuarios()->pluck('id')->toArray();
 
-            // Actualiza campo directo en users:
-            //  a) A todos los seleccionados -> set sucursal_id actual
-            User::whereIn('id', $this->selectedUsers)
-                ->update(['sucursal_id' => $this->selectedSucursal->id]);
+            // a) Asignar sucursal_id a los seleccionados
+            if (!empty($this->selectedUsers)) {
+                User::whereIn('id', $this->selectedUsers)
+                    ->update(['sucursal_id' => $this->selectedSucursal->id]);
+            }
 
-            //  b) A todos los NO seleccionados que antes estaban en esta sucursal -> null
-            $antes = User::where('sucursal_id', $this->selectedSucursal->id)
-                ->pluck('id')
-                ->toArray();
-
+            // b) Quitar sucursal_id a los que ya no están seleccionados
             $aNull = array_diff($antes, $this->selectedUsers);
             if (!empty($aNull)) {
-                User::whereIn('id', $aNull)->update(['sucursal_id' => null]);
+                User::whereIn('id', $aNull)
+                    ->where('sucursal_id', $this->selectedSucursal->id)
+                    ->update(['sucursal_id' => null]);
             }
         });
 
         $this->dispatch('notify', message: 'Usuarios asignados a la sucursal');
         $this->showUserModal = false;
-
-        // Refresca el otro componente
         $this->dispatch('refreshMakeuser');
     }
 

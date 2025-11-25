@@ -404,26 +404,40 @@
                             {{-- <a href="{{ route('usuarios.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                                 {{ __('menu.users_list') }}
                             </a> --}}
+                            @can('asideusuarios.administraclientes')
+                                <a href="{{ route('usuarios.clientes') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                    {{-- {{ __('menu.permissions') }} --}}
+                                    Clientes
+                                </a>
 
-                            <a href="{{ route('usuarios.clientes') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{-- {{ __('menu.permissions') }} --}}
-                                Clientes
-                            </a>
+                            @endcan
 
-                            <a href="{{ route('usuarios.proveedor') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{-- {{ __('menu.permissions') }} --}}
-                                Proveedor
-                            </a>
+                            @can('asideusuarios.administraproveedor')
+                        
+                                <a href="{{ route('usuarios.proveedor') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                    {{-- {{ __('menu.permissions') }} --}}
+                                    Proveedor
+                                </a>
+                            
+                                
+                            @endcan
 
-                            <a href="{{ route('usuarios.staff') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{-- {{ __('menu.permissions') }} --}}
-                                Staff
-                            </a>
+                            @can('asideusuarios.administrastaff')
+                                <a href="{{ route('usuarios.staff') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                    {{-- {{ __('menu.permissions') }} --}}
+                                    Staff
+                                </a>
+                            @endcan
 
-                            <a href="{{ route('usuarios.admin') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{-- {{ __('menu.permissions') }} --}}
-                                Admin
-                            </a>
+
+                            @can('asideusuarios.administraadmin')
+                                <a href="{{ route('usuarios.admin') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                    {{-- {{ __('menu.permissions') }} --}}
+                                    Admin
+                                </a>
+                                
+                            @endcan
+
 
                            @hasanyrole('admin')
                             <a href="{{ route('permisos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">

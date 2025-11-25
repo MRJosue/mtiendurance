@@ -24,12 +24,15 @@
                 placeholder="Buscar empresa..."
                 class="w-full sm:w-64 px-3 py-2 border rounded-lg"
             />
-            <button
-                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                wire:click="nuevaEmpresa"
-            >
-                + Nueva Principal
-            </button>
+
+            {{-- Ya no se permite crear organización principal --}}
+            {{-- 
+            @can('usuarios.configuracion.seccion.administra.Organizacion')
+                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" wire:click="nuevaEmpresa">
+                    + Nueva Organizacion Principal
+                </button>
+            @endcan
+            --}}
         </div>
 
         <div class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8">
@@ -60,12 +63,14 @@
                             </td>
                             <td class="border-b px-4 py-2 text-center">
                                 <x-dropdown>
-                                    <x-dropdown.item>
-                                        <b wire:click="editarEmpresa({{ $empresa->id }})">Editar</b>
-                                    </x-dropdown.item>
-                                    <x-dropdown.item separator>
-                                        <b wire:click="confirmarEliminar({{ $empresa->id }})">Eliminar</b>
-                                    </x-dropdown.item>
+                                    @can('usuarios.configuracion.seccion.administra.Organizacion')
+                                        <x-dropdown.item>
+                                            <b wire:click="editarEmpresa({{ $empresa->id }})">Editar</b>
+                                        </x-dropdown.item>
+                                        {{-- <x-dropdown.item separator>
+                                            <b wire:click="confirmarEliminar({{ $empresa->id }})">Eliminar</b>
+                                        </x-dropdown.item> --}}
+                                    @endcan
                                 </x-dropdown>
                             </td>
                         </tr>
@@ -84,7 +89,10 @@
         @if($showModal)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
             <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg relative">
-                <h2 class="text-xl font-semibold mb-4">{{ $empresaId ? 'Editar Empresa' : 'Nueva Empresa' }}</h2>
+                <h2 class="text-xl font-semibold mb-4">
+                    {{-- Solo edición, ya no hay creación --}}
+                    Editar Empresa
+                </h2>
                 <form wire:submit.prevent="guardarEmpresa">
                     <div class="mb-3">
                         <label class="block mb-1 font-medium">Nombre *</label>
@@ -105,28 +113,30 @@
                         <input type="text" wire:model.defer="direccion" class="w-full border rounded-lg px-3 py-2" />
                     </div>
 
-                    <div class="mb-3">
-                        <label class="block mb-1 font-medium">Propietario (usuario) *</label>
-                        <select wire:model="usuarioPropietarioId" class="w-full border rounded-lg px-3 py-2">
-                            <option value="">— Selecciona propietario —</option>
-                            @foreach($usuariosPropietarios as $user)
-                                <option value="{{ $user->id }}">
-                                    {{ $user->name }} ({{ $user->email }})
-                                    @if($user->empresa_id && $user->empresa_id !== $empresaId)
-                                        — Ya tiene otra empresa
-                                    @endif
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('usuarioPropietarioId') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
+                    {{-- Campo propietario eliminado en edición --}}
 
                     <div class="flex justify-end gap-2 mt-4">
-                        <button type="button" wire:click="$set('showModal', false)" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancelar</button>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Guardar</button>
+                        <button
+                            type="button"
+                            wire:click="$set('showModal', false)"
+                            class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                            Guardar
+                        </button>
                     </div>
                 </form>
-                <button wire:click="$set('showModal', false)" class="absolute top-2 right-2 text-gray-500 hover:text-gray-800">✕</button>
+                <button
+                    wire:click="$set('showModal', false)"
+                    class="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
+                >
+                    ✕
+                </button>
             </div>
         </div>
         @endif
@@ -137,18 +147,45 @@
             <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md relative">
                 <h2 class="text-xl font-semibold mb-4">Eliminar Empresa</h2>
                 @if($alertaRelacionUsuarios)
-                    <div class="mb-3 text-red-600">No puedes eliminar una empresa con propietario asignado. Transfiere primero.</div>
+                    <div class="mb-3 text-red-600">
+                        No puedes eliminar una empresa con propietario asignado. Transfiere primero.
+                    </div>
                     <div class="flex justify-end gap-2 mt-4">
-                        <button type="button" wire:click="$set('showDeleteModal', false)" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cerrar</button>
+                        <button
+                            type="button"
+                            wire:click="$set('showDeleteModal', false)"
+                            class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                        >
+                            Cerrar
+                        </button>
                     </div>
                 @else
-                    <div class="mb-3">¿Seguro que deseas eliminar esta empresa? Esta acción no se puede deshacer.</div>
+                    <div class="mb-3">
+                        ¿Seguro que deseas eliminar esta empresa? Esta acción no se puede deshacer.
+                    </div>
                     <div class="flex justify-end gap-2 mt-4">
-                        <button type="button" wire:click="$set('showDeleteModal', false)" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancelar</button>
-                        <button type="button" wire:click="eliminarEmpresa" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Eliminar</button>
+                        <button
+                            type="button"
+                            wire:click="$set('showDeleteModal', false)"
+                            class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="button"
+                            wire:click="eliminarEmpresa"
+                            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                        >
+                            Eliminar
+                        </button>
                     </div>
                 @endif
-                <button wire:click="$set('showDeleteModal', false)" class="absolute top-2 right-2 text-gray-500 hover:text-gray-800">✕</button>
+                <button
+                    wire:click="$set('showDeleteModal', false)"
+                    class="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
+                >
+                    ✕
+                </button>
             </div>
         </div>
         @endif

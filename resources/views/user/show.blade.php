@@ -23,24 +23,29 @@
                         <br>
                     <h2 class="text-m font-bold mb-4">email: {{$user->email}}</h2>
       
-
                     {{-- <div>
                         @livewire('usuarios.cliente-management', ['userId' => $user->id])
                     </div> --}}
 
-                    <div>
-                        @livewire('usuarios.configuraciones-usuario-empresa',  ['userId' => $user->id])
-                    </div>
+                    @can('usuarios.configuracion.seccion.organisacion')
+                        <div>
+                            @livewire('usuarios.configuraciones-usuario-empresa',  ['userId' => $user->id])
+                        </div>
+                    @endcan
 
-                    <div>
-                        @livewire('usuarios.configuraciones-usuario-sucursal', ['userId' => $user->id])
-                    </div>
+                    @can('usuarios.configuracion.seccion.sucursales')
+                        <div>
+                            @livewire('usuarios.configuraciones-usuario-sucursal', ['userId' => $user->id])
+                        </div>
+                    @endcan
+
+                    @can('usuarios.configuracion.seccion.makeuser')
+                        <div>
+                            @livewire('usuarios.configuraciones-usuario-makeuser', ['userId' => $user->id])
+                        </div>
+                    @endcan
 
 
-                    <div>
-                        @livewire('usuarios.configuraciones-usuario-makeuser', ['userId' => $user->id])
-
-                    </div>
                 </div>
 
                 <div class="p-6 text-gray-900 dark:text-gray-100">
