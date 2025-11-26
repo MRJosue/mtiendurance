@@ -286,19 +286,19 @@
                             <div class="px-4 py-2 bg-gray-100 font-semibold text-gray-700 rounded-t">
                                 Roles Disponibles
                             </div>
-                            <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto">
-                                @foreach($roles as $rol)
-                                    <label class="flex items-center space-x-2">
-                                        <input
-                                            type="checkbox"
-                                            wire:model="rolesSeleccionados"
-                                            value="{{ $rol->id }}"
-                                            class="form-checkbox text-blue-600"
-                                        >
-                                        <span class="text-gray-700">{{ $rol->name }}</span>
-                                    </label>
-                                @endforeach
-                            </div>
+                                <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+                                    @foreach($roles as $rol)
+                                        <label class="flex items-center space-x-2">
+                                            <input
+                                                type="radio"
+                                                wire:model="rolSeleccionado"
+                                                value="{{ $rol->id }}"
+                                                class="text-blue-600"
+                                            >
+                                            <span class="text-gray-700">{{ $rol->name }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
                         </div>
                     </div>
                     <div class="flex items-center justify-end border-t border-gray-200 p-4 space-x-2">

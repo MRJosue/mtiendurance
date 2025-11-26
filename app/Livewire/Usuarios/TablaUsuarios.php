@@ -16,7 +16,7 @@ class TablaUsuarios extends Component
 
     public $modal = false;
     public $usuario_id;
-    public $rolesSeleccionados = [];
+    public $rolSeleccionado = null;
 
     /** Búsqueda global */
     public $search = '';
@@ -43,6 +43,27 @@ class TablaUsuarios extends Component
     {
         $this->tipo = $tipo;
     }
+
+
+    protected function resolverTipoDesdeRoles(array $rolesNames): ?int
+    {
+        $mapPrioridad = [
+            'admin'     => 4,
+            'staff'     => 3,
+            'proveedor' => 2,
+            'cliente'   => 1,
+        ];
+
+        foreach ($mapPrioridad as $roleName => $tipo) {
+            if (in_array($roleName, $rolesNames, true)) {
+                return $tipo;
+            }
+        }
+
+        return null;
+    }
+
+
 
     public function render()
     {
@@ -155,7 +176,10 @@ class TablaUsuarios extends Component
 
         $usuario = User::findOrFail($id);
         $this->usuario_id = $usuario->id;
-        $this->rolesSeleccionados = $usuario->roles->pluck('id')->toArray();
+
+        // Tomamos solo el primer rol que tenga
+        $this->rolSeleccionado = optional($usuario->roles->first())->id;
+
         $this->modal = true;
     }
 
@@ -164,21 +188,35 @@ class TablaUsuarios extends Component
         abort_unless($this->isPrivileged(), 403);
 
         $usuario = User::findOrFail($this->usuario_id);
-        $nombresRoles = Role::whereIn('id', $this->rolesSeleccionados)
-                            ->pluck('name')
-                            ->toArray();
 
-        $usuario->syncRoles($nombresRoles);
+        // Validar que haya al menos un rol seleccionado
+        if (!$this->rolSeleccionado) {
+            session()->flash('message', 'Debes seleccionar un rol.');
+            return;
+        }
 
-        session()->flash('message', 'Roles actualizados correctamente.');
+        // 1. Obtener el rol seleccionado
+        $rol = Role::findOrFail($this->rolSeleccionado);
+
+        // 2. Sincronizar SOLO ese rol
+        $usuario->syncRoles([$rol->name]);
+
+        // 3. Calcular tipo desde el nombre del rol
+        $nuevoTipo = $this->resolverTipoDesdeRoles([$rol->name]);
+
+        if (!is_null($nuevoTipo)) {
+            $usuario->tipo = $nuevoTipo;
+            $usuario->save();
+        }
+
+        session()->flash('message', 'Rol y tipo actualizados correctamente.');
         $this->cerrarModal();
     }
-
     public function cerrarModal()
     {
         $this->modal = false;
         $this->usuario_id = null;
-        $this->rolesSeleccionados = [];
+        $this->rolSeleccionado = null;
     }
 
     /* ===============================
