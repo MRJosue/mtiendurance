@@ -60,25 +60,19 @@ class ConfiguracionesUsuarioEmpresa extends Component
 
     public function render()
     {
-        $user = User::find($this->userId);
-
-        $empresasQuery = Empresa::with('propietario')
-            ->when($this->search, fn ($q) => $q->where('nombre', 'like', '%' . $this->search . '%'))
-            ->orderBy('nombre');
-
-        if (!$user?->hasRole('admin')) {
-            // solo su empresa, si tiene
-            $empresasQuery->whereHas('propietario', fn ($q) => $q->where('id', $this->userId));
-        }
-
-        $empresas = $empresasQuery->paginate($this->perPage);
+        // Solo empresas cuyo propietario sea el usuario consultado
+        $empresas = Empresa::with('propietario')
+            ->whereHas('propietario', fn ($q) => $q->where('id', $this->userId))
+            ->when($this->search, fn ($q) =>
+                $q->where('nombre', 'like', '%' . $this->search . '%')
+            )
+            ->orderBy('nombre')
+            ->paginate($this->perPage);
 
         return view('livewire.usuarios.configuraciones-usuario-empresa', [
             'empresas' => $empresas,
-            // 'usuariosPropietarios' ya no es necesario en la vista
         ]);
     }
-
     /**
      * Ya no se permite crear organización principal.
      * Si alguien llegara a disparar esta acción, mostramos error.
@@ -91,16 +85,16 @@ class ConfiguracionesUsuarioEmpresa extends Component
 
     public function editarEmpresa($id)
     {
-        $empresa = Empresa::with('propietario')->findOrFail($id);
+        $empresa = Empresa::with('propietario')
+            ->where('id', $id)
+            ->whereHas('propietario', fn ($q) => $q->where('id', $this->userId))
+            ->firstOrFail();
 
         $this->empresaId = $empresa->id;
         $this->nombre    = $empresa->nombre;
         $this->rfc       = $empresa->rfc;
         $this->telefono  = $empresa->telefono;
         $this->direccion = $empresa->direccion;
-
-        // Ya no editamos propietario desde este componente
-        // $this->usuarioPropietarioId = $empresa->propietario?->id;
 
         $this->showModal = true;
     }

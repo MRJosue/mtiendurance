@@ -57,6 +57,10 @@ class MigrarUsuariosLegacy extends Command
         $this->info('===> Paso 1.2: STAFF -> USERS (espacio 800000 + id)');
         $this->migrarStaffAUsers($dry, $rolStaff);
 
+        // AQUÍ metemos al chingon, después de tener todo el staff
+        $this->info('===> Paso 1.3: Admin "el chingon" y subordinados STAFF');
+        $this->crearAdminElChingon($dry);
+
         $this->info('===> Paso 2: AutoIncrement users');
         $this->ajustarAutoIncrement('users', 'id', $dry);
 
@@ -65,6 +69,26 @@ class MigrarUsuariosLegacy extends Command
 
         $this->info('===> Paso 2.3: Empresas / Sucursales');
         $this->backfillEmpresasYSucursales($rolPrincipal, $rolSubordinado, $dry);
+
+
+        // $this->info('===> Paso 1.1: CLIENTSUP -> USERS (espacio 700000 + id)');
+        // $this->migrarClientsUpAUsers($dry, $rolProveedor);
+
+        // $this->info('===> Paso 1.2: STAFF -> USERS (espacio 800000 + id)');
+        // $this->migrarStaffAUsers($dry, $rolStaff);
+
+        // $this->info('===> Paso 2: AutoIncrement users');
+        // $this->ajustarAutoIncrement('users', 'id', $dry);
+
+        // $this->info('===> Paso 2.2: Jerarquías y roles por subordinados');
+        // $this->backfillSubordinadosYRoles($rolPrincipal, $rolSubordinado, $dry);
+
+        // $this->info('===> Paso 2.3: Empresas / Sucursales');
+        // $this->backfillEmpresasYSucursales($rolPrincipal, $rolSubordinado, $dry);
+
+        // $this->info('===> Paso 2.4: Admin "el chingon" y subordinados STAFF');
+        // $this->crearAdminElChingon($dry);
+
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
         app(PermissionRegistrar::class)->forgetCachedPermissions();
@@ -591,385 +615,662 @@ class MigrarUsuariosLegacy extends Command
         $this->line('   + Jerarquía aplicada: padres con subordinados y roles sincronizados.');
      }
 
-protected function backfillEmpresasYSucursales(Role $rolPrincipal, Role $rolSubordinado, bool $dry): void
-{
-    if (!Schema::hasTable('empresas') || !Schema::hasTable('sucursales')) {
-        $this->warn('   ! No existen tablas empresas/sucursales. Se omite Paso 2.3.');
-        return;
-    }
-    $tienePivot = Schema::hasTable('sucursal_user');
+    protected function backfillEmpresasYSucursales(Role $rolPrincipal, Role $rolSubordinado, bool $dry): void
+    {
+        if (!Schema::hasTable('empresas') || !Schema::hasTable('sucursales')) {
+            $this->warn('   ! No existen tablas empresas/sucursales. Se omite Paso 2.3.');
+            return;
+        }
+        $tienePivot = Schema::hasTable('sucursal_user');
 
-    // === NUEVO: principales por ROL O por LEGACY (NULL/0) ===
-    $principalesPorRol = DB::table('model_has_roles')
-        ->where('role_id', $rolPrincipal->id)
-        ->where('model_type', User::class)
-        ->pluck('model_id');
+        // Excluir al admin "el chingon" de este proceso (se maneja aparte)
+        $adminId = DB::table('users')
+            ->where('email', 'el.chingon@mtiendurance.com')
+            ->value('id');
 
-    $principalesPorLegacy = DB::table('users')
-        ->whereNull('super_id_legacy')
-        ->orWhere('super_id_legacy', 0)
-        ->pluck('id');
+        // === PRINCIPALES SOLO CLIENTES (tipo = 1) ===
+        // 1) Por rol cliente_principal
+        $principalesPorRol = DB::table('model_has_roles')
+            ->join('users', function ($join) {
+                $join->on('model_has_roles.model_id', '=', 'users.id')
+                    ->where('model_has_roles.model_type', User::class);
+            })
+            ->where('model_has_roles.role_id', $rolPrincipal->id)
+            ->where('users.tipo', 1) // SOLO clientes
+            ->pluck('users.id');
 
-    $principalesIds = collect()
-        ->merge($principalesPorRol)
-        ->merge($principalesPorLegacy)
-        ->unique()
-        ->map(fn($v) => (int) $v)
-        ->values();
+        // 2) Por legacy: super_id_legacy NULL o 0, pero SOLO tipo=1
+        $principalesPorLegacy = DB::table('users')
+            ->where('tipo', 1) // SOLO clientes
+            ->where(function ($q) {
+                $q->whereNull('super_id_legacy')
+                ->orWhere('super_id_legacy', 0);
+            })
+            ->pluck('id');
 
-    if ($principalesIds->isEmpty()) {
-        $this->line('   = No hay usuarios principales (ni por rol ni por legacy).');
-        return;
-    }
-    // === FIN NUEVO ===
+        $principalesIds = collect()
+            ->merge($principalesPorRol)
+            ->merge($principalesPorLegacy)
+            ->unique()
+            ->map(fn($v) => (int) $v)
+            ->filter(function ($id) use ($adminId) {
+                // Si tenemos admin y coincide, lo excluimos
+                if ($adminId) {
+                    return $id !== (int) $adminId;
+                }
+                return true;
+            })
+            ->values();
 
-    // 2) Traer principales
-    $principales = DB::table('users')
-        ->select('id', 'name', 'company_legacy', 'subordinados', 'empresa_id', 'sucursal_id')
-        ->whereIn('id', $principalesIds)
-        ->get()
-        ->keyBy('id');
+        if ($principalesIds->isEmpty()) {
+            $this->line('   = No hay usuarios principales (clientes) para Empresas/Sucursales.');
+            return;
+        }
+        // === FIN NUEVO ===
 
-    foreach ($principales as $principal) {
-        $principalId = (int) $principal->id;
+        // 2) Traer principales (SOLO clientes tipo=1)
+        $principales = DB::table('users')
+            ->select('id', 'name', 'company_legacy', 'subordinados', 'empresa_id', 'sucursal_id')
+            ->whereIn('id', $principalesIds)
+            ->where('tipo', 1) // refuerzo
+            ->get()
+            ->keyBy('id');
 
-        // Nombre de empresa (company_legacy del principal si existe; si no, name; si no, fallback)
-        $empresaNombre = trim((string)($principal->company_legacy ?? ''));
-        if ($empresaNombre === '') {
-            $empresaNombre = trim((string)$principal->name);
+        foreach ($principales as $principal) {
+            $principalId = (int) $principal->id;
+
+            // Nombre de empresa (company_legacy del principal si existe; si no, name; si no, fallback)
+            $empresaNombre = trim((string)($principal->company_legacy ?? ''));
             if ($empresaNombre === '') {
-                $empresaNombre = "Empresa de Usuario {$principalId}";
+                $empresaNombre = trim((string)$principal->name);
+                if ($empresaNombre === '') {
+                    $empresaNombre = "Empresa de Usuario {$principalId}";
+                }
+            }
+
+            // 3) Obtener/crear empresa
+            $empresaId = DB::table('empresas')->where('nombre', $empresaNombre)->value('id');
+            if (!$empresaId) {
+                if ($dry) {
+                    $this->line("   [DRY] Crear empresa(nombre='{$empresaNombre}')");
+                } else {
+                    $empresaId = DB::table('empresas')->insertGetId([
+                        'nombre'     => $empresaNombre,
+                        'rfc'        => null,
+                        'telefono'   => null,
+                        'direccion'  => null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    $this->line("   + Empresa creada id={$empresaId} nombre='{$empresaNombre}'");
+                }
+            } else {
+                $this->line("   = Empresa existente id={$empresaId} nombre='{$empresaNombre}'");
+            }
+
+            // 4) Sucursal "principal" = nombre de la empresa
+            $sucursalDefaultNombre = $empresaNombre;
+
+            // Intentar encontrar sucursal con el nombre de la empresa
+            $sucursalDefaultId = null;
+            if (!$dry) {
+                $sucursalDefaultId = DB::table('sucursales')
+                    ->where('empresa_id', $empresaId)
+                    ->where('nombre', $sucursalDefaultNombre)
+                    ->value('id');
+            }
+
+            // Si no existe, ver si hay una 'Matriz' para renombrarla
+            if (!$sucursalDefaultId) {
+                $sucursalMatrizId = null;
+                if (!$dry) {
+                    $sucursalMatrizId = DB::table('sucursales')
+                        ->where('empresa_id', $empresaId)
+                        ->where('nombre', 'Matriz')
+                        ->value('id');
+                }
+
+                if ($sucursalMatrizId) {
+                    if ($dry) {
+                        $this->line("   [DRY] Renombrar sucursal id={$sucursalMatrizId} de 'Matriz' a '{$sucursalDefaultNombre}'");
+                    } else {
+                        DB::table('sucursales')->where('id', $sucursalMatrizId)->update([
+                            'nombre'     => $sucursalDefaultNombre,
+                            'tipo'       => 1,
+                            'updated_at' => now(),
+                        ]);
+                        $sucursalDefaultId = $sucursalMatrizId;
+                        $this->line("   + Sucursal renombrada id={$sucursalDefaultId} ('{$sucursalDefaultNombre}')");
+                    }
+                }
+            }
+
+            // Si aún no existe, crearla
+            if (!$sucursalDefaultId) {
+                if ($dry) {
+                    $this->line("   [DRY] Crear sucursal(nombre='{$sucursalDefaultNombre}', empresa_id={$empresaId})");
+                } else {
+                    $sucursalDefaultId = DB::table('sucursales')->insertGetId([
+                        'empresa_id' => $empresaId,
+                        'nombre'     => $sucursalDefaultNombre,
+                        'tipo'       => 1, 
+                        'telefono'   => null,
+                        'direccion'  => null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    $this->line("   + Sucursal creada id={$sucursalDefaultId} ('{$sucursalDefaultNombre}')");
+                }
+            } else {
+                $this->line("   = Sucursal existente id={$sucursalDefaultId} ('{$sucursalDefaultNombre}')");
+            }
+
+            // 5) Asignar empresa/sucursal al principal
+            if ($dry) {
+                $this->line("   [DRY] users.id={$principalId} -> empresa_id={$empresaId}, sucursal_id={$sucursalDefaultId}");
+            } else {
+                DB::table('users')->where('id', $principalId)->update([
+                    'empresa_id'  => $empresaId,
+                    'sucursal_id' => $sucursalDefaultId,
+                    'updated_at'  => now(),
+                ]);
+            }
+
+            // 6) Subordinados… (igual que ya lo tenías)
+            $subsIds = [];
+            if ($principal->subordinados) {
+                try {
+                    $decoded = is_string($principal->subordinados)
+                        ? json_decode($principal->subordinados, true)
+                        : $principal->subordinados;
+                    if (is_array($decoded)) {
+                        $subsIds = array_values(array_unique(array_map('intval', $decoded)));
+                    }
+                } catch (\Throwable $e) { /* ignore */ }
+            }
+
+            if (!empty($subsIds)) {
+                $subs = DB::table('users')
+                    ->select('id', 'company_legacy')
+                    ->whereIn('id', $subsIds)
+                    ->get();
+
+                foreach ($subs as $sub) {
+                    $subId = (int) $sub->id;
+                    $sucursalDestinoId = $sucursalDefaultId;
+
+                    $nombreSucursalSub = trim((string)($sub->company_legacy ?? ''));
+                    if ($nombreSucursalSub !== '') {
+                        if (strcasecmp($nombreSucursalSub, $sucursalDefaultNombre) === 0) {
+                            $this->line("     = Sub {$subId} company_legacy = nombre de empresa -> usa sucursal default");
+                        } else {
+                            $existeSucursal = null;
+                            if (!$dry) {
+                                $existeSucursal = DB::table('sucursales')
+                                    ->where('empresa_id', $empresaId)
+                                    ->where('nombre', $nombreSucursalSub)
+                                    ->value('id');
+                            }
+                            if (!$existeSucursal) {
+                                if ($dry) {
+                                    $this->line("     [DRY] Crear sucursal(nombre='{$nombreSucursalSub}', empresa_id={$empresaId}) para sub {$subId}");
+                                } else {
+                                    $existeSucursal = DB::table('sucursales')->insertGetId([
+                                        'empresa_id' => $empresaId,
+                                        'nombre'     => $nombreSucursalSub,
+                                        'telefono'   => null,
+                                        'direccion'  => null,
+                                        'tipo'       => 2,
+                                        'created_at' => now(),
+                                        'updated_at' => now(),
+                                    ]);
+                                    $this->line("     + Sucursal creada id={$existeSucursal} ('{$nombreSucursalSub}')");
+                                }
+                            } else {
+                                $this->line("     = Sucursal existente id={$existeSucursal} ('{$nombreSucursalSub}')");
+                            }
+                            if ($existeSucursal) {
+                                $sucursalDestinoId = $existeSucursal;
+                            }
+                        }
+                    } else {
+                        $this->line("     = Sub {$subId} sin company_legacy -> usa sucursal default ('{$sucursalDefaultNombre}')");
+                    }
+
+                    if ($dry) {
+                        $this->line("     [DRY] users.id={$subId} -> empresa_id={$empresaId}, sucursal_id={$sucursalDestinoId}");
+                    } else {
+                        DB::table('users')->where('id', $subId)->update([
+                            'empresa_id'  => $empresaId,
+                            'sucursal_id' => $sucursalDestinoId,
+                            'updated_at'  => now(),
+                        ]);
+                    }
+
+                    if ($tienePivot) {
+                        if ($dry) {
+                            $this->line("       [DRY] Pivot sucursal_user: sucursal={$sucursalDestinoId}, user={$subId}");
+                        } else {
+                            $ya = DB::table('sucursal_user')
+                                ->where('sucursal_id', $sucursalDestinoId)
+                                ->where('user_id', $subId)
+                                ->exists();
+                            if (!$ya) {
+                                DB::table('sucursal_user')->insert([
+                                    'sucursal_id' => $sucursalDestinoId,
+                                    'user_id'     => $subId,
+                                    'created_at'  => now(),
+                                    'updated_at'  => now(),
+                                ]);
+                                $this->line("       + Pivot sucursal_user: sucursal={$sucursalDestinoId}, user={$subId}");
+                            }
+                        }
+                    }
+                }
+
+                // Pivot para el principal
+                if ($tienePivot) {
+                    if ($dry) {
+                        $this->line("     [DRY] Pivot sucursal_user (principal): sucursal={$sucursalDefaultId}, user={$principalId}");
+                    } else {
+                        $ya = DB::table('sucursal_user')
+                            ->where('sucursal_id', $sucursalDefaultId)
+                            ->where('user_id', $principalId)
+                            ->exists();
+                        if (!$ya) {
+                            DB::table('sucursal_user')->insert([
+                                'sucursal_id' => $sucursalDefaultId,
+                                'user_id'     => $principalId,
+                                'created_at'  => now(),
+                                'updated_at'  => now(),
+                            ]);
+                            $this->line("       + Pivot sucursal_user (principal): sucursal={$sucursalDefaultId}, user={$principalId}");
+                        }
+                    }
+                }
+            } else {
+                // Principal sin subordinados: mantener pivot
+                if ($tienePivot) {
+                    if ($dry) {
+                        $this->line("   [DRY] Pivot sucursal_user (principal sin subs): sucursal={$sucursalDefaultId}, user={$principalId}");
+                    } else {
+                        $ya = DB::table('sucursal_user')
+                            ->where('sucursal_id', $sucursalDefaultId)
+                            ->where('user_id', $principalId)
+                            ->exists();
+                        if (!$ya) {
+                            DB::table('sucursal_user')->insert([
+                                'sucursal_id' => $sucursalDefaultId,
+                                'user_id'     => $principalId,
+                                'created_at'  => now(),
+                                'updated_at'  => now(),
+                            ]);
+                            $this->line("   + Pivot sucursal_user (principal sin subs): sucursal={$sucursalDefaultId}, user={$principalId}");
+                        }
+                    }
+                }
             }
         }
 
-        // 3) Obtener/crear empresa
-        $empresaId = DB::table('empresas')->where('nombre', $empresaNombre)->value('id');
+        $this->line('   + Empresas/Sucursales: sucursal principal renombrada al nombre de la empresa y subordinados asignados correctamente.');
+    }
+
+
+    /**
+     * Crea (si no existen) Empresa y Sucursal con el mismo nombre ($baseName)
+     * y asigna empresa_id / sucursal_id al usuario. También inserta en el
+     * pivot sucursal_user si dicha tabla existe.
+     */
+    protected function crearEmpresaSucursalParaUsuario(int $userId, string $baseName, bool $dry): void
+    {
+        if (!Schema::hasTable('empresas') || !Schema::hasTable('sucursales')) {
+            $this->warn("   ! No existen tablas empresas/sucursales. Se omite creación para user {$userId}.");
+            return;
+        }
+
+        $baseName = mb_substr(trim($baseName) !== '' ? trim($baseName) : "Empresa de Usuario {$userId}", 0, 255);
+        $tienePivot = Schema::hasTable('sucursal_user');
+
+        // Si ya tiene empresa/sucursal, evitar trabajo innecesario
+        $userRow = DB::table('users')->where('id', $userId)->select('empresa_id','sucursal_id')->first();
+        if ($userRow && $userRow->empresa_id && $userRow->sucursal_id) {
+            $this->line("   = Usuario {$userId} ya tiene empresa_id={$userRow->empresa_id} y sucursal_id={$userRow->sucursal_id}");
+            return;
+        }
+
+        // Empresa: buscar por nombre
+        $empresaId = DB::table('empresas')->where('nombre', $baseName)->value('id');
+
         if (!$empresaId) {
             if ($dry) {
-                $this->line("   [DRY] Crear empresa(nombre='{$empresaNombre}')");
+                $this->line("   [DRY] Crear empresa(nombre='{$baseName}')");
             } else {
                 $empresaId = DB::table('empresas')->insertGetId([
-                    'nombre'     => $empresaNombre,
+                    'nombre'     => $baseName,
                     'rfc'        => null,
                     'telefono'   => null,
                     'direccion'  => null,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
-                $this->line("   + Empresa creada id={$empresaId} nombre='{$empresaNombre}'");
+                $this->line("   + Empresa creada id={$empresaId} nombre='{$baseName}'");
             }
         } else {
-            $this->line("   = Empresa existente id={$empresaId} nombre='{$empresaNombre}'");
+            $this->line("   = Empresa existente id={$empresaId} nombre='{$baseName}'");
         }
 
-        // 4) Sucursal "principal" = nombre de la empresa
-        $sucursalDefaultNombre = $empresaNombre;
-
-        // Intentar encontrar sucursal con el nombre de la empresa
-        $sucursalDefaultId = null;
+        // Sucursal: mismo nombre que la empresa/baseName, tipo=1
+        $sucursalId = null;
         if (!$dry) {
-            $sucursalDefaultId = DB::table('sucursales')
+            $sucursalId = DB::table('sucursales')
                 ->where('empresa_id', $empresaId)
-                ->where('nombre', $sucursalDefaultNombre)
+                ->where('nombre', $baseName)
                 ->value('id');
         }
 
-        // Si no existe, ver si hay una 'Matriz' para renombrarla
-        if (!$sucursalDefaultId) {
-            $sucursalMatrizId = null;
-            if (!$dry) {
-                $sucursalMatrizId = DB::table('sucursales')
-                    ->where('empresa_id', $empresaId)
-                    ->where('nombre', 'Matriz')
-                    ->value('id');
-            }
-
-            if ($sucursalMatrizId) {
-                if ($dry) {
-                    $this->line("   [DRY] Renombrar sucursal id={$sucursalMatrizId} de 'Matriz' a '{$sucursalDefaultNombre}'");
-                } else {
-                    DB::table('sucursales')->where('id', $sucursalMatrizId)->update([
-                        'nombre'     => $sucursalDefaultNombre,
-                         'tipo'       => 1,
-                        'updated_at' => now(),
-                    ]);
-                    $sucursalDefaultId = $sucursalMatrizId;
-                    $this->line("   + Sucursal renombrada id={$sucursalDefaultId} ('{$sucursalDefaultNombre}')");
-                }
-            }
-        }
-
-        // Si aún no existe, crearla
-        if (!$sucursalDefaultId) {
+        if (!$sucursalId) {
             if ($dry) {
-                $this->line("   [DRY] Crear sucursal(nombre='{$sucursalDefaultNombre}', empresa_id={$empresaId})");
+                $this->line("   [DRY] Crear sucursal(nombre='{$baseName}', empresa_id={$empresaId}, tipo=1)");
             } else {
-                $sucursalDefaultId = DB::table('sucursales')->insertGetId([
+                $sucursalId = DB::table('sucursales')->insertGetId([
                     'empresa_id' => $empresaId,
-                    'nombre'     => $sucursalDefaultNombre,
-                    'tipo'       => 1, 
+                    'nombre'     => $baseName,
+                    'tipo'       => 1, // principal
                     'telefono'   => null,
                     'direccion'  => null,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
-                $this->line("   + Sucursal creada id={$sucursalDefaultId} ('{$sucursalDefaultNombre}')");
+                $this->line("   + Sucursal creada id={$sucursalId} ('{$baseName}')");
             }
         } else {
-            $this->line("   = Sucursal existente id={$sucursalDefaultId} ('{$sucursalDefaultNombre}')");
+            $this->line("   = Sucursal existente id={$sucursalId} ('{$baseName}')");
         }
 
-        // 5) Asignar empresa/sucursal al principal
+        // Asignar al usuario
         if ($dry) {
-            $this->line("   [DRY] users.id={$principalId} -> empresa_id={$empresaId}, sucursal_id={$sucursalDefaultId}");
+            $this->line("   [DRY] users.id={$userId} -> empresa_id={$empresaId}, sucursal_id={$sucursalId}");
         } else {
-            DB::table('users')->where('id', $principalId)->update([
+            DB::table('users')->where('id', $userId)->update([
                 'empresa_id'  => $empresaId,
-                'sucursal_id' => $sucursalDefaultId,
+                'sucursal_id' => $sucursalId,
                 'updated_at'  => now(),
             ]);
         }
 
-        // 6) Subordinados…
-        $subsIds = [];
-        if ($principal->subordinados) {
-            try {
-                $decoded = is_string($principal->subordinados)
-                    ? json_decode($principal->subordinados, true)
-                    : $principal->subordinados;
-                if (is_array($decoded)) {
-                    $subsIds = array_values(array_unique(array_map('intval', $decoded)));
-                }
-            } catch (\Throwable $e) { /* ignore */ }
+        // Pivot sucursal_user (si existe)
+        if ($tienePivot && !$dry) {
+            $ya = DB::table('sucursal_user')
+                ->where('sucursal_id', $sucursalId)
+                ->where('user_id', $userId)
+                ->exists();
+            if (!$ya) {
+                DB::table('sucursal_user')->insert([
+                    'sucursal_id' => $sucursalId,
+                    'user_id'     => $userId,
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ]);
+                $this->line("   + Pivot sucursal_user: sucursal={$sucursalId}, user={$userId}");
+            } else {
+                $this->line("   = Pivot sucursal_user ya existente: sucursal={$sucursalId}, user={$userId}");
+            }
+        }
+    }
+
+
+
+    /**
+     * Crea (o actualiza) el usuario administrador "el chingon"
+     * con empresa "MTIENDURANCE" y sucursal "Comercial de Viniles",
+     * y asigna como subordinados a todos los usuarios STAFF,
+     * detectados por tipo=3 o por rol Spatie "staff".
+     * Todos los STAFF comparten esa empresa/sucursal.
+     */
+    protected function crearAdminElChingon(bool $dry): void
+    {
+        $nombreAdmin    = 'el chingon';
+        $emailAdmin     = 'el.chingon@mtiendurance.com';
+        $nombreEmpresa  = 'MTIENDURANCE';
+        $nombreSucursal = 'Comercial de Viniles';
+
+        // Config tipo "principal"
+        $configPrincipal = [
+            'flag-user-sel-preproyectos'     => false,
+            'flag-can-user-sel-preproyectos' => true,
+        ];
+
+        // ==========================
+        // 1) Detectar STAFF (por tipo y por rol Spatie)
+        // ==========================
+
+        // Por tipo=3
+        $staffIdsPorTipo = DB::table('users')
+            ->where('tipo', 3)
+            ->pluck('id')
+            ->map(fn ($v) => (int) $v);
+
+        // Por rol Spatie "staff"
+        $rolStaff = Role::where('name', 'staff')->first();
+        $staffIdsPorRol = collect();
+        if ($rolStaff) {
+            $staffIdsPorRol = DB::table('model_has_roles')
+                ->where('role_id', $rolStaff->id)
+                ->where('model_type', User::class)
+                ->pluck('model_id')
+                ->map(fn ($v) => (int) $v);
         }
 
-        if (!empty($subsIds)) {
-            $subs = DB::table('users')
-                ->select('id', 'company_legacy')
-                ->whereIn('id', $subsIds)
-                ->get();
+        // Unir ambos (tipo y rol) y dejar únicos
+        $staffIds = $staffIdsPorTipo
+            ->merge($staffIdsPorRol)
+            ->unique()
+            ->values()
+            ->all();
 
-            foreach ($subs as $sub) {
-                $subId = (int) $sub->id;
-                $sucursalDestinoId = $sucursalDefaultId;
+        $this->line('   = STAFF detectados (tipo=3 o rol staff) como subordinados de "el chingon": ' . json_encode($staffIds));
 
-                $nombreSucursalSub = trim((string)($sub->company_legacy ?? ''));
-                if ($nombreSucursalSub !== '') {
-                    if (strcasecmp($nombreSucursalSub, $sucursalDefaultNombre) === 0) {
-                        $this->line("     = Sub {$subId} company_legacy = nombre de empresa -> usa sucursal default");
-                    } else {
-                        $existeSucursal = null;
-                        if (!$dry) {
-                            $existeSucursal = DB::table('sucursales')
-                                ->where('empresa_id', $empresaId)
-                                ->where('nombre', $nombreSucursalSub)
-                                ->value('id');
-                        }
-                        if (!$existeSucursal) {
-                            if ($dry) {
-                                $this->line("     [DRY] Crear sucursal(nombre='{$nombreSucursalSub}', empresa_id={$empresaId}) para sub {$subId}");
-                            } else {
-                                $existeSucursal = DB::table('sucursales')->insertGetId([
-                                    'empresa_id' => $empresaId,
-                                    'nombre'     => $nombreSucursalSub,
-                                    'telefono'   => null,
-                                    'direccion'  => null,
-                                    'tipo'       => 2,
-                                    'created_at' => now(),
-                                    'updated_at' => now(),
-                                ]);
-                                $this->line("     + Sucursal creada id={$existeSucursal} ('{$nombreSucursalSub}')");
-                            }
-                        } else {
-                            $this->line("     = Sucursal existente id={$existeSucursal} ('{$nombreSucursalSub}')");
-                        }
-                        if ($existeSucursal) {
-                            $sucursalDestinoId = $existeSucursal;
-                        }
-                    }
-                } else {
-                    $this->line("     = Sub {$subId} sin company_legacy -> usa sucursal default ('{$sucursalDefaultNombre}')");
-                }
+        // Intentar obtener rol admin (si existe)
+        $rolAdmin = Role::where('name', 'admin')->first();
+        if (!$rolAdmin) {
+            $this->warn('   ! Rol "admin" no encontrado en Spatie. Se creará/actualizará el usuario pero sin asignar rol admin.');
+        }
 
-                if ($dry) {
-                    $this->line("     [DRY] users.id={$subId} -> empresa_id={$empresaId}, sucursal_id={$sucursalDestinoId}");
-                } else {
-                    DB::table('users')->where('id', $subId)->update([
-                        'empresa_id'  => $empresaId,
-                        'sucursal_id' => $sucursalDestinoId,
-                        'updated_at'  => now(),
-                    ]);
-                }
+        // ==========================
+        // 2) Crear / actualizar usuario "el chingon"
+        // ==========================
 
-                if ($tienePivot) {
-                    if ($dry) {
-                        $this->line("       [DRY] Pivot sucursal_user: sucursal={$sucursalDestinoId}, user={$subId}");
-                    } else {
-                        $ya = DB::table('sucursal_user')
-                            ->where('sucursal_id', $sucursalDestinoId)
-                            ->where('user_id', $subId)
-                            ->exists();
-                        if (!$ya) {
-                            DB::table('sucursal_user')->insert([
-                                'sucursal_id' => $sucursalDestinoId,
-                                'user_id'     => $subId,
-                                'created_at'  => now(),
-                                'updated_at'  => now(),
-                            ]);
-                            $this->line("       + Pivot sucursal_user: sucursal={$sucursalDestinoId}, user={$subId}");
-                        }
-                    }
-                }
-            }
+        $existing = DB::table('users')->where('email', $emailAdmin)->first();
+        $adminId  = null;
 
-            // Pivot para el principal
-            if ($tienePivot) {
-                if ($dry) {
-                    $this->line("     [DRY] Pivot sucursal_user (principal): sucursal={$sucursalDefaultId}, user={$principalId}");
-                } else {
-                    $ya = DB::table('sucursal_user')
-                        ->where('sucursal_id', $sucursalDefaultId)
-                        ->where('user_id', $principalId)
-                        ->exists();
-                    if (!$ya) {
-                        DB::table('sucursal_user')->insert([
-                            'sucursal_id' => $sucursalDefaultId,
-                            'user_id'     => $principalId,
-                            'created_at'  => now(),
-                            'updated_at'  => now(),
-                        ]);
-                        $this->line("       + Pivot sucursal_user (principal): sucursal={$sucursalDefaultId}, user={$principalId}");
-                    }
-                }
+        if ($existing) {
+            $adminId = (int) $existing->id;
+            $this->line("   = Ya existe usuario admin con email {$emailAdmin} (id={$adminId}), se actualizará.");
+
+            $update = [
+                'name'                      => $nombreAdmin,
+                'tipo'                      => 4, // 4 = ADMIN
+                'config'                    => json_encode($configPrincipal),
+                'subordinados'              => json_encode($staffIds),
+                'user_can_sel_preproyectos' => json_encode($staffIds),
+                'updated_at'                => now(),
+            ];
+
+            if ($dry) {
+                $this->line("   [DRY] UPDATE users.id={$adminId} (el chingon) con nuevos subordinados y config principal");
+            } else {
+                DB::table('users')->where('id', $adminId)->update($update);
             }
         } else {
-            // Principal sin subordinados: mantener pivot
-            if ($tienePivot) {
-                if ($dry) {
-                    $this->line("   [DRY] Pivot sucursal_user (principal sin subs): sucursal={$sucursalDefaultId}, user={$principalId}");
-                } else {
-                    $ya = DB::table('sucursal_user')
-                        ->where('sucursal_id', $sucursalDefaultId)
-                        ->where('user_id', $principalId)
-                        ->exists();
-                    if (!$ya) {
-                        DB::table('sucursal_user')->insert([
-                            'sucursal_id' => $sucursalDefaultId,
-                            'user_id'     => $principalId,
-                            'created_at'  => now(),
-                            'updated_at'  => now(),
-                        ]);
-                        $this->line("   + Pivot sucursal_user (principal sin subs): sucursal={$sucursalDefaultId}, user={$principalId}");
-                    }
-                }
+            $plainPassword = 'ElChingon2025!'; // cámbiala después
+            $passwordHash  = bcrypt($plainPassword);
+
+            $row = [
+                'name'                      => $nombreAdmin,
+                'email'                     => $emailAdmin,
+                'email_verified_at'         => now(),
+                'password'                  => $passwordHash,
+                'remember_token'            => Str::random(10),
+                'tipo'                      => 4, // ADMIN
+                'config'                    => json_encode($configPrincipal),
+                'user_can_sel_preproyectos' => json_encode($staffIds),
+                'subordinados'              => json_encode($staffIds),
+                'empresa_id'                => null,
+                'sucursal_id'               => null,
+                'user_legacy'               => null,
+                'company_legacy'            => null,
+                'super_legacy'              => null,
+                'super_id_legacy'           => null,
+                'created_at'                => now(),
+                'updated_at'                => now(),
+            ];
+
+            if ($dry) {
+                $this->line("   [DRY] Insertaría usuario admin '{$nombreAdmin}' con email={$emailAdmin}");
+                $adminId = 0;
+            } else {
+                $adminId = DB::table('users')->insertGetId($row);
+                $this->line("   + Usuario admin creado id={$adminId} email={$emailAdmin}");
             }
         }
-    }
 
-    $this->line('   + Empresas/Sucursales: sucursal principal renombrada al nombre de la empresa y subordinados asignados correctamente.');
-}
+        // ==========================
+        // 3) Crear/asegurar Empresa "MTIENDURANCE" y Sucursal "Comercial de Viniles"
+        // ==========================
 
-/**
- * Crea (si no existen) Empresa y Sucursal con el mismo nombre ($baseName)
- * y asigna empresa_id / sucursal_id al usuario. También inserta en el
- * pivot sucursal_user si dicha tabla existe.
- */
-protected function crearEmpresaSucursalParaUsuario(int $userId, string $baseName, bool $dry): void
-{
-    if (!Schema::hasTable('empresas') || !Schema::hasTable('sucursales')) {
-        $this->warn("   ! No existen tablas empresas/sucursales. Se omite creación para user {$userId}.");
-        return;
-    }
-
-    $baseName = mb_substr(trim($baseName) !== '' ? trim($baseName) : "Empresa de Usuario {$userId}", 0, 255);
-    $tienePivot = Schema::hasTable('sucursal_user');
-
-    // Si ya tiene empresa/sucursal, evitar trabajo innecesario
-    $userRow = DB::table('users')->where('id', $userId)->select('empresa_id','sucursal_id')->first();
-    if ($userRow && $userRow->empresa_id && $userRow->sucursal_id) {
-        $this->line("   = Usuario {$userId} ya tiene empresa_id={$userRow->empresa_id} y sucursal_id={$userRow->sucursal_id}");
-        return;
-    }
-
-    // Empresa: buscar por nombre
-    $empresaId = DB::table('empresas')->where('nombre', $baseName)->value('id');
-
-    if (!$empresaId) {
         if ($dry) {
-            $this->line("   [DRY] Crear empresa(nombre='{$baseName}')");
-        } else {
+            $this->line("   [DRY] Crear/asegurar empresa '{$nombreEmpresa}' y sucursal '{$nombreSucursal}'");
+            return;
+        }
+
+        if (!$adminId || $adminId <= 0) {
+            $this->warn("   ! No se tiene un adminId válido para 'el chingon'.");
+            return;
+        }
+
+        if (!Schema::hasTable('empresas') || !Schema::hasTable('sucursales')) {
+            $this->warn("   ! No existen tablas empresas/sucursales. No se pueden asignar a 'el chingon' ni a STAFF.");
+            return;
+        }
+
+        // Empresa MTIENDURANCE
+        $empresaId = DB::table('empresas')
+            ->where('nombre', $nombreEmpresa)
+            ->value('id');
+
+        if (!$empresaId) {
             $empresaId = DB::table('empresas')->insertGetId([
-                'nombre'     => $baseName,
+                'nombre'     => $nombreEmpresa,
                 'rfc'        => null,
                 'telefono'   => null,
                 'direccion'  => null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-            $this->line("   + Empresa creada id={$empresaId} nombre='{$baseName}'");
+            $this->line("   + Empresa creada id={$empresaId} nombre='{$nombreEmpresa}'");
+        } else {
+            $this->line("   = Empresa existente id={$empresaId} nombre='{$nombreEmpresa}'");
         }
-    } else {
-        $this->line("   = Empresa existente id={$empresaId} nombre='{$baseName}'");
-    }
 
-    // Sucursal: mismo nombre que la empresa/baseName, tipo=1
-    $sucursalId = null;
-    if (!$dry) {
+
+        // Asegurar que el propietario de la empresa sea "el chingon"
+        if ($empresaId && $adminId && !$dry) {
+            // Detectar columna de propietario
+            $propColumn = null;
+            if (Schema::hasColumn('empresas', 'propietario_id')) {
+                $propColumn = 'propietario_id';
+            } elseif (Schema::hasColumn('empresas', 'owner_id')) {
+                $propColumn = 'owner_id';
+            } elseif (Schema::hasColumn('empresas', 'user_id')) {
+                $propColumn = 'user_id';
+            }
+
+            if ($propColumn) {
+                DB::table('empresas')
+                    ->where('id', $empresaId)
+                    ->update([
+                        $propColumn => $adminId,
+                    ]);
+
+                $this->line("   + Propietario de empresa MTIENDURANCE actualizado ({$propColumn}={$adminId})");
+            } else {
+                $this->warn('   ! No se encontró columna de propietario en empresas (propietario_id / owner_id / user_id).');
+            }
+        }
+
+        // Sucursal Comercial de Viniles (tipo=1)
         $sucursalId = DB::table('sucursales')
             ->where('empresa_id', $empresaId)
-            ->where('nombre', $baseName)
+            ->where('nombre', $nombreSucursal)
             ->value('id');
-    }
 
-    if (!$sucursalId) {
-        if ($dry) {
-            $this->line("   [DRY] Crear sucursal(nombre='{$baseName}', empresa_id={$empresaId}, tipo=1)");
-        } else {
+        if (!$sucursalId) {
             $sucursalId = DB::table('sucursales')->insertGetId([
                 'empresa_id' => $empresaId,
-                'nombre'     => $baseName,
+                'nombre'     => $nombreSucursal,
                 'tipo'       => 1, // principal
                 'telefono'   => null,
                 'direccion'  => null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-            $this->line("   + Sucursal creada id={$sucursalId} ('{$baseName}')");
+            $this->line("   + Sucursal creada id={$sucursalId} nombre='{$nombreSucursal}'");
+        } else {
+            $this->line("   = Sucursal existente id={$sucursalId} nombre='{$nombreSucursal}'");
         }
-    } else {
-        $this->line("   = Sucursal existente id={$sucursalId} ('{$baseName}')");
-    }
 
-    // Asignar al usuario
-    if ($dry) {
-        $this->line("   [DRY] users.id={$userId} -> empresa_id={$empresaId}, sucursal_id={$sucursalId}");
-    } else {
-        DB::table('users')->where('id', $userId)->update([
+        // Asignar empresa/sucursal al admin
+        DB::table('users')->where('id', $adminId)->update([
             'empresa_id'  => $empresaId,
             'sucursal_id' => $sucursalId,
             'updated_at'  => now(),
         ]);
-    }
+        $this->line("   + 'el chingon' asignado a empresa_id={$empresaId}, sucursal_id={$sucursalId}");
 
-    // Pivot sucursal_user (si existe)
-    if ($tienePivot && !$dry) {
-        $ya = DB::table('sucursal_user')
-            ->where('sucursal_id', $sucursalId)
-            ->where('user_id', $userId)
-            ->exists();
-        if (!$ya) {
-            DB::table('sucursal_user')->insert([
-                'sucursal_id' => $sucursalId,
-                'user_id'     => $userId,
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ]);
-            $this->line("   + Pivot sucursal_user: sucursal={$sucursalId}, user={$userId}");
+        // Rol admin
+        if ($rolAdmin) {
+            $this->asignarRolSpatiePorId($adminId, $rolAdmin, false);
+        }
+
+        // ==========================
+        // 4) Asignar TODOS los STAFF a esa misma empresa/sucursal
+        // ==========================
+
+        if (!empty($staffIds)) {
+            DB::table('users')
+                ->whereIn('id', $staffIds)
+                ->update([
+                    'empresa_id'  => $empresaId,
+                    'sucursal_id' => $sucursalId,
+                    'updated_at'  => now(),
+                ]);
+
+            $this->line("   + STAFF actualizados para usar la misma empresa/sucursal que 'el chingon'.");
+
+            if (Schema::hasTable('sucursal_user')) {
+                foreach ($staffIds as $sid) {
+                    $ya = DB::table('sucursal_user')
+                        ->where('sucursal_id', $sucursalId)
+                        ->where('user_id', $sid)
+                        ->exists();
+
+                    if (!$ya) {
+                        DB::table('sucursal_user')->insert([
+                            'sucursal_id' => $sucursalId,
+                            'user_id'     => $sid,
+                            'created_at'  => now(),
+                            'updated_at'  => now(),
+                        ]);
+                        $this->line("       + Pivot sucursal_user: sucursal={$sucursalId}, user={$sid}");
+                    } else {
+                        $this->line("       = Pivot sucursal_user ya existe: sucursal={$sucursalId}, user={$sid}");
+                    }
+                }
+            }
         } else {
-            $this->line("   = Pivot sucursal_user ya existente: sucursal={$sucursalId}, user={$userId}");
+            $this->line("   = No se encontraron STAFF (tipo=3 o rol staff) para asignar a la empresa/sucursal de 'el chingon'.");
         }
     }
-}
 
 
 
@@ -1013,14 +1314,16 @@ protected function crearEmpresaSucursalParaUsuario(int $userId, string $baseName
             File::append($this->logFilePath, '['.now()->toDateTimeString()."] {$level}: {$line}\n");
         }
     }
+
     public function info($string, $verbosity = null){ $this->appendToMigrationLog('INFO', (string)$string); return parent::info($string, $verbosity); }
+
     public function warn($string, $verbosity = null){ $this->appendToMigrationLog('WARN', (string)$string); return parent::warn($string, $verbosity); }
+
     public function error($string, $verbosity = null){ $this->appendToMigrationLog('ERROR',(string)$string); return parent::error($string, $verbosity); }
     public function line($string, $style = null, $verbosity = null){
         $this->appendToMigrationLog($style ? strtoupper((string)$style) : 'LINE', (string)$string);
         return parent::line($string, $style, $verbosity);
     }
-
 
     protected function esPrincipalDesdeLegacy(?int $superIdLegacy): bool
     {

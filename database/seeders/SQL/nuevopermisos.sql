@@ -1074,8 +1074,6 @@ INSERT INTO `tipo_envio` (`id`, `nombre`, `descripcion`, `dias_envio`, `created_
 
 
 REPLACE INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `remember_token`, `config`, `user_can_sel_preproyectos`, `subordinados`, `empresa_id`, `sucursal_id`, `created_at`, `updated_at`, `role_id`) VALUES
-(9001, 'german USER', 'german@mtiendurance.com', NULL, '$2y$12$3g3wGpb3AaoxPEskNWWmaOcTu8z9pBrGR6ulDBkNXJ2H7YwZYKg.i', NULL, NULL, NULL, NULL, NULL, NULL, '2025-06-09 21:24:22', '2025-06-09 21:24:22', NULL),
-(9002, 'Admin User', 'ingjosue.cardona@gmail.com', NULL, '$2y$12$xUAE.yUwUCEYhq6Sm4auR.jgIVRQzGYfTr4bJhAdPQ.R9hDIcrbO.', 'XzLJquJ6s8goj1vR4sXPlNlSY9TNLt58lZQxgMIKT4rRNpKHP44uFB4VI8Fl', NULL, NULL, NULL, NULL, NULL, '2025-06-09 21:24:23', '2025-06-09 21:24:23', NULL),
-(9003, 'Carlos Prueba', 'carlos@mtiendurance.com', NULL, '$2y$12$t11kGJmU06fojTsOt2ZCeehn40o1EZuI23BoWT7YlPVbolxXT6tli', NULL, NULL, NULL, NULL, NULL, NULL, '2025-06-09 21:24:23', '2025-06-09 21:24:23', NULL);
+(9002, 'Admin User', 'ingjosue.cardona@gmail.com', NULL, '$2y$12$xUAE.yUwUCEYhq6Sm4auR.jgIVRQzGYfTr4bJhAdPQ.R9hDIcrbO.', 'XzLJquJ6s8goj1vR4sXPlNlSY9TNLt58lZQxgMIKT4rRNpKHP44uFB4VI8Fl', NULL, NULL, NULL, NULL, NULL, '2025-06-09 21:24:23', '2025-06-09 21:24:23', NULL);
 COMMIT;
 

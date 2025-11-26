@@ -71,14 +71,14 @@ class ConfiguracionesUsuarioSucursal extends Component
 
         $empresasQuery = Empresa::orderBy('nombre');
 
-        if (!$user->hasRole('admin')) {
-            if ($user->empresa_id) {
-                $sucursalesQuery->where('empresa_id', $user->empresa_id);
-                $empresasQuery->where('id', $user->empresa_id);
-            } else {
-                $sucursalesQuery->whereRaw('0=1');
-                $empresasQuery->whereRaw('0=1');
-            }
+        if ($user && $user->empresa_id) {
+            // SIEMPRE solo la empresa del usuario consultado
+            $sucursalesQuery->where('empresa_id', $user->empresa_id);
+            $empresasQuery->where('id', $user->empresa_id);
+        } else {
+            // Usuario sin empresa => no ve nada
+            $sucursalesQuery->whereRaw('0=1');
+            $empresasQuery->whereRaw('0=1');
         }
 
         return view('livewire.usuarios.configuraciones-usuario-sucursal', [
@@ -102,13 +102,16 @@ class ConfiguracionesUsuarioSucursal extends Component
     public function openCreateModal()
     {
         $this->resetInput();
-        // En creación siempre será Secundaria
-        $this->tipo = 2;
+        $this->tipo = 2; // siempre Secundaria
 
-        // Preseleccionar empresa por defecto según el usuario actual
         $user = User::find($this->userId);
+
         if ($user && $user->empresa_id) {
             $this->empresa_id = $user->empresa_id;
+        } else {
+            // Si no tiene empresa, no permitimos crear
+            $this->dispatch('notify', message: 'El usuario no tiene organización asignada.');
+            return;
         }
 
         $this->showSucursalModal = true;
@@ -116,7 +119,14 @@ class ConfiguracionesUsuarioSucursal extends Component
 
     public function openEditModal($id)
     {
-        $s = Sucursal::findOrFail($id);
+        $user = User::find($this->userId);
+
+        $s = Sucursal::where('id', $id)
+            ->when($user && $user->empresa_id, fn ($q) =>
+                $q->where('empresa_id', $user->empresa_id)
+            )
+            ->firstOrFail();
+
         $this->editingId    = $s->id;
         $this->empresa_id   = $s->empresa_id;
         $this->nombre       = $s->nombre;
@@ -136,6 +146,16 @@ class ConfiguracionesUsuarioSucursal extends Component
         // En creación el tipo SIEMPRE será Secundaria
         $this->tipo = 2;
 
+        $user = User::find($this->userId);
+
+        if (!$user || !$user->empresa_id) {
+            $this->dispatch('notify', message: 'El usuario no tiene organización asignada.');
+            return;
+        }
+
+        // Blindamos empresa_id para que no se pueda cambiar vía Livewire
+        $this->empresa_id = $user->empresa_id;
+
         $this->validate();
 
         Sucursal::create([
@@ -153,7 +173,16 @@ class ConfiguracionesUsuarioSucursal extends Component
 
     public function update()
     {
-        // Validamos sólo campos editables; 'tipo' NO se valida ni se toma desde el formulario
+        $user = User::find($this->userId);
+
+        if (!$user || !$user->empresa_id) {
+            $this->dispatch('notify', message: 'El usuario no tiene organización asignada.');
+            return;
+        }
+
+        // Blindamos empresa_id
+        $this->empresa_id = $user->empresa_id;
+
         $this->validate([
             'empresa_id' => 'required|exists:empresas,id',
             'nombre'     => 'required|string|max:255',
@@ -161,15 +190,16 @@ class ConfiguracionesUsuarioSucursal extends Component
             'direccion'  => 'nullable|string|max:255',
         ]);
 
-        $sucursal = Sucursal::findOrFail($this->editingId);
+        $sucursal = Sucursal::where('id', $this->editingId)
+            ->where('empresa_id', $user->empresa_id)
+            ->firstOrFail();
 
         $sucursal->update([
             'empresa_id' => $this->empresa_id,
             'nombre'     => $this->nombre,
             'telefono'   => $this->telefono,
             'direccion'  => $this->direccion,
-            // El tipo NO se toca; se conserva el que ya tiene en BD
-            'tipo'       => $sucursal->tipo,
+            'tipo'       => $sucursal->tipo, // no se toca
         ]);
 
         $this->resetInput();
@@ -177,19 +207,36 @@ class ConfiguracionesUsuarioSucursal extends Component
         $this->dispatch('notify', message: 'Sucursal actualizada correctamente');
     }
 
+
     public function delete($id)
     {
-        Sucursal::destroy($id);
+        $user = User::find($this->userId);
+
+        $sucursal = Sucursal::where('id', $id)
+            ->when($user && $user->empresa_id, fn ($q) =>
+                $q->where('empresa_id', $user->empresa_id)
+            )
+            ->firstOrFail();
+
+        $sucursal->delete();
+
         $this->dispatch('notify', message: 'Sucursal eliminada');
     }
+
 
     /* --------- Modal de usuarios por sucursal --------- */
 
     public function openUserModal($sucursalId)
     {
-        $this->selectedSucursal = Sucursal::with('usuarios')->findOrFail($sucursalId);
+        $user = User::find($this->userId);
 
-        // Aquí se pasa la organización de la sucursal
+        $this->selectedSucursal = Sucursal::with('usuarios')
+            ->where('id', $sucursalId)
+            ->when($user && $user->empresa_id, fn ($q) =>
+                $q->where('empresa_id', $user->empresa_id)
+            )
+            ->firstOrFail();
+
         $this->cargarUsuariosDisponiblesPorEmpresa($this->selectedSucursal->empresa_id);
 
         $this->selectedUsers = $this->selectedSucursal
@@ -199,6 +246,7 @@ class ConfiguracionesUsuarioSucursal extends Component
 
         $this->showUserModal = true;
     }
+
 
     // Asignación inmediata (desde "disponibles" -> "asignados")
     public function assignUserToSucursal(int $userId): void
@@ -228,7 +276,15 @@ class ConfiguracionesUsuarioSucursal extends Component
     // Modal SOLO de asignados (lectura)
     public function openAssignedOnlyModal($sucursalId)
     {
-        $this->selectedSucursal = Sucursal::with('usuarios')->findOrFail($sucursalId);
+        $user = User::find($this->userId);
+
+        $this->selectedSucursal = Sucursal::with('usuarios')
+            ->where('id', $sucursalId)
+            ->when($user && $user->empresa_id, fn ($q) =>
+                $q->where('empresa_id', $user->empresa_id)
+            )
+            ->firstOrFail();
+
         $this->selectedUsers = $this->selectedSucursal
             ->usuarios()
             ->pluck('id')

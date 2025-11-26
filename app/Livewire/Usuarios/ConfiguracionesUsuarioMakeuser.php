@@ -64,7 +64,9 @@ class ConfiguracionesUsuarioMakeuser extends Component
     public function loadSubordinados()
     {
         $ids = $this->jefe->subordinados ?? [];
+
         $this->subordinados = User::whereIn('id', $ids)
+            ->where('empresa_id', $this->jefe->empresa_id) // SOLO misma empresa del jefe
             ->with(['sucursal:id,nombre,tipo'])
             ->get();
     }
@@ -81,19 +83,32 @@ class ConfiguracionesUsuarioMakeuser extends Component
 
     public function showCreateForm()
     {
+        if (!$this->jefe->empresa_id) {
+            $this->dispatch('notify', type: 'error', message: 'El usuario no tiene organización asignada.');
+            return;
+        }
+
         $this->resetForm();
+
+        // Sucursales SOLO de la empresa del jefe
         $this->loadSucursalesForSelect($this->jefe->empresa_id);
 
-        // En creación no bloqueamos campos (tu requisito fue para EDICIÓN)
+        // En creación no bloqueamos campos
         $this->nameLocked = false;
         $this->sucursalLocked = false;
 
         $this->showForm = true;
     }
 
+
     public function showEditForm($id)
     {
-        $user = User::findOrFail($id);
+        $idsSubordinados = $this->jefe->subordinados ?? [];
+
+        $user = User::where('id', $id)
+            ->where('empresa_id', $this->jefe->empresa_id) // misma empresa
+            ->whereIn('id', $idsSubordinados)              // tiene que ser subordinado de este jefe
+            ->firstOrFail();
 
         $this->editingId   = $user->id;
         $this->name        = $user->name;
@@ -105,7 +120,7 @@ class ConfiguracionesUsuarioMakeuser extends Component
         $this->nameLocked     = !$this->canAdmin;
         $this->sucursalLocked = !$this->canAdmin;
 
-        // sucursales según empresa del jefe (política del sistema)
+        // Sucursales según empresa del jefe
         $this->loadSucursalesForSelect($this->jefe->empresa_id);
 
         $this->showForm = true;
@@ -127,13 +142,17 @@ class ConfiguracionesUsuarioMakeuser extends Component
         }
 
         if ($this->editingId) {
-            // UPDATE
-            $user = User::findOrFail($this->editingId);
+            // UPDATE: solo usuarios subordinados de la empresa del jefe
+            $idsSubordinados = $this->jefe->subordinados ?? [];
+
+            $user = User::where('id', $this->editingId)
+                ->where('empresa_id', $this->jefe->empresa_id)
+                ->whereIn('id', $idsSubordinados)
+                ->firstOrFail();
 
             DB::transaction(function () use ($user) {
-                // Si NO es admin, ignora cambios de nombre y sucursal.
                 if ($this->canAdmin) {
-                    $user->name = $this->name;
+                    $user->name        = $this->name;
                     $user->sucursal_id = $this->sucursal_id ?: null;
                 }
 
@@ -143,26 +162,28 @@ class ConfiguracionesUsuarioMakeuser extends Component
                     $user->password = Hash::make($this->password);
                 }
 
-                // política: asegura empresa del subordinado = empresa del jefe
-                if (!$user->empresa_id) {
-                    $user->empresa_id = $this->jefe->empresa_id;
-                }
+                // Asegura empresa del subordinado = empresa del jefe
+                $user->empresa_id = $this->jefe->empresa_id;
 
                 $user->save();
             });
 
         } else {
-            // CREATE
+            // CREATE: siempre misma empresa que el jefe
+            if (!$this->jefe->empresa_id) {
+                $this->dispatch('notify', type: 'error', message: 'El usuario no tiene organización asignada.');
+                return;
+            }
+
             DB::transaction(function () {
                 $user = User::create([
                     'name'       => $this->name,
                     'email'      => $this->email,
                     'password'   => Hash::make($this->password),
-                    'empresa_id' => $this->jefe->empresa_id, // misma empresa que el jefe
+                    'empresa_id' => $this->jefe->empresa_id,
                     'sucursal_id'=> $this->sucursal_id ?: null,
                 ]);
 
-                // agrega al arreglo de subordinados del jefe
                 $subs = $this->jefe->subordinados ?? [];
                 $subs[] = $user->id;
                 $this->jefe->subordinados = array_values(array_unique($subs));
@@ -181,7 +202,12 @@ class ConfiguracionesUsuarioMakeuser extends Component
 
     public function deleteUser($id)
     {
-        $user = User::findOrFail($id);
+        $idsSubordinados = $this->jefe->subordinados ?? [];
+
+        $user = User::where('id', $id)
+            ->where('empresa_id', $this->jefe->empresa_id)
+            ->whereIn('id', $idsSubordinados)
+            ->firstOrFail();
 
         DB::transaction(function () use ($user) {
             $user->delete();
@@ -196,6 +222,7 @@ class ConfiguracionesUsuarioMakeuser extends Component
         $this->loadSubordinados();
         $this->dispatch('notify', type: 'success', message: 'Usuario eliminado correctamente');
     }
+
 
     public function resetForm()
     {

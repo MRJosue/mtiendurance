@@ -19,9 +19,17 @@ class ConfiguracionesUsuario extends Component
 
     public function getTodosLosUsuariosProperty()
     {
+        $jefe = User::findOrFail($this->userId);
+        $empresaId = $jefe->empresa_id;
+
+        if (!$empresaId) {
+            return collect(); // si no tiene empresa, no sugerimos a nadie
+        }
+
         return User::query()
             ->select('id', 'name')
-            ->whereJsonContains('config->flag-user-sel-preproyectos', true)
+            ->where('empresa_id', $empresaId)     // misma organización / empresa
+            ->where('id', '<>', $this->userId)    // opcional: no incluirse a sí mismo
             ->orderBy('name')
             ->get();
     }
@@ -30,28 +38,31 @@ class ConfiguracionesUsuario extends Component
     {
         $this->userId = $userId;
 
-        // Obtener los IDs permitidos del usuario (puede venir como JSON o array)
-        $idsPermitidos = User::query()
+        // Puede venir como JSON o array
+        $idsGuardados = User::query()
             ->where('id', $userId)
             ->value('user_can_sel_preproyectos') ?? [];
 
-        if (!is_array($idsPermitidos)) {
-            $idsPermitidos = json_decode($idsPermitidos, true) ?? [];
+        if (!is_array($idsGuardados)) {
+            $idsGuardados = json_decode($idsGuardados, true) ?? [];
         }
 
-        // Filtrar por usuarios válidos (flag-user-sel-preproyectos = true)
-        $this->usuariosSeleccionados = User::query()
-            ->whereIn('id', $idsPermitidos)
-            ->whereJsonContains('config->flag-user-sel-preproyectos', true)
-            ->pluck('id')
+        // IDs válidos según la empresa del usuario
+        $permitidos = $this->allowedUserIds();
+
+        $this->usuariosSeleccionados = collect($idsGuardados)
             ->map(fn ($v) => (int)$v)
-            ->toArray();
+            ->filter(fn ($id) => in_array($id, $permitidos, true))
+            ->values()
+            ->all();
 
         Log::debug('mount usuariosSeleccionados filtrados', ['data' => $this->usuariosSeleccionados]);
         Log::debug('mount UserID', ['data' => $this->userId]);
 
         $this->loadFlags();
     }
+
+
 
     public function guardarFlag(string $key, $valor): void
     {
@@ -84,10 +95,18 @@ class ConfiguracionesUsuario extends Component
      */
     protected function allowedUserIds(): array
     {
+        $jefe = User::findOrFail($this->userId);
+        $empresaId = $jefe->empresa_id;
+
+        if (!$empresaId) {
+            return [];
+        }
+
         return User::query()
-            ->whereJsonContains('config->flag-user-sel-preproyectos', true)
+            ->where('empresa_id', $empresaId)     // misma organización / empresa
+            ->where('id', '<>', $this->userId)    // opcional: no incluirse a sí mismo
             ->pluck('id')
-            ->map(fn ($v) => (int)$v)
+            ->map(fn ($v) => (int) $v)
             ->toArray();
     }
 
