@@ -32,10 +32,38 @@ class CambiarRolActual extends Component
         ]);
 
         $user = Auth::user();
+
+        // 1) Actualizar rol (solo uno)
         $user->syncRoles([$this->rolActual]);
 
-        session()->flash('message', 'Rol actualizado correctamente a: ' . $this->rolActual);
+        // 2) Mapear rol → tipo y actualizar campo `tipo`
+        $nuevoTipo = $this->mapTipoPorRol($this->rolActual);
+
+        if (!is_null($nuevoTipo)) {
+            $user->tipo = $nuevoTipo;
+            $user->save();
+        }
+
+        session()->flash(
+            'message',
+            'Rol actualizado correctamente a: ' . $this->rolActual . ' (tipo: ' . ($nuevoTipo ?? 'sin cambio') . ')'
+        );
     }
+
+
+        protected function mapTipoPorRol(string $rolName): ?int
+    {
+        $map = [
+            'cliente'   => 1,
+            'proveedor' => 2,
+            'staff'     => 3,
+            'admin'     => 4,
+        ];
+
+        return $map[$rolName] ?? null;
+    }
+
+
 
     public function render()
     {

@@ -58,6 +58,8 @@ class User extends Authenticatable
         'super_id_legacy',
         'empresa_id',
         'sucursal_id',
+        'es_propietario',   
+
     ];
 
 
@@ -84,6 +86,7 @@ class User extends Authenticatable
         'config' => 'array',
         'user_can_sel_preproyectos' => 'array',
         'subordinados' => 'array',
+        'es_propietario' => 'boolean', 
     ];
 
 
@@ -195,6 +198,8 @@ class User extends Authenticatable
 
         return strtolower(self::TIPOS[$this->tipo] ?? '') === strtolower($tipo);
     }
+
+    
 
     public function getTipoTextoAttribute(): string
     {

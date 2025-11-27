@@ -36,4 +36,6 @@ class Empresa extends Model
         return $this->hasOne(User::class, 'empresa_id');
     }
 
+
+
 }

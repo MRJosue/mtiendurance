@@ -60,12 +60,19 @@ class ConfiguracionesUsuarioEmpresa extends Component
 
     public function render()
     {
-        // Solo empresas cuyo propietario sea el usuario consultado
-        $empresas = Empresa::with('propietario')
-            ->whereHas('propietario', fn ($q) => $q->where('id', $this->userId))
-            ->when($this->search, fn ($q) =>
-                $q->where('nombre', 'like', '%' . $this->search . '%')
-            )
+        // Solo empresas cuyo propietario sea el usuario consultado (es_propietario = true)
+        $empresas = Empresa::with([
+                'propietario' => function ($q) {
+                    $q->where('es_propietario', true);
+                },
+            ])
+            ->whereHas('propietario', function ($q) {
+                $q->where('id', $this->userId)
+                  ->where('es_propietario', true);
+            })
+            ->when($this->search, function ($q) {
+                $q->where('nombre', 'like', '%' . $this->search . '%');
+            })
             ->orderBy('nombre')
             ->paginate($this->perPage);
 
@@ -73,6 +80,7 @@ class ConfiguracionesUsuarioEmpresa extends Component
             'empresas' => $empresas,
         ]);
     }
+
     /**
      * Ya no se permite crear organización principal.
      * Si alguien llegara a disparar esta acción, mostramos error.
@@ -85,9 +93,16 @@ class ConfiguracionesUsuarioEmpresa extends Component
 
     public function editarEmpresa($id)
     {
-        $empresa = Empresa::with('propietario')
+        $empresa = Empresa::with([
+                'propietario' => function ($q) {
+                    $q->where('es_propietario', true);
+                },
+            ])
             ->where('id', $id)
-            ->whereHas('propietario', fn ($q) => $q->where('id', $this->userId))
+            ->whereHas('propietario', function ($q) {
+                $q->where('id', $this->userId)
+                  ->where('es_propietario', true);
+            })
             ->firstOrFail();
 
         $this->empresaId = $empresa->id;
@@ -142,18 +157,26 @@ class ConfiguracionesUsuarioEmpresa extends Component
 
     public function confirmarEliminar($id)
     {
-        $empresa = Empresa::with('propietario')->findOrFail($id);
-        $this->empresaAEliminar = $empresa->id;
-        $this->alertaRelacionUsuarios = (bool) $empresa->propietario; // si tiene propietario, bloquear
-        $this->showDeleteModal = true;
+        $empresa = Empresa::findOrFail($id);
+
+        $tienePropietario = User::where('empresa_id', $empresa->id)
+            ->where('es_propietario', true)
+            ->exists();
+
+        $this->empresaAEliminar       = $empresa->id;
+        $this->alertaRelacionUsuarios = $tienePropietario;
+        $this->showDeleteModal        = true;
     }
 
     public function eliminarEmpresa()
     {
-        $empresa = Empresa::with('propietario')->findOrFail($this->empresaAEliminar);
+        $empresa = Empresa::findOrFail($this->empresaAEliminar);
 
-        if ($empresa->propietario) {
-            // Bloquea borrado si hay un usuario que depende de ella (regla 1:1)
+        $tienePropietario = User::where('empresa_id', $empresa->id)
+            ->where('es_propietario', true)
+            ->exists();
+
+        if ($tienePropietario) {
             $this->dispatch(
                 'notify',
                 type: 'error',

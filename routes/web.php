@@ -190,6 +190,7 @@ Route::get('/importacion/proyectos',[importacioncontroller::class, 'index'])->mi
 
 // permisos
 Route::get('/usuarios/permisos',[permisoscontroller::class, 'index'])->middleware(['auth','verified'])->name('permisos.index');
+Route::get('/usuarios/empresas',[permisoscontroller::class, 'showempresas'])->middleware(['auth','verified'])->name('permisos.empresas');
 
 
 Route::get('/users/appi', [UserController::class, 'getusersselect'])->name('api.users.index');

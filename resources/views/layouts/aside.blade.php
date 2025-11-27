@@ -443,6 +443,12 @@
                             <a href="{{ route('permisos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                                 {{ __('menu.permissions') }}
                             </a>
+
+                            <a href="{{ route('permisos.empresas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                Administra empresas
+                            </a>
+
+                            
                             @endhasanyrole
 
 

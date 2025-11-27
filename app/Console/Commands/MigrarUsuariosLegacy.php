@@ -99,8 +99,9 @@ class MigrarUsuariosLegacy extends Command
 
     /* ================== helpers y rutinas existentes ================== */
 
-    protected function migrarClientesAUsers(bool $dry, Role $rolPrincipal, Role $rolSubordinado) { 
-                // Por email, conservar el de menor client_id
+    protected function migrarClientesAUsers(bool $dry, Role $rolPrincipal, Role $rolSubordinado)
+    { 
+        // Por email, conservar el de menor client_id
         $dedup = DB::table('client')
             ->select(DB::raw('MIN(client_id) as keep_id'), 'email')
             ->groupBy('email')
@@ -131,7 +132,7 @@ class MigrarUsuariosLegacy extends Command
             $password = $c->password ?? '';
             if (!is_string($password)) $password = '';
             if (!preg_match('/^\$2y\$/', $password)) {
-                $plain = strlen($password) ? $password : Str::random(16);
+                $plain    = strlen($password) ? $password : Str::random(16);
                 $password = bcrypt($plain);
             }
 
@@ -147,16 +148,18 @@ class MigrarUsuariosLegacy extends Command
 
             // Regla: super_id > 0 => cliente_principal; else => cliente_subordinado
             $rolDestino = $this->esPrincipalDesdeLegacy($superIdLegacy)
-            ? $rolPrincipal
-            : $rolSubordinado;
+                ? $rolPrincipal
+                : $rolSubordinado;
 
+            // NUEVO: es_propietario inicial si es cliente_principal
+            $esPropietarioInicial = ($rolDestino->name === 'cliente_principal');
 
             // NUEVO: config por rol
             $configArr = ($rolDestino->name === 'cliente_principal')
                 ? ['flag-user-sel-preproyectos' => false, 'flag-can-user-sel-preproyectos' => true]
                 : ['flag-user-sel-preproyectos' => true,  'flag-can-user-sel-preproyectos' => false];      
 
-             $tipo = 1; // 1 = CLIENTE
+            $tipo = 1; // 1 = CLIENTE
 
             // Fila para INSERT (sin role_id)
             $row = [
@@ -168,16 +171,17 @@ class MigrarUsuariosLegacy extends Command
                 'remember_token'    => null,
 
                 'tipo'                        => $tipo,       
+                'config'                      => json_encode($configArr),
+                'user_can_sel_preproyectos'   => null,
+                'subordinados'                => null,
 
-                // 👇 ya no dupliques estas claves
-                'config'                       => json_encode($configArr),
-                'user_can_sel_preproyectos'    => null, // se poblará en backfill
-                'subordinados'                 => null,
+                'empresa_id'                  => null,
+                'sucursal_id'                 => null,
+                'created_at'                  => now(),
+                'updated_at'                  => now(),
 
-                'empresa_id'        => null,
-                'sucursal_id'       => null,
-                'created_at'        => now(),
-                'updated_at'        => now(),
+                // NUEVO: flag de propietario
+                'es_propietario'              => $esPropietarioInicial ? 1 : 0,
 
                 // Legacy
                 'user_legacy'       => $userLegacy,
@@ -193,7 +197,7 @@ class MigrarUsuariosLegacy extends Command
 
                 // Backfill NO destructivo solo de legacy
                 $existente = DB::table('users')->where('id', $row['id'])
-                    ->select('user_legacy','company_legacy','super_legacy','super_id_legacy','config') // <- agrega 'config'
+                    ->select('user_legacy','company_legacy','super_legacy','super_id_legacy','config','es_propietario')
                     ->first();
 
                 $toUpdate = [];
@@ -211,6 +215,11 @@ class MigrarUsuariosLegacy extends Command
                 }
                 if (is_null($existente->config)) {
                     $toUpdate['config'] = json_encode($configArr);
+                }
+
+                // NUEVO: si es principal, marcamos es_propietario = 1
+                if ($esPropietarioInicial && (empty($existente->es_propietario))) {
+                    $toUpdate['es_propietario'] = 1;
                 }
 
                 if (!empty($toUpdate)) {
@@ -233,14 +242,15 @@ class MigrarUsuariosLegacy extends Command
             $emailsYaInsertados[$email] = true;
 
             if ($dry) {
-                $this->line(" + [DRY] Insertaría users.id={$row['id']} email={$row['email']} (legacy) y asignaría rol Spatie={$rolDestino->name}");
+                $this->line(" + [DRY] Insertaría users.id={$row['id']} email={$row['email']} (legacy, es_propietario=" . ($esPropietarioInicial ? '1' : '0') . ") y asignaría rol Spatie={$rolDestino->name}");
             } else {
                 DB::table('users')->insert($row);
                 $this->asignarRolSpatiePorId((int)$row['id'], $rolDestino, $dry);
-                $this->line(" + Insertado users.id={$row['id']} email={$row['email']} (legacy) y rol Spatie={$rolDestino->name}");
+                $this->line(" + Insertado users.id={$row['id']} email={$row['email']} (legacy, es_propietario=" . ($esPropietarioInicial ? '1' : '0') . ") y rol Spatie={$rolDestino->name}");
             }
         }
     }
+
 
     protected function migrarClientsUpAUsers(bool $dry, Role $rolProveedor)
     {
@@ -547,8 +557,9 @@ class MigrarUsuariosLegacy extends Command
             DB::table('model_has_roles')->insert($pivotDestino);
         }
     }
-    protected function backfillSubordinadosYRoles(Role $rolPrincipal, Role $rolSubordinado, bool $dry): void { 
-                // 1) Traer (id, super_id_legacy) de todos los users
+    protected function backfillSubordinadosYRoles(Role $rolPrincipal, Role $rolSubordinado, bool $dry): void
+    { 
+        // 1) Traer (id, super_id_legacy) de todos los users
         $users = DB::table('users')
             ->select('id', 'super_id_legacy')
             ->get();
@@ -563,7 +574,7 @@ class MigrarUsuariosLegacy extends Command
             return;
         }
 
-        // 3) Para cada padre => actualizar subordinados JSON y rol principal
+        // 3) Para cada padre => actualizar subordinados JSON, rol principal y es_propietario = 1
         foreach ($hijosPorPadre as $padreId => $hijos) {
             // Validar que el padre exista como user.id
             $existePadre = DB::table('users')->where('id', $padreId)->exists();
@@ -580,11 +591,13 @@ class MigrarUsuariosLegacy extends Command
                 $this->line("   [DRY] users.id={$padreId} subordinados=" . json_encode($subIds));
                 $this->line("   [DRY] users.id={$padreId} user_can_sel_preproyectos=" . json_encode($subIds));
                 $this->line("   [DRY] users.id={$padreId} config=" . json_encode($principalConfig));
+                $this->line("   [DRY] users.id={$padreId} es_propietario=1");
             } else {
                 DB::table('users')->where('id', $padreId)->update([
                     'subordinados'               => json_encode($subIds),
-                    'user_can_sel_preproyectos'  => json_encode($subIds), // <-- IGUAL que subordinados
+                    'user_can_sel_preproyectos'  => json_encode($subIds),
                     'config'                     => json_encode($principalConfig),
+                    'es_propietario'             => 1, // 👈 padre = propietario
                     'updated_at'                 => now(),
                 ]);
             }
@@ -595,7 +608,7 @@ class MigrarUsuariosLegacy extends Command
 
         // 4) Hijos (subordinados)
         $todosHijosIds = $hijosPorPadre->flatten(1)->pluck('id')->unique()->map(fn($v) => (int)$v)->values();
-        $subConfig = ['flag-user-sel-preproyectos' => true, 'flag-can-user-sel-preproyectos' => false]; // <-- AQUI
+        $subConfig = ['flag-user-sel-preproyectos' => true, 'flag-can-user-sel-preproyectos' => false];
 
         foreach ($todosHijosIds as $hijoId) {
             $this->syncRolSpatieUnico((int)$hijoId, $rolSubordinado, $rolPrincipal, $dry);
@@ -603,19 +616,22 @@ class MigrarUsuariosLegacy extends Command
             if ($dry) {
                 $this->line("   [DRY] users.id={$hijoId} config=" . json_encode($subConfig));
                 $this->line("   [DRY] users.id={$hijoId} user_can_sel_preproyectos=null");
+                $this->line("   [DRY] users.id={$hijoId} es_propietario=0");
             } else {
                 DB::table('users')->where('id', $hijoId)->update([
                     'config'                    => json_encode($subConfig),
                     'user_can_sel_preproyectos' => null, // hijos no tienen subordinados
+                    'es_propietario'            => 0,    // 👈 aseguramos que no sean propietarios
                     'updated_at'                => now(),
                 ]);
             }
         }
 
-        $this->line('   + Jerarquía aplicada: padres con subordinados y roles sincronizados.');
-     }
+        $this->line('   + Jerarquía aplicada: padres con subordinados, roles y propietarios sincronizados.');
+    }
 
-    protected function backfillEmpresasYSucursales(Role $rolPrincipal, Role $rolSubordinado, bool $dry): void
+
+     protected function backfillEmpresasYSucursales(Role $rolPrincipal, Role $rolSubordinado, bool $dry): void
     {
         if (!Schema::hasTable('empresas') || !Schema::hasTable('sucursales')) {
             $this->warn('   ! No existen tablas empresas/sucursales. Se omite Paso 2.3.');
@@ -1093,6 +1109,7 @@ class MigrarUsuariosLegacy extends Command
                 'config'                    => json_encode($configPrincipal),
                 'subordinados'              => json_encode($staffIds),
                 'user_can_sel_preproyectos' => json_encode($staffIds),
+                'es_propietario'            => 1,
                 'updated_at'                => now(),
             ];
 
@@ -1121,6 +1138,7 @@ class MigrarUsuariosLegacy extends Command
                 'company_legacy'            => null,
                 'super_legacy'              => null,
                 'super_id_legacy'           => null,
+                'es_propietario'            => 1,
                 'created_at'                => now(),
                 'updated_at'                => now(),
             ];
