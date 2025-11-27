@@ -187,6 +187,46 @@
             </div>
         @endif
 
+        {{-- STAFF: seleccionar Empresa y Sucursal (por defecto MTIENDURANCE + sucursal principal) --}}
+        @if($tipo === 3)
+            <div class="rounded-lg border p-4 bg-gray-50">
+                <h3 class="font-semibold mb-2">Asignación de Empresa y Sucursal (Staff)</h3>
+                <p class="text-xs text-gray-500 mb-3">
+                    Por defecto se selecciona la empresa <span class="font-semibold">MTIENDURANCE</span> y su sucursal principal si existen.
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700">Empresa</label>
+                        <select wire:model.live="empresa_id_staff" class="w-full p-2 border rounded">
+                            <option value="">Seleccione empresa...</option>
+                            @foreach($empresasStaff as $empresa)
+                                <option value="{{ $empresa->id }}">{{ $empresa->nombre }}</option>
+                            @endforeach
+                        </select>
+                        @error('empresa_id_staff') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700">Sucursal</label>
+                        <select
+                            wire:model.live="sucursal_id_staff"
+                            class="w-full p-2 border rounded"
+                            @disabled(!$empresa_id_staff)
+                        >
+                            <option value="">Seleccione sucursal...</option>
+                            @foreach($sucursalesStaff as $s)
+                                <option value="{{ $s->id }}">
+                                    {{ $s->nombre }} ({{ (int)$s->tipo === 1 ? 'Principal' : 'Secundaria' }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('sucursal_id_staff') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <button type="submit" class="w-full sm:w-auto bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
             Crear Usuario
         </button>

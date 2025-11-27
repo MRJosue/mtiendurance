@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
-
 class CrearUsuarios extends Component
 {
     /** Tipo de usuario según entrada:
@@ -23,8 +22,6 @@ class CrearUsuarios extends Component
      *  4 → ADMIN
      */
     public ?int $tipo = 1;
-
-
 
     // --- Campos base ---
     public string $name = '';
@@ -47,21 +44,25 @@ class CrearUsuarios extends Component
     public ?string $sucursal_direccion = null;
 
     // --- Cliente subordinado: búsqueda de Empresa + selección de Sucursal ---
-    public string $empresaQuery = '';                 // ← entangle con x-model search
-    public array  $empresasSugeridas = [];            // ← resultados para Alpine
-    public bool   $puedeBuscarEmpresas = true;        // ← controla habilitar/deshabilitar buscador
-    public ?int   $empresa_id_sub = null;             // ← entangle selectedId
-    public $sucursalesDeEmpresa;                      // Collection
+    public string $empresaQuery = '';
+    public array  $empresasSugeridas = [];
+    public bool   $puedeBuscarEmpresas = true;
+    public ?int   $empresa_id_sub = null;
+    public $sucursalesDeEmpresa; // Collection
     public ?int   $sucursal_id_sub = null;
 
-    
+    // --- STAFF: selección de Empresa + Sucursal ---
+    public ?int $empresa_id_staff = null;
+    public ?int $sucursal_id_staff = null;
+    public $sucursalesStaff;   // Collection de sucursales para staff
+    public $empresasStaff;     // Collection de empresas para staff
 
     /* ===================== MOUNT ===================== */
 
     public function mount(int $tipo = 1): void
     {
         // Normalizas el tipo
-        $this->tipo = in_array($tipo, [1,2,3,4], true) ? $tipo : 1;
+        $this->tipo = in_array($tipo, [1, 2, 3, 4], true) ? $tipo : 1;
 
         // 🔐 Revalidar permisos aquí también
         $user = Auth::user();
@@ -76,7 +77,6 @@ class CrearUsuarios extends Component
         $permisoNecesario = $permisoPorTipo[$this->tipo] ?? null;
 
         if (!$user || !$permisoNecesario || !$user->can($permisoNecesario)) {
-            // Livewire 3: redirección desde componente
             $this->redirectRoute('usuarios.index');
             return;
         }
@@ -84,17 +84,22 @@ class CrearUsuarios extends Component
         // Si llega aquí, sí tiene permiso → carga roles según tipo
         $this->cargarRolesDisponibles();
 
+        // Inicializaciones
         $this->empresasSugeridas   = [];
         $this->sucursalesDeEmpresa = collect();
+
+        $this->empresasStaff       = collect();
+        $this->sucursalesStaff     = collect();
+
+        // Si es STAFF, cargar empresas y preseleccionar MTIENDURANCE + sucursal principal
+        if ($this->tipo === 3) {
+            $this->empresasStaff = Empresa::orderBy('nombre')->get();
+            $this->preseleccionarEmpresaSucursalStaffPorDefecto();
+        }
     }
 
     /**
      * Carga los roles disponibles según el tipo de usuario que se va a crear.
-     *
-     * 1 → CLIENTE:  solo 'cliente_principal' (tipo=1)
-     * 2 → PROVEEDOR: roles tipo=2
-     * 3 → STAFF:     roles tipo=3
-     * 4 → ADMIN:     roles tipo=4
      */
     protected function cargarRolesDisponibles(): void
     {
@@ -119,7 +124,6 @@ class CrearUsuarios extends Component
                 break;
 
             default:
-                // fallback de seguridad: no mostrar roles
                 $query->whereRaw('1 = 0');
                 break;
         }
@@ -128,6 +132,46 @@ class CrearUsuarios extends Component
             ->orderBy('name')
             ->pluck('name')
             ->toArray();
+    }
+
+    /**
+     * STAFF: intenta preseleccionar Empresa "MTIENDURANCE" (o "MTI Endurance")
+     * y su sucursal principal.
+     */
+    protected function preseleccionarEmpresaSucursalStaffPorDefecto(): void
+    {
+        if ($this->empresa_id_staff) {
+            // Ya hay algo seleccionado (por si se reutiliza el componente)
+            $this->cargarSucursalesStaff();
+            return;
+        }
+
+        $empresa = Empresa::query()
+            ->where(function ($q) {
+                $q->where('nombre', 'MTIENDURANCE')
+                  ->orWhere('nombre', 'MTI Endurance');
+            })
+            ->orderByRaw("CASE WHEN nombre = 'MTIENDURANCE' THEN 0 ELSE 1 END")
+            ->first();
+
+        if (!$empresa) {
+            // No existe la empresa MTIENDURANCE, simplemente no preseleccionamos
+            return;
+        }
+
+        $this->empresa_id_staff = $empresa->id;
+
+        $this->sucursalesStaff = Sucursal::where('empresa_id', $empresa->id)
+            ->orderBy('tipo')   // 1 Principal primero
+            ->orderBy('nombre')
+            ->get();
+
+        $sucursalPrincipal = $this->sucursalesStaff->firstWhere('tipo', 1)
+            ?? $this->sucursalesStaff->first();
+
+        if ($sucursalPrincipal) {
+            $this->sucursal_id_staff = $sucursalPrincipal->id;
+        }
     }
 
     /* ===================== VALIDACIÓN ===================== */
@@ -171,6 +215,27 @@ class CrearUsuarios extends Component
             ]);
         }
 
+        // Validación extra para STAFF: empresa + sucursal obligatorias
+        if ($this->tipo === 3) {
+            $base = array_merge($base, [
+                'empresa_id_staff'  => 'required|exists:empresas,id',
+                'sucursal_id_staff' => [
+                    'required',
+                    'exists:sucursales,id',
+                    function ($attribute, $value, $fail) {
+                        if ($this->empresa_id_staff && $value) {
+                            $ok = Sucursal::where('id', $value)
+                                ->where('empresa_id', $this->empresa_id_staff)
+                                ->exists();
+                            if (!$ok) {
+                                $fail('La sucursal no pertenece a la empresa seleccionada.');
+                            }
+                        }
+                    },
+                ],
+            ]);
+        }
+
         return $base;
     }
 
@@ -178,14 +243,20 @@ class CrearUsuarios extends Component
     {
         $this->validateOnly($propertyName);
 
-        // Cascada: al cambiar la empresa seleccionada, recargar sucursales
+        // Cascada: al cambiar la empresa seleccionada para cliente subordinado
         if ($propertyName === 'empresa_id_sub') {
             $this->cargarSucursalesEmpresa();
             $this->sucursal_id_sub = null;
         }
+
+        // Cascada: al cambiar la empresa seleccionada para staff
+        if ($propertyName === 'empresa_id_staff') {
+            $this->cargarSucursalesStaff();
+            $this->sucursal_id_staff = null;
+        }
     }
 
-    /* ===================== AUTOCOMPLETAR EMPRESAS ===================== */
+    /* ===================== AUTOCOMPLETAR EMPRESAS (cliente subordinado) ===================== */
 
     public function updatedEmpresaQuery(): void
     {
@@ -216,7 +287,17 @@ class CrearUsuarios extends Component
     {
         $this->sucursalesDeEmpresa = $this->empresa_id_sub
             ? Sucursal::where('empresa_id', $this->empresa_id_sub)
-                ->orderBy('tipo')     // 1 (Principal) primero
+                ->orderBy('tipo')
+                ->orderBy('nombre')
+                ->get()
+            : collect();
+    }
+
+    protected function cargarSucursalesStaff(): void
+    {
+        $this->sucursalesStaff = $this->empresa_id_staff
+            ? Sucursal::where('empresa_id', $this->empresa_id_staff)
+                ->orderBy('tipo')
                 ->orderBy('nombre')
                 ->get()
             : collect();
@@ -229,19 +310,22 @@ class CrearUsuarios extends Component
         $this->validate();
 
         DB::transaction(function () {
+            // Determinar tipo a guardar en la tabla users
+            $tipoUsuario = $this->tipo ?? 1;
+
             // 1) Crear usuario con tipo (1–4) según entrada
             $user = User::create([
                 'name'     => $this->name,
                 'email'    => $this->email,
                 'password' => Hash::make($this->password),
-                'tipo'     => $this->tipo ?? 1,
+                'tipo'     => $tipoUsuario,
             ]);
 
             // 2) Asignar rol Spatie
             $user->assignRole($this->role);
             Log::debug('Asignando rol', ['rol' => $this->role, 'user_id' => $user->id]);
 
-            // 3) Flujo por rol
+            // 3) Flujo por rol / tipo
             if ($this->role === 'cliente_principal') {
                 // Empresa
                 $empresa = Empresa::create([
@@ -270,6 +354,12 @@ class CrearUsuarios extends Component
                 $user->empresa_id  = $this->empresa_id_sub;
                 $user->sucursal_id = $this->sucursal_id_sub;
                 $user->save();
+
+            } elseif ($this->tipo === 3 && $this->empresa_id_staff && $this->sucursal_id_staff) {
+                // STAFF: asignar empresa + sucursal seleccionadas
+                $user->empresa_id  = $this->empresa_id_staff;
+                $user->sucursal_id = $this->sucursal_id_staff;
+                $user->save();
             }
         });
 
@@ -279,9 +369,13 @@ class CrearUsuarios extends Component
             'empresa_nombre','empresa_rfc','empresa_telefono','empresa_direccion',
             'sucursal_nombre','sucursal_telefono','sucursal_direccion',
             'empresaQuery','empresa_id_sub','sucursal_id_sub',
+            'empresa_id_staff','sucursal_id_staff',
         ]);
+
         $this->empresasSugeridas   = [];
         $this->sucursalesDeEmpresa = collect();
+        $this->empresasStaff       = collect();
+        $this->sucursalesStaff     = collect();
 
         session()->flash('message', 'Usuario creado exitosamente.');
         $this->dispatch('notify', message: 'Usuario creado exitosamente');
@@ -294,8 +388,14 @@ class CrearUsuarios extends Component
         // Aquí podrías recalcular permisos dinámicamente si quieres
         $this->puedeBuscarEmpresas = true;
 
+        // Para staff, aseguramos tener la lista de empresas cargada
+        if ($this->tipo === 3 && ($this->empresasStaff === null || $this->empresasStaff->isEmpty())) {
+            $this->empresasStaff = Empresa::orderBy('nombre')->get();
+        }
+
         return view('livewire.usuarios.crear-usuarios', [
             'puedeBuscarEmpresas' => $this->puedeBuscarEmpresas,
+            'empresasStaff'       => $this->tipo === 3 ? $this->empresasStaff : collect(),
         ]);
     }
 }
