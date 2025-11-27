@@ -1,13 +1,16 @@
 <div
     x-data="{
-        abierto: true,
+        abierto: JSON.parse(localStorage.getItem('cambiar_propietario_empresas_abierto') ?? 'true'),
         modalAbierto: @entangle('showModal'),
         seleccionado: @entangle('nuevoPropietarioId')
     }"
     class="container mx-auto p-6"
 >
     <h2
-        @click="abierto = !abierto"
+        @click="
+            abierto = !abierto;
+            localStorage.setItem('cambiar_propietario_empresas_abierto', JSON.stringify(abierto));
+        "
         class="text-2xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition flex flex-col md:flex-row md:items-center md:justify-between"
     >
         <span>Administra propietarios de empresas</span>
@@ -15,29 +18,364 @@
     </h2>
 
     <div x-show="abierto" x-transition>
-        {{-- Filtro de empresas --}}
-        <div class="mb-4 flex flex-wrap gap-3 items-center">
-            <input
-                type="text"
-                wire:model.debounce.400ms="searchEmpresa"
-                placeholder="Buscar empresa por nombre o RFC..."
-                class="w-full sm:w-80 px-3 py-2 border rounded-lg text-sm"
-            />
-        </div>
+        {{-- PANEL DE FILTROS AVANZADOS (opcional, lo dejamos como en Pedidos) --}}
 
-        {{-- Tabla de empresas --}}
+
+        {{-- TABLA DE EMPRESAS --}}
         <div class="overflow-x-auto bg-white rounded-lg shadow">
             <table class="min-w-full border-collapse border border-gray-200 rounded-lg text-sm">
                 <thead class="bg-gray-100">
+                    {{-- Encabezados con ordenamiento --}}
                     <tr>
-                        <th class="border-b px-4 py-2 text-left font-medium text-gray-600">ID</th>
-                        <th class="border-b px-4 py-2 text-left font-medium text-gray-600">Nombre</th>
-                        <th class="border-b px-4 py-2 text-left font-medium text-gray-600">RFC</th>
-                        <th class="border-b px-4 py-2 text-left font-medium text-gray-600">Teléfono</th>
-                        <th class="border-b px-4 py-2 text-left font-medium text-gray-600">Propietario</th>
-                        <th class="border-b px-4 py-2 text-center font-medium text-gray-600">Acciones</th>
+                        {{-- ID (ordenable) --}}
+                        <th class="border-b px-4 py-2 text-left font-medium text-gray-600">
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-1 hover:text-blue-600"
+                                wire:click="sortBy('id')"
+                                title="Ordenar por ID"
+                            >
+                                <span>ID</span>
+                                <span class="text-xs">
+                                    @if($sortField === 'id')
+                                        {{ $sortDir === 'asc' ? '▲' : '▼' }}
+                                    @else
+                                        ⇵
+                                    @endif
+                                </span>
+                            </button>
+                        </th>
+
+                        {{-- Nombre (ordenable) --}}
+                        <th class="border-b px-4 py-2 text-left font-medium text-gray-600">
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-1 hover:text-blue-600"
+                                wire:click="sortBy('nombre')"
+                                title="Ordenar por nombre"
+                            >
+                                <span>Nombre</span>
+                                <span class="text-xs">
+                                    @if($sortField === 'nombre')
+                                        {{ $sortDir === 'asc' ? '▲' : '▼' }}
+                                    @else
+                                        ⇵
+                                    @endif
+                                </span>
+                            </button>
+                        </th>
+
+                        {{-- RFC (ordenable) --}}
+                        <th class="border-b px-4 py-2 text-left font-medium text-gray-600">
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-1 hover:text-blue-600"
+                                wire:click="sortBy('rfc')"
+                                title="Ordenar por RFC"
+                            >
+                                <span>RFC</span>
+                                <span class="text-xs">
+                                    @if($sortField === 'rfc')
+                                        {{ $sortDir === 'asc' ? '▲' : '▼' }}
+                                    @else
+                                        ⇵
+                                    @endif
+                                </span>
+                            </button>
+                        </th>
+
+                        {{-- Teléfono (ordenable) --}}
+                        <th class="border-b px-4 py-2 text-left font-medium text-gray-600">
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-1 hover:text-blue-600"
+                                wire:click="sortBy('telefono')"
+                                title="Ordenar por teléfono"
+                            >
+                                <span>Teléfono</span>
+                                <span class="text-xs">
+                                    @if($sortField === 'telefono')
+                                        {{ $sortDir === 'asc' ? '▲' : '▼' }}
+                                    @else
+                                        ⇵
+                                    @endif
+                                </span>
+                            </button>
+                        </th>
+
+                        {{-- Propietario (ordenable por nombre) --}}
+                        <th class="border-b px-4 py-2 text-left font-medium text-gray-600">
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-1 hover:text-blue-600"
+                                wire:click="sortBy('propietario_nombre')"
+                                title="Ordenar por propietario"
+                            >
+                                <span>Propietario</span>
+                                <span class="text-xs">
+                                    @if($sortField === 'propietario_nombre')
+                                        {{ $sortDir === 'asc' ? '▲' : '▼' }}
+                                    @else
+                                        ⇵
+                                    @endif
+                                </span>
+                            </button>
+                        </th>
+
+                        <th class="border-b px-4 py-2 text-center font-medium text-gray-600">
+                            Acciones
+                        </th>
+                    </tr>
+
+                    {{-- FILTROS POR COLUMNA (dropdown tipo Pedidos) --}}
+                    <tr class="border-t border-gray-200">
+                        {{-- Filtro ID --}}
+                        <th class="px-4 py-2">
+                            <div x-data="{ open:false }" class="relative inline-flex items-center">
+                                <button
+                                    @click="open = !open"
+                                    class="px-2 py-1 rounded hover:bg-gray-200 text-xs"
+                                    title="Filtrar ID"
+                                >
+                                    ⋮
+                                </button>
+                                <div
+                                    x-cloak
+                                    x-show="open"
+                                    @click.away="open=false"
+                                    x-transition
+                                    class="absolute z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
+                                >
+                                    <label class="block text-xs text-gray-600 mb-1">
+                                        ID empresa
+                                    </label>
+                                    <input
+                                        type="text"
+                                        class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                        placeholder="Ej. 10 o 10,11,12"
+                                        wire:model.live.debounce.400ms="filters.id"
+                                    />
+                                    <div class="mt-2 flex justify-end gap-2">
+                                        <button
+                                            type="button"
+                                            class="px-2 py-1 text-xs rounded border"
+                                            @click="$wire.set('filters.id','')"
+                                        >
+                                            Limpiar
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="px-2 py-1 text-xs rounded border"
+                                            @click="open=false"
+                                        >
+                                            Cerrar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </th>
+
+                        {{-- Filtro Nombre --}}
+                        <th class="px-4 py-2">
+                            <div x-data="{ open:false }" class="relative inline-flex items-center">
+                                <button
+                                    @click="open = !open"
+                                    class="px-2 py-1 rounded hover:bg-gray-200 text-xs"
+                                    title="Filtrar nombre"
+                                >
+                                    ⋮
+                                </button>
+                                <div
+                                    x-cloak
+                                    x-show="open"
+                                    @click.away="open=false"
+                                    x-transition
+                                    class="absolute z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
+                                >
+                                    <label class="block text-xs text-gray-600 mb-1">
+                                        Nombre de la empresa
+                                    </label>
+                                    <input
+                                        class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                        placeholder="Nombre..."
+                                        wire:model.live.debounce.400ms="filters.nombre"
+                                    />
+                                    <div class="mt-2 flex justify-end gap-2">
+                                        <button
+                                            type="button"
+                                            class="px-2 py-1 text-xs rounded border"
+                                            @click="$wire.set('filters.nombre','')"
+                                        >
+                                            Limpiar
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="px-2 py-1 text-xs rounded border"
+                                            @click="open=false"
+                                        >
+                                            Cerrar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </th>
+
+                        {{-- Filtro RFC --}}
+                        <th class="px-4 py-2">
+                            <div x-data="{ open:false }" class="relative inline-flex items-center">
+                                <button
+                                    @click="open = !open"
+                                    class="px-2 py-1 rounded hover:bg-gray-200 text-xs"
+                                    title="Filtrar RFC"
+                                >
+                                    ⋮
+                                </button>
+                                <div
+                                    x-cloak
+                                    x-show="open"
+                                    @click.away="open=false"
+                                    x-transition
+                                    class="absolute z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
+                                >
+                                    <label class="block text-xs text-gray-600 mb-1">
+                                        RFC
+                                    </label>
+                                    <input
+                                        class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                        placeholder="RFC..."
+                                        wire:model.live.debounce.400ms="filters.rfc"
+                                    />
+                                    <div class="mt-2 flex justify-end gap-2">
+                                        <button
+                                            type="button"
+                                            class="px-2 py-1 text-xs rounded border"
+                                            @click="$wire.set('filters.rfc','')"
+                                        >
+                                            Limpiar
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="px-2 py-1 text-xs rounded border"
+                                            @click="open=false"
+                                        >
+                                            Cerrar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </th>
+
+                        {{-- Filtro Teléfono --}}
+                        <th class="px-4 py-2">
+                            <div x-data="{ open:false }" class="relative inline-flex items-center">
+                                <button
+                                    @click="open = !open"
+                                    class="px-2 py-1 rounded hover:bg-gray-200 text-xs"
+                                    title="Filtrar teléfono"
+                                >
+                                    ⋮
+                                </button>
+                                <div
+                                    x-cloak
+                                    x-show="open"
+                                    @click.away="open=false"
+                                    x-transition
+                                    class="absolute z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
+                                >
+                                    <label class="block text-xs text-gray-600 mb-1">
+                                        Teléfono
+                                    </label>
+                                    <input
+                                        class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                        placeholder="Teléfono..."
+                                        wire:model.live.debounce.400ms="filters.telefono"
+                                    />
+                                    <div class="mt-2 flex justify-end gap-2">
+                                        <button
+                                            type="button"
+                                            class="px-2 py-1 text-xs rounded border"
+                                            @click="$wire.set('filters.telefono','')"
+                                        >
+                                            Limpiar
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="px-2 py-1 text-xs rounded border"
+                                            @click="open=false"
+                                        >
+                                            Cerrar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </th>
+
+                        {{-- Filtro Propietario --}}
+                        <th class="px-4 py-2">
+                            <div x-data="{ open:false }" class="relative inline-flex items-center">
+                                <button
+                                    @click="open = !open"
+                                    class="px-2 py-1 rounded hover:bg-gray-200 text-xs"
+                                    title="Filtrar propietario"
+                                >
+                                    ⋮
+                                </button>
+                                <div
+                                    x-cloak
+                                    x-show="open"
+                                    @click.away="open=false"
+                                    x-transition
+                                    class="absolute z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
+                                >
+                                    <label class="block text-xs text-gray-600 mb-1">
+                                        Propietario (nombre o correo)
+                                    </label>
+                                    <input
+                                        class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                        placeholder="Nombre/correo..."
+                                        wire:model.live.debounce.400ms="filters.propietario"
+                                    />
+
+                                    <div class="mt-3 flex items-center space-x-2">
+                                        <input
+                                            id="sin_propietario_col"
+                                            type="checkbox"
+                                            class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                            wire:model.live="filters.sin_propietario"
+                                        >
+                                        <label for="sin_propietario_col" class="text-xs text-gray-700">
+                                            Solo sin propietario
+                                        </label>
+                                    </div>
+
+                                    <div class="mt-2 flex justify-end gap-2">
+                                        <button
+                                            type="button"
+                                            class="px-2 py-1 text-xs rounded border"
+                                            @click="
+                                                $wire.set('filters.propietario','');
+                                                $wire.set('filters.sin_propietario', false);
+                                            "
+                                        >
+                                            Limpiar
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="px-2 py-1 text-xs rounded border"
+                                            @click="open=false"
+                                        >
+                                            Cerrar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </th>
+
+                        {{-- Columna acciones sin filtro --}}
+                        <th class="px-4 py-2"></th>
                     </tr>
                 </thead>
+
                 <tbody>
                     @forelse($empresas as $empresa)
                         <tr class="hover:bg-gray-50">
@@ -90,7 +428,7 @@
         </div>
 
         {{-- Modal Cambio de Propietario --}}
-        @if($showModal && $empresaSeleccionada)
+       @if($showModal && $empresaSeleccionada)
             <div
                 class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
                 x-show="modalAbierto"
@@ -146,14 +484,33 @@
 
                         {{-- Buscador de usuarios --}}
                         <div class="flex flex-wrap gap-3 items-center">
-                            <input
-                                type="text"
-                                wire:model.debounce.400ms="searchUsuario"
-                                placeholder="Buscar usuario (nombre o correo)..."
-                                class="w-full sm:flex-1 px-3 py-2 border rounded-lg text-sm"
-                            />
-                            <p class="text-xs text-gray-500">
-                                Puedes seleccionar cualquier usuario del sistema como nuevo propietario.
+                            <div class="flex w-full sm:w-auto sm:flex-1 gap-2">
+                                <input
+                                    type="text"
+                                    wire:model.defer="searchUsuario"
+                                    placeholder="Buscar usuario (nombre o correo)..."
+                                    class="flex-1 px-3 py-2 border rounded-lg text-sm"
+                                />
+
+                                <button
+                                    type="button"
+                                    wire:click="buscarCandidatos"
+                                    class="px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600"
+                                >
+                                    Buscar
+                                </button>
+
+                                <button
+                                    type="button"
+                                    wire:click="limpiarBusquedaUsuarios"
+                                    class="px-3 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200"
+                                >
+                                    Limpiar
+                                </button>
+                            </div>
+
+                            <p class="text-xs text-gray-500 w-full">
+                                Escribe el nombre o correo y presiona <span class="font-semibold">Buscar</span>.
                             </p>
                         </div>
 

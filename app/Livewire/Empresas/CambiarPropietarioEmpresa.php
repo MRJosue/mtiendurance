@@ -6,8 +6,8 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Empresa;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
 use App\Models\Sucursal;
+use Illuminate\Support\Facades\DB;
 
 class CambiarPropietarioEmpresa extends Component
 {
@@ -15,8 +15,29 @@ class CambiarPropietarioEmpresa extends Component
 
     protected $paginationTheme = 'tailwind';
 
-    /** Filtro de empresas */
-    public string $searchEmpresa = '';
+    /** Filtros avanzados y por columna */
+    public bool $mostrarFiltros = false;
+
+    public array $filters = [
+        'id'              => null,
+        'nombre'          => null,
+        'rfc'             => null,
+        'telefono'        => null,
+        'propietario'     => null,
+        'sin_propietario' => false,
+    ];
+
+    /** Ordenamiento */
+    public string $sortField = 'nombre';
+    public string $sortDir   = 'asc';
+
+    protected array $sortable = [
+        'id',
+        'nombre',
+        'rfc',
+        'telefono',
+        'propietario_nombre',
+    ];
 
     /** Modal y selección */
     public bool $showModal = false;
@@ -27,27 +48,83 @@ class CambiarPropietarioEmpresa extends Component
 
     public function mount(): void
     {
-        // Sin parámetros; se usa como admin global
+        // Admin global, sin parámetros
     }
 
     /* ===================== QUERIES / PROPERTIES ===================== */
 
     public function getEmpresasProperty()
     {
-        return Empresa::query()
+        $query = Empresa::query()
             ->with([
                 'propietario' => function ($q) {
                     $q->where('es_propietario', true);
                 },
-            ])
-            ->when($this->searchEmpresa, function ($q) {
-                $q->where(function ($inner) {
-                    $inner->where('nombre', 'like', '%' . $this->searchEmpresa . '%')
-                          ->orWhere('rfc', 'like', '%' . $this->searchEmpresa . '%');
+            ]);
+
+        // FILTROS (panel y columnas usan el mismo array)
+        $query
+            ->when($this->filters['id'], function ($q, $v) {
+                $ids = collect(preg_split('/[,;\s]+/', (string) $v, -1, PREG_SPLIT_NO_EMPTY))
+                    ->map(fn ($i) => (int) trim($i))
+                    ->filter();
+
+                if ($ids->isNotEmpty()) {
+                    $q->whereIn('id', $ids->all());
+                }
+            })
+            ->when($this->filters['nombre'], function ($q, $v) {
+                $v = trim((string) $v);
+                $q->where('nombre', 'like', '%' . $v . '%');
+            })
+            ->when($this->filters['rfc'], function ($q, $v) {
+                $v = trim((string) $v);
+                $q->where('rfc', 'like', '%' . $v . '%');
+            })
+            ->when($this->filters['telefono'], function ($q, $v) {
+                $v = trim((string) $v);
+                $q->where('telefono', 'like', '%' . $v . '%');
+            })
+            ->when($this->filters['propietario'], function ($q, $v) {
+                $v = '%' . trim((string) $v) . '%';
+                $q->whereHas('propietario', function ($p) use ($v) {
+                    $p->where('name', 'like', $v)
+                        ->orWhere('email', 'like', $v);
                 });
             })
-            ->orderBy('nombre')
-            ->paginate(10);
+            ->when($this->filters['sin_propietario'], function ($q) {
+                $q->whereDoesntHave('propietario');
+            });
+
+        // ORDENAMIENTO
+        $dir = $this->sortDir === 'asc' ? 'asc' : 'desc';
+
+        switch ($this->sortField) {
+            case 'id':
+            case 'nombre':
+            case 'rfc':
+            case 'telefono':
+                $query->orderBy($this->sortField, $dir);
+                break;
+
+            case 'propietario_nombre':
+                $empresasTable = (new Empresa)->getTable();
+                $usersTable    = (new User)->getTable();
+
+                $query->leftJoin($usersTable, function ($join) use ($empresasTable, $usersTable) {
+                        $join->on("{$usersTable}.id", '=', "{$empresasTable}.propietario_id")
+                             ->where("{$usersTable}.es_propietario", true);
+                    })
+                    ->select("{$empresasTable}.*")
+                    ->orderBy("{$usersTable}.name", $dir);
+                break;
+
+            default:
+                $query->orderBy('nombre', 'asc');
+                break;
+        }
+
+        return $query->paginate(10);
     }
 
     public function getEmpresaSeleccionadaProperty(): ?Empresa
@@ -63,6 +140,7 @@ class CambiarPropietarioEmpresa extends Component
             ])
             ->find($this->empresaIdSeleccionada);
     }
+
     public function getCandidatosProperty()
     {
         if (!$this->empresaIdSeleccionada) {
@@ -72,9 +150,10 @@ class CambiarPropietarioEmpresa extends Component
         return User::query()
             ->select('id', 'name', 'email', 'tipo', 'empresa_id', 'sucursal_id', 'es_propietario')
             ->when($this->searchUsuario, function ($q) {
-                $q->where(function ($inner) {
-                    $inner->where('name', 'like', '%' . $this->searchUsuario . '%')
-                          ->orWhere('email', 'like', '%' . $this->searchUsuario . '%');
+                $search = '%' . $this->searchUsuario . '%';
+                $q->where(function ($inner) use ($search) {
+                    $inner->where('name', 'like', $search)
+                          ->orWhere('email', 'like', $search);
                 });
             })
             ->orderBy('name')
@@ -84,8 +163,42 @@ class CambiarPropietarioEmpresa extends Component
 
     /* ===================== ACCIONES ===================== */
 
-    public function updatingSearchEmpresa()
+    public function updatedFilters(): void
     {
+        $this->resetPage();
+    }
+
+    public function buscarPorFiltros(): void
+    {
+        $this->resetPage();
+    }
+
+    public function clearFilters(): void
+    {
+        $this->filters = [
+            'id'              => null,
+            'nombre'          => null,
+            'rfc'             => null,
+            'telefono'        => null,
+            'propietario'     => null,
+            'sin_propietario' => false,
+        ];
+        $this->resetPage();
+    }
+
+    public function sortBy(string $field): void
+    {
+        if (!in_array($field, $this->sortable, true)) {
+            return;
+        }
+
+        if ($this->sortField === $field) {
+            $this->sortDir = $this->sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sortDir   = 'asc';
+        }
+
         $this->resetPage();
     }
 
@@ -106,6 +219,7 @@ class CambiarPropietarioEmpresa extends Component
 
         $this->showModal = true;
     }
+
     public function cerrarModal(): void
     {
         $this->reset([
@@ -151,7 +265,7 @@ class CambiarPropietarioEmpresa extends Component
             /** @var User $nuevo */
             $nuevo = User::lockForUpdate()->findOrFail($this->nuevoPropietarioId);
 
-            // 2) Usuarios de esta empresa (EXCEPTO el nuevo propietario)
+            // 2) Usuarios de esta empresa (EXCEPTO el nuevo)
             $usuariosEmpresa = User::where('empresa_id', $empresa->id)
                 ->where('id', '<>', $nuevo->id)
                 ->pluck('id')
@@ -159,9 +273,7 @@ class CambiarPropietarioEmpresa extends Component
                 ->values()
                 ->all();
 
-            // 3) Actualizar flags de TODOS los usuarios de la empresa:
-            //    - Solo el nuevo propietario mantiene subordinados / user_can_sel_preproyectos
-            //    - El resto se limpia (null)
+            // 3) Reset flags
             User::where('empresa_id', $empresa->id)->update([
                 'user_can_sel_preproyectos' => null,
                 'subordinados'              => null,
@@ -170,16 +282,15 @@ class CambiarPropietarioEmpresa extends Component
             ]);
 
             // 4) Configurar nuevo propietario
-            $nuevo->empresa_id               = $empresa->id;
-            $nuevo->sucursal_id              = $sucursalPrincipalId;
-            $nuevo->es_propietario           = true;
+            $nuevo->empresa_id                = $empresa->id;
+            $nuevo->sucursal_id               = $sucursalPrincipalId;
+            $nuevo->es_propietario            = true;
             $nuevo->user_can_sel_preproyectos = $usuariosEmpresa;
-            $nuevo->subordinados             = $usuariosEmpresa;
-            $nuevo->updated_at               = now();
+            $nuevo->subordinados              = $usuariosEmpresa;
+            $nuevo->updated_at                = now();
             $nuevo->save();
         });
 
-        // Refrescar datos
         $this->resetPage();
         $this->cerrarModal();
 
@@ -188,6 +299,20 @@ class CambiarPropietarioEmpresa extends Component
             message: 'Propietario actualizado correctamente.',
             type: 'success'
         );
+    }
+
+    public function buscarCandidatos(): void
+    {
+        // Solo forzamos un re-render; el filtro ya se aplica en getCandidatosProperty()
+        // Si en algún punto paginamos candidatos, aquí podríamos resetear página.
+        // $this->resetPage();  // no es necesario ahora, pero lo dejo comentado por si luego cambias a paginate
+    }
+
+    public function limpiarBusquedaUsuarios(): void
+    {
+        $this->searchUsuario = '';
+        // Forzamos un nuevo render para mostrar todos los candidatos
+        // $this->resetPage();
     }
 
     public function render()
