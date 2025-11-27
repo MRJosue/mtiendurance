@@ -60,16 +60,25 @@ class ConfiguracionesUsuarioEmpresa extends Component
 
     public function render()
     {
-        // Solo empresas cuyo propietario sea el usuario consultado (es_propietario = true)
-        $empresas = Empresa::with([
-                'propietario' => function ($q) {
-                    $q->where('es_propietario', true);
-                },
-            ])
-            ->whereHas('propietario', function ($q) {
-                $q->where('id', $this->userId)
-                  ->where('es_propietario', true);
-            })
+        // Empresa a la que pertenece el usuario consultado
+        $empresaId = User::whereKey($this->userId)->value('empresa_id');
+
+        $query = Empresa::with([
+            'propietario' => function ($q) {
+                // Aseguramos que sólo venga el propietario marcado
+                $q->where('es_propietario', true);
+            },
+        ]);
+
+        // Si el usuario tiene empresa asignada, la filtramos
+        if ($empresaId) {
+            $query->where('id', $empresaId);
+        } else {
+            // Si no tiene empresa, no mostramos ninguna (para no traer todo el catálogo)
+            $query->whereRaw('1 = 0');
+        }
+
+        $empresas = $query
             ->when($this->search, function ($q) {
                 $q->where('nombre', 'like', '%' . $this->search . '%');
             })
@@ -80,6 +89,7 @@ class ConfiguracionesUsuarioEmpresa extends Component
             'empresas' => $empresas,
         ]);
     }
+
 
     /**
      * Ya no se permite crear organización principal.
