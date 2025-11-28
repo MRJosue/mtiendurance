@@ -35,6 +35,9 @@ class RolesCrud extends Component
     public $nombreRol = '';
     public $tipoRol = null; // 1=CLIENTE,2=PROVEEDOR,3=STAFF,4=ADMIN
 
+    // Permisos actuales del rol que se está editando (para checks en el modal)
+    public $role_permissions_ids = [];
+
     // ====== Form Permiso ======
     public $permiso_id = null;
     public $permiso_name = '';    // machine
@@ -42,7 +45,7 @@ class RolesCrud extends Component
     public $permiso_guard = 'web';
     public $permiso_orden = null;
     public $permiso_type_id = null;
-    public $permiso_grupo_id = null;   // opcional: asignarlo a un grupo con orden
+    public $permiso_grupo_id = null;
     public $permiso_grupo_orden = null;
 
     // ====== Form Grupo ======
@@ -51,7 +54,6 @@ class RolesCrud extends Component
     public $grupo_slug = '';
     public $grupo_orden = null;
 
-    // Nuevas: selección/orden de permisos dentro del grupo
     public $grupo_permisos_sel = [];     // [permission_id, ...]
     public $grupo_permisos_orden = [];   // [permission_id => orden]
 
@@ -65,21 +67,14 @@ class RolesCrud extends Component
         // Sincroniza search con query (debounce desde Blade)
         $this->search = trim($this->query ?? '');
 
-        $roles = Role::query()
+        // Tabla de roles: ya no necesitamos cargar permisos aquí
+        $rolesList = Role::query()
             ->select(['id', 'name', 'guard_name', 'tipo'])
             ->when($this->search, fn($q) =>
                 $q->where('name', 'like', '%' . $this->search . '%')
             )
-            ->orderBy('name');
-
-        // Permisos-id por rol para la columna "Permisos por Grupo"
-        $rolesList = $roles
-            ->with(['permissions:id,name'])
+            ->orderBy('name')
             ->paginate(10);
-
-        foreach ($rolesList as $rol) {
-            $rol->permissions_ids = $rol->permissions->pluck('id')->all();
-        }
 
         // Grupos de permisos
         $grupos = GrupoOrden::query()
@@ -87,13 +82,13 @@ class RolesCrud extends Component
             ->withCount('permissions')
             ->with(['permissions' => function ($q) {
                 $q->select('permissions.id','permissions.name','permissions.nombre')
-                  ->orderBy('grupo_orden_permission.orden')
-                  ->orderBy('permissions.name');
+                    ->orderBy('grupo_orden_permission.orden')
+                    ->orderBy('permissions.name');
             }])
             ->orderBy('orden')->orderBy('nombre')
             ->get();
 
-        // Permisos por tipo (para modales de grupos / permisos)
+        // Permisos por tipo (para modal de grupos / permisos)
         $permisos = Permission::select(['id','name','nombre','orden','permission_type_id'])
             ->with(['type:id,nombre'])
             ->orderByRaw('CASE WHEN permission_type_id IS NULL THEN 1 ELSE 0 END')
@@ -131,10 +126,15 @@ class RolesCrud extends Component
 
     public function editarRol($id)
     {
-        $rol = Role::findOrFail($id);
+        $rol = Role::with('permissions:id')->findOrFail($id);
+
         $this->role_id   = $rol->id;
         $this->nombreRol = $rol->name;
         $this->tipoRol   = $rol->tipo; // puede ser null si aún no se ha seteado
+
+        // Cargamos los permisos actuales del rol para pre-chequear en el modal grande
+        $this->role_permissions_ids = $rol->permissions->pluck('id')->map(fn($v) => (int)$v)->all();
+
         $this->modalRol  = true;
     }
 
@@ -154,7 +154,12 @@ class RolesCrud extends Component
         $rol->tipo       = $this->tipoRol;
         $rol->save();
 
-        // ⚠️ Ya NO tocamos permisos del rol aquí (ni syncPermissions)
+        // Nota: permisos se manejan con togglePermiso, no aquí.
+        if (!$this->role_id) {
+            // Si se acaba de crear, todavía no tiene permisos
+            $this->role_permissions_ids = [];
+            $this->role_id = $rol->id;
+        }
 
         $this->dispatch('toast', ['type' => 'success', 'msg' => 'Rol guardado correctamente.']);
         $this->modalRol = false;
@@ -176,7 +181,6 @@ class RolesCrud extends Component
         if ($this->confirmType === 'rol' && $this->confirmId) {
             $rol = Role::find($this->confirmId);
             if ($rol) {
-                // Opcional: limpiar relaciones de permisos al borrar
                 $rol->syncPermissions([]);
                 $rol->delete();
                 $this->dispatch('toast', ['type' => 'success', 'msg' => 'Rol eliminado.']);
@@ -190,6 +194,7 @@ class RolesCrud extends Component
         $this->role_id   = null;
         $this->nombreRol = '';
         $this->tipoRol   = null;
+        $this->role_permissions_ids = [];
     }
 
     /* ============ PERMISOS (MODAL PERMISO) ============ */
@@ -375,14 +380,16 @@ class RolesCrud extends Component
         $this->grupo_permisos_orden = [];
     }
 
-    /* ============ ASIGNACIÓN RÁPIDA: ROL <-> PERMISO (columna grupos) ============ */
+    /* ============ ASIGNACIÓN RÁPIDA: ROL <-> PERMISO ============ */
 
     public function togglePermiso(int $role_id, int $permiso_id, bool $checked): void
     {
         $role    = Role::find($role_id);
         $permiso = Permission::find($permiso_id);
 
-        if (!$role || !$permiso) return;
+        if (!$role || !$permiso) {
+            return;
+        }
 
         if ($checked) {
             if (!$role->hasPermissionTo($permiso->name)) {
@@ -391,6 +398,22 @@ class RolesCrud extends Component
         } else {
             if ($role->hasPermissionTo($permiso->name)) {
                 $role->revokePermissionTo($permiso->name);
+            }
+        }
+
+        // Refrescamos array local si coincide con el rol editado
+        if ($this->role_id === $role_id) {
+            if ($checked) {
+                if (!in_array($permiso_id, $this->role_permissions_ids)) {
+                    $this->role_permissions_ids[] = $permiso_id;
+                }
+            } else {
+                $this->role_permissions_ids = array_values(
+                    array_filter(
+                        $this->role_permissions_ids,
+                        fn($id) => (int)$id !== (int)$permiso_id
+                    )
+                );
             }
         }
 
@@ -407,9 +430,26 @@ class RolesCrud extends Component
         if ($assign) {
             $role->givePermissionTo($permNames);
             $this->dispatch('toast', ['type' => 'success', 'msg' => 'Permisos del grupo asignados al rol.']);
+
+            if ($this->role_id === $roleId) {
+                $ids = $grupo->permissions->pluck('id')->map(fn($v) => (int)$v)->all();
+                $this->role_permissions_ids = array_values(
+                    array_unique(array_merge($this->role_permissions_ids, $ids))
+                );
+            }
         } else {
             $role->revokePermissionTo($permNames);
             $this->dispatch('toast', ['type' => 'success', 'msg' => 'Permisos del grupo quitados del rol.']);
+
+            if ($this->role_id === $roleId) {
+                $ids = $grupo->permissions->pluck('id')->map(fn($v) => (int)$v)->all();
+                $this->role_permissions_ids = array_values(
+                    array_filter(
+                        $this->role_permissions_ids,
+                        fn($id) => !in_array((int)$id, $ids)
+                    )
+                );
+            }
         }
     }
 
