@@ -73,7 +73,20 @@
                     <option value="RECHAZADO">Rechazado</option>
                 </select>
             </div>
+
+                <div class="md:col-span-3">
+                    <label class="inline-flex items-center text-sm text-gray-700">
+                        <input
+                            type="checkbox"
+                            wire:model="filtro_inactivos"
+                            class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 mr-2"
+                        >
+                        <span>Mostrar solo pedidos inactivos</span>
+                    </label>
+                </div>
         </div>
+
+        
     
         <div class="mt-4 flex gap-3">
             <button wire:click="aplicarFiltros" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">

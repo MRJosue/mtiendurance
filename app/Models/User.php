@@ -59,6 +59,7 @@ class User extends Authenticatable
         'empresa_id',
         'sucursal_id',
         'es_propietario',   
+        'ind_activo'
 
     ];
 

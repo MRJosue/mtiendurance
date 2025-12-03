@@ -64,6 +64,19 @@
                             <option value="ENTREGADA">ENTREGADA</option>
                             <option value="CANCELADA">CANCELADA</option>
                         </select>
+
+
+                            <div class="flex items-center space-x-2">
+                                <input
+                                    type="checkbox"
+                                    id="solo-inactivas"
+                                    wire:model.live="filters.inactivos"
+                                    class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                />
+                                <label for="solo-inactivas" class="text-sm text-gray-700">
+                                    Mostrar solo muestras inactivas
+                                </label>
+                            </div>
                     </div>
                 </div>
             </template>

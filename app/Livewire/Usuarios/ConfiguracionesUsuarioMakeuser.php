@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
+use App\Models\Proyecto;
+use App\Models\Pedido;
+
 
 class ConfiguracionesUsuarioMakeuser extends Component
 {
@@ -28,6 +31,24 @@ class ConfiguracionesUsuarioMakeuser extends Component
     public $nameLocked = false;  // bloquear edición de nombre si no-admin
     public $sucursalLocked = false; // bloquear edición de sucursal si no-admin
 
+    // Activar / Inactivar subordinado
+    public bool $showDeactivateModal = false;
+    public bool $showActivateModal   = false;
+    public ?int $targetUserId        = null;
+
+    public array $deactivateStats = [
+        'nombre_usuario'  => '',
+        'total_proyectos' => 0,
+        'total_pedidos'   => 0,
+    ];
+
+    public array $activateStats = [
+        'nombre_usuario'  => '',
+        'total_proyectos' => 0,
+        'total_pedidos'   => 0,
+    ];
+
+
     protected function rules()
     {
         $rules = [
@@ -42,6 +63,19 @@ class ConfiguracionesUsuarioMakeuser extends Component
             $rules['password'] = ['required','string','min:6'];
         }
         return $rules;
+    }
+
+    /**
+     * Helper: obtiene un subordinado válido o 404.
+     */
+    protected function getSubordinadoOrFail(int $id): User
+    {
+        $idsSubordinados = $this->jefe->subordinados ?? [];
+
+        return User::where('id', $id)
+            ->where('empresa_id', $this->jefe->empresa_id)
+            ->whereIn('id', $idsSubordinados)
+            ->firstOrFail();
     }
 
     public function mount($userId)
@@ -199,6 +233,106 @@ class ConfiguracionesUsuarioMakeuser extends Component
         $this->dispatch('notify', type: 'success', message: 'Usuario guardado correctamente');
         $this->dispatch('refreshMakeuser');
     }
+
+   /**
+     * Abrir modal de inactivación para un subordinado.
+     */
+    public function openDeactivateModal(int $userId): void
+    {
+        $user = $this->getSubordinadoOrFail($userId);
+        $this->targetUserId = $user->id;
+
+        $totalProyectos = Proyecto::where('usuario_id', $user->id)->count();
+        $totalPedidos   = Pedido::where('user_id', $user->id)->count();
+
+        $this->deactivateStats = [
+            'nombre_usuario'  => $user->name,
+            'total_proyectos' => $totalProyectos,
+            'total_pedidos'   => $totalPedidos,
+        ];
+
+        $this->showDeactivateModal = true;
+    }
+
+    /**
+     * Confirmar inactivación del subordinado:
+     * - Solo este usuario
+     * - Sus proyectos / pedidos
+     */
+    public function inactivarUsuarioConfirmado(): void
+    {
+        if (!$this->targetUserId) {
+            return;
+        }
+
+        $user = $this->getSubordinadoOrFail($this->targetUserId);
+
+        DB::transaction(function () use ($user) {
+            $user->update(['ind_activo' => 0]);
+
+            Proyecto::where('usuario_id', $user->id)->update(['ind_activo' => 0]);
+            Pedido::where('user_id', $user->id)->update(['ind_activo' => 0]);
+        });
+
+        $this->loadSubordinados();
+        $this->showDeactivateModal = false;
+        $this->targetUserId = null;
+
+        $this->dispatch('notify', type: 'success', message: 'Usuario inactivado correctamente');
+    }
+
+    /**
+     * Abrir modal de activación para un subordinado.
+     */
+    public function openActivateModal(int $userId): void
+    {
+        $user = $this->getSubordinadoOrFail($userId);
+        $this->targetUserId = $user->id;
+
+        $totalProyectos = Proyecto::where('usuario_id', $user->id)
+            ->where('ind_activo', 0)
+            ->count();
+
+        $totalPedidos = Pedido::where('user_id', $user->id)
+            ->where('ind_activo', 0)
+            ->count();
+
+        $this->activateStats = [
+            'nombre_usuario'  => $user->name,
+            'total_proyectos' => $totalProyectos,
+            'total_pedidos'   => $totalPedidos,
+        ];
+
+        $this->showActivateModal = true;
+    }
+
+    /**
+     * Confirmar activación de subordinado:
+     * - Solo este usuario
+     * - Sus proyectos / pedidos
+     */
+    public function activarUsuarioConfirmado(): void
+    {
+        if (!$this->targetUserId) {
+            return;
+        }
+
+        $user = $this->getSubordinadoOrFail($this->targetUserId);
+
+        DB::transaction(function () use ($user) {
+            $user->update(['ind_activo' => 1]);
+
+            Proyecto::where('usuario_id', $user->id)->update(['ind_activo' => 1]);
+            Pedido::where('user_id', $user->id)->update(['ind_activo' => 1]);
+        });
+
+        $this->loadSubordinados();
+        $this->showActivateModal = false;
+        $this->targetUserId = null;
+
+        $this->dispatch('notify', type: 'success', message: 'Usuario activado correctamente');
+    }
+   
 
     public function deleteUser($id)
     {

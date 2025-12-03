@@ -71,12 +71,14 @@ class ReconfigurarProyectos extends Component
         ];
 
         
-        public array $filters = [
-            'id'      => null,
-            'nombre'  => null,
-            'cliente' => null,   // se aplica solo si el usuario puede ver la columna Cliente
-            'estado'  => null,   // útil si quieres sobre-filtrar dentro del tab actual
-        ];
+public array $filters = [
+    'id'        => null,
+    'nombre'    => null,
+    'cliente'   => null,
+    'estado'    => null,
+    'inactivos' => false, // 👈 NUEVO: false = solo activos, true = solo inactivos
+];
+
 
 
         public function buscarPorFiltros()
@@ -92,10 +94,11 @@ class ReconfigurarProyectos extends Component
         public function clearFilters(): void
         {
             $this->filters = [
-                'id'      => null,
-                'nombre'  => null,
-                'cliente' => null,
-                'estado'  => null,
+                'id'        => null,
+                'nombre'    => null,
+                'cliente'   => null,
+                'estado'    => null,
+                'inactivos' => false,
             ];
             $this->resetPage();
             $this->dispatch('filters-cleared');
@@ -131,6 +134,14 @@ class ReconfigurarProyectos extends Component
             }
 
             $ids = Proyecto::query()
+
+                ->when($this->filters['inactivos'] ?? false, function ($q) {
+                     $q->where('ind_activo', 0);
+                })
+                ->when(!($this->filters['inactivos'] ?? false), function ($q) {
+                    $q->where('ind_activo', 1);
+                })
+
                 // NUEVO: Tab POR REPROGRAMAR => ambos flags en 1
                 ->when($this->activeTab === 'POR REPROGRAMAR', function ($q) {
                     $q->where('flag_solicitud_reconfigurar', 1)
@@ -319,6 +330,17 @@ class ReconfigurarProyectos extends Component
                     'pedidos.producto.categoria:id,nombre',
                     'tareas:id,proyecto_id,staff_id,descripcion,estado',
                 ]);
+
+
+            $query
+            ->when($this->filters['inactivos'] ?? false, function ($q) {
+                // check marcado → solo inactivos
+                $q->where('ind_activo', 0);
+            })
+            ->when(!($this->filters['inactivos'] ?? false), function ($q) {
+                // sin check → solo activos
+                $q->where('ind_activo', 1);
+            });
 
             // Filtros por columna (se quedan igual) ...
             $query

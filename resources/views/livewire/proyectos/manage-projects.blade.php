@@ -137,9 +137,9 @@
                                     <span class="text-xs">{!! $arrow('id') !!}</span>
                                 </button>
 
-                                {{-- Filtro ID en dropdown (teleport al body) --}}
+                                {{-- Filtro ID + Inactivos en dropdown (teleport al body) --}}
                                 <div x-data="dropdownTeleport()" class="relative shrink-0">
-                                    <button x-ref="btn" @click="toggle" class="p-1 rounded hover:bg-gray-200" title="Filtrar ID">⋮</button>
+                                    <button x-ref="btn" @click="toggle" class="p-1 rounded hover:bg-gray-200" title="Filtros de ID">⋮</button>
 
                                     <template x-teleport="body">
                                         <div
@@ -147,26 +147,57 @@
                                             x-transition
                                             @click.outside="close"
                                             :style="style"
-                                            class="fixed z-50 w-64 rounded-lg border bg-white shadow p-3"
+                                            class="fixed z-50 w-64 rounded-lg border bg-white shadow p-3 space-y-3"
                                         >
-                                            <label class="block text-xs text-gray-600 mb-1">
-                                                ID Proyecto (ej. 101 ó 101,102)
-                                            </label>
-                                            <input
-                                                type="text"
-                                                class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                                placeholder="ID…"
-                                                wire:model.live.debounce.400ms="filters.id"
-                                            />
-                                            <div class="mt-2 flex justify-end gap-2">
-                                                <button type="button" class="px-2 py-1 text-xs rounded border"
-                                                        @click="$wire.set('filters.id','')">Limpiar</button>
-                                                <button type="button" class="px-2 py-1 text-xs rounded border"
-                                                        @click="close">Cerrar</button>
+                                            {{-- Filtro por ID --}}
+                                            <div>
+                                                <label class="block text-xs text-gray-600 mb-1">
+                                                    ID Proyecto (ej. 101 ó 101,102)
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                                    placeholder="ID…"
+                                                    wire:model.live.debounce.400ms="filters.id"
+                                                />
+                                            </div>
+
+                                            {{-- Filtro proyectos inactivos --}}
+                                            <div class="border-t pt-2">
+                                                <label class="inline-flex items-center space-x-2 text-xs text-gray-700">
+                                                    <input
+                                                        type="checkbox"
+                                                        class="rounded border-gray-300"
+                                                        wire:model.live="filters.inactivos" {{-- 👈 sin value, Livewire lo hace bool --}}
+                                                    >
+                                                    <span>Mostrar solo proyectos inactivos</span>
+                                                </label>
+                                            </div>
+
+                                            <div class="pt-1 flex justify-end gap-2">
+                                                <button
+                                                    type="button"
+                                                    class="px-2 py-1 text-xs rounded border"
+                                                    @click="
+                                                        $wire.set('filters.id', '');
+                                                        $wire.set('filters.inactivos', false);
+                                                    "
+                                                >
+                                                    Limpiar
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    class="px-2 py-1 text-xs rounded border"
+                                                    @click="close"
+                                                >
+                                                    Cerrar
+                                                </button>
                                             </div>
                                         </div>
                                     </template>
                                 </div>
+
+
                             </div>
 
                             </th>

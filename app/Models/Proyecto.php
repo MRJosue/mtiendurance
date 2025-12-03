@@ -53,6 +53,7 @@ class Proyecto extends Model
         'caracteristicas_sel',
         'opciones_sel',
         'total_piezas_sel',
+        'ind_activo'
     ];
 
     protected $casts = [

@@ -51,8 +51,9 @@ class Pedido extends Model
         'url',
         'last_uploaded_file_id',
         'flag_aprobar_sin_fechas',
-        'flag_solicitud_aprobar_sin_fechas'
-        
+        'flag_solicitud_aprobar_sin_fechas',
+        'flag_solicitud_aprobar_sin_fechas',
+        'ind_activo'
     ];
 
     protected $casts = [

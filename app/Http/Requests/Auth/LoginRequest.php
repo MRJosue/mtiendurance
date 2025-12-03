@@ -27,8 +27,21 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'email'    => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+        ];
+    }
+
+    /**
+     * Credenciales usadas para el intento de login.
+     * Aquí forzamos que el usuario esté activo.
+     */
+    public function credentials(): array
+    {
+        return [
+            'email'      => $this->get('email'),
+            'password'   => $this->get('password'),
+            'ind_activo' => 1, // ❗ Solo usuarios activos pueden loguear
         ];
     }
 
@@ -41,7 +54,8 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        // 👇 Ahora usamos credentials(), que incluye ind_activo = 1
+        if (! Auth::attempt($this->credentials(), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([

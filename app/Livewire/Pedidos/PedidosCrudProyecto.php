@@ -66,6 +66,13 @@ class PedidosCrudProyecto extends Component
 
     public ?int $estado_id = null;     // ⬅️ nuevo
     public array $estados = [];        // ⬅️ nuevo
+
+        // 👇 NUEVO
+    public array $filters = [
+        'inactivos' => false, // false = solo activos, true = solo inactivos
+    ];
+
+
     
     protected $listeners = ['abrirModalEdicion' => 'abrirModal',
                             'ActualizarTablaPedido' => 'actualizarTabla',];
@@ -763,23 +770,47 @@ class PedidosCrudProyecto extends Component
     public function render()
     {
         $proyecto = Proyecto::find($this->proyectoId);
-    
+
+        $query = Pedido::where('proyecto_id', $this->proyectoId)
+            ->where('tipo', 'PEDIDO');
+
+        // 👇 Filtro base: activos / inactivos
+        if ($this->filters['inactivos']) {
+            // Check marcado → solo inactivos
+            $query->where('ind_activo', 0);
+        } else {
+            // Sin check → solo activos
+            $query->where('ind_activo', 1);
+        }
+
+        $query->with([
+            'pedidoTallas.talla' => function ($query) {
+                $query->with('gruposTallas');
+            },
+            'tipoEnvio',
+            'usuario',
+        ]);
+
         return view('livewire.pedidos.pedidos-crud-proyecto', [
-            'tiposEnvio' => TipoEnvio::all(),
-            'direccionesFiscales' => DireccionFiscal::where('usuario_id', $proyecto->usuario_id)->get(),
+            'tiposEnvio'         => TipoEnvio::all(),
+            'direccionesFiscales'=> DireccionFiscal::where('usuario_id', $proyecto->usuario_id)->get(),
             'direccionesEntrega' => DireccionEntrega::where('usuario_id', $proyecto->usuario_id)->get(),
-            'pedidos' => Pedido::where('proyecto_id', $this->proyectoId)
-                ->where('tipo', 'PEDIDO')
-                ->with([
-                    'pedidoTallas.talla' => function ($query) {
-                        $query->with('gruposTallas'); // Cargar los grupos de talla correctamente
-                    },
-                    'tipoEnvio',
-                    'usuario'
-                ])
-                ->paginate(6),
+            'pedidos'            => $query->paginate(6),
         ]);
     }
+
+
+    public function buscarPorFiltros()
+{
+    $this->resetPage();
+}
+
+public function updatedFilters()
+{
+    $this->resetPage();
+}
+
+
 
 
 }

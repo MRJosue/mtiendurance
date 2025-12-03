@@ -173,7 +173,7 @@ Route::post('/preproyecto/upload-temporal', [PreproyectoUploadController::class,
 
 
 //Administracion de usuarios
-Route::get('/usuarios',[UserController::class, 'index'])->middleware(['auth','verified'])->name('usuarios.index');
+// Route::get('/usuarios',[UserController::class, 'index'])->middleware(['auth','verified'])->name('usuarios.index');
 
 Route::get('/usuarios/clientes',[UserController::class, 'showclientes'])->middleware(['auth','verified'])->name('usuarios.clientes');
 Route::get('/usuarios/proveedor',[UserController::class, 'showcproveedor'])->middleware(['auth','verified'])->name('usuarios.proveedor');

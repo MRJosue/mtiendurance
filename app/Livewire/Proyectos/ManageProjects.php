@@ -86,10 +86,11 @@ class ManageProjects extends Component
 
         
         public array $filters = [
-            'id'      => null,
-            'nombre'  => null,
-            'cliente' => null,   // se aplica solo si el usuario puede ver la columna Cliente
-            'estado'  => null,   // útil si quieres sobre-filtrar dentro del tab actual
+            'id'        => null,
+            'nombre'    => null,
+            'cliente'   => null,
+            'estado'    => null,
+            'inactivos' => false, // 👈 bool
         ];
 
 
@@ -131,20 +132,20 @@ class ManageProjects extends Component
         public function clearFilters(): void
         {
             $this->filters = [
-                'id'      => null,
-                'nombre'  => null,
-                'cliente' => null,
-                'estado'  => null,
+                'id'        => null,
+                'nombre'    => null,
+                'cliente'   => null,
+                'estado'    => null,
+                'inactivos' => false, // 👈 reset también
             ];
             $this->resetPage();
             $this->dispatch('filters-cleared');
         }
 
-        public function updatedFilters(): void
+        public function updatedFilters($value): void
         {
             $this->resetPage();
         }
-
             
         public function updating($field)
         {
@@ -167,6 +168,15 @@ class ManageProjects extends Component
             if (!$value) return;
 
             $idsQuery = Proyecto::query()
+
+                // 👇 mismo filtro base
+                ->when($this->filters['inactivos'], fn($q) =>
+                    $q->where('ind_activo', 0)
+                )
+                ->when(!$this->filters['inactivos'], fn($q) =>
+                    $q->where('ind_activo', 1)
+                )
+                
                 // Tab REPROGRAMAR
                 ->when($this->activeTab === 'REPROGRAMAR', fn($q) =>
                     $q->where('estado', 'DISEÑO APROBADO')->where('flag_reconfigurar', 1)
@@ -380,6 +390,15 @@ class ManageProjects extends Component
                     'pedidos.producto.categoria:id,nombre',
                     'tareas:id,proyecto_id,staff_id,descripcion,estado',
                 ]);
+            
+                // --- Filtro base activo / inactivo ---
+                if ($this->filters['inactivos']) {
+                    // Si está activo el check => solo inactivos
+                    $query->where('ind_activo', 0);
+                } else {
+                    // Sin check => solo activos
+                    $query->where('ind_activo', 1);
+                }
 
             // --- Filtros por columna ---
             $query
@@ -399,9 +418,15 @@ class ManageProjects extends Component
                         $u->where('name', 'like', '%'.$v.'%')->orWhere('email', 'like', '%'.$v.'%')
                     );
                 })
+
                 ->when($this->filters['estado'], fn($q, $v) =>
                     $q->where('estado', $v)
-                );
+                )
+
+                ->when($this->filters['inactivos'], function ($q) {
+                    $q->where('ind_activo', 0);
+                });
+
 
             // --- Tabs ---
             if ($this->activeTab === 'REPROGRAMAR') {
@@ -427,6 +452,8 @@ class ManageProjects extends Component
                 // cliente_subordinado, estaf, u otros
                 $query->where('usuario_id', $user->id);
             }
+
+            
 
             // --- Order by (seguro) ---
             if (!in_array($this->sortField, $this->sortable, true)) {

@@ -101,6 +101,10 @@ class AdministraAprobacionEspecial extends Component
     public $filtro_estado_id = '';      // filtro por estado
     public $catalogoEstados = [];       // para selects
 
+     public bool $filtro_inactivos = false;
+
+
+
     // ids útiles para lógicas internas
     protected $estado_por_aprobar_id = null;
     protected $estado_rechazado_id   = null;
@@ -112,7 +116,7 @@ class AdministraAprobacionEspecial extends Component
         $this->clientes = Cliente::all();
         $this->direccionesFiscales = DireccionFiscal::with('ciudad.estado')->get();
         $this->direccionesEntrega  = DireccionEntrega::with('ciudad.estado')->get();
-        $this->usuarios = User::query()->role('estaf')->get();
+        $this->usuarios = User::query()->role('staff')->get();
         $this->productos_activos = Producto::where('ind_activo', 1)->get();
         $this->categorias_activas = Categoria::where('ind_activo', 1)->get();
 
@@ -362,11 +366,11 @@ class AdministraAprobacionEspecial extends Component
             'filtro_total',
             'filtro_estado',
             'filtro_estado_produccion',
+            'filtro_inactivos', // 👈 NUEVO
         ]);
-    
+
         $this->resetPage();
     }
-    
 
 public function render()
 {
@@ -380,6 +384,17 @@ public function render()
         'pedidoOpciones.opcion.caracteristicas',
         'estadoPedido:id,nombre', // <— para mostrar nombre
     ]);
+
+
+    $query
+        ->when($this->filtro_inactivos, function ($q) {
+            // Checkbox marcado → solo inactivos
+            $q->where('ind_activo', 0);
+        })
+        ->when(!$this->filtro_inactivos, function ($q) {
+            // Sin check → solo activos
+            $q->where('ind_activo', 1);
+        });
 
     if ($this->filtro_usuario) {
         $query->whereHas('proyecto.user', fn($q) =>

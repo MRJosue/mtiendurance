@@ -81,6 +81,18 @@
                                                         placeholder="Ej. 101 o 101,102"
                                                         wire:model.live.debounce.400ms="filters.id"
                                                     />
+
+                                                    <div class="mt-3 pt-2 border-t border-gray-200">
+                                                        <label class="flex items-center gap-2 text-xs text-gray-700">
+                                                            <input
+                                                                type="checkbox"
+                                                                wire:model.live="filters.inactivos"
+                                                                class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                                            >
+                                                            <span>Mostrar solo proyectos inactivos</span>
+                                                        </label>
+                                                    </div>
+
                                                     <div class="mt-2 flex justify-end gap-2">
                                                         <button
                                                             type="button"

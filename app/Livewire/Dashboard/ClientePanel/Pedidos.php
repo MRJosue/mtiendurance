@@ -34,7 +34,8 @@ public string $sortDir   = 'desc';
         'estado_pedido' => null,   
         'estado_diseno' => null,   
         'fecha_desde'   => null,   
-        'fecha_hasta'   => null,   
+        'fecha_hasta'   => null,
+        'inactivos'     => false,   // 👈 NUEVO: por defecto solo activos
     ];
 
     public array $sortable = [
@@ -109,6 +110,7 @@ $proyecto = \App\Models\Proyecto::with([
             'estado_diseno' => null,
             'fecha_desde'   => null,
             'fecha_hasta'   => null,
+            'inactivos'     => false,   // 👈 vuelve a “solo activos”
         ];
         $this->resetPage();
         $this->dispatch('filters-cleared');
@@ -134,6 +136,15 @@ $proyecto = \App\Models\Proyecto::with([
             'pedidoOpciones.opcion.caracteristicas',
             'usuario:id,name',
         ])->where('tipo', $this->activeTab === 'MUESTRAS' ? 'MUESTRA' : 'PEDIDO');
+
+            /* 👇 Filtro base: activos / inactivos */
+        if ($this->filters['inactivos']) {
+            // Check marcado → solo inactivos
+            $query->where('ind_activo', 0);
+        } else {
+            // Sin check → solo activos
+            $query->where('ind_activo', 1);
+        }
 
         // ---------- Filtros ----------
         $query

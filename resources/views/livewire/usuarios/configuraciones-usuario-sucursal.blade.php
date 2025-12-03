@@ -1,6 +1,8 @@
 <div 
     x-data="{
         abierto: JSON.parse(localStorage.getItem('configuracionesusuariosucursal') ?? 'true'),
+        showDeactivate: @entangle('showDeactivateModal'),
+        showActivate: @entangle('showActivateModal'),
         toggle() {
             this.abierto = !this.abierto;
             localStorage.setItem('configuracionesusuariosucursal', JSON.stringify(this.abierto));
@@ -8,7 +10,6 @@
     }"
     class="container mx-auto p-6"
 >
-
     <h2 
         @click="toggle()"
         class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
@@ -40,7 +41,7 @@
                 type="text"
                 wire:model.debounce.500ms="search"
                 class="border px-4 py-2 rounded-lg w-full sm:w-1/3"
-                placeholder="Buscar sucursal..."
+                placeholder="Buscar Empresa..."
             />
         </div>
 
@@ -52,6 +53,7 @@
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">ID</th>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Empresa</th>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Tipo</th>
+                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Estado</th> 
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Teléfono</th>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Dirección</th>
                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Usuarios Asignados</th>
@@ -69,6 +71,19 @@
                                     {{ $sucursal->tipo == 1 ? 'Principal' : 'Secundaria' }}
                                 </span>
                             </td>
+
+                            <td class="border-b px-4 py-2 text-gray-700 text-sm">
+                                @if($sucursal->ind_activo)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+                                        Activa
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">
+                                        Inactiva
+                                    </span>
+                                @endif
+                            </td>
+
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->telefono }}</td>
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->direccion }}</td>
                             <td class="border-b px-4 py-2 text-gray-700 text-sm">
@@ -107,17 +122,27 @@
                                 @endcan
 
                                 @can('usuarios.configuracion.eliminar.empresa')
-                                    <button
-                                        wire:click="delete({{ $sucursal->id }})"
-                                        onclick="return confirm('¿Eliminar sucursal?')"
-                                        class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700 text-xs ml-1"
-                                    >
-                                        Eliminar
-                                    </button>
+                                    @if($sucursal->ind_activo)
+                                        <button
+                                            wire:click="openDeactivateModal({{ $sucursal->id }})"
+                                            class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700 text-xs ml-1"
+                                        >
+                                            Inactivar
+                                        </button>
+                                    @else
+                                        <button
+                                            wire:click="openActivateModal({{ $sucursal->id }})"
+                                            class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-700 text-xs ml-1"
+                                        >
+                                            Activar
+                                        </button>
+                                    @endif
                                 @endcan
 
 
                             </td>
+
+
                         </tr>
                     @empty
                         <tr>
@@ -141,7 +166,7 @@
         >
             <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-3xl mx-auto">
                 <h2 class="text-lg font-bold mb-4 text-gray-700">
-                    {{ $editingId ? 'Editar Sucursal' : 'Crear Sucursal' }}
+                    {{ $editingId ? 'Editar Empresa' : 'Crear Empresa' }}
                 </h2>
 
                 <form wire:submit.prevent="{{ $editingId ? 'update' : 'store' }}" class="space-y-4">
@@ -252,7 +277,7 @@
             class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40"
         >
             <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl mx-auto">
-                <h2 class="text-lg font-bold mb-4 text-gray-700">Asignar usuarios a la Sucursal</h2>
+                <h2 class="text-lg font-bold mb-4 text-gray-700">Asignar usuarios a la Empresa</h2>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <!-- Columna: Asignados (por sucursal_id) -->
@@ -298,7 +323,7 @@
                                     <button
                                         wire:click="assignUserToSucursal({{ $u->id }})"
                                         class="px-3 py-1 text-xs rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                                        title="Asignar a la sucursal"
+                                        title="Asignar a la empresa"
                                     >
                                         Asignar
                                     </button>
@@ -361,6 +386,106 @@
                     class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
                 >
                     Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+    {{-- MODAL INACTIVAR SUCURSAL --}}
+    <div
+        x-cloak
+        x-show="showDeactivate"
+        x-transition
+        class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
+    >
+        <div class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative">
+            <h2 class="text-lg sm:text-xl font-bold mb-4 text-red-600">
+                Confirmar inactivación de Empresa
+            </h2>
+
+            <p class="text-sm text-gray-700 mb-4">
+                Estás a punto de inactivar la sucursal
+                <span class="font-semibold">{{ $deactivateStats['nombre_sucursal'] ?? '' }}</span>.
+            </p>
+
+            <div class="mb-4 text-sm text-gray-700 space-y-1">
+                <p class="font-semibold">
+                    Se aplicará lo siguiente:
+                </p>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>La sucursal quedará marcada como <strong>Inactiva</strong>.</li>
+                    <li>Usuarios asignados a esta sucursal: 
+                        <span class="font-semibold">{{ $deactivateStats['total_usuarios'] ?? 0 }}</span>
+                    </li>
+                    <li>Los usuarios mantienen su relación con la Empresa (solo se cambia el estado de la Empresa).</li>
+                </ul>
+            </div>
+
+            <p class="text-xs text-red-500 mb-4">
+                Esta acción no elimina registros, pero puede afectar flujos que filtren por empresas activas.
+            </p>
+
+            <div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
+                <button
+                    type="button"
+                    class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                    @click="showDeactivate = false"
+                >
+                    Cancelar
+                </button>
+                <button
+                    type="button"
+                    class="w-full sm:w-auto px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                    wire:click="inactivarSucursalConfirmada"
+                >
+                    Sí, inactivar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL ACTIVAR SUCURSAL --}}
+    <div
+        x-cloak
+        x-show="showActivate"
+        x-transition
+        class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
+    >
+        <div class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative">
+            <h2 class="text-lg sm:text-xl font-bold mb-4 text-emerald-700">
+                Confirmar activación de Empresa
+            </h2>
+
+            <p class="text-sm text-gray-700 mb-4">
+                Vas a activar la Empresa
+                <span class="font-semibold">{{ $activateStats['nombre_sucursal'] ?? '' }}</span>.
+            </p>
+
+            <div class="mb-4 text-sm text-gray-700 space-y-1">
+                <p class="font-semibold">
+                    Se realizará lo siguiente:
+                </p>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>La empresa quedará marcada como <strong>Activa</strong>.</li>
+                    <li>Usuarios asignados a esta Empresa: 
+                        <span class="font-semibold">{{ $activateStats['total_usuarios'] ?? 0 }}</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
+                <button
+                    type="button"
+                    class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                    @click="showActivate = false"
+                >
+                    Cancelar
+                </button>
+                <button
+                    type="button"
+                    class="w-full sm:w-auto px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+                    wire:click="activarSucursalConfirmada"
+                >
+                    Sí, activar
                 </button>
             </div>
         </div>

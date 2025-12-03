@@ -59,10 +59,20 @@ class MuestrasCrudProyecto extends Component
 
     protected $listeners = ['ActualizarTablaMuestra' => 'actualizarTabla'];
 
+        // 👇 NUEVO: filtro para activos / inactivos
+    public array $filters = [
+        'inactivos' => false, // false => solo activos, true => solo inactivos
+    ];
+
+
+
     // Reset de página al cambiar cualquier filtro
     public function updated($prop)
     {
-        if (str_starts_with($prop, 'f_')) {
+        if (
+            str_starts_with($prop, 'f_') ||
+            str_starts_with($prop, 'filters.')
+        ) {
             $this->resetPage();
         }
     }
@@ -103,6 +113,17 @@ class MuestrasCrudProyecto extends Component
                 ->orderByDesc('id')
                 ->limit(1),
             ]);
+
+
+        // 👇 Filtro base: activos / inactivos
+        if ($this->filters['inactivos'] ?? false) {
+            // check marcado → solo inactivos
+            $query->where('ind_activo', 0);
+        } else {
+            // sin check → solo activos
+            $query->where('ind_activo', 1);
+        }
+        
 
         // Filtros
         if ($this->f_id !== '') {

@@ -20,10 +20,25 @@ class ConfiguracionesUsuarioSucursal extends Component
     public $showAssignedOnlyModal = false;    // Modal "Asignados"
 
     public $selectedSucursal = null;
-    public $selectedUsers = [];               // ids asignados (estado actual)
+    public $selectedUsers = [];               
     public $search = '';
     public $userId;
-    public $usuariosDisponibles = [];         // universo permitido (subordinados)
+    public $usuariosDisponibles = [];         
+
+    // Activar / Inactivar sucursal
+    public bool $showDeactivateModal = false;
+    public bool $showActivateModal   = false;
+    public ?int $targetSucursalId    = null;
+
+    public array $deactivateStats = [
+        'nombre_sucursal' => '',
+        'total_usuarios'  => 0,
+    ];
+
+    public array $activateStats = [
+        'nombre_sucursal' => '',
+        'total_usuarios'  => 0,
+    ];
 
     protected $rules = [
         'empresa_id' => 'required|exists:empresas,id',
@@ -45,8 +60,7 @@ class ConfiguracionesUsuarioSucursal extends Component
     }
 
     /**
-     * Usuarios disponibles = los que pertenecen a la organización (empresa_id)
-     * pero todavía NO tienen sucursal asignada (sucursal_id = null).
+     * Usuarios disponibles de la empresa (puedes filtrar más si quieres)
      */
     protected function cargarUsuariosDisponiblesPorEmpresa(?int $empresaId): void
     {
@@ -56,7 +70,6 @@ class ConfiguracionesUsuarioSucursal extends Component
         }
 
         $this->usuariosDisponibles = User::where('empresa_id', $empresaId)
-         
             ->orderBy('name')
             ->get();
     }
@@ -72,11 +85,9 @@ class ConfiguracionesUsuarioSucursal extends Component
         $empresasQuery = Empresa::orderBy('nombre');
 
         if ($user && $user->empresa_id) {
-            // SIEMPRE solo la empresa del usuario consultado
             $sucursalesQuery->where('empresa_id', $user->empresa_id);
             $empresasQuery->where('id', $user->empresa_id);
         } else {
-            // Usuario sin empresa => no ve nada
             $sucursalesQuery->whereRaw('0=1');
             $empresasQuery->whereRaw('0=1');
         }
@@ -93,7 +104,7 @@ class ConfiguracionesUsuarioSucursal extends Component
         $this->nombre     = '';
         $this->telefono   = '';
         $this->direccion  = '';
-        $this->tipo       = 2;   // por defecto "Secundaria"
+        $this->tipo       = 2;
         $this->editingId  = null;
     }
 
@@ -109,7 +120,6 @@ class ConfiguracionesUsuarioSucursal extends Component
         if ($user && $user->empresa_id) {
             $this->empresa_id = $user->empresa_id;
         } else {
-            // Si no tiene empresa, no permitimos crear
             $this->dispatch('notify', message: 'El usuario no tiene organización asignada.');
             return;
         }
@@ -143,7 +153,6 @@ class ConfiguracionesUsuarioSucursal extends Component
 
     public function store()
     {
-        // En creación el tipo SIEMPRE será Secundaria
         $this->tipo = 2;
 
         $user = User::find($this->userId);
@@ -153,7 +162,6 @@ class ConfiguracionesUsuarioSucursal extends Component
             return;
         }
 
-        // Blindamos empresa_id para que no se pueda cambiar vía Livewire
         $this->empresa_id = $user->empresa_id;
 
         $this->validate();
@@ -164,6 +172,7 @@ class ConfiguracionesUsuarioSucursal extends Component
             'telefono'   => $this->telefono,
             'direccion'  => $this->direccion,
             'tipo'       => $this->tipo,
+            'ind_activo' => 1,
         ]);
 
         $this->resetInput();
@@ -180,7 +189,6 @@ class ConfiguracionesUsuarioSucursal extends Component
             return;
         }
 
-        // Blindamos empresa_id
         $this->empresa_id = $user->empresa_id;
 
         $this->validate([
@@ -207,8 +215,9 @@ class ConfiguracionesUsuarioSucursal extends Component
         $this->dispatch('notify', message: 'Sucursal actualizada correctamente');
     }
 
+    /* --------- Activar / Inactivar sucursal --------- */
 
-    public function delete($id)
+    public function openDeactivateModal(int $id): void
     {
         $user = User::find($this->userId);
 
@@ -218,13 +227,85 @@ class ConfiguracionesUsuarioSucursal extends Component
             )
             ->firstOrFail();
 
-        $sucursal->delete();
+        $this->targetSucursalId = $sucursal->id;
 
-        $this->dispatch('notify', message: 'Sucursal eliminada');
+        $totalUsuarios = User::where('sucursal_id', $sucursal->id)->count();
+
+        $this->deactivateStats = [
+            'nombre_sucursal' => $sucursal->nombre,
+            'total_usuarios'  => $totalUsuarios,
+        ];
+
+        $this->showDeactivateModal = true;
     }
 
+    public function inactivarSucursalConfirmada(): void
+    {
+        if (!$this->targetSucursalId) {
+            return;
+        }
 
-    /* --------- Modal de usuarios por sucursal --------- */
+        $user = User::find($this->userId);
+
+        $sucursal = Sucursal::where('id', $this->targetSucursalId)
+            ->when($user && $user->empresa_id, fn ($q) =>
+                $q->where('empresa_id', $user->empresa_id)
+            )
+            ->firstOrFail();
+
+        $sucursal->update(['ind_activo' => 0]);
+
+        $this->showDeactivateModal = false;
+        $this->targetSucursalId = null;
+
+        $this->dispatch('notify', message: 'Sucursal inactivada correctamente');
+    }
+
+    public function openActivateModal(int $id): void
+    {
+        $user = User::find($this->userId);
+
+        $sucursal = Sucursal::where('id', $id)
+            ->when($user && $user->empresa_id, fn ($q) =>
+                $q->where('empresa_id', $user->empresa_id)
+            )
+            ->firstOrFail();
+
+        $this->targetSucursalId = $sucursal->id;
+
+        $totalUsuarios = User::where('sucursal_id', $sucursal->id)->count();
+
+        $this->activateStats = [
+            'nombre_sucursal' => $sucursal->nombre,
+            'total_usuarios'  => $totalUsuarios,
+        ];
+
+        $this->showActivateModal = true;
+    }
+
+    public function activarSucursalConfirmada(): void
+    {
+        if (!$this->targetSucursalId) {
+            return;
+        }
+
+        $user = User::find($this->userId);
+
+        $sucursal = Sucursal::where('id', $this->targetSucursalId)
+            ->when($user && $user->empresa_id, fn ($q) =>
+                $q->where('empresa_id', $user->empresa_id)
+            )
+            ->firstOrFail();
+
+        $sucursal->update(['ind_activo' => 1]);
+
+        $this->showActivateModal = false;
+        $this->targetSucursalId = null;
+
+        $this->dispatch('notify', message: 'Sucursal activada correctamente');
+    }
+
+    /* --------- Usuarios por sucursal --------- */
 
     public function openUserModal($sucursalId)
     {
@@ -247,33 +328,27 @@ class ConfiguracionesUsuarioSucursal extends Component
         $this->showUserModal = true;
     }
 
-
-    // Asignación inmediata (desde "disponibles" -> "asignados")
     public function assignUserToSucursal(int $userId): void
     {
         if (!$this->selectedSucursal) {
             return;
         }
 
-        // Asegura que viene de la misma empresa y sin sucursal asignada
         if (!$this->usuariosDisponibles->contains('id', $userId)) {
             return;
         }
 
         User::whereKey($userId)->update(['sucursal_id' => $this->selectedSucursal->id]);
 
-        // Refresca listas
         $this->selectedSucursal->load('usuarios');
         $this->selectedUsers = $this->selectedSucursal->usuarios()->pluck('id')->toArray();
 
-        // Recalcula disponibles (los que quedan con sucursal_id null)
         $this->cargarUsuariosDisponiblesPorEmpresa($this->selectedSucursal->empresa_id);
 
         $this->dispatch('notify', message: 'Usuario asignado a la sucursal');
         $this->dispatch('refreshMakeuser');
     }
 
-    // Modal SOLO de asignados (lectura)
     public function openAssignedOnlyModal($sucursalId)
     {
         $user = User::find($this->userId);
@@ -300,7 +375,6 @@ class ConfiguracionesUsuarioSucursal extends Component
         $this->selectedUsers = [];
     }
 
-    // Remoción inmediata de la sucursal (sin pivote)
     public function removeUserFromSucursal(int $userId): void
     {
         if (!$this->selectedSucursal) {
@@ -320,7 +394,6 @@ class ConfiguracionesUsuarioSucursal extends Component
         $this->dispatch('refreshMakeuser');
     }
 
-    // Guardado masivo usando sucursal_id directo (por si algún día usas checkboxes)
     public function saveUsersToSucursal()
     {
         if (!$this->selectedSucursal) {
@@ -328,16 +401,13 @@ class ConfiguracionesUsuarioSucursal extends Component
         }
 
         DB::transaction(function () {
-            // Usuarios que ya estaban asignados antes
             $antes = $this->selectedSucursal->usuarios()->pluck('id')->toArray();
 
-            // a) Asignar sucursal_id a los seleccionados
             if (!empty($this->selectedUsers)) {
                 User::whereIn('id', $this->selectedUsers)
                     ->update(['sucursal_id' => $this->selectedSucursal->id]);
             }
 
-            // b) Quitar sucursal_id a los que ya no están seleccionados
             $aNull = array_diff($antes, $this->selectedUsers);
             if (!empty($aNull)) {
                 User::whereIn('id', $aNull)
