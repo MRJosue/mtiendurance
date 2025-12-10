@@ -272,6 +272,14 @@
                             </th>
                             @endrole
 
+
+                            {{-- Proveedor (solo si tiene permiso) --}}
+                            @can('tablaProyectos-ver-columna-proveedor')
+                                <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
+                                    <span>Proveedor</span>
+                                </th>
+                            @endcan
+
                             {{-- Pedidos (solo si aplica permiso) --}}
                             @can('tablaProyectos-ver-columna-pedidos')
                                 <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Pedidos</th>
@@ -406,6 +414,17 @@
                                     </td>
                                 @endrole
 
+                                {{-- Proveedor (solo si tiene permiso) --}}
+                                @can('tablaProyectos-ver-columna-proveedor')
+                                    <td class="px-3 py-2 text-sm text-gray-700">
+                                        @if($project->proveedor)
+                                            {{ $project->proveedor->name }}
+                                        @else
+                                            <span class="text-gray-500">Sin proveedor</span>
+                                        @endif
+                                    </td>
+                                @endcan
+
                                 {{-- Pedidos --}}
                                 @can('tablaProyectos-ver-columna-pedidos')
                                     <td class="px-3 py-2 text-sm text-gray-700">
@@ -537,6 +556,7 @@
                                     $cols = 1 /* ID */ + 1 /* Nombre */ + 2 /* Estado proyecto + Estado diseño */ + 1 /* Acciones */;
                                     if(auth()->user()->hasAnyRole(['admin','estaf','jefediseñador','cliente_principal'])) $cols++;
                                     if(auth()->user()->can('tablaProyectos-ver-columna-pedidos')) $cols++;
+                                     if(auth()->user()->can('tablaProyectos-ver-columna-proveedor')) $cols++;
                                     // checkbox maestro visible?
                                     if(auth()->user()->hasAnyRole(['admin','estaf']) || (auth()->user()->hasRole('cliente_principal') && ($isClientePrincipalConSub ?? false))) $cols++;
                                 @endphp

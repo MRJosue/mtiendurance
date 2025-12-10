@@ -482,7 +482,7 @@ class ManageProjects extends Component
                     'user.empresa:id,nombre',
                     'user.sucursal:id,nombre,empresa_id',
                     'user.sucursal.empresa:id,nombre',
-
+                    'proveedor:id,name',
                     
                     'pedidos:id,proyecto_id,producto_id,total,estatus',
                     'pedidos.producto:id,nombre,categoria_id',
