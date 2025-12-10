@@ -6,6 +6,7 @@ use App\Models\proyecto_estados;
 use Livewire\Component;
 use App\Models\Proyecto;
 use App\Models\Tarea;
+use App\Models\Chat;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\NuevaNotificacion;
@@ -21,6 +22,12 @@ class TareasDiseno extends Component
 
     public ?int $selectedUser = null;        // Diseñador elegido
     public string $taskDescription = '';     // Descripción de la tarea
+
+
+    // 🔹 proveedor
+    public bool $modalProveedorOpen = false;
+    public ?int $selectedProveedor = null;
+
 
     protected $rules = [
         'selectedUser'    => 'required|exists:users,id',
@@ -121,16 +128,96 @@ class TareasDiseno extends Component
         }
     }
 
+
+
     public function render()
     {
         // Recarga relaciones por si cambian en tiempo real
-        $this->proyecto->load(['tareas.staff', 'estados.usuario']);
+        $this->proyecto->load(['tareas.staff', 'estados.usuario', 'proveedor']);
 
         return view('livewire.proyectos.tareas-diseno', [
             'disenadores' => User::whereHas('roles', function ($q) {
                                  $q->where('name', 'diseñador');
                              })->get(),
+            'proveedores' => User::whereHas('roles', function ($q) {
+                                 $q->where('name', 'proveedor');
+                             })->get(),
         ]);
     }
+
+    public function abrirModalProveedor(): void
+    {
+        $this->modalProveedorOpen = true;
+    }
+
+    /** Cierra el modal de asignación de proveedor */
+    public function cerrarModalProveedor(): void
+    {
+        $this->reset(['modalProveedorOpen', 'selectedProveedor']);
+        $this->resetErrorBag();
+    }
+    /** Asigna proveedor y crea chat de proveedor */
+    public function asignarProveedor(): void
+    {
+        $this->validate([
+            'selectedProveedor' => 'required|exists:users,id',
+        ], [
+            'selectedProveedor.required' => 'Selecciona un proveedor.',
+            'selectedProveedor.exists'   => 'El proveedor seleccionado no existe.',
+        ]);
+
+        // Actualizar el proyecto con el proveedor elegido
+        $this->proyecto->proveedor_id = $this->selectedProveedor;
+        $this->proyecto->save();
+
+        // Crear (o recuperar) chat de proveedor
+        $chat = Chat::firstOrCreate(
+            [
+                'proyecto_id'  => $this->proyecto->id,
+                'tipo_chat'    => 2, // 2 = proveedor
+                'proveedor_id' => $this->selectedProveedor,
+            ],
+            [
+                'fecha_creacion' => now(),
+            ]
+        );
+
+        // Registrar en historial de estados
+        proyecto_estados::create([
+            'proyecto_id' => $this->proyecto->id,
+            'estado'      => 'Proveedor asignado al proyecto',
+            'fecha_inicio'=> now(),
+            'usuario_id'  => Auth::id(),
+        ]);
+
+        // Notificaciones básicas
+        $ruta = 'proyectos/' . $this->proyecto->id;
+
+        $this->enviarNotificacion(
+            Auth::id(),
+            'Asignaste un proveedor al proyecto ' . $this->proyecto->id,
+            $ruta
+        );
+
+        $this->enviarNotificacion(
+            $this->selectedProveedor,
+            'Te han asignado como proveedor del proyecto ' . $this->proyecto->id,
+            $ruta
+        );
+
+        // Opcional: avisar al cliente
+        $this->enviarNotificacion(
+            $this->proyecto->usuario_id,
+            'Se asignó un proveedor al proyecto ' . $this->proyecto->id,
+            $ruta
+        );
+
+        session()->flash('message', 'Proveedor asignado y chat de proveedor creado correctamente.');
+
+        $this->cerrarModalProveedor();
+        // recargar relaciones
+        $this->proyecto->refresh()->load(['tareas.staff', 'estados.usuario', 'proveedor']);
+    }
+
 }
 

@@ -9,12 +9,45 @@
     <!-- Sección de Tareas -->
     <div>
         @if ($proyecto->tareas->isEmpty())
-            <button wire:click="abrirModal"
-                    class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded mb-4">
+        <div class="flex flex-wrap gap-2 mb-4">
+            <button
+                wire:click="abrirModal"
+                class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded"
+            >
                 Asignar tarea a diseñador
             </button>
+
+            {{-- 🔹 Botón para asignar proveedor si el proyecto lo requiere --}}
+            @if($proyecto->flag_requiere_proveedor)
+                <button
+                    wire:click="abrirModalProveedor"
+                    class="bg-purple-500 hover:bg-purple-600 text-white font-semibold px-4 py-2 rounded"
+                >
+                    {{ $proyecto->proveedor?->name ? 'Cambiar / Chat proveedor' : 'Asignar proveedor' }}
+                </button>
+            @endif
+        </div>
         @else
-        
+
+            <div class="flex flex-wrap gap-2 mb-4">
+            <button
+                wire:click="abrirModal"
+                class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded"
+            >
+                Asignar tarea a diseñador
+            </button>
+
+            {{-- 🔹 Botón para asignar proveedor si el proyecto lo requiere --}}
+            @if($proyecto->flag_requiere_proveedor)
+                <button
+                    wire:click="abrirModalProveedor"
+                    class="bg-purple-500 hover:bg-purple-600 text-white font-semibold px-4 py-2 rounded"
+                >
+                    {{ $proyecto->proveedor?->name ? 'Cambiar / Chat proveedor' : 'Asignar proveedor' }}
+                </button>
+            @endif
+        </div>
+
             <div class="overflow-x-auto bg-white rounded-lg shadow border">
                 <table class="min-w-full text-sm text-left table-auto border-collapse">
                     <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
@@ -144,6 +177,47 @@
             </div>
         </div>
     @endif
+
+    <!-- Modal de Asignación de Proveedor -->
+    @if ($modalProveedorOpen)
+        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div class="relative bg-white rounded shadow-lg w-full max-w-md p-6">
+                <!-- Botón X -->
+                <button wire:click="cerrarModalProveedor"
+                        class="absolute top-2 right-2 text-gray-600 hover:text-gray-800 text-xl font-bold">×</button>
+
+                <h3 class="text-lg font-semibold mb-4">Asignar Proveedor</h3>
+
+                <!-- Selector de proveedor -->
+                <label class="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
+                <select wire:model="selectedProveedor" class="w-full p-2 border rounded mb-3">
+                    <option value="">Seleccione un proveedor</option>
+                    @foreach ($proveedores as $prov)
+                        <option value="{{ $prov->id }}">
+                            {{ $prov->name }} (ID: {{ $prov->id }})
+                        </option>
+                    @endforeach
+                </select>
+                @error('selectedProveedor')
+                    <div class="bg-red-100 text-red-800 p-2 rounded mb-3">{{ $message }}</div>
+                @enderror
+
+                <p class="text-xs text-gray-500 mb-4">
+                    Al asignar un proveedor se creará (si no existe) un chat de proveedor para este proyecto.
+                </p>
+
+                <div class="flex justify-end gap-2">
+                    <button wire:click="cerrarModalProveedor" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded">
+                        Cancelar
+                    </button>
+                    <button wire:click="asignarProveedor" class="bg-purple-500 hover:bg-purple-600 text-white font-semibold px-4 py-2 rounded">
+                        Asignar proveedor
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
 </div>
 
 @push('scripts')

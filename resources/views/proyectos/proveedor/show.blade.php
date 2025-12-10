@@ -40,6 +40,14 @@
                                 >
                                     Detalles del Proyecto
                                 </button>
+
+                                <button 
+                                    @click="tab = 'chatProveedor'" 
+                                    :class="tab === 'chatProveedor' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'" 
+                                    class="py-2 px-4 font-medium whitespace-nowrap focus:outline-none"
+                                >
+                                    Chat del Proveedor
+                                </button>
                                 {{-- <button 
                                     @click="tab = 'chat'" 
                                     :class="tab === 'chat' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'" 
@@ -169,6 +177,15 @@
                                     <livewire:proyectos.tareas-diseno :proyecto-id="$proyecto->id" />
                                 </div>
                             @endcan --}}
+
+                            <!-- Contenido Chat -->
+                            <div x-show="tab === 'chatProveedor'" x-cloak class="flex flex-col flex-1 min-h-0 p-5">
+                                <h2 class="text-2xl font-bold mb-4">Chat del Proyecto</h2>
+                                <div wire:poll.2s class="flex-1 min-h-0 flex flex-col overflow-y-auto bg-white dark:bg-gray-700 rounded-lg shadow-md p-4">
+                                    <livewire:chat-proveedor-component :proyecto-id="$proyecto->id" />
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
