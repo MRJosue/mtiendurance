@@ -26,6 +26,7 @@ class PreProyecto extends Model
         'fecha_embarque',
         'fecha_entrega', 
         'flag_armado',
+        'flag_requiere_proveedor',
         'categoria_sel', 
         'producto_sel', 
         'caracteristicas_sel', 
@@ -41,7 +42,9 @@ class PreProyecto extends Model
         'producto_sel' => 'json',
         'caracteristicas_sel' => 'json',
         'opciones_sel' => 'json',
-        'total_piezas_sel' => 'json'
+        'total_piezas_sel' => 'json',
+        'flag_requiere_proveedor' => 'boolean',
+
     ];
 
 
@@ -66,6 +69,7 @@ class PreProyecto extends Model
                     // 'fecha_embarque' => $this->fecha_embarque,
                     // 'fecha_entrega' => $this->fecha_entrega,
                     'flag_armado' => $this->flag_armado,
+                    'flag_requiere_proveedor' => $this->flag_requiere_proveedor,
                     'categoria_sel' => $this->categoria_sel,
                     'producto_sel' => $this->producto_sel,
                     'caracteristicas_sel' => $this->caracteristicas_sel,

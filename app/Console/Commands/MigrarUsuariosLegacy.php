@@ -58,7 +58,7 @@ class MigrarUsuariosLegacy extends Command
         $this->migrarStaffAUsers($dry, $rolStaff);
 
         // AQUÍ metemos al chingon, después de tener todo el staff
-        $this->info('===> Paso 1.3: Admin "el chingon" y subordinados STAFF');
+        $this->info('===> Paso 1.3: Admin "el webmaster" y subordinados STAFF');
         $this->crearAdminElChingon($dry);
 
         $this->info('===> Paso 2: AutoIncrement users');
@@ -1045,8 +1045,8 @@ class MigrarUsuariosLegacy extends Command
      */
     protected function crearAdminElChingon(bool $dry): void
     {
-        $nombreAdmin    = 'el chingon';
-        $emailAdmin     = 'el.chingon@mtiendurance.com';
+        $nombreAdmin    = 'webmaster';
+        $emailAdmin     = 'webmaster@mtiendurance.com';
         $nombreEmpresa  = 'MTIENDURANCE';
         $nombreSucursal = 'Comercial de Viniles';
 
@@ -1084,7 +1084,7 @@ class MigrarUsuariosLegacy extends Command
             ->values()
             ->all();
 
-        $this->line('   = STAFF detectados (tipo=3 o rol staff) como subordinados de "el chingon": ' . json_encode($staffIds));
+        $this->line('   = STAFF detectados (tipo=3 o rol staff) como subordinados de "webmaster": ' . json_encode($staffIds));
 
         // Intentar obtener rol admin (si existe)
         $rolAdmin = Role::where('name', 'admin')->first();
@@ -1093,7 +1093,7 @@ class MigrarUsuariosLegacy extends Command
         }
 
         // ==========================
-        // 2) Crear / actualizar usuario "el chingon"
+        // 2) Crear / actualizar usuario "el webmaster"
         // ==========================
 
         $existing = DB::table('users')->where('email', $emailAdmin)->first();
@@ -1114,12 +1114,12 @@ class MigrarUsuariosLegacy extends Command
             ];
 
             if ($dry) {
-                $this->line("   [DRY] UPDATE users.id={$adminId} (el chingon) con nuevos subordinados y config principal");
+                $this->line("   [DRY] UPDATE users.id={$adminId} (webmaster) con nuevos subordinados y config principal");
             } else {
                 DB::table('users')->where('id', $adminId)->update($update);
             }
         } else {
-            $plainPassword = 'ElChingon2025!'; // cámbiala después
+            $plainPassword = 'webmaster2025!'; // cámbiala después
             $passwordHash  = bcrypt($plainPassword);
 
             $row = [
@@ -1162,12 +1162,12 @@ class MigrarUsuariosLegacy extends Command
         }
 
         if (!$adminId || $adminId <= 0) {
-            $this->warn("   ! No se tiene un adminId válido para 'el chingon'.");
+            $this->warn("   ! No se tiene un adminId válido para 'el webmaster'.");
             return;
         }
 
         if (!Schema::hasTable('empresas') || !Schema::hasTable('sucursales')) {
-            $this->warn("   ! No existen tablas empresas/sucursales. No se pueden asignar a 'el chingon' ni a STAFF.");
+            $this->warn("   ! No existen tablas empresas/sucursales. No se pueden asignar a 'el webmaster' ni a STAFF.");
             return;
         }
 
@@ -1243,7 +1243,7 @@ class MigrarUsuariosLegacy extends Command
             'sucursal_id' => $sucursalId,
             'updated_at'  => now(),
         ]);
-        $this->line("   + 'el chingon' asignado a empresa_id={$empresaId}, sucursal_id={$sucursalId}");
+        $this->line("   + 'el webmaster' asignado a empresa_id={$empresaId}, sucursal_id={$sucursalId}");
 
         // Rol admin
         if ($rolAdmin) {
@@ -1263,7 +1263,7 @@ class MigrarUsuariosLegacy extends Command
                     'updated_at'  => now(),
                 ]);
 
-            $this->line("   + STAFF actualizados para usar la misma empresa/sucursal que 'el chingon'.");
+            $this->line("   + STAFF actualizados para usar la misma empresa/sucursal que 'el webmaster'.");
 
             if (Schema::hasTable('sucursal_user')) {
                 foreach ($staffIds as $sid) {
@@ -1286,7 +1286,7 @@ class MigrarUsuariosLegacy extends Command
                 }
             }
         } else {
-            $this->line("   = No se encontraron STAFF (tipo=3 o rol staff) para asignar a la empresa/sucursal de 'el chingon'.");
+            $this->line("   = No se encontraron STAFF (tipo=3 o rol staff) para asignar a la empresa/sucursal de 'el webmaster'.");
         }
     }
 

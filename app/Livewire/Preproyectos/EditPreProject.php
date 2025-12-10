@@ -78,6 +78,8 @@ class EditPreProject extends Component
     public $caracteristicas_sel = [];
     public $opciones_sel = [];
 
+    public $flag_requiere_proveedor = 0;
+
     public $total_piezas;
     public $tallas = [];
     public $tallasSeleccionadas = [];
@@ -118,6 +120,8 @@ class EditPreProject extends Component
 
         $this->nombre = $preProyecto->nombre;
         $this->descripcion = $preProyecto->descripcion;
+
+        $this->flag_requiere_proveedor = (int) ($preProyecto->flag_requiere_proveedor ?? 0);
 
        
         $this->fecha_produccion = Carbon::parse($preProyecto->fecha_produccion)->format('Y-m-d');
@@ -288,6 +292,7 @@ class EditPreProject extends Component
             'direccion_fiscal_id' => $this->direccion_fiscal_id,
             'direccion_entrega_id' => $this->direccion_entrega_id,
             'id_tipo_envio' => $this->id_tipo_envio,
+            'flag_requiere_proveedor' => $this->flag_requiere_proveedor,
         ]);
 
         // Guardar nuevos archivos
@@ -382,6 +387,7 @@ class EditPreProject extends Component
 
         $this->producto_id = null;
         $this->productos = Producto::where('categoria_id', $this->categoria_id)->get();
+         $this->flag_requiere_proveedor = 0;
 
     }
 
@@ -416,6 +422,15 @@ class EditPreProject extends Component
             {
 
                 $producto = Producto::find($this->producto_id);
+
+
+                    if ($producto) {
+                    $this->flag_requiere_proveedor = (int) ($producto->flag_requiere_proveedor ?? 0);
+                } else {
+                    $this->flag_requiere_proveedor = 0;
+                }
+
+
 
                 if ($producto && $producto->flag_armado == 1) {
                     $this->mostrar_selector_armado = true;

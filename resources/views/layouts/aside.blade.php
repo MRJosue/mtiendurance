@@ -115,6 +115,14 @@
                         </a>
                     @endcan
 
+                   
+
+                    <a href="{{ route('diseños.vistaproveedor') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                          DiseñosProveedor
+                    </a>
+
+
+
                     @livewire('aside-hojas', ['ubicacion' => 'diseño'])
                     
                 </div>

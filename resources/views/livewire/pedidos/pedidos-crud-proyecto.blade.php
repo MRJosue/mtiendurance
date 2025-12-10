@@ -149,7 +149,10 @@
                     <th class="p-2 text-left">Proyecto</th>
                     <th class="p-2 text-left">Producto / Categoría</th>
                     {{-- <th class="p-2 text-left">Características</th> --}}
-                    <th class="p-2 text-left">Cliente</th>
+                    @can('ViststaclientePedidosProyecto')
+                        <th class="p-2 text-left">Cliente</th>
+                        
+                    @endcan
                     <th class="p-2 text-left">Piezas Totales</th>
                     <th class="p-2 text-left">Estado Diseño</th>
                     <th class="p-2 text-center">Estado Pedido</th>
@@ -191,7 +194,10 @@
                                 <span class="text-gray-400">Sin características</span>
                             @endif
                         </td> --}}
-                        <td class="p-2">{{ $pedido->usuario->name ?? 'Sin usuario' }}</td>
+                        @can('ViststaclientePedidosProyecto')
+                           <td class="p-2">{{ $pedido->usuario->name ?? 'Sin usuario' }}</td> 
+                        @endcan
+                        
                         <td class="p-2">{{ $pedido->total }} piezas</td>
                         <td class="p-2">
                             @php

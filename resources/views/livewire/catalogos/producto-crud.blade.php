@@ -34,6 +34,8 @@
                 <th class="border border-gray-300 p-2 text-left">Nombre</th>
                 <th class="border border-gray-300 p-2 text-left">Días de Producción</th>
                 <th class="border border-gray-300 p-2 text-left">Armado</th>
+                <th class="border border-gray-300 p-2 text-left">Req. Proveedor</th>
+
                 <th class="border border-gray-300 p-2 text-left">Categoría</th>
                 <th class="border border-gray-300 p-2 text-left">Características</th>
                 <th class="border border-gray-300 p-2 text-left">Caract. No Armado</th>
@@ -47,6 +49,9 @@
                     <td class="border border-gray-300 p-2">{{ $prod->nombre }}</td>
                     <td class="border border-gray-300 p-2">{{ $prod->dias_produccion }}</td>
                     <td class="border border-gray-300 p-2">{{ $prod->flag_armado ? 'Sí' : 'No' }}</td>
+                    <td class="border border-gray-300 p-2">{{ $prod->flag_requiere_proveedor ? 'Sí' : 'No' }}</td>
+
+
                     <td class="border border-gray-300 p-2">{{ $prod->categoria ? $prod->categoria->nombre : 'Sin categoría' }}</td>
 
                     <td class="border border-gray-300 p-2">{{ $prod->caracteristicasArmado->pluck('nombre')->join(', ') }}</td>
@@ -126,6 +131,16 @@
                             <option value="0">No</option>
                         </select>
                         @error('flag_armado') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+
+                    <!-- Requiere Proveedor -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">¿Requiere proveedor?</label>
+                        <select class="w-full border border-gray-300 rounded p-2" wire:model="flag_requiere_proveedor">
+                            <option value="0">No</option>
+                            <option value="1">Sí</option>
+                        </select>
+                        @error('flag_requiere_proveedor') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
 

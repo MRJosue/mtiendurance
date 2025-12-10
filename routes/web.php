@@ -159,6 +159,10 @@ Route::middleware('auth')->group(function () {
 Route::get('/proyectos',[ProyectosController::class, 'index'])->middleware(['auth','verified'])->name('proyectos.index');
 Route::get('/proyectos/reprogramar',[ProyectosController::class, 'reprogramar'])->middleware(['auth','verified'])->name('proyectos.reprogramar');
 Route::get('/proyectos/{proyecto}', [ProyectosController::class, 'show'])->middleware(['auth', 'verified'])->name('proyecto.show');
+Route::get('/proveedor/proyectos/{proyecto}', [ProyectosController::class, 'showproveedor'])->middleware(['auth', 'verified'])->name('proyecto.proveedor.show');
+
+
+Route::get('/proveedores/diseños',[ProyectosController::class, 'vistaproveedor'])->middleware(['auth','verified'])->name('diseños.vistaproveedor');
 
 
 // Pedidos

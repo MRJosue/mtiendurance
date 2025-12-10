@@ -1,6 +1,8 @@
 <div 
     x-data="{
         abierto: JSON.parse(localStorage.getItem('dashboard_preproyecto_abierto') ?? 'true'),
+        showDeactivate: @entangle('showDeactivateModal'),
+        showActivate: @entangle('showActivateModal'),
         toggle() {
             this.abierto = !this.abierto;
             localStorage.setItem('dashboard_preproyecto_abierto', JSON.stringify(this.abierto));
@@ -8,6 +10,8 @@
     }"
     class="container mx-auto p-6"
 >
+
+
             <h2 
                 @click="toggle()"
                 class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
@@ -83,7 +87,7 @@
                     selected: @entangle('selectedProjects').live,
                     idsPagina: @entangle('idsPagina').live
                 }"
-                class="overflow-x-auto bg-white rounded-lg shadow"
+               class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8"
             >
                 <table class="w-full table-auto border-collapse border border-gray-200">
                 <thead class="bg-gray-100">
@@ -104,7 +108,7 @@
                                     "
                                 />
                             </th>
-                        @else
+                            @else
                             @role('cliente_principal')
                                 @if($isClientePrincipalConSub)
                                     <th class="px-3 py-2">
@@ -273,6 +277,11 @@
                                 <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Pedidos</th>
                             @endcan
 
+                            {{-- Estado Proyecto (ind_activo) --}}
+                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
+                                Estado Proyecto
+                            </th>
+
                             {{-- Estado Diseño --}}
                             <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
                                 <div class="flex items-center gap-2 min-w-[12rem]">
@@ -334,43 +343,43 @@
                             <tr class="hover:bg-gray-50">
                                 {{-- Checkbox fila --}}
                                 @hasanyrole('admin|estaf')
-                                    <td class="px-3 py-2">
-                                        <input
-                                            type="checkbox"
-                                            :value="{{ $project->id }}"
-                                            :checked="selected.includes(Number({{ $project->id }}))"
-                                            @change="
-                                                const id = Number({{ $project->id }});
-                                                if ($event.target.checked) {
-                                                    if (!selected.includes(id)) selected.push(id)
-                                                } else {
-                                                    selected = selected.filter(i => i !== id)
-                                                }
-                                            "
-                                            wire:key="chk-{{ $project->id }}"
-                                        />
-                                    </td>
-                                @else
-                                    @role('cliente_principal')
-                                        @if($isClientePrincipalConSub)
-                                            <td class="px-3 py-2">
-                                                <input
-                                                    type="checkbox"
-                                                    :value="{{ $project->id }}"
-                                                    :checked="selected.includes(Number({{ $project->id }}))"
-                                                    @change="
-                                                        const id = Number({{ $project->id }});
-                                                        if ($event.target.checked) {
-                                                            if (!selected.includes(id)) selected.push(id)
-                                                        } else {
-                                                            selected = selected.filter(i => i !== id)
-                                                        }
-                                                    "
-                                                    wire:key="chk-{{ $project->id }}"
-                                                />
-                                            </td>
-                                        @endif
-                                    @endrole
+                                        <td class="px-3 py-2">
+                                            <input
+                                                type="checkbox"
+                                                :value="{{ $project->id }}"
+                                                :checked="selected.includes(Number({{ $project->id }}))"
+                                                @change="
+                                                    const id = Number({{ $project->id }});
+                                                    if ($event.target.checked) {
+                                                        if (!selected.includes(id)) selected.push(id)
+                                                    } else {
+                                                        selected = selected.filter(i => i !== id)
+                                                    }
+                                                "
+                                                wire:key="chk-{{ $project->id }}"
+                                            />
+                                        </td>
+                                    @else
+                                        @role('cliente_principal')
+                                            @if($isClientePrincipalConSub)
+                                                <td class="px-3 py-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        :value="{{ $project->id }}"
+                                                        :checked="selected.includes(Number({{ $project->id }}))"
+                                                        @change="
+                                                            const id = Number({{ $project->id }});
+                                                            if ($event.target.checked) {
+                                                                if (!selected.includes(id)) selected.push(id)
+                                                            } else {
+                                                                selected = selected.filter(i => i !== id)
+                                                            }
+                                                        "
+                                                        wire:key="chk-{{ $project->id }}"
+                                                    />
+                                                </td>
+                                            @endif
+                                        @endrole
                                 @endhasanyrole
 
                                 {{-- ID con link --}}
@@ -415,6 +424,19 @@
                                         @endif
                                     </td>
                                 @endcan
+
+                                {{-- Estado Proyecto --}}
+                                <td class="px-3 py-2 text-sm">
+                                    @if($project->ind_activo)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+                                            Activo
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">
+                                            Inactivo
+                                        </span>
+                                    @endif
+                                </td>                                
 
                                 {{-- Estado Diseño con badge --}}
                                 @php
@@ -469,14 +491,17 @@
                                             :href="route('proyecto.show', $project->id)"
                                             label="Ver detalles"
                                         />
+
                                         @can('dashboardDiseñosBotonAsignarTarea')
                                             @if($project->tareas->isEmpty())
-                                                <x-dropdown.item separator
+                                                <x-dropdown.item
+                                                    separator
                                                     @click="$wire.dispatch('abrir-modal-asignacion', { id: {{ $project->id }} })"
                                                     label="Asignar Tarea"
                                                 />
                                             @endif
                                         @endcan
+
                                         @can('tablaProyectos-ver-columna-pedidos')
                                             <x-dropdown.item
                                                 @click="$wire.dispatch('abrir-resumen', { id: {{ $project->id }} })"
@@ -484,14 +509,32 @@
                                             />
                                         @endcan
 
+                                        @hasanyrole('admin|estaf')
+                                            @if($project->ind_activo)
+                                                <x-dropdown.item
+                                                    separator
+                                                    wire:click="openDeactivateModal({{ $project->id }})"
+                                                    label="Inactivar proyecto"
+                                                    class="text-red-600 hover:bg-red-50"
+                                                />
+                                            @else
+                                                <x-dropdown.item
+                                                    separator
+                                                    wire:click="openActivateModal({{ $project->id }})"
+                                                    label="Activar proyecto"
+                                                    class="text-emerald-600 hover:bg-emerald-50"
+                                                />
+                                            @endif
+                                        @endhasanyrole
                                     </x-dropdown>
                                 </td>
+
                             </tr>
                         @empty
                             <tr>
                                 @php
                                     // columnas visibles según roles/permiso
-                                    $cols = 1 /* ID */ + 1 /* Nombre */ + 1 /* Estado */ + 1 /* Acciones */;
+                                    $cols = 1 /* ID */ + 1 /* Nombre */ + 2 /* Estado proyecto + Estado diseño */ + 1 /* Acciones */;
                                     if(auth()->user()->hasAnyRole(['admin','estaf','jefediseñador','cliente_principal'])) $cols++;
                                     if(auth()->user()->can('tablaProyectos-ver-columna-pedidos')) $cols++;
                                     // checkbox maestro visible?
@@ -686,6 +729,115 @@
         </div>
     </div>
     @endif
+
+
+
+{{-- Modal INACTIVAR PROYECTO --}}
+<div
+    x-cloak
+    x-show="showDeactivate"
+    x-transition
+    class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
+>
+    <div class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative">
+        <h2 class="text-lg sm:text-xl font-bold mb-4 text-red-600">
+            Confirmar inactivación de proyecto
+        </h2>
+
+        <p class="text-sm text-gray-700 mb-4">
+            Estás a punto de inactivar el proyecto
+            <span class="font-semibold">
+                #{{ $deactivateStats['id'] ?? '' }} - {{ $deactivateStats['nombre'] ?? '' }}
+            </span>.
+        </p>
+
+        <div class="mb-4 text-sm text-gray-700 space-y-1">
+            <p class="font-semibold">
+                Se aplicará lo siguiente:
+            </p>
+            <ul class="list-disc list-inside space-y-1">
+                <li>El proyecto quedará marcado como <strong>Inactivo</strong>.</li>
+                <li>Estado actual de diseño: <strong>{{ $deactivateStats['estado'] ?? 'Sin estado' }}</strong>.</li>
+                <li>Pedidos activos asociados (tipo PEDIDO, estado_id = 1): 
+                    <span class="font-semibold">{{ $deactivateStats['total_pedidos'] ?? 0 }}</span>
+                </li>
+            </ul>
+        </div>
+
+        <p class="text-xs text-red-500 mb-4">
+            Esta acción no elimina el proyecto ni sus pedidos, pero dejará de mostrarse en las vistas que solo consideran proyectos activos.
+        </p>
+
+        <div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
+            <button
+                type="button"
+                class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                @click="showDeactivate = false"
+            >
+                Cancelar
+            </button>
+            <button
+                type="button"
+                class="w-full sm:w-auto px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                wire:click="inactivarProyectoConfirmado"
+            >
+                Sí, inactivar
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- Modal ACTIVAR PROYECTO --}}
+<div
+    x-cloak
+    x-show="showActivate"
+    x-transition
+    class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
+>
+    <div class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative">
+        <h2 class="text-lg sm:text-xl font-bold mb-4 text-emerald-700">
+            Confirmar activación de proyecto
+        </h2>
+
+        <p class="text-sm text-gray-700 mb-4">
+            Vas a activar el proyecto
+            <span class="font-semibold">
+                #{{ $activateStats['id'] ?? '' }} - {{ $activateStats['nombre'] ?? '' }}
+            </span>.
+        </p>
+
+        <div class="mb-4 text-sm text-gray-700 space-y-1">
+            <p class="font-semibold">
+                Se realizará lo siguiente:
+            </p>
+            <ul class="list-disc list-inside space-y-1">
+                <li>El proyecto quedará marcado como <strong>Activo</strong>.</li>
+                <li>Estado de diseño: <strong>{{ $activateStats['estado'] ?? 'Sin estado' }}</strong>.</li>
+                <li>Pedidos activos asociados (tipo PEDIDO, estado_id = 1): 
+                    <span class="font-semibold">{{ $activateStats['total_pedidos'] ?? 0 }}</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
+            <button
+                type="button"
+                class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                @click="showActivate = false"
+            >
+                Cancelar
+            </button>
+            <button
+                type="button"
+                class="w-full sm:w-auto px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+                wire:click="activarProyectoConfirmado"
+            >
+                Sí, activar
+            </button>
+        </div>
+    </div>
+</div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {

@@ -167,6 +167,15 @@
             @error('producto_id') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
         </div>
 
+        @if($producto_id)
+            <div class="mb-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                            {{ $flag_requiere_proveedor ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700' }}">
+                    {{ $flag_requiere_proveedor ? 'Este producto REQUIERE proveedor' : 'Este producto NO requiere proveedor' }}
+                </span>
+            </div>
+        @endif
+
         {{-- El proyecto es armado ?  --}}
         @if ($mostrar_selector_armado)
             <div class="mb-4">

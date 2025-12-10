@@ -47,6 +47,7 @@ class Proyecto extends Model
         'flag_armado',
         'flag_reconfigurar',
         'flag_solicitud_reconfigurar',
+        'flag_requiere_proveedor',
         'activo',
         'categoria_sel',
         'producto_sel',
@@ -103,7 +104,8 @@ class Proyecto extends Model
 
     public function proveedor()
     {
-        return $this->belongsTo(Proveedor::class);
+        // Ahora proveedor_id apunta a users.id
+        return $this->belongsTo(User::class, 'proveedor_id');
     }
 
     public function pedidos()

@@ -21,6 +21,7 @@ class Producto extends Model
         'nombre',
         'dias_produccion',
         'flag_armado',
+        'flag_requiere_proveedor',
         'ind_activo'
     ];
 

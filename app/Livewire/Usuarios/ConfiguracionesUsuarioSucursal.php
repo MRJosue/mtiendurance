@@ -85,9 +85,21 @@ class ConfiguracionesUsuarioSucursal extends Component
         $empresasQuery = Empresa::orderBy('nombre');
 
         if ($user && $user->empresa_id) {
+            // Siempre se filtra por la empresa del usuario
             $sucursalesQuery->where('empresa_id', $user->empresa_id);
             $empresasQuery->where('id', $user->empresa_id);
+
+            // 🔴 Si NO es propietario, solo mostrar la sucursal a la que está asignado
+            if (!$user->es_propietario) {
+                if ($user->sucursal_id) {
+                    $sucursalesQuery->where('id', $user->sucursal_id);
+                } else {
+                    // Si no tiene sucursal asignada, no mostramos ninguna
+                    $sucursalesQuery->whereRaw('0 = 1');
+                }
+            }
         } else {
+            // Sin empresa, no mostramos nada
             $sucursalesQuery->whereRaw('0=1');
             $empresasQuery->whereRaw('0=1');
         }
@@ -95,6 +107,7 @@ class ConfiguracionesUsuarioSucursal extends Component
         return view('livewire.usuarios.configuraciones-usuario-sucursal', [
             'sucursales' => $sucursalesQuery->paginate(10),
             'empresas'   => $empresasQuery->get(),
+            'usuarioActual' => $user, // lo mandamos por si lo quieres usar en la vista
         ]);
     }
 

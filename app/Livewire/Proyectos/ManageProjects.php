@@ -51,11 +51,29 @@ class ManageProjects extends Component
 
 
             // ORDENAMIENTO
-            public string $sortField = 'id';
-            public string $sortDir   = 'desc';
-            protected array $sortable = ['id','nombre','estado']; // whitelist
+        public string $sortField = 'id';
+        public string $sortDir   = 'desc';
+        protected array $sortable = ['id','nombre','estado']; // whitelist
             
 
+        public bool $showDeactivateModal = false;
+        public bool $showActivateModal   = false;
+        public ?int $targetProyectoId    = null;
+
+
+        public array $deactivateStats = [
+            'id'             => null,
+            'nombre'         => '',
+            'estado'         => '',
+            'total_pedidos'  => 0,
+        ];
+
+        public array $activateStats = [
+            'id'             => null,
+            'nombre'         => '',
+            'estado'         => '',
+            'total_pedidos'  => 0,
+        ];        
 
 
             /* ---------- Props UI ---------- */
@@ -211,10 +229,18 @@ class ManageProjects extends Component
 
         public function deleteSelected(): void
         {
-            Proyecto::whereIn('id', $this->selectedProjects)->delete();
+            if (empty($this->selectedProjects)) {
+                return;
+            }
+
+            Proyecto::whereIn('id', $this->selectedProjects)
+                ->update(['ind_activo' => 0]);
+
             $this->reset(['selectedProjects', 'selectAll']);
-            $this->dispatch('banner', ['message' => 'Proyectos eliminados exitosamente.']);
+
+            $this->dispatch('notify', message: 'Proyectos inactivados exitosamente.');
         }
+
 
 
 
@@ -371,6 +397,79 @@ class ManageProjects extends Component
             $this->proyectoResumen      = null;
             $this->ultimoPedidoPendiente = null;
             $this->ultimosPedidos       = collect();
+        }
+
+        public function openDeactivateModal(int $proyectoId): void
+        {
+            $proyecto = Proyecto::withCount(['pedidos as pedidos_activos_count' => function ($q) {
+                    $q->where('tipo', 'PEDIDO')->where('estado_id', '1');
+                }])
+                ->findOrFail($proyectoId);
+
+            $this->targetProyectoId = $proyecto->id;
+
+            $this->deactivateStats = [
+                'id'            => $proyecto->id,
+                'nombre'        => $proyecto->nombre ?? 'Sin nombre',
+                'estado'        => $proyecto->estado ?? 'Sin estado',
+                'total_pedidos' => $proyecto->pedidos_activos_count ?? 0,
+            ];
+
+            $this->showDeactivateModal = true;
+        }
+
+        public function inactivarProyectoConfirmado(): void
+        {
+            if (!$this->targetProyectoId) {
+                return;
+            }
+
+            Proyecto::whereKey($this->targetProyectoId)->update(['ind_activo' => 0]);
+
+            $this->showDeactivateModal = false;
+            $this->targetProyectoId    = null;
+
+            // Limpio selección por si estabas viendo activos
+            $this->selectedProjects = [];
+            $this->selectAll        = false;
+
+            $this->dispatch('notify', message: 'Proyecto inactivado correctamente');
+        }
+
+        public function openActivateModal(int $proyectoId): void
+        {
+            $proyecto = Proyecto::withCount(['pedidos as pedidos_activos_count' => function ($q) {
+                    $q->where('tipo', 'PEDIDO')->where('estado_id', '1');
+                }])
+                ->findOrFail($proyectoId);
+
+            $this->targetProyectoId = $proyecto->id;
+
+            $this->activateStats = [
+                'id'            => $proyecto->id,
+                'nombre'        => $proyecto->nombre ?? 'Sin nombre',
+                'estado'        => $proyecto->estado ?? 'Sin estado',
+                'total_pedidos' => $proyecto->pedidos_activos_count ?? 0,
+            ];
+
+            $this->showActivateModal = true;
+        }
+
+        public function activarProyectoConfirmado(): void
+        {
+            if (!$this->targetProyectoId) {
+                return;
+            }
+
+            Proyecto::whereKey($this->targetProyectoId)->update(['ind_activo' => 1]);
+
+            $this->showActivateModal = false;
+            $this->targetProyectoId  = null;
+
+            $this->selectedProjects = [];
+            $this->selectAll        = false;
+
+            $this->dispatch('notify', message: 'Proyecto activado correctamente');
         }
 
 

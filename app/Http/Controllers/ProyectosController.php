@@ -26,7 +26,21 @@ class ProyectosController extends Controller
         return view('proyectos.show',  ['proyecto' => $Proyecto]);
     }
 
+    public function showproveedor(Proyecto $Proyecto)
+    {
 
+        //proyecto.proveedor.show
+        //proyecto.proveedor.show
+        return view('proyectos.proveedor.show',  ['proyecto' => $Proyecto]);
+    }
+
+
+    public function vistaproveedor(Proyecto $Proyecto)
+    {
+
+        //dd($Proyecto);
+        return view('proyectos.diseñosvistaproveedor',  ['proyecto' => $Proyecto]);
+    }
 
 
 }

@@ -90,11 +90,18 @@ class EditProject extends Component
     public ?int $usuario_id_nuevo = null;  // id elegido en el selector
     public array $usuariosSugeridos = [];  // resultados para el dropdown
 
+    public $flag_requiere_proveedor = 0;
+
+
+
 public function mount($ProyectoId)
 {
     $this->ProyectoId = $ProyectoId;
 
     $preProyecto = Proyecto::findOrFail($ProyectoId);
+
+    $this->flag_requiere_proveedor = (int) ($preProyecto->flag_requiere_proveedor ?? 0);
+
 
     $this->usuario_id_nuevo = Proyecto::where('id', $this->ProyectoId)->value('usuario_id');
 
@@ -199,6 +206,7 @@ public function mount($ProyectoId)
                     'total' => $totalPiezasFinal,
                     'detalle_tallas' => $this->mostrarFormularioTallas ? $this->tallasSeleccionadas : null
                 ]),
+                'flag_requiere_proveedor' => $this->flag_requiere_proveedor,
             ];
 
             // Si se eligió un nuevo usuario, actualizar también el proyecto
@@ -337,6 +345,7 @@ public function mount($ProyectoId)
         $this->productos = $this->categoria_id
             ? Producto::where('categoria_id', $this->categoria_id)->get()
             : collect();
+        $this->flag_requiere_proveedor = 0;
         $this->despligaformopciones();
     }
 
@@ -369,6 +378,12 @@ public function mount($ProyectoId)
             {
 
                 $producto = Producto::find($this->producto_id);
+
+                if ($producto) {
+                    $this->flag_requiere_proveedor = (int) ($producto->flag_requiere_proveedor ?? 0);
+                } else {
+                    $this->flag_requiere_proveedor = 0;
+                }
 
                 if ($producto && $producto->flag_armado == 1) {
                     $this->mostrar_selector_armado = true;

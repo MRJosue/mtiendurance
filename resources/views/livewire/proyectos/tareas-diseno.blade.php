@@ -14,6 +14,7 @@
                 Asignar tarea a diseñador
             </button>
         @else
+        
             <div class="overflow-x-auto bg-white rounded-lg shadow border">
                 <table class="min-w-full text-sm text-left table-auto border-collapse">
                     <thead class="bg-gray-100 text-gray-700 uppercase text-xs">

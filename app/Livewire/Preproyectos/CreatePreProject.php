@@ -102,7 +102,7 @@ class CreatePreProject extends Component
     public bool $puedeBuscarUsuarios = false;
 
 
-
+    public $flag_requiere_proveedor = 0;
 
     
     // Form genérico de dirección
@@ -276,6 +276,7 @@ class CreatePreProject extends Component
             'fecha_embarque' => $this->fecha_embarque,
             'fecha_entrega' => $this->fecha_entrega,
             'flag_armado'=> $this->seleccion_armado,
+            'flag_requiere_proveedor'=> $this->flag_requiere_proveedor,// Este valor vinene del producto seleccionado
             'categoria_sel' => json_encode(['id' => $this->categoria_id, 'nombre' => Categoria::find($this->categoria_id)->nombre]),
             'producto_sel' => json_encode(['id' => $this->producto_id, 'nombre' => Producto::find($this->producto_id)->nombre]),
             'caracteristicas_sel' => json_encode($this->caracteristicas_sel),
@@ -387,6 +388,8 @@ class CreatePreProject extends Component
             $this->mostrarFormularioTallas = 0;
             $this->caracteristicas_sel = [];
             $this->opciones_sel = [];
+
+        $this->flag_requiere_proveedor = 0;
     }
 
     public function despliega_form_tallas()
@@ -419,6 +422,12 @@ class CreatePreProject extends Component
             {
 
                 $producto = Producto::find($this->producto_id);
+
+                if ($producto) {
+                    $this->flag_requiere_proveedor = (int) ($producto->flag_requiere_proveedor ?? 0);
+                } else {
+                    $this->flag_requiere_proveedor = 0;
+                }
 
                 if ($producto && $producto->flag_armado == 1) {
                     $this->mostrar_selector_armado = true;
