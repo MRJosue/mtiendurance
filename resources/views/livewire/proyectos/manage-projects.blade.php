@@ -8,7 +8,7 @@
             localStorage.setItem('dashboard_preproyecto_abierto', JSON.stringify(this.abierto));
         }
     }"
-    class="container mx-auto p-6"
+    class="p-2 sm:p-3 h-full min-h-0 flex flex-col"
 >
 
 

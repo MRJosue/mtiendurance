@@ -6,7 +6,7 @@
             localStorage.setItem('usuarios_tabla_abierto', JSON.stringify(this.abierto));
         }
     }"
-    class="max-w-6xl mx-auto p-4 sm:p-6"
+   class="p-2 sm:p-3 h-full min-h-0 flex flex-col"
 >
     <h2 
         @click="toggle()"

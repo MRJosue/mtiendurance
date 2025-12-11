@@ -9,7 +9,7 @@
     @endcanany
 
     @can('dashboardclientepedidos')
-    @livewire('dashboard.cliente-panel.pedidos')
+        @livewire('dashboard.cliente-panel.pedidos')
     @endcan
 
 </div>
