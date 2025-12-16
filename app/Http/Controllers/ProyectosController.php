@@ -34,6 +34,10 @@ class ProyectosController extends Controller
         return view('proyectos.proveedor.show',  ['proyecto' => $Proyecto]);
     }
 
+    public function transferencias()
+    {
+        return view('proyectos.transferencias');
+    }  
 
     public function vistaproveedor(Proyecto $Proyecto)
     {

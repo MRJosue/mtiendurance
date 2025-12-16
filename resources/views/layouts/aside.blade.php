@@ -115,7 +115,10 @@
                         </a>
                     @endcan
 
-                   
+                    <a href="{{ route('proyectos.transferencias') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                          Solicitud de reasignacion
+                    </a>
+
 
                     <a href="{{ route('diseños.vistaproveedor') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                           DiseñosProveedor

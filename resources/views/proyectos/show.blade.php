@@ -161,8 +161,9 @@
                                     </div>
 
                                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-3">
-
+                                        <livewire:proyectos.transferencia-proyecto :proyecto="$proyecto" />
                                     </div>
+                                    
                             </div>
                             <!-- Contenido Chat -->
                             <div x-show="tab === 'chat'" x-cloak class="flex flex-col flex-1 min-h-0 p-5">
