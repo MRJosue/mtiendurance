@@ -1,6 +1,4 @@
-<div class="w-full col-span-full">
-    
-
+<div>
         @can('proyectos.transferencia.generar')
             <div class="p-4 border rounded-lg shadow bg-gray-50 dark:bg-gray-700 space-y-3">
                 <div class="flex items-center justify-between gap-3">
