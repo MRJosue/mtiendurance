@@ -6,7 +6,7 @@
             localStorage.setItem('usuarios_tabla_abierto', JSON.stringify(this.abierto));
         }
     }"
-   class="p-2 sm:p-3 h-full min-h-0 flex flex-col"
+     class="w-full max-w-none px-2 sm:px-4 h-full min-h-0 flex flex-col"
 >
     <h2 
         @click="toggle()"
@@ -52,8 +52,8 @@
             };
         @endphp
 
-        <div class="overflow-x-auto bg-white rounded-lg shadow">
-            <table class="min-w-full border-collapse border border-gray-300">
+       <div class="w-full overflow-x-auto bg-white rounded-lg shadow">
+            <table class="min-w-full table-auto border-collapse border border-gray-200">
                 <thead class="bg-gray-100">
                     <tr>
                         {{-- ID (ordenable) --}}
