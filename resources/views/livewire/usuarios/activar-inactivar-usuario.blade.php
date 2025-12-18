@@ -1,13 +1,12 @@
 <div
-    x-data="{ 
+    x-data="{
         showDeactivate: @entangle('showDeactivateModal'),
-        showActivate: @entangle('showActivateModal') 
+        showActivate: @entangle('showActivateModal')
     }"
     class="container mx-auto p-6"
 >
     <!-- Botones de acción -->
     <div class="mb-4 flex flex-wrap gap-3">
-        {{-- Botón para INACTIVAR (solo si está activo) --}}
         @if($user->ind_activo)
             <button
                 type="button"
@@ -18,7 +17,6 @@
             </button>
         @endif
 
-        {{-- Botón para ACTIVAR (solo si está inactivo) --}}
         @if(!$user->ind_activo)
             <button
                 type="button"
@@ -67,9 +65,7 @@
         x-transition
         class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
     >
-        <div
-            class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 p-6 relative"
-        >
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 p-6 relative">
             <h2 class="text-lg sm:text-xl font-bold mb-4 text-red-600">
                 Confirmar inactivación de usuario
             </h2>
@@ -86,14 +82,8 @@
                     </p>
                     <ul class="list-disc list-inside space-y-1">
                         <li>Subordinados afectados: <span class="font-semibold">{{ $deactivateStats['total_subordinados'] }}</span></li>
-                        <li>Total de usuarios que serán inactivados (incluyendo propietario): 
+                        <li>Total de usuarios que serán inactivados (incluyendo propietario):
                             <span class="font-semibold">{{ $deactivateStats['total_usuarios_afectados'] }}</span>
-                        </li>
-                        <li>Proyectos que se marcarán como inactivos: 
-                            <span class="font-semibold">{{ $deactivateStats['total_proyectos'] }}</span>
-                        </li>
-                        <li>Pedidos que se marcarán como inactivos: 
-                            <span class="font-semibold">{{ $deactivateStats['total_pedidos'] }}</span>
                         </li>
                     </ul>
                 </div>
@@ -104,18 +94,12 @@
                     </p>
                     <ul class="list-disc list-inside space-y-1">
                         <li>Se inactivará solo este usuario.</li>
-                        <li>Proyectos del usuario que se marcarán como inactivos: 
-                            <span class="font-semibold">{{ $deactivateStats['total_proyectos'] }}</span>
-                        </li>
-                        <li>Pedidos del usuario que se marcarán como inactivos: 
-                            <span class="font-semibold">{{ $deactivateStats['total_pedidos'] }}</span>
-                        </li>
                     </ul>
                 </div>
             @endif
 
             <p class="text-xs text-red-500 mb-4">
-                Esta acción no elimina registros, pero puede afectar el acceso del usuario y el uso operativo de proyectos y pedidos.
+                Esta acción no elimina registros, pero puede afectar el acceso del usuario.
             </p>
 
             <div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
@@ -144,9 +128,7 @@
         x-transition
         class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
     >
-        <div
-            class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative"
-        >
+        <div class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative">
             <h2 class="text-lg sm:text-xl font-bold mb-4 text-emerald-700">
                 Confirmar activación de usuario
             </h2>
@@ -157,17 +139,9 @@
             </p>
 
             <div class="mb-4 text-sm text-gray-700 space-y-1">
-                <p class="font-semibold">
-                    Se realizará lo siguiente:
-                </p>
+                <p class="font-semibold">Se realizará lo siguiente:</p>
                 <ul class="list-disc list-inside space-y-1">
-                    <li>Se activará únicamente este usuario (no se activan subordinados).</li>
-                    <li>Proyectos del usuario que pasarán a activos: 
-                        <span class="font-semibold">{{ $activateStats['total_proyectos'] }}</span>
-                    </li>
-                    <li>Pedidos del usuario que pasarán a activos: 
-                        <span class="font-semibold">{{ $activateStats['total_pedidos'] }}</span>
-                    </li>
+                    <li>Se activará únicamente este usuario.</li>
                 </ul>
             </div>
 
@@ -190,10 +164,8 @@
         </div>
     </div>
 
-    {{-- Scripts opcionales para escuchar eventos (encapsulados como pediste) --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Ejemplo: mostrar un log cuando se actualiza un usuario
             window.addEventListener('usuario-actualizado', (event) => {
                 console.log('Usuario actualizado desde Livewire', event.detail);
             });

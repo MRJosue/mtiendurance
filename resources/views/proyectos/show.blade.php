@@ -51,7 +51,7 @@
                                     Chat del Proyecto
                                 </button>
 
-                                @can('chatProveedor')
+                                @can('proyectodiseñopestañachatProveedor')
                                     <button 
                                         @click="tab = 'chatProveedor'" 
                                         :class="tab === 'chatProveedor' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'" 
