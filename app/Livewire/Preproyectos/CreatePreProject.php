@@ -261,7 +261,15 @@ class CreatePreProject extends Component
 
 
             if (!$this->UsuarioSeleccionado) {
-                $this->UsuarioSeleccionado = Auth::id();
+                // si no hay seleccionado, intenta usar auth SOLO si es cliente
+                if ($this->userEsCliente((int) Auth::id())) {
+                    $this->UsuarioSeleccionado = Auth::id();
+                }
+            }
+
+            if (!$this->UsuarioSeleccionado || !$this->userEsCliente((int) $this->UsuarioSeleccionado)) {
+                $this->addError('UsuarioSeleccionado', 'Debes seleccionar un usuario CLIENTE para crear el preproyecto.');
+                return;
             }
 
 
@@ -1076,7 +1084,7 @@ public function usuarioSeleccionadoCambio($usuarioId)
         $puedeTodos = $user->can('preproyectos_seleccionar_todos_usuarios');
         $subIds = $this->currentUserSubordinateIds();
 
-        $builder = \App\Models\User::query();
+        $builder = $this->baseClientesQuery();
 
         if (!$puedeTodos) {
             if (count($subIds) === 0) {
@@ -1106,12 +1114,14 @@ public function usuarioSeleccionadoCambio($usuarioId)
 
         // primer pintado: si no hay query y no salió nada, sugiere 5 subordinados
         if ($bootstrap && empty($this->usuariosSugeridos) && !$puedeTodos && count($subIds) > 0) {
-            $this->usuariosSugeridos = \App\Models\User::whereIn('id', $subIds)
+            $this->usuariosSugeridos = $this->baseClientesQuery()
+                ->whereIn('id', $subIds)
                 ->orderBy('name')
                 ->limit(5)
                 ->get(['id','name','email'])
                 ->toArray();
         }
+
     }
 
     // Livewire v3: cuando cambia el texto de búsqueda
@@ -1124,9 +1134,33 @@ public function usuarioSeleccionadoCambio($usuarioId)
     public function updatedUsuarioIdNuevo($value): void
     {
         $id = (int) $value;
+
+        if ($id && !$this->userEsCliente($id)) {
+            $this->addError('UsuarioSeleccionado', 'Solo puedes seleccionar usuarios con rol tipo CLIENTE.');
+            $this->usuario_id_nuevo = null;
+            $this->UsuarioSeleccionado = null;
+            $this->dispatch('usuario-cambiado', id: null);
+            return;
+        }
+
         $this->usuarioSeleccionadoCambio($id);
-        // eventos Livewire v3 → dispatch
         $this->dispatch('usuario-cambiado', id: $id);
+    }
+
+
+    protected function baseClientesQuery(): Builder
+    {
+        return \App\Models\User::query()
+            ->whereHas('roles', function ($q) {
+                $q->where('tipo', 1); // 1 = CLIENTE
+            });
+    }
+
+    protected function userEsCliente(int $userId): bool
+    {
+        return \App\Models\User::whereKey($userId)
+            ->whereHas('roles', fn($q) => $q->where('tipo', 1))
+            ->exists();
     }
 
     

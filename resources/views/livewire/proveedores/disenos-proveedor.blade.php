@@ -199,9 +199,9 @@
                         </th>
 
                         {{-- Cliente (siempre visible para proveedor) --}}
-                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
+                        {{-- <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
                             <span class="min-w-[12rem] inline-block">Cliente</span>
-                        </th>
+                        </th> --}}
 
                         @can('proveedor.ver-todos-disenos')
                             {{-- Proveedor asignado --}}
@@ -288,7 +288,7 @@
                                 class="px-3 py-2 text-sm font-semibold min-w-[6rem]"
                                 title="{{ $project->nombre ?? 'Proyecto #'.$project->id }}"
                             >
-                                {!! $project->proyecto_link !!}
+                                {{ $project->id }}
                             </td>
 
                             {{-- Nombre --}}
@@ -297,7 +297,7 @@
                             </td>
 
                             {{-- Cliente --}}
-                            <td class="px-3 py-2 text-sm text-gray-700">
+                            {{-- <td class="px-3 py-2 text-sm text-gray-700">
                                 @if($project->user)
                                     <span class="inline-block">
                                         {{ $project->user->name }}
@@ -305,7 +305,7 @@
                                 @else
                                     <span class="text-gray-500">Sin Cliente</span>
                                 @endif
-                            </td>
+                            </td> --}}
 
                             @can('proveedor.ver-todos-disenos')
                                 {{-- Proveedor asignado --}}

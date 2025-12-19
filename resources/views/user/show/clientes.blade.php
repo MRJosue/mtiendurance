@@ -17,7 +17,12 @@
     </div>
     </div>
 
-
+                    {{-- 
+                        1 = CLIENTE
+                        2 = PROVEEDOR
+                        3 = STAFF
+                        4 = ADMIN
+                    --}}
 
 
 </x-app-layout>

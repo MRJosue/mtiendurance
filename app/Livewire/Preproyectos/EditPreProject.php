@@ -24,6 +24,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\On;
 use Spatie\Permission\Models\Role;
+use Illuminate\Database\Eloquent\Builder;
 
 class EditPreProject extends Component
 {
@@ -59,6 +60,18 @@ class EditPreProject extends Component
     // public $fileDescriptions = [];
     // public $uploadedFiles = [];
     public $existingFiles = [];
+
+    // Selector de usuario (solo clientes)
+    public ?int $UsuarioSeleccionado = null;
+
+    public string $usuarioQuery = '';
+    public ?int $usuario_id_nuevo = null;
+    public array $usuariosSugeridos = [];
+    public bool $puedeBuscarUsuarios = false;
+
+    // Direcciones dependientes del usuario seleccionado
+    public $direccionesFiscales = [];
+    public $direccionesEntrega = [];
 
     public $nombre;
     public $descripcion;
@@ -114,9 +127,25 @@ class EditPreProject extends Component
     public function mount($preProyectoId)
     {
         $this->preProyectoId = $preProyectoId;
+
+
         
 
         $preProyecto = PreProyecto::findOrFail($preProyectoId);
+
+
+                // Usuario dueño del preproyecto
+        $this->UsuarioSeleccionado = (int) $preProyecto->usuario_id;
+        $this->usuario_id_nuevo = $this->UsuarioSeleccionado;
+
+        // Inicializa selector (permisos/subordinados) + sugeridos
+        $this->setupUsuarioSelector();
+        $this->refreshUsuariosSugeridos(true);
+
+        // Cargar direcciones del usuario seleccionado
+        $this->cargarDirecciones();
+
+
 
         $this->nombre = $preProyecto->nombre;
         $this->descripcion = $preProyecto->descripcion;
@@ -374,8 +403,8 @@ class EditPreProject extends Component
             'productos' => $this->productos,
             'tiposEnvio' => $this->tipos_envio,
             'mostrarFormularioTallas'=> $this->mostrarFormularioTallas,
-            'direccionesFiscales' => DireccionFiscal::where('usuario_id', Auth::id())->get(),
-            'direccionesEntrega' => DireccionEntrega::where('usuario_id', Auth::id())->get(),
+            'direccionesFiscales' => $this->direccionesFiscales,
+            'direccionesEntrega'  => $this->direccionesEntrega,
         ]);
     }
 
@@ -889,6 +918,135 @@ class EditPreProject extends Component
         // 2) Delegar en el modelo la descarga real
         return $archivo->descargar();
     }
+
+
+// --------- SOLO CLIENTES ----------
+protected function baseClientesQuery(): Builder
+{
+    return \App\Models\User::query()
+        ->whereHas('roles', fn($q) => $q->where('tipo', 1)); // 1=CLIENTE
+}
+
+protected function userEsCliente(int $userId): bool
+{
+    return \App\Models\User::whereKey($userId)
+        ->whereHas('roles', fn($q) => $q->where('tipo', 1))
+        ->exists();
+}
+
+// --------- PERMISOS / SUBORDINADOS ----------
+protected function setupUsuarioSelector(): void
+{
+    $user = Auth::user();
+
+    // si estás en modo lectura, no permitas búsqueda
+    if ($this->modoLectura) {
+        $this->puedeBuscarUsuarios = false;
+        return;
+    }
+
+    $puedeTodos = $user->can('preproyectos_seleccionar_todos_usuarios');
+    $subIds     = $this->currentUserSubordinateIds();
+
+    $this->puedeBuscarUsuarios = $puedeTodos || count($subIds) > 0;
+}
+
+protected function currentUserSubordinateIds(): array
+{
+    $user = Auth::user();
+    $ids = [];
+
+    if (method_exists($user, 'subordinates')) {
+        $ids = $user->subordinates()->pluck('id')->all();
+    } elseif (is_array(data_get($user, 'config.subordinates'))) {
+        $ids = array_values(array_filter($user->config['subordinates']));
+    } elseif (is_array(data_get($user, 'user_can_sel_preproyectos'))) {
+        $ids = array_values(array_filter($user->user_can_sel_preproyectos));
+    }
+
+    return array_values(array_unique(array_map('intval', $ids)));
+}
+
+// --------- SUGERIDOS ----------
+public function refreshUsuariosSugeridos(bool $bootstrap = false): void
+{
+    $user = Auth::user();
+    $q = trim($this->usuarioQuery);
+
+    $puedeTodos = $user->can('preproyectos_seleccionar_todos_usuarios');
+    $subIds = $this->currentUserSubordinateIds();
+
+    $builder = $this->baseClientesQuery();
+
+    if (!$puedeTodos) {
+        if (count($subIds) === 0) {
+            $this->usuariosSugeridos = [];
+            return;
+        }
+        $builder->whereIn('id', $subIds);
+    }
+
+    if ($q !== '') {
+        $builder->where(function ($qq) use ($q) {
+            $qq->where('name', 'like', "%{$q}%")
+               ->orWhere('email', 'like', "%{$q}%");
+        });
+    }
+
+    $limit = $puedeTodos ? 10 : 5;
+
+    $this->usuariosSugeridos = $builder
+        ->orderBy('name')
+        ->limit($limit)
+        ->get(['id', 'name', 'email'])
+        ->toArray();
+
+    // bootstrap: si no hay query, intenta al menos incluir al seleccionado actual si es cliente
+    if ($bootstrap && $this->UsuarioSeleccionado && $this->userEsCliente((int)$this->UsuarioSeleccionado)) {
+        $ya = collect($this->usuariosSugeridos)->pluck('id')->contains($this->UsuarioSeleccionado);
+        if (!$ya) {
+            $u = $this->baseClientesQuery()->whereKey($this->UsuarioSeleccionado)->first(['id','name','email']);
+            if ($u) {
+                array_unshift($this->usuariosSugeridos, $u->toArray());
+            }
+        }
+    }
+}
+
+public function updatedUsuarioQuery(): void
+{
+    $this->refreshUsuariosSugeridos();
+}
+
+public function updatedUsuarioIdNuevo($value): void
+{
+    $id = (int) $value;
+
+    if ($id && !$this->userEsCliente($id)) {
+        $this->addError('UsuarioSeleccionado', 'Solo puedes seleccionar usuarios con rol tipo CLIENTE.');
+        $this->usuario_id_nuevo = null;
+        return;
+    }
+
+    $this->UsuarioSeleccionado = $id;
+    $this->cargarDirecciones();
+
+    // (Opcional) si necesitas notificar JS
+    $this->dispatch('usuario-cambiado', id: $id);
+}
+
+// --------- DIRECCIONES POR USUARIO ----------
+public function cargarDirecciones(): void
+{
+    if ($this->UsuarioSeleccionado) {
+        $this->direccionesFiscales = DireccionFiscal::where('usuario_id', $this->UsuarioSeleccionado)->get();
+        $this->direccionesEntrega  = DireccionEntrega::where('usuario_id', $this->UsuarioSeleccionado)->get();
+    } else {
+        $this->direccionesFiscales = collect();
+        $this->direccionesEntrega  = collect();
+    }
+}
+
 
     public function setReadOnlyMode()
     {

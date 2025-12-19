@@ -215,9 +215,9 @@
                                     <div x-show="tab === 'pedidos'">
                                         @livewire('pedidos.pedidos-crud-proyecto', ['proyectoId' => $proyecto->id ])
                                     </div>
-                                    {{-- <div x-show="tab === 'muestras'">
+                                    <div x-show="tab === 'muestras'">
                                         @livewire('pedidos.muestras-crud-proyecto', ['proyectoId' => $proyecto->id])
-                                    </div> --}}
+                                    </div>
                                 </div>
                             </div>
                         </div>

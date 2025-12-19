@@ -47,10 +47,17 @@
             this.open = false;
         },
         init(){
-            // Mostrar usuario actual por defecto al entrar
+            const authIsCliente = @js(auth()->user()?->roles()->where('tipo', 1)->exists() ?? false);
+
+            // Mostrar usuario actual por defecto SOLO si es cliente
             if(!this.selectedId){
-                this.selectedId = {{ auth()->id() }};
-                this.search = '{{ auth()->user()->name }} ({{ auth()->user()->email }})';
+                if(authIsCliente){
+                    this.selectedId = {{ auth()->id() }};
+                    this.search = '{{ auth()->user()->name }} ({{ auth()->user()->email }})';
+                } else {
+                    this.selectedId = null;
+                    this.search = '';
+                }
             } else {
                 const user = (this.$wire.usuariosSugeridos || []).find(u => u.id === this.selectedId);
                 if(user){
@@ -58,6 +65,7 @@
                 }
             }
         }
+
     }"
     class="mb-6"
 >
