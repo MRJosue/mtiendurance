@@ -134,7 +134,9 @@
         </div>
 </div>
 
-
+@error('UsuarioSeleccionado')
+    <span class="text-red-600 text-sm">{{ $message }}</span>
+@enderror
 
         <!-- Nombre y Descripción -->
         <div class="mb-4">
