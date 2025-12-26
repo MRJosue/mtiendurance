@@ -8,10 +8,7 @@ use Livewire\WithFileUploads;
 use App\Models\Proyecto;
 use App\Models\DireccionEntrega;
 use App\Models\DireccionFiscal;
-use App\Models\Ciudad;
-use App\Models\Pais;
-use App\Models\Estado;
-use App\Models\TipoEnvio;
+use App\Models\Cliente;
 
 use App\Models\Pedido;
 use App\Models\PedidoEstado;
@@ -167,138 +164,149 @@ public function mount($ProyectoId)
     $this->tallasSeleccionadas = $totSel['detalle_tallas'] ?? [];
 }
 
-    public function update()
-    {
+public function update()
+{
+    Log::debug('Pre validaciones');
 
-        Log::debug('Pre validaciones');
+    // Normaliza selects (a veces llegan como "" desde el <select>)
+    $this->categoria_id = $this->categoria_id ? (int) $this->categoria_id : null;
+    $this->producto_id  = $this->producto_id ? (int) $this->producto_id : null;
+
+    // Validaciones base
+    $this->validate([
+        'nombre'       => 'required|string|max:255',
+        'descripcion'  => 'nullable|string',
+        'fecha_entrega'=> 'nullable|date',
+        'categoria_id' => 'required|exists:categorias,id',
+        'producto_id'  => 'required|exists:productos,id',
+    ]);
+
+    // Validación usuario (si viene)
+    if (!is_null($this->usuario_id_nuevo)) {
         $this->validate([
-            'nombre' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
-            'fecha_entrega' => 'nullable|date',
-            'categoria_id' => 'required|exists:categorias,id',
-            'producto_id' => 'required|exists:productos,id',
+            'usuario_id_nuevo' => ['integer', Rule::exists('users', 'id')],
+        ]);
+    }
+
+    // Total piezas (si hay tallas, el array es anidado: grupo->talla->cantidad)
+    $totalPiezasFinal = $this->mostrarFormularioTallas
+        ? collect($this->tallasSeleccionadas)->flatten()->sum()
+        : (int) ($this->total_piezas ?? 0);
+
+    // Actualizar proyecto
+    $preProyecto = Proyecto::findOrFail($this->ProyectoId);
+
+    $updateData = [
+        'nombre' => $this->nombre,
+        'descripcion' => $this->descripcion,
+        'categoria_sel' => json_encode([
+            'id' => $this->categoria_id,
+            'nombre' => Categoria::find($this->categoria_id)->nombre,
+        ]),
+        'producto_sel' => json_encode([
+            'id' => $this->producto_id,
+            'nombre' => Producto::find($this->producto_id)->nombre,
+        ]),
+        'caracteristicas_sel' => json_encode($this->caracteristicas_sel),
+        'opciones_sel' => json_encode($this->opciones_sel),
+        'flag_reconfigurar' => 0,
+        'flag_solicitud_reconfigurar' => 0,
+        'total_piezas_sel' => json_encode([
+            'total' => $totalPiezasFinal,
+            'detalle_tallas' => $this->mostrarFormularioTallas ? $this->tallasSeleccionadas : null,
+        ]),
+        'flag_requiere_proveedor' => (int) $this->flag_requiere_proveedor,
+    ];
+
+    // Si se eligió un nuevo usuario, actualizar también el proyecto
+    if (!is_null($this->usuario_id_nuevo)) {
+        $updateData['usuario_id'] = (int) $this->usuario_id_nuevo;
+    }
+
+    $preProyecto->update($updateData);
+
+    // --- Si cambió el usuario, validar que sea CLIENTE (Spatie roles.tipo=1) y resolver/crear cliente_id ---
+    // if (!is_null($this->usuario_id_nuevo)) {
+
+    //     $cliente = Cliente::where('usuario_id', (int) $this->usuario_id_nuevo)->first();
+
+    //     if (!$cliente) {
+    //         $this->addError('usuario_id_nuevo', 'El usuario es cliente (rol), pero aún no tiene registro en la tabla clientes.');
+    //         return;
+    //     }
+
+    //     Pedido::where('proyecto_id', $this->ProyectoId)
+    //         ->whereIn('estatus', ['POR APROBAR', 'POR REPROGRAMAR'])
+    //         ->update(['cliente_id' => $cliente->id]);
+    // }
+
+    // Pedidos a reconfigurar (usar estatus)
+    $pedidos = Pedido::where('proyecto_id', $this->ProyectoId)
+        ->whereIn('estatus', ['POR APROBAR', 'POR REPROGRAMAR'])
+        ->get();
+
+    foreach ($pedidos as $pedido) {
+
+        $pedido->update([
+            'producto_id' => $this->producto_id,
+            'total' => $totalPiezasFinal,
+            'estatus' => 'POR APROBAR',
         ]);
 
-        // --- VALIDACIÓN del usuario seleccionado (si viene) ---
-        if (!is_null($this->usuario_id_nuevo)) {
-            $this->validate([
-                'usuario_id_nuevo' => ['integer', Rule::exists('users','id')],
-            ]);
-        }
+        // Rehacer pivotes
+        PedidoCaracteristica::where('pedido_id', $pedido->id)->delete();
+        PedidoOpcion::where('pedido_id', $pedido->id)->delete();
+        PedidoTalla::where('pedido_id', $pedido->id)->delete();
 
-        $this->total_piezas = 0;
+        foreach ($this->caracteristicas_sel as $caracteristica) {
 
-         $totalPiezasFinal = $this->mostrarFormularioTallas ? array_sum($this->tallasSeleccionadas) : $this->total_piezas;
-         $totalPiezasFinal = $this->mostrarFormularioTallas ? array_sum((array) $this->tallasSeleccionadas) : $this->total_piezas;
-        // Actualizar el preproyecto
-            $preProyecto = Proyecto::findOrFail($this->ProyectoId);
-
-            $updateData = [
-                'nombre' => $this->nombre,
-                'descripcion' => $this->descripcion,
-                'categoria_sel' => json_encode(['id' => $this->categoria_id, 'nombre' => Categoria::find($this->categoria_id)->nombre]),
-                'producto_sel' => json_encode(['id' => $this->producto_id, 'nombre' => Producto::find($this->producto_id)->nombre]),
-                'caracteristicas_sel' => json_encode($this->caracteristicas_sel),
-                'opciones_sel' => json_encode($this->opciones_sel),
-                'flag_reconfigurar'=> 0,
-                'flag_solicitud_reconfigurar'=> 0,
-                'total_piezas_sel' => json_encode([
-                    'total' => $totalPiezasFinal,
-                    'detalle_tallas' => $this->mostrarFormularioTallas ? $this->tallasSeleccionadas : null
-                ]),
-                'flag_requiere_proveedor' => $this->flag_requiere_proveedor,
-            ];
-
-            // Si se eligió un nuevo usuario, actualizar también el proyecto
-            if (!is_null($this->usuario_id_nuevo)) {
-                $updateData['usuario_id'] = $this->usuario_id_nuevo;
-            }
-
-            $preProyecto->update($updateData);
-
-
-        // Actualizar pedidos relacionados
-        $pedidos = Pedido::where('proyecto_id', $this->ProyectoId)
-            ->whereIn('estado', ['POR APROBAR', 'POR REPROGRAMAR'])
-            ->get();
-
-        foreach ($pedidos as $pedido) {
-            $pedido->update([
-                'producto_id' => $this->producto_id,
-                'total' => $totalPiezasFinal,
-                'estado'=>'POR APROBAR'
-            ]);
-
-            PedidoCaracteristica::where('pedido_id', $pedido->id)->delete();
-            PedidoOpcion::where('pedido_id', $pedido->id)->delete();
-            PedidoTalla::where('pedido_id', $pedido->id)->delete();
-
-            foreach ($this->caracteristicas_sel as $caracteristica) {
-                PedidoCaracteristica::create([
-                    'pedido_id' => $pedido->id,
-                    'caracteristica_id' => $caracteristica['id'],
-                ]);
-
-                // --- Si se cambió el usuario del proyecto, propágalo a los pedidos del proyecto ---
-                if (!is_null($this->usuario_id_nuevo)) {
-                    Pedido::where('proyecto_id', $this->ProyectoId)
-                            ->whereIn('estado', ['POR APROBAR', 'POR REPROGRAMAR'])
-                            ->update(['usuario_id' => $this->usuario_id_nuevo]);
-                }
-
-
-
-                if (!empty($caracteristica['opciones'])) {
-                    foreach ($caracteristica['opciones'] as $opcion) {
-                        PedidoOpcion::create([
-                            'pedido_id' => $pedido->id,
-                            'opcion_id' => $opcion['id'],
-                            'valor' => $opcion['valoru'] ?? null,
-                        ]);
-                    }
-                }
-            }
-
-            if ($this->mostrarFormularioTallas && isset($this->tallasSeleccionadas)) {
-                foreach ($this->tallasSeleccionadas as $grupoId => $tallas) {
-                    foreach ($tallas as $tallaId => $cantidad) {
-                        PedidoTalla::create([
-                            'pedido_id' => $pedido->id,
-                            'talla_id' => $tallaId,
-                            'grupo_talla_id' => $grupoId,
-                            'cantidad' => 0, // se inicializa en cero
-                        ]);
-                    }
-                }
-            }
-
-            // mensaje de chat 
-
-
-
-            PedidoEstado::create([
+            PedidoCaracteristica::create([
                 'pedido_id' => $pedido->id,
-                'proyecto_id' => $this->ProyectoId,
-                'usuario_id' => auth()->id(),
-                'estado' => 'Se reprograma El pedido',
-                'fecha_inicio' => now(),
-                'fecha_fin' => null,
+                'caracteristica_id' => $caracteristica['id'],
             ]);
 
+            if (!empty($caracteristica['opciones'])) {
+                foreach ($caracteristica['opciones'] as $opcion) {
+                    PedidoOpcion::create([
+                        'pedido_id' => $pedido->id,
+                        'opcion_id' => $opcion['id'],
+                        'valor' => $opcion['valoru'] ?? null,
+                    ]);
+                }
+            }
         }
 
-        
-        
-        $this->registrarEventoEnChat('El Usuario genero la reconfiguración del proyecto.');
+        // Tallas (si aplica)
+        if ($this->mostrarFormularioTallas && is_array($this->tallasSeleccionadas)) {
+            foreach ($this->tallasSeleccionadas as $grupoId => $tallas) {
+                foreach ($tallas as $tallaId => $cantidad) {
+                    PedidoTalla::create([
+                        'pedido_id' => $pedido->id,
+                        'talla_id' => $tallaId,
+                        'grupo_talla_id' => $grupoId,
+                        'cantidad' => 0, // se inicializa en cero por tu flujo
+                    ]);
+                }
+            }
+        }
 
-
-        // Insertamos al log de pedidos
-
-        
-
-        session()->flash('message', 'Preproyecto actualizado exitosamente.');
-        return redirect()->route('proyecto.show', $this->ProyectoId);
+        // Log estado
+        PedidoEstado::create([
+            'pedido_id' => $pedido->id,
+            'proyecto_id' => $this->ProyectoId,
+            'usuario_id' => auth()->id(),
+            'estado' => 'Se reprograma el pedido',
+            'fecha_inicio' => now(),
+            'fecha_fin' => null,
+        ]);
     }
+
+    $this->registrarEventoEnChat('El Usuario generó la reconfiguración del proyecto.');
+
+    session()->flash('message', 'Preproyecto actualizado exitosamente.');
+    return redirect()->route('proyecto.show', $this->ProyectoId);
+}
+
 
     protected function registrarEventoEnChat($mensaje)
     {
@@ -669,26 +677,29 @@ public function mount($ProyectoId)
 
     }
 
-    public function updatedUsuarioQuery($value): void
-    {
-        $term = trim($value);
+public function updatedUsuarioQuery($value): void
+{
+    $term = trim($value);
 
-        if ($term === '') {
-            $this->usuariosSugeridos = [];
-            return;
-        }
-
-        $this->usuariosSugeridos = User::query()
-            ->select('id','name','email')
-            ->where(function($q) use ($term){
-                $q->where('name', 'like', "%{$term}%")
-                ->orWhere('email', 'like', "%{$term}%");
-            })
-            ->orderBy('name')
-            ->limit(15)
-            ->get()
-            ->toArray();
+    if ($term === '') {
+        $this->usuariosSugeridos = [];
+        return;
     }
+
+    $this->usuariosSugeridos = User::query()
+        ->select('users.id', 'users.name', 'users.email')
+        ->whereHas('roles', function ($q) {
+            $q->where('roles.tipo', 1); // 1 = CLIENTE
+        })
+        ->where(function ($q) use ($term) {
+            $q->where('users.name', 'like', "%{$term}%")
+              ->orWhere('users.email', 'like', "%{$term}%");
+        })
+        ->orderBy('users.name')
+        ->limit(15)
+        ->get()
+        ->toArray();
+}
 
     public function selectUsuario(int $id): void
     {

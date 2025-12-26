@@ -53,13 +53,19 @@ class Pedido extends Model
         'flag_aprobar_sin_fechas',
         'flag_solicitud_aprobar_sin_fechas',
         'flag_solicitud_aprobar_sin_fechas',
-        'ind_activo'
+        'ind_activo',
+
+        'estatus_proveedor',
+        'proveedor_visto_at',
+        'proveedor_visto_por',
+        'nota_proveedor',
     ];
 
     protected $casts = [
         'fecha_produccion' => 'date',     // Carbon|null
         'fecha_embarque'   => 'date',
         'fecha_entrega'    => 'date',
+        'proveedor_visto_at' => 'datetime',
     ];
     public function tareasProduccion()
     {
@@ -288,6 +294,8 @@ class Pedido extends Model
             'url'                   => $url,
             'last_uploaded_file_id' => $lastFileId,
             'flag_facturacion'      => (int) ($data['flag_facturacion'] ?? 0), // 0 = no cobra, 1 = sí cobra
+
+             'estatus_proveedor' => $data['estatus_proveedor'] ?? 'PENDIENTE',
         ]);
 
         PedidoEstado::create([

@@ -143,7 +143,7 @@
             </div>
         @endrole
 
-    </div>
+
 
     {{-- MODAL: SOLICITUD --}}
     @if($modalSolicitud)

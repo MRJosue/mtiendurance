@@ -18,9 +18,13 @@
                     x-data="{
                         open:false,
                         search: @entangle('usuarioQuery').live,
-                        selectedId: @entangle('usuario_id_nuevo'),
+                        selectedId: @entangle('usuario_id_nuevo').live,
                         get hasResults(){ return (this.$wire.usuariosSugeridos || []).length > 0 },
-                        select(id){ this.selectedId = id; this.open = false; },
+                        select(id){
+                            this.selectedId = id;
+                            this.open = false;
+                            this.$wire.set('usuario_id_nuevo', id);
+                        },
                     }"
                     class="mb-6"
                 >
@@ -67,8 +71,13 @@
                             >
                                 No se encontraron usuarios
                             </div>
+
+                            @error('usuario_id_nuevo')
+                                <span class="text-red-600 text-sm">{{ $message }}</span>
+                            @enderror
                         </div>
                     </div>
+
 
                     <!-- Píldora del seleccionado -->
                     <div class="mt-2" x-show="selectedId">
@@ -217,6 +226,17 @@
                 <div>
                     <span class="text-red-600 text-sm">Nota: Al guardar este formulario habras reconfigurado la solicitud original </span>
                 </div>
+
+                @if ($errors->any())
+                    <div class="bg-red-100 text-red-800 p-4 rounded-lg mb-4">
+                        <p class="font-semibold mb-2">Errores al guardar:</p>
+                        <ul class="list-disc list-inside text-sm">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
                 <!-- Botones -->
                 <div class="flex justify-end gap-4 mt-6">

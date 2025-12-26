@@ -213,7 +213,8 @@
                                 <!-- Contenido de las pestañas -->
                                 <div class="mt-4">
                                     <div x-show="tab === 'pedidos'">
-                                        @livewire('pedidos.pedidos-crud-proyecto', ['proyectoId' => $proyecto->id ])
+                                       
+                                        @livewire('proveedores.pedidos-proveedor-proyecto', ['proyectoId' => $proyecto->id ])
                                     </div>
                                     <div x-show="tab === 'muestras'">
                                         @livewire('pedidos.muestras-crud-proyecto', ['proyectoId' => $proyecto->id])
