@@ -12,14 +12,22 @@ class EnviarNotificacion extends Component
 {
     public function enviarNotificacion()
     {
-        $user = Auth::user(); // Usuario autenticado
-        
-        if ($user) {
-            $user->notify(new NuevaNotificacion("Tienes una nueva notificación en tiempo real."));
-            $this->dispatch('notificacionEnviada');
-        }
-    }
+        $user = Auth::user();
 
+        if (!$user) return;
+
+        try {
+            $user->notify(new NuevaNotificacion("Tienes una nueva notificación en tiempo real."));
+        } catch (\Throwable $e) {
+            Log::warning('Notificación enviada, pero falló broadcast (WS caído)', [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ]);
+        }
+
+        // ✅ Actualiza la campana/lista aunque no haya websockets
+        $this->dispatch('notificacionEnviada');
+    }
     public function render()
     {
         return view('livewire.notificaciones.enviar-notificacion');
