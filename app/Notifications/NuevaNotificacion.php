@@ -21,9 +21,16 @@ class NuevaNotificacion extends Notification
         $this->liga = $liga;
     }
 
-    public function via($notifiable)
+    public function via($notifiable): array
     {
-        return ['database', 'broadcast'];
+        $channels = ['database'];
+
+        // ✅ Broadcast solo si está habilitado
+        if (config('notifications.broadcast_enabled', false) === true) {
+            $channels[] = 'broadcast';
+        }
+
+        return $channels;
     }
 
     public function toArray($notifiable)
