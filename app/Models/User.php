@@ -59,7 +59,8 @@ class User extends Authenticatable
         'empresa_id',
         'sucursal_id',
         'es_propietario',   
-        'ind_activo'
+        'ind_activo',
+        'flag_perfil_configurado'
 
     ];
 
@@ -88,6 +89,7 @@ class User extends Authenticatable
         'user_can_sel_preproyectos' => 'array',
         'subordinados' => 'array',
         'es_propietario' => 'boolean', 
+        'flag_perfil_configurado' => 'boolean'
     ];
 
 

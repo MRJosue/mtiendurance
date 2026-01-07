@@ -41,6 +41,9 @@ use App\Livewire\Produccion\HojaViewer;
 use App\Http\Controllers\PreproyectoUploadController;
 
 
+use App\Livewire\Perfil\ConfiguracionInicial;
+
+
 use App\Events\TestEvent;
 use App\Events\MessageSent;
 use App\Events\NewChatMessage;
@@ -48,6 +51,9 @@ use App\Models\MensajeChat;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+
+use App\Models\DireccionFiscal;
+use App\Models\DireccionEntrega;
 
 
 /*
@@ -95,10 +101,43 @@ Route::get('/', function () {
     return view('auth.login');
 });
 
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified', 'perfil.configurado'])
+    ->name('dashboard');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::middleware(['auth'])->group(function () {
 
+    Route::get('/perfil/configuracion-inicial', function () {
+        return view('perfil.configuracion-inicial', ['user' => auth()->user()]);
+    })->name('perfil.inicial');
+
+    Route::post('/perfil/configuracion-inicial/finalizar', function () {
+        $user = auth()->user();
+
+        $tieneFiscal  = DireccionFiscal::where('usuario_id', $user->id)->exists();
+        $tieneEntrega = DireccionEntrega::where('usuario_id', $user->id)->exists();
+
+        if (!$tieneFiscal || !$tieneEntrega) {
+            return back()->withErrors([
+                'direcciones' => 'Debes registrar al menos una dirección fiscal y una de entrega.'
+            ]);
+        }
+
+        // Validar que ya tenga RFC guardado en config
+        $rfc = $user->config['rfc'] ?? null;
+        if (!$rfc) {
+            return back()->withErrors([
+                'direcciones' => 'Falta el RFC en tus datos de usuario.'
+            ]);
+        }
+
+        $user->update(['flag_perfil_configurado' => true]);
+
+        return redirect()->route('dashboard');
+    })->name('perfil.inicial.finalizar');
+
+});
 
 Route::get('/MessageSent', function () {
     event(new \App\Events\MessageSent("¡Hola desde el servidor!"));
@@ -130,9 +169,6 @@ Route::get('/emitir-demo', function () {
 });
 
 Route::view('/demo', 'demo');
-
-
-
 
 
 Route::get('/ChatMessageTest', function () {

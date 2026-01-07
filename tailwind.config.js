@@ -5,7 +5,7 @@ const colors = require('tailwindcss/colors')
 
 
 module.exports = {
-
+darkMode: false,
       presets: [
         require("./vendor/wireui/wireui/tailwind.config.js")
     ],
