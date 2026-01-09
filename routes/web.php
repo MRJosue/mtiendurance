@@ -197,7 +197,9 @@ Route::get('/proyectos/transferencias',[ProyectosController::class, 'transferenc
 
 
 Route::get('/proyectos/reprogramar',[ProyectosController::class, 'reprogramar'])->middleware(['auth','verified'])->name('proyectos.reprogramar');
-Route::get('/proyectos/{proyecto}', [ProyectosController::class, 'show'])->middleware(['auth', 'verified'])->name('proyecto.show');
+// Route::get('/proyectos/{proyecto}', [ProyectosController::class, 'show'])->middleware(['auth', 'verified'])->name('proyecto.show');
+Route::get('/proyectos/{proyecto}', [ProyectosController::class, 'show'])->middleware(['auth', 'verified', 'proyecto.access'])->name('proyecto.show');
+
 Route::get('/proveedor/proyectos/{proyecto}', [ProyectosController::class, 'showproveedor'])->middleware(['auth', 'verified'])->name('proyecto.proveedor.show');
 
 

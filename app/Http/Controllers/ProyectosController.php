@@ -19,11 +19,11 @@ class ProyectosController extends Controller
     }
 
 
-    public function show(Proyecto $Proyecto)
+    public function show(Proyecto $proyecto)
     {
+        $this->authorize('view', $proyecto);
 
-        //dd($Proyecto);
-        return view('proyectos.show',  ['proyecto' => $Proyecto]);
+        return view('proyectos.show', ['proyecto' => $proyecto]);
     }
 
     public function showproveedor(Proyecto $Proyecto)

@@ -6,7 +6,8 @@ namespace App\Providers;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use App\Policies\HojaFiltroProduccionPolicy;
 use App\Models\HojaFiltroProduccion;
-
+use App\Models\Proyecto;
+use App\Policies\ProyectoPolicy;
 class AuthServiceProvider extends ServiceProvider
 {
     /**
@@ -17,7 +18,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
     
         HojaFiltroProduccion::class => HojaFiltroProduccionPolicy::class,
-
+        Proyecto::class => ProyectoPolicy::class,
     ];
 
     /**
@@ -25,6 +26,6 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+         $this->registerPolicies();
     }
 }

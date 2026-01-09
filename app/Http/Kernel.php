@@ -11,7 +11,8 @@ class Kernel extends HttpKernel
         // Otros middlewares
         'role' => \App\Http\Middleware\RoleMiddleware::class,
         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-         'perfil.configurado' => \App\Http\Middleware\EnsurePerfilConfigurado::class,
+        'perfil.configurado' => \App\Http\Middleware\EnsurePerfilConfigurado::class,
+        'proyecto.access' => \App\Http\Middleware\EnsureProyectoAccess::class,
     ];
 
     /**
