@@ -8,7 +8,7 @@
             localStorage.setItem('dashboard_preproyecto_abierto', JSON.stringify(this.abierto));
         }
     }"
-    class="p-2 sm:p-3 h-full min-h-0 flex flex-col"
+     class="p-2 sm:p-3 h-full min-h-0 flex flex-col"
 >
 
 
@@ -62,25 +62,25 @@
                         </div>
                     </div>
 
-                    <div x-data="{ selectedProjects: @entangle('selectedProjects') }" class="container mx-auto p-6">
+                    <div x-data="{ selectedProjects: @entangle('selectedProjects') }" class="w-full px-2 sm:px-3">
 
-    {{-- === TABLA estilo hoja-viewer para manage-projects === --}}
-    @php
-        $arrow = function(string $field) use ($sortField, $sortDir) {
-            if ($sortField !== $field) return '⇵';
-            return $sortDir === 'asc' ? '▲' : '▼';
-        };
+                        {{-- === TABLA estilo hoja-viewer para manage-projects === --}}
+                        @php
+                            $arrow = function(string $field) use ($sortField, $sortDir) {
+                                if ($sortField !== $field) return '⇵';
+                                return $sortDir === 'asc' ? '▲' : '▼';
+                            };
 
-        $coloresEstadoDiseno = [
-            'PENDIENTE'        => 'bg-yellow-400 text-black',
-            'ASIGNADO'         => 'bg-blue-500 text-white',
-            'EN PROCESO'       => 'bg-orange-500 text-white',
-            'REVISION'         => 'bg-purple-600 text-white',
-            'DISEÑO APROBADO'  => 'bg-emerald-600 text-white',
-            'DISEÑO RECHAZADO' => 'bg-red-600 text-white',
-            'CANCELADO'        => 'bg-gray-500 text-white',
-        ];
-    @endphp
+                            $coloresEstadoDiseno = [
+                                'PENDIENTE'        => 'bg-yellow-400 text-black',
+                                'ASIGNADO'         => 'bg-blue-500 text-white',
+                                'EN PROCESO'       => 'bg-orange-500 text-white',
+                                'REVISION'         => 'bg-purple-600 text-white',
+                                'DISEÑO APROBADO'  => 'bg-emerald-600 text-white',
+                                'DISEÑO RECHAZADO' => 'bg-red-600 text-white',
+                                'CANCELADO'        => 'bg-gray-500 text-white',
+                            ];
+                        @endphp
 
             <div
                 x-data="{

@@ -17,9 +17,10 @@
             <input
                 type="text"
                 wire:model.defer="name"
-                class="mt-1 w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                readonly
+                class="mt-1 w-full rounded-lg border-gray-300 bg-gray-100 cursor-not-allowed
+                    dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
             >
-            @error('name') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
         </div>
 
         <div>
@@ -27,10 +28,12 @@
             <input
                 type="email"
                 wire:model.defer="email"
-                class="mt-1 w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                readonly
+                class="mt-1 w-full rounded-lg border-gray-300 bg-gray-100 cursor-not-allowed
+                    dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
             >
-            @error('email') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
         </div>
+
 
         <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">RFC</label>

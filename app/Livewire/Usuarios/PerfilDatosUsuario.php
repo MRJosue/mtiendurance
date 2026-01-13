@@ -35,8 +35,8 @@ class PerfilDatosUsuario extends Component
     public function rules(): array
     {
         return [
-            'name'  => ['required','string','max:255'],
-            'email' => ['required','email','max:255', Rule::unique('users','email')->ignore($this->userId)],
+            // 'name'  => ['required','string','max:255'],
+            // 'email' => ['required','email','max:255', Rule::unique('users','email')->ignore($this->userId)],
             'rfc'   => ['required','string','max:13'],
 
             // Password opcional
@@ -52,8 +52,8 @@ class PerfilDatosUsuario extends Component
         $u = Auth::user();
         abort_if($u->id !== $this->userId, 403);
 
-        $u->name  = $this->name;
-        $u->email = $this->email;
+        // $u->name  = $this->name;
+        // $u->email = $this->email;
 
         $cfg = $u->config ?? [];
         $cfg['rfc'] = strtoupper(trim($this->rfc));
