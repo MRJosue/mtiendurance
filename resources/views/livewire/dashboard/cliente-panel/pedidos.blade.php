@@ -62,6 +62,25 @@
                                                         Mostrar pedidos de diseños No aprobados
                                                     </label>
                                                 </div>
+
+                                                <div class="flex flex-col gap-1">
+                                                    <label for="perPage" class="text-sm text-gray-700 font-medium">
+                                                        Registros por página
+                                                    </label>
+
+                                                    <select
+                                                        id="perPage"
+                                                        wire:model.live="perPage"
+                                                        class="w-full rounded-lg border-gray-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-sm"
+                                                    >
+                                                        <option value="10">10</option>
+                                                        <option value="20">20</option>
+                                                        <option value="30">30</option>
+                                                        <option value="50">50</option>
+                                                        <option value="100">100</option>
+                                                    </select>
+                                                </div>
+
                                                 {{-- 👇 NUEVO filtro activos / inactivos --}}
                                                 <div class="flex items-center space-x-2">
                                                     <input
@@ -74,6 +93,10 @@
                                                         Mostrar solo pedidos inactivos
                                                     </label>
                                                 </div>
+
+
+
+
                                     </div>
                                 </div>
                             </template>
@@ -92,6 +115,7 @@
                                 </button>
                             </div>
                         @endif
+            
 
                 <!-- PESTAÑAS PEDIDOS | MUESTRAS -->
             <ul class="flex flex-wrap border-b border-gray-200 mb-4 gap-1">
@@ -120,6 +144,7 @@
                 };
             @endphp
 
+    
 
         <div class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8">
         <table class="w-full table-auto border-collapse border border-gray-200">

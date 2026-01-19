@@ -18,6 +18,8 @@ class Pedidos extends Component
     public array  $tabs      = ['PEDIDOS', 'MUESTRAS'];
     public string $activeTab = 'PEDIDOS';
 
+    public int $perPage = 100;
+
     /* ---- Filtros extra que ya tenías ---- */
     public bool $mostrarFiltros          = false;
     public bool $mostrarSoloNoAprobados  = true;
@@ -116,7 +118,11 @@ $proyecto = \App\Models\Proyecto::with([
         $this->dispatch('filters-cleared');
     }
 
-    
+    public function updatedPerPage(): void
+    {
+        $this->resetPage();
+    }
+
 
     /* ---- Render ---- */
 
@@ -249,7 +255,9 @@ $proyecto = \App\Models\Proyecto::with([
         }
 
         return view('livewire.dashboard.cliente-panel.pedidos', [
-            'pedidos' => $query->paginate(100),
+           'pedidos' => $query->paginate($this->perPage),
         ]);
     }
+
+    
 }

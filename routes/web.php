@@ -55,6 +55,7 @@ use Illuminate\Http\Request;
 use App\Models\DireccionFiscal;
 use App\Models\DireccionEntrega;
 
+use App\Events\TestReverbMessage;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,6 +74,26 @@ use App\Http\Controllers\DemoController;
 //Lang
 
 use Illuminate\Support\Facades\Cookie;
+
+
+
+Route::view('/reverb-test', 'reverb-test')->name('reverb.test');
+
+Route::post('/reverb-test/send', function (Request $request) {
+    $data = $request->validate([
+        'message' => ['required', 'string', 'max:500'],
+    ]);
+
+    broadcast(new TestReverbMessage(
+        message: $data['message'],
+        sentAt: now()->toDateTimeString()
+    ));
+
+    return response()->json(['ok' => true]);
+})->name('reverb.test.send');
+
+
+
 
 Route::get('/lang/{locale}', function (string $locale) {
     abort_unless(in_array($locale, ['es','en']), 404);

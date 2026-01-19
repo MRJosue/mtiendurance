@@ -1,4 +1,4 @@
-<div 
+<div
     x-data="{
         abierto: JSON.parse(localStorage.getItem('dashboard_tareas_abierto') ?? 'true'),
         toggle() {
@@ -6,25 +6,25 @@
             localStorage.setItem('dashboard_tareas_abierto', JSON.stringify(this.abierto));
         }
     }"
-    class="container mx-auto p-6"
+    class="p-2 sm:p-3 h-full min-h-0 flex flex-col"
 >
-    <h2 
+    <h2
         @click="toggle()"
         class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
     >
         Tareas de Diseño
         <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
-    </h2>   
+    </h2>
 
-    <div x-show="abierto" x-transition>
-        {{-- TOP BAR: acciones + perPage --}}
+    <div x-show="abierto" x-transition class="min-h-0">
+        {{-- TOP BAR: chips + perPage (igual que Diseños) --}}
         <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div class="flex flex-wrap items-center gap-2">
-                {{-- Chips de estado rápidos --}}
+                @php
+                    $estadoChips = ['PENDIENTE','EN PROCESO','COMPLETADA','RECHAZADO','CANCELADO'];
+                @endphp
+
                 <div class="flex flex-wrap gap-2">
-                    @php
-                        $estadoChips = ['PENDIENTE','EN PROCESO','COMPLETADA','RECHAZADO','CANCELADO'];
-                    @endphp
                     @foreach($estadoChips as $chip)
                         <button
                             class="px-3 py-1 text-xs rounded-full border hover:bg-gray-100
@@ -35,6 +35,7 @@
                             {{ $chip }}
                         </button>
                     @endforeach
+
                     @if(($filters['estado'] ?? '') !== '')
                         <button
                             class="px-3 py-1 text-xs rounded-full border hover:bg-gray-100"
@@ -61,7 +62,7 @@
             </div>
         </div>
 
-        {{-- TABLA estilo manage-projects --}}
+        {{-- TABLA con el MISMO frame que Diseños --}}
         @php
             $arrow = function(string $field) use ($sortField, $sortDir) {
                 if ($sortField !== $field) return '⇵';
@@ -96,7 +97,7 @@
                                             :style="style"
                                             class="fixed z-50 w-64 rounded-lg border bg-white shadow p-3"
                                         >
-                                            <label class="block text-xs text-gray-600 mb-1">ID Tarea (e.g. 100 ó 100,101)</label>
+                                            <label class="block text-xs text-gray-600 mb-1">ID Tarea (ej. 100 ó 100,101)</label>
                                             <input
                                                 type="text"
                                                 class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
@@ -118,109 +119,37 @@
                         {{-- ID Proyecto --}}
                         <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
                             <div class="flex items-center justify-between gap-2 min-w-[8rem]">
-                                <button
-                                    class="inline-flex items-center gap-1 hover:text-blue-600"
-                                    wire:click="sortBy('proyectos.id')"
-                                    title="Ordenar por ID Proyecto"
-                                >
+                                <button class="inline-flex items-center gap-1 hover:text-blue-600"
+                                        wire:click="sortBy('proyectos.id')" title="Ordenar por ID Proyecto">
                                     <span>ID Proyecto</span>
                                     <span class="text-xs">{!! $arrow('proyectos.id') !!}</span>
                                 </button>
-                                <div x-data="{ open:false }" class="relative shrink-0">
-                                    <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="Filtrar ID Proyecto">⋮</button>
-                                    <div
-                                        x-cloak x-show="open" @click.away="open=false" x-transition
-                                        class="absolute right-0 z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
-                                    >
-                                        <label class="block text-xs text-gray-600 mb-1">ID Proyecto</label>
-                                        <input
-                                            type="text"
-                                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                            placeholder="Ej. 200 ó 200,201"
-                                            wire:model.live.debounce.400ms="filters.proyecto_id"
-                                        />
-                                        <div class="mt-2 flex justify-end gap-2">
-                                            <button type="button" class="px-2 py-1 text-xs rounded border"
-                                                    @click="$wire.set('filters.proyecto_id','')">Limpiar</button>
-                                            <button type="button" class="px-2 py-1 text-xs rounded border"
-                                                    @click="open=false">Cerrar</button>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </th>
 
-                        {{-- Proyecto (nombre) --}}
+                        {{-- Proyecto --}}
                         <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
                             <div class="flex items-center justify-between gap-2 min-w-[14rem]">
-                                <button
-                                    class="inline-flex items-center gap-1 hover:text-blue-600"
-                                    wire:click="sortBy('proyectos.nombre')"
-                                    title="Ordenar por Proyecto"
-                                >
+                                <button class="inline-flex items-center gap-1 hover:text-blue-600"
+                                        wire:click="sortBy('proyectos.nombre')" title="Ordenar por Proyecto">
                                     <span>Proyecto</span>
                                     <span class="text-xs">{!! $arrow('proyectos.nombre') !!}</span>
                                 </button>
-                                <div x-data="{ open:false }" class="relative shrink-0">
-                                    <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="Filtrar Proyecto">⋮</button>
-                                    <div
-                                        x-cloak x-show="open" @click.away="open=false" x-transition
-                                        class="absolute right-0 z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
-                                    >
-                                        <label class="block text-xs text-gray-600 mb-1">Nombre contiene</label>
-                                        <input
-                                            type="text"
-                                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                            placeholder="Buscar…"
-                                            wire:model.live.debounce.400ms="filters.proyecto"
-                                        />
-                                        <div class="mt-2 flex justify-end gap-2">
-                                            <button type="button" class="px-2 py-1 text-xs rounded border"
-                                                    @click="$wire.set('filters.proyecto','')">Limpiar</button>
-                                            <button type="button" class="px-2 py-1 text-xs rounded border"
-                                                    @click="open=false">Cerrar</button>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </th>
 
-                        {{-- Asignado a --}}
+                        {{-- Asignado --}}
                         <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
                             <div class="flex items-center justify-between gap-2 min-w-[12rem]">
-                                <button
-                                    class="inline-flex items-center gap-1 hover:text-blue-600"
-                                    wire:click="sortBy('users.name')"
-                                    title="Ordenar por Asignado"
-                                >
+                                <button class="inline-flex items-center gap-1 hover:text-blue-600"
+                                        wire:click="sortBy('users.name')" title="Ordenar por Asignado">
                                     <span>Asignado a</span>
                                     <span class="text-xs">{!! $arrow('users.name') !!}</span>
                                 </button>
-                                <div x-data="{ open:false }" class="relative shrink-0">
-                                    <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="Filtrar Asignado">⋮</button>
-                                    <div
-                                        x-cloak x-show="open" @click.away="open=false" x-transition
-                                        class="absolute right-0 z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
-                                    >
-                                        <label class="block text-xs text-gray-600 mb-1">Nombre o correo</label>
-                                        <input
-                                            type="text"
-                                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                            placeholder="Buscar…"
-                                            wire:model.live.debounce.400ms="filters.asignado"
-                                        />
-                                        <div class="mt-2 flex justify-end gap-2">
-                                            <button type="button" class="px-2 py-1 text-xs rounded border"
-                                                    @click="$wire.set('filters.asignado','')">Limpiar</button>
-                                            <button type="button" class="px-2 py-1 text-xs rounded border"
-                                                    @click="open=false">Cerrar</button>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </th>
 
-                        {{-- Descripción (solo texto, filtro textual simple) --}}
+                        {{-- Descripción --}}
                         <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
                             <div class="flex items-center justify-between gap-2 min-w-[14rem]">
                                 <span>Descripción</span>
@@ -251,14 +180,12 @@
                         {{-- Estado --}}
                         <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
                             <div class="flex items-center gap-2 min-w-[12rem]">
-                                <button
-                                    class="inline-flex items-center gap-1 hover:text-blue-600"
-                                    wire:click="sortBy('tareas.estado')"
-                                    title="Ordenar por Estado"
-                                >
+                                <button class="inline-flex items-center gap-1 hover:text-blue-600"
+                                        wire:click="sortBy('tareas.estado')" title="Ordenar por Estado">
                                     <span>Estado</span>
                                     <span class="text-xs">{!! $arrow('tareas.estado') !!}</span>
                                 </button>
+
                                 <div x-data="{ open:false }" class="relative">
                                     <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="Filtrar Estado">⋮</button>
                                     <div
@@ -304,6 +231,7 @@
                             ];
                             $badge = $clases[$estado] ?? 'bg-gray-100 text-gray-800 ring-gray-600/20';
                         @endphp
+
                         <tr class="hover:bg-gray-50">
                             <td class="px-3 py-2 text-sm">{{ $task->id }}</td>
                             <td class="px-3 py-2 text-sm">{{ $task->proyecto->id ?? '—' }}</td>
@@ -312,7 +240,7 @@
                             <td class="px-3 py-2 text-sm">{{ $task->descripcion }}</td>
                             <td class="px-3 py-2 text-sm">
                                 <span class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ring-1 ring-inset {{ $badge }}">
-                                    <span class="h-1.5 w-1.5 rounded-full 
+                                    <span class="h-1.5 w-1.5 rounded-full
                                         @if($estado==='PENDIENTE') bg-yellow-500
                                         @elseif($estado==='EN PROCESO') bg-blue-500
                                         @elseif($estado==='COMPLETADA') bg-emerald-500
@@ -322,27 +250,24 @@
                                     {{ $estado }}
                                 </span>
                             </td>
+
                             <td class="px-3 py-2 text-sm">
                                 <x-dropdown>
-
                                     @can('admin-disenio-cambiar-estado-tarea')
-                                  
-                                    <x-dropdown.item separator>
-                                        <b   
-                                            wire:click="abrirModal({{ $task->id }})"
-                                            wire:loading.attr="disabled"
-                                            wire:target="cancelarMuestra">Cambiar Estado</b>
-                                    </x-dropdown.item>
-                               
+                                        <x-dropdown.item separator>
+                                            <b wire:click="abrirModal({{ $task->id }})"
+                                               wire:loading.attr="disabled">
+                                                Cambiar Estado
+                                            </b>
+                                        </x-dropdown.item>
                                     @endcan
 
-                                <x-dropdown.item separator>
-                                    <b  wire:click="verificarProceso({{ $task->proyecto->id }})" >Ver detalles</b>
-                                </x-dropdown.item>
-
-                                    
+                                    <x-dropdown.item separator>
+                                        <b wire:click="verificarProceso({{ $task->proyecto->id }})">
+                                            Ver detalles
+                                        </b>
+                                    </x-dropdown.item>
                                 </x-dropdown>
-
                             </td>
                         </tr>
                     @empty
@@ -362,7 +287,7 @@
         </div>
     </div>
 
-    {{-- Modal: Cambiar estado --}}
+    {{-- Modal: Cambiar estado (igual lo puedes dejar tal cual) --}}
     @if($modalOpen)
         <div class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
             <div class="bg-white rounded shadow-lg w-full max-w-md p-6">
@@ -374,8 +299,9 @@
                         <option value="{{ $status }}">{{ $status }}</option>
                     @endforeach
                 </select>
-                @error('newStatus') 
-                    <div class="bg-red-100 text-red-800 p-3 rounded mb-3">{{ $message }}</div> 
+
+                @error('newStatus')
+                    <div class="bg-red-100 text-red-800 p-3 rounded mb-3">{{ $message }}</div>
                 @enderror
 
                 <div class="flex justify-end space-x-2">
@@ -389,32 +315,11 @@
             </div>
         </div>
     @endif
-
-    {{-- Modal: Confirmar inicio de proceso --}}
-    @if($mostrarModalConfirmacion)
-        <div class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-            <div class="bg-white rounded shadow-lg w-full max-w-md p-6">
-                <h2 class="text-lg font-semibold mb-4 text-center text-gray-800">¿Iniciar proceso de diseño?</h2>
-                <p class="text-gray-600 text-center mb-6">
-                    Esta acción marcará el proyecto como <strong>"EN PROCESO"</strong> y notificará a los responsables.
-                </p>
-                <div class="flex justify-end space-x-3">
-                    <button wire:click="cancelarConfirmacion" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
-                        Cancelar
-                    </button>
-                    <button wire:click="confirmarInicioProceso" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-                        Confirmar
-                    </button>
-                </div>
-            </div>
-        </div>
-    @endif
 </div>
 
-{{-- Scripts: encapsulados en DOMContentLoaded y usando dispatch en lugar de emit --}}
+{{-- Scripts: DOMContentLoaded + dropdownTeleport (igual que Diseños) --}}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Alpine helper para dropdown con teleport (estilo manage-projects)
     window.dropdownTeleport = () => ({
         open: false,
         style: '',
@@ -426,6 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
         reposition() {
             const btn = this.$refs.btn;
             if (!btn) return;
+
             const r = btn.getBoundingClientRect();
             const panelW = 256; // w-64
             const gap = 6;
@@ -442,19 +348,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Escucha de eventos desde la UI (dispatch)
+    // Si quieres disparar acciones desde la UI usando dispatch (en lugar de emit)
     window.addEventListener('abrir-modal-estado', e => {
         const id = e.detail?.id;
-        if (id) {
-            $wire.abrirModal(id);
-        }
+        if (id) $wire.abrirModal(id);
     });
 
     window.addEventListener('verificar-proceso', e => {
-        const pid = e.detail?.id;
-        if (pid) {
-            $wire.verificarProceso(pid);
-        }
+        const id = e.detail?.id;
+        if (id) $wire.verificarProceso(id);
     });
 });
 </script>

@@ -334,8 +334,11 @@
                             {{-- @can('dashboardjefediseñadorproyectos') --}}
 
                             @can('dashboardDiseñosColumnaTareas')
-                                    <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Tareas</th>
+                                <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 w-[22rem] min-w-[22rem] max-w-[22rem]">
+                                    Tareas
+                                </th>
                             @endcan
+
                             @can('dashboardDiseñosColumnaHistorial')
                         
                                 <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Historial</th>
@@ -470,19 +473,20 @@
 
                                 {{-- Tareas / Historial (opcional) --}}
                                 @can('dashboardDiseñosColumnaTareas')
-                                    <td class="px-3 py-2 text-sm">
+                                    <td class="px-3 py-2 text-sm w-[22rem] min-w-[22rem] max-w-[22rem] align-top">
                                         @if($project->tareas->isNotEmpty())
-                                            <ul class="list-disc list-inside space-y-1 text-xs text-gray-700">
+                                            <ul class="list-disc list-inside space-y-1 text-xs text-gray-700 break-words">
                                                 @foreach($project->tareas as $tarea)
-                                                    <li>{{ $tarea->descripcion }}</li>
+                                                    <li class="break-words">{{ $tarea->descripcion }}</li>
                                                 @endforeach
                                             </ul>
                                         @else
                                             <span class="text-gray-500">Sin tareas</span>
                                         @endif
                                     </td>
-
                                 @endcan
+
+                                
                                 @can('dashboardDiseñosColumnaHistorial')
                                     <td class="px-3 py-2 text-sm">
                                         @if($project->estados->isNotEmpty())
