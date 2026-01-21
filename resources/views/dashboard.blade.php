@@ -137,6 +137,18 @@
             </div>
         </div> --}}
 
+            @role('admin')
+            <div class="p-2 sm:p-3">
+                <div class="overflow-x-auto bg-white rounded-lg shadow">
+                    {{-- <livewire:pedido-table /> --}}
+
+                    <livewire:pedidos-power-grid />
+                    
+                </div>
+            </div>
+
+
+            @endrole
     </div>
 
 
