@@ -85,7 +85,7 @@
                 <div x-show="openSections.disenio" x-transition class="pl-6 mt-1 space-y-1">
 
 
-                    @can('asidediseniodesplegable')
+                    @can('asideverdisenios')
                         <a href="{{ route('proyectos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                             {{ __('menu.designs') }}
                         </a>
@@ -115,14 +115,21 @@
                         </a>
                     @endcan
 
-                    <a href="{{ route('proyectos.transferencias') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                          Solicitud de reasignacion
-                    </a>
+
+                    @can('asideSolicitudreasignacion')
+                        <a href="{{ route('proyectos.transferencias') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                            Solicitud de reasignacion
+                        </a>  
+                    @endcan
 
 
-                    <a href="{{ route('diseños.vistaproveedor') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                          DiseñosProveedor
-                    </a>
+                    @can('asidediseñosproveedor')
+                        <a href="{{ route('diseños.vistaproveedor') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                            Diseños Proveedor
+                        </a>
+                    @endcan
+
+
 
 
 
