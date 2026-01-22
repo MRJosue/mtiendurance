@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\DB;
 
 use Illuminate\Support\Facades\Log;
 
@@ -76,26 +77,47 @@ class ConfigInicial extends Component
         
     public function mount(int $userId): void
     {
-        $this->userId = $userId;
+            $this->userId = $userId;
 
-        $u = Auth::user();
-        abort_if(!$u || $u->id !== $this->userId, 403);
+            $u = Auth::user();
+                abort_if(!$u || $u->id !== $this->userId, 403);
 
-        $this->name  = $u->name ?? '';
-        $this->email = $u->email ?? '';
-        $this->rfc   = $u->config['rfc'] ?? '';
+                $tipoRol = $this->obtenerTipoRolUsuario($u); // 1=CLIENTE,2=PROVEEDOR,3=STAFF,4=ADMIN
 
-        // Catálogos en memoria
-        $paises = Pais::orderBy('nombre')->get(['id','nombre']);
+                // ✅ STAFF/ADMIN: no necesitan direcciones -> marcar perfil configurado y salir
+                if (in_array($tipoRol, [3, 4], true)) {
 
-        $this->f_paisesList = $paises;
-        $this->f_estadosList = collect();
-        $this->f_ciudadesList = collect();
+                    // evita writes innecesarios
+                    if (!$u->flag_perfil_configurado) {
+                        $u->flag_perfil_configurado = 1;
+                        $u->save();
+                    }
 
-        $this->e_paisesList = $paises;
-        $this->e_estadosList = collect();
-        $this->e_ciudadesList = collect();
+                    $this->redirectRoute('dashboard', navigate: true);
+                    return;
+                }
 
+
+                $this->name  = $u->name ?? '';
+                $this->email = $u->email ?? '';
+                $this->rfc   = $u->config['rfc'] ?? '';
+
+                // Catálogos en memoria
+                $paises = Pais::orderBy('nombre')->get(['id','nombre']);
+
+                $this->f_paisesList = $paises;
+                $this->f_estadosList = collect();
+                $this->f_ciudadesList = collect();
+
+                $this->e_paisesList = $paises;
+                $this->e_estadosList = collect();
+                $this->e_ciudadesList = collect();
+
+
+                // if ($u->esStaffOAdmin()) {
+                //      $this->redirect(route('dashboard'), navigate: true);
+                //     return;
+                // }
 
     }
 
@@ -425,6 +447,17 @@ class ConfigInicial extends Component
         $u = Auth::user();
         abort_if(!$u || $u->id !== $this->userId, 403);
 
+        $tipoRol = $this->obtenerTipoRolUsuario($u);
+
+        if (in_array($tipoRol, [3, 4], true)) {
+            if (!$u->flag_perfil_configurado) {
+                $u->flag_perfil_configurado = 1;
+                $u->save();
+            }
+            $this->redirectRoute('dashboard', navigate: true);
+            return;
+        }
+
         $this->validate($this->rulesDatosUsuario());
 
         $cfg = $u->config ?? [];
@@ -479,6 +512,26 @@ class ConfigInicial extends Component
         $this->faltaFiscal = !DireccionFiscal::where('usuario_id', $this->userId)->exists();
         $this->faltaEntrega = !DireccionEntrega::where('usuario_id', $this->userId)->exists();
     }
+
+    private function obtenerTipoRolUsuario($u): ?int
+    {
+        // Prioridad: users.rol_id
+        if (!empty($u->rol_id)) {
+            $tipo = DB::table('roles')->where('id', $u->rol_id)->value('tipo');
+            return $tipo !== null ? (int)$tipo : null;
+        }
+
+        // Fallback: roles de Spatie (model_has_roles)
+        $tipo = DB::table('model_has_roles')
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('model_has_roles.model_type', $u::class)
+            ->where('model_has_roles.model_id', $u->id)
+            ->orderByDesc('roles.tipo')
+            ->value('roles.tipo');
+
+        return $tipo !== null ? (int)$tipo : null;
+    }
+
 
 
     public function render()

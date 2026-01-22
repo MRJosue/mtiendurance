@@ -201,7 +201,26 @@ class User extends Authenticatable
 
         return strtolower(self::TIPOS[$this->tipo] ?? '') === strtolower($tipo);
     }
+    public function rolTipo(): ?int
+    {
+        // rol directo
+        if (!empty($this->rol_id)) {
+            return (int) \DB::table('roles')->where('id', $this->rol_id)->value('tipo');
+        }
 
+        // roles spatie
+        return (int) \DB::table('model_has_roles')
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('model_has_roles.model_type', $this::class)
+            ->where('model_has_roles.model_id', $this->id)
+            ->orderByDesc('roles.tipo')
+            ->value('roles.tipo'); // toma uno (si tu sistema solo usa 1 rol real)
+    }
+
+    public function esStaffOAdmin(): bool
+    {
+        return in_array((int) $this->rolTipo(), [3, 4], true);
+    }
     
 
     public function getTipoTextoAttribute(): string
