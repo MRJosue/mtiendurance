@@ -54,7 +54,7 @@ document.addEventListener('alpine:init', () => {
     });
   }
 });
-
+console.log('Hola soy  FIN de app js');
 // ¡Arranca Alpine!
 // Alpine.start()
 
