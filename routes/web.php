@@ -229,6 +229,7 @@ Route::get('/proveedores/diseños',[ProyectosController::class, 'vistaproveedor'
 
 // Pedidos
 Route::get('/pedidos',[PedidosController::class, 'index'])->middleware(['auth','verified'])->name('pedidos.index');
+Route::get('/pedidos/proveedor',[PedidosController::class, 'pedidosproveedor'])->middleware(['auth','verified'])->name('pedidos.pedidosproveedor');
 
 //preproyectos
 Route::get('/preproyectos',[PreproyectosController::class, 'index'])->middleware(['auth','verified'])->name('preproyectos.index');

@@ -157,10 +157,18 @@
                 </button>
 
                 <div x-show="openSections.pedidos" x-transition class="pl-6 mt-1 space-y-1">
-
+                     @can('pedidiosindex')
                     <a href="{{ route('pedidos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                         {{ __('menu.orders') }}
                     </a>
+                    @endcan
+
+                    @can('pedidiosproveedor')
+                        <a href="{{ route('pedidos.pedidosproveedor') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                            Pedidos Provceedor
+                        </a>
+                    @endcan
+
 
                        @livewire('aside-hojas', ['ubicacion' => 'pedidos'])
                 </div>

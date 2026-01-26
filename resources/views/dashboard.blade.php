@@ -108,6 +108,33 @@
                 </div>
 
         @endhasanyrole
+        
+
+        @hasanyrole('admin|proveedor')
+
+        <div class="w-full mx-auto sm:px-6 lg:px-8">    
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+                            <hr/>
+                                @livewire('proveedores.disenos-proveedor')
+                            </div>
+            </div>
+        </div>
+
+        
+        <div class="w-full mx-auto sm:px-6 lg:px-8">
+            
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+                            <hr/>
+                                @livewire('dashboard.proveedor-panel.pedidos-proveedor-dashboard')
+                            </div>
+            </div>
+        </div>
+
+        @endhasanyrole
 
 
 
