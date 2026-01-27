@@ -138,53 +138,60 @@
         @endif
 
         {{-- Tabla --}}
-        <div class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8">
-            <table class="w-full table-auto border-collapse border border-gray-200">
-                <thead class="bg-gray-100">
+        <div class="overflow-x-auto bg-white rounded shadow min-h-64 pb-8">
+            <table class="min-w-full table-auto divide-y divide-gray-200 text-sm">
+                <thead class="bg-gray-100 text-gray-700">
                     <tr>
-                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">ID</th>
-                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Proyecto</th>
-                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Cliente</th>
-                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Producto/Categoría</th>
-                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Piezas</th>
-                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Producción</th>
-                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Embarque</th>
-                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Entrega</th>
-                        <th class="px-3 py-2 text-center text-sm font-medium text-gray-600">Estatus proveedor</th>
-                        <th class="px-3 py-2 text-center text-sm font-medium text-gray-600">Visto</th>
-                        <th class="px-3 py-2 text-center text-sm font-medium text-gray-600">Acciones</th>
+                        <th class="p-2 text-left">ID</th>
+                        <th class="p-2 text-left">Proyecto</th>
+                        <th class="p-2 text-left">Producto / Categoría</th>
+                        <th class="p-2 text-left">Piezas</th>
+                        <th class="p-2 text-left">Producción</th>
+                        <th class="p-2 text-left">Embarque</th>
+                        <th class="p-2 text-left">Entrega</th>
+                        <th class="p-2 text-center">Estatus Proveedor</th>
+                        <th class="p-2 text-center">Visto</th>
+                        <th class="p-2 text-center">Acciones</th>
                     </tr>
                 </thead>
 
-                <tbody class="text-sm">
+                <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($pedidos as $pedido)
                         <tr class="hover:bg-gray-50">
-                            <td class="px-3 py-2 font-semibold min-w-[4rem]">
+                            <td
+                                class="p-2 px-4 py-2 font-semibold min-w-[4rem] cursor-help whitespace-nowrap"
+                                title="{{ $pedido->tooltip_clave ?? '' }}"
+                            >
                                 {{ $pedido->clave ?? $pedido->id }}
                             </td>
 
-                            <td class="px-3 py-2 font-semibold">
+                            <td class="p-2 whitespace-nowrap">
                                 {{ $pedido->proyecto->nombre ?? '—' }}
                                 <div class="text-xs text-gray-500">#{{ $pedido->proyecto_id }}</div>
                             </td>
 
-                            <td class="px-3 py-2 font-semibold">
-                                <span title="{{ $pedido->usuario?->tooltip_sucursal_empresa }}" class="inline-block cursor-help">
-                                    {{ $pedido->usuario->name ?? 'Sin cliente' }}
-                                </span>
-                            </td>
-
-                            <td class="px-3 py-2">
+                            <td class="p-2 min-w-[14rem]">
                                 <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
                                 <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
                             </td>
 
-                            <td class="px-3 py-2">{{ number_format((float)($pedido->total ?? 0), 0) }} piezas</td>
-                            <td class="px-3 py-2">{{ $pedido->fecha_produccion?->format('Y-m-d') ?? '—' }}</td>
-                            <td class="px-3 py-2">{{ $pedido->fecha_embarque?->format('Y-m-d') ?? '—' }}</td>
-                            <td class="px-3 py-2">{{ $pedido->fecha_entrega?->format('Y-m-d') ?? '—' }}</td>
+                            <td class="p-2 whitespace-nowrap">
+                                {{ number_format((float)($pedido->total ?? 0), 0) }} piezas
+                            </td>
 
-                            <td class="px-3 py-2 text-center">
+                            <td class="p-2 whitespace-nowrap">
+                                {{ $pedido->fecha_produccion?->format('Y-m-d') ?? '—' }}
+                            </td>
+
+                            <td class="p-2 whitespace-nowrap">
+                                {{ $pedido->fecha_embarque?->format('Y-m-d') ?? '—' }}
+                            </td>
+
+                            <td class="p-2 whitespace-nowrap">
+                                {{ $pedido->fecha_entrega?->format('Y-m-d') ?? '—' }}
+                            </td>
+
+                            <td class="p-2 text-center whitespace-nowrap">
                                 @php
                                     $e = strtoupper($pedido->estatus_proveedor ?? 'PENDIENTE');
                                     $badge = match($e) {
@@ -200,7 +207,7 @@
                                 </span>
                             </td>
 
-                            <td class="px-3 py-2 text-center">
+                            <td class="p-2 text-center whitespace-nowrap">
                                 @if($pedido->proveedor_visto_at)
                                     <span class="text-xs text-gray-600">
                                         {{ $pedido->proveedor_visto_at->format('Y-m-d H:i') }}
@@ -210,18 +217,27 @@
                                 @endif
                             </td>
 
-                            <td class="px-3 py-2 text-center">
+                            <td class="p-2 text-center whitespace-nowrap">
                                 <x-dropdown>
                                     <x-dropdown.item>
-                                        <b wire:click="abrirModalProveedor({{ $pedido->id }})">Actualizar estatus</b>
+                                        <b
+                                            class="cursor-pointer"
+                                            wire:click="abrirModalProveedor({{ $pedido->id }})"
+                                        >
+                                            Actualizar estatus proveedor
+                                        </b>
                                     </x-dropdown.item>
-                                    <x-dropdown.item separator :href="route('proyecto.proveedor.show', $pedido->proyecto_id)" label="Ver proyecto" />
+
+                                    <x-dropdown.item separator
+                                        :href="route('proyecto.proveedor.show', $pedido->proyecto_id)"
+                                        label="Ver proyecto"
+                                    />
                                 </x-dropdown>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="px-4 py-6 text-center text-sm text-gray-500">
+                            <td colspan="10" class="px-4 py-6 text-center text-sm text-gray-500">
                                 No hay pedidos para mostrar.
                             </td>
                         </tr>

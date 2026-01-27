@@ -32,9 +32,9 @@ class PedidosProveedorProyecto extends Component
     // Estados simples
     public array $estatusProveedorOptions = [
         'PENDIENTE',
-        'EN PROCESO',
+        'VISTO',
+        'EN_PROCESO',
         'LISTO',
-        'BLOQUEADO',
     ];
 
     protected $listeners = [

@@ -153,7 +153,7 @@
                         <label class="block text-sm font-medium text-gray-700">Estatus proveedor</label>
                         <select wire:model="estatus_proveedor" class="w-full border rounded p-2">
                             @foreach($estatusProveedorOptions as $opt)
-                                <option value="{{ $opt }}">{{ $opt }}</option>
+                                <option value="{{ $opt }}">{{ str_replace('_', ' ', $opt) }}</option>
                             @endforeach
                         </select>
                         @error('estatus_proveedor') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
