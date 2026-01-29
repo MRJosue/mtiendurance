@@ -43,11 +43,19 @@ class MigrarProyectosLegacy extends Command
 
     protected function migrarProjectsAProyectos(int $fallbackUserId, bool $dry)
     {
+        // $projects = DB::table('project')
+        //     ->whereBetween('project_id', [33000, 53200])
+        //     ->whereRaw("LOWER(title) NOT REGEXP '\\\\/[[:space:]]*complemento'")
+        //     ->orderBy('project_id')
+        //     ->get();
+
         $projects = DB::table('project')
-            ->whereBetween('project_id', [33000, 53200])
-            ->whereRaw("LOWER(title) NOT REGEXP '\\\\/[[:space:]]*complemento'")
-            ->orderBy('project_id')
-            ->get();
+            ->whereRaw("LOWER(title) NOT REGEXP '\\/[[:space:]]*complemento'")
+            ->orderByDesc('project_id')
+            ->limit(5000)
+            ->get()
+            ->sortBy('project_id')
+            ->values();
 
         foreach ($projects as $p) {
             $usuarioId = (int) ($p->client_id ?? 0);
