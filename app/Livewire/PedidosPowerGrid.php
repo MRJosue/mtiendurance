@@ -6,13 +6,17 @@ use App\Models\Pedido;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use PowerComponents\LivewirePowerGrid\Button;
+
 use PowerComponents\LivewirePowerGrid\Column;
+
 use PowerComponents\LivewirePowerGrid\Facades\Filter;
 use PowerComponents\LivewirePowerGrid\Facades\PowerGrid;
 use PowerComponents\LivewirePowerGrid\PowerGridFields;
 use PowerComponents\LivewirePowerGrid\PowerGridComponent;
 use App\Models\Proyecto;
 use Livewire\Attributes\On;
+use Illuminate\Support\HtmlString;
+
 
 final class PedidosPowerGrid extends PowerGridComponent
 {
@@ -90,9 +94,9 @@ final class PedidosPowerGrid extends PowerGridComponent
                 ];
                 $class = $map[$estado] ?? 'bg-gray-200 text-gray-700';
 
-                return '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[11rem] justify-center '.$class.'">'
+                return new HtmlString('<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[11rem] justify-center '.$class.'">'
                     . e($estado ?: '—') .
-                '</span>';
+                '</span>');
             })
 
             // ✅ CHIP ESTADO PEDIDO (pedido->estado)
@@ -108,9 +112,9 @@ final class PedidosPowerGrid extends PowerGridComponent
                     default         => 'bg-yellow-400 text-black',
                 };
 
-                return '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[9rem] justify-center '.$class.'">'
+                return new HtmlString('<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[9rem] justify-center '.$class.'">'
                     . e($estado ?: '—') .
-                '</span>';
+                '</span>');
             })
 
             // ✅ Fechas seguras (si vienen null no truena)
@@ -120,6 +124,9 @@ final class PedidosPowerGrid extends PowerGridComponent
             ->add('fecha_entrega_fmt', fn (Pedido $m) =>
                 $m->fecha_entrega ? Carbon::parse($m->fecha_entrega)->format('Y-m-d') : 'No definida'
             );
+
+
+            
     }
 
     // public function columns(): array
@@ -260,40 +267,27 @@ final class PedidosPowerGrid extends PowerGridComponent
     // }
 
 
+
     public function columns(): array
     {
         return [
-            // ✅ CLAVE proyecto_id-id con tooltip
             Column::make('ID', 'clave_html')
-                ->sortable('id') // o sortable('proyecto_id') si lo prefieres
-                ->searchable('id'), // buscar por id (puedes ampliar a proyecto_id si quieres),
+                ->sortable('id')
+                ->searchable('id'),
 
-            Column::make('Proyecto', 'proyecto_nombre')
-                ->searchable(),
-
-            Column::make('Cliente', 'cliente_nombre')
-                ->searchable(),
-
+            Column::make('Proyecto', 'proyecto_nombre')->searchable(),
+            Column::make('Cliente', 'cliente_nombre')->searchable(),
             Column::make('Producto / Categoría', 'producto_categoria'),
 
-            Column::make('Total', 'total_piezas')
-                ->sortable('total'),
-
+            Column::make('Total', 'total_piezas')->sortable('total'),
             Column::make('Estado Diseño', 'estado_diseno_chip'),
-
-            Column::make('Estado Pedido', 'estado_pedido_chip')
-                ->sortable('estado'),
-
+            Column::make('Estado Pedido', 'estado_pedido_chip')->sortable('estado'),
             Column::make('Producción', 'fecha_produccion_fmt'),
+            Column::make('Entrega', 'fecha_entrega_fmt')->sortable('fecha_entrega'),
 
-            Column::make('Entrega', 'fecha_entrega_fmt')
-                ->sortable('fecha_entrega'),
-
-            Column::action('Action'),
-
+            Column::action('Acciones'),
         ];
     }
-
 
     public function filters(): array
     {
@@ -314,28 +308,6 @@ final class PedidosPowerGrid extends PowerGridComponent
     public $infoProyecto = null;
 
 
-    public function actions($row): array
-    {
-        $proyectoId = (int) data_get($row, 'proyecto_id', 0);
-
-        return [
-            Button::add('ir_diseno')
-                ->id() // ✅ sin parámetro
-                ->slot('Diseño')
-                ->class('btn btn-sm')
-                ->dispatch('pg-ir-diseno', ['proyectoId' => $proyectoId]),
-
-            Button::add('ver_info')
-                ->id() // ✅ sin parámetro
-                ->slot('Info')
-                ->class('btn btn-sm')
-                ->dispatch('pg-ver-info', ['proyecto_id' => $proyectoId]),
-        ];
-    }
-    public function actionRules($row): array
-    {
-        return [];
-    }
 
 
     #[On('pg-ir-diseno')]
@@ -347,13 +319,32 @@ final class PedidosPowerGrid extends PowerGridComponent
         $this->js("window.location.href = " . json_encode($url) . ";");
     }
 
+
     #[On('pg-ver-info')]
-
-
-    public function abrirModalVerInfoFromGrid(int $proyecto_id): void
+    public function abrirModalVerInfoFromGrid(int $proyectoId): void
     {
-        $this->abrirModalVerInfo($proyecto_id);
+        if ($proyectoId <= 0) return;
+        $this->abrirModalVerInfo($proyectoId);
     }
+
+
+    public function actions(Pedido $row): array
+    {
+        $proyectoId = (int) ($row->proyecto_id ?? 0);
+
+        return [
+            Button::add('ver-diseno')
+                ->slot('🎨 Ver diseño')
+                ->class('px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition')
+                ->route('proyecto.show', ['proyecto' => $proyectoId]),
+
+            Button::add('ver-info')
+                ->slot('ℹ️ Ver info')
+                ->class('px-3 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition')
+                ->dispatch('pg-ver-info', ['proyectoId' => $proyectoId]),
+        ];
+    }
+
 
     public function abrirModalVerInfo(int $proyectoId): void
     {

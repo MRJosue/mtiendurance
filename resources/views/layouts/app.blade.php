@@ -17,6 +17,7 @@
 
     @livewireStyles
     @wireUiScripts
+
 </head>
 
 <body class="font-sans antialiased bg-gray-100 dark:bg-gray-900 overflow-x-hidden">
@@ -99,6 +100,7 @@
     </div>
 
     @livewireScripts
+
     @stack('scripts')
     <x-notify::notify />
     @notifyJs

@@ -1,6 +1,6 @@
 <div class="w-full">
-    <div class="bg-white rounded-lg shadow overflow-x-auto">
-        <div class="p-2 sm:p-4">
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-2 sm:p-4 overflow-x-auto overflow-y-visible">
             {{ $this->table }}
         </div>
     </div>
@@ -54,10 +54,47 @@
                 </div>
             </div>
         @endif
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const initPgDropdowns = () => {
+            // evita duplicar listeners
+            if (window.__pgDropdownsReady) return;
+            window.__pgDropdownsReady = true;
+
+            document.addEventListener('click', (e) => {
+                const allMenus = document.querySelectorAll('.pg-dd-menu');
+                const btn = e.target.closest('.pg-dd-btn');
+
+                // click fuera => cerrar todo
+                if (!btn) {
+                    allMenus.forEach(m => m.classList.add('hidden'));
+                    return;
+                }
+
+                const wrap = btn.closest('.pg-dd-wrap');
+                const menu = wrap ? wrap.querySelector('.pg-dd-menu') : null;
+
+                // cierra todos menos el actual
+                allMenus.forEach(m => {
+                    if (m !== menu) m.classList.add('hidden');
+                });
+
+                if (menu) menu.classList.toggle('hidden');
+            });
+        };
+
+        initPgDropdowns();
+
+        // cuando Livewire navega (v3) o rehidrata vistas
+        document.addEventListener('livewire:navigated', () => {
+            // NO reinicies listener (ya existe), solo cierra dropdowns por si quedaron abiertos
+            document.querySelectorAll('.pg-dd-menu').forEach(m => m.classList.add('hidden'));
+        });
+    });
+    </script>
+
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // scripts si agregas después
-});
-</script>
+
+
