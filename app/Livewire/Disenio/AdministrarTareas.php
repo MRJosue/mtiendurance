@@ -141,14 +141,17 @@ class AdministrarTareas extends Component
 
     public function verificarProceso($proyectoId)
     {
-        $tarea = Tarea::where('proyecto_id', $proyectoId)->first();
+        $tarea = Tarea::with('proyecto')
+            ->where('proyecto_id', $proyectoId)
+            ->first();
 
         if ($tarea && (int)($tarea->disenio_flag_first_proceso ?? 0) === 0) {
             $this->mostrarModalConfirmacion = true;
             $this->proyectoPendienteConfirmacion = $tarea->proyecto;
-        } else {
-            return redirect()->route('proyecto.show', $proyectoId);
+            return;
         }
+
+        return redirect()->route('proyecto.show', $proyectoId);
     }
 
     public function confirmarInicioProceso()

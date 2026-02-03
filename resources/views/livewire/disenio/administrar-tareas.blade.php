@@ -315,6 +315,50 @@
             </div>
         </div>
     @endif
+
+{{-- Modal: Confirmar inicio de proceso (Ver detalles) --}}
+@if($mostrarModalConfirmacion)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-3">
+        <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
+            <h2 class="text-lg font-semibold mb-2">
+                Confirmar inicio de proceso
+            </h2>
+
+            <p class="text-sm text-gray-700">
+                Es la primera vez que abres este proyecto en diseño.
+                ¿Deseas marcar el proyecto como <b>EN PROCESO</b> y continuar a detalles?
+            </p>
+
+            <div class="mt-4 rounded-lg border bg-gray-50 p-3 text-sm">
+                <div><span class="text-gray-500">Proyecto:</span>
+                    <b>{{ $proyectoPendienteConfirmacion->nombre ?? '—' }}</b>
+                </div>
+                <div><span class="text-gray-500">ID:</span>
+                    <b>{{ $proyectoPendienteConfirmacion->id ?? '—' }}</b>
+                </div>
+            </div>
+
+            <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
+                <button
+                    type="button"
+                    wire:click="cancelarConfirmacion"
+                    class="w-full sm:w-auto rounded-lg bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="button"
+                    wire:click="confirmarInicioProceso"
+                    class="w-full sm:w-auto rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+                >
+                    Sí, continuar
+                </button>
+            </div>
+        </div>
+    </div>
+@endif
+
 </div>
 
 {{-- Scripts: DOMContentLoaded + dropdownTeleport (igual que Diseños) --}}

@@ -60,6 +60,8 @@ class ManageProjects extends Component
         public bool $showActivateModal   = false;
         public ?int $targetProyectoId    = null;
 
+        public array $idsPagina = [];
+
 
         public array $deactivateStats = [
             'id'             => null,
@@ -562,6 +564,14 @@ class ManageProjects extends Component
 
             // --- Paginar solo una vez ---
             $projects = $query->paginate($this->perPage);
+
+            // 👇 ids de la página actual (para checkbox maestro)
+            $this->idsPagina = $projects->getCollection()
+                ->pluck('id')
+                ->map(fn($id) => (int) $id)
+                ->values()
+                ->all();
+
 
             return view('livewire.proyectos.manage-projects', compact('projects'));
         }

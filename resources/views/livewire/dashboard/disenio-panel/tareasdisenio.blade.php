@@ -25,7 +25,7 @@
                         </div>
                     @endif
 
-                    <div class="overflow-x-auto bg-white rounded-lg shadow">
+                    <div class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8">
                         <table class="w-full border-collapse border border-gray-300 rounded-lg">
                             <thead class="bg-gray-100">
                                 <tr>
