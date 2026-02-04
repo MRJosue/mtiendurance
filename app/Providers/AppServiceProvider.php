@@ -21,6 +21,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+
+        config([
+                'mail.default' => 'mailpit',  // o 'mailpit' si lo creaste
+                'mail.mailers.smtp.host' => '127.0.0.1',
+                'mail.mailers.smtp.port' => 1025,
+                'mail.mailers.smtp.encryption' => null,
+                'mail.mailers.smtp.username' => null,
+                'mail.mailers.smtp.password' => null,
+            ]);
+
         Blade::component('card-minimizable', CardMinimizable::class);
     }
 }
