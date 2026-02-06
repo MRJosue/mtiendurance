@@ -282,6 +282,7 @@ Route::get('/api/users/index', function (Request $request) {
             'id'   => $u->id,
             'name' => "{$u->name} ({$u->email})",
         ]);
+        
 })->name('api.users.index')->middleware('auth');
 
 
@@ -375,7 +376,7 @@ Route::get('catalogos/hojaFiltrosProduccion', [TallasController::class, 'hojaFil
     //     // }
     // });
 
-    Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth'])->group(function () {
         // OJO: elimina la ruta anterior que apuntaba directamente al componente Livewire
         Route::get('/produccion/hojas/{key}', [HojasViewerController::class, 'show'])
             ->name('produccion.hojas.show');
