@@ -13,14 +13,18 @@
             ];
 
             $coloresEstadoProduccion = [
-                'PENDIENTE'        => 'bg-yellow-400 text-black',
-                'ASIGNADO'         => 'bg-blue-500 text-white',
-                'EN PROCESO'       => 'bg-orange-500 text-white',
-                'REVISION'         => 'bg-purple-600 text-white',
-                'DISEÑO APROBADO'  => 'bg-emerald-600 text-white',
-                'DISEÑO RECHAZADO' => 'bg-red-600 text-white',
-                'CANCELADO'        => 'bg-gray-500 text-white',
+                'POR APROBAR'   => 'bg-yellow-400 text-black',
+                'POR PROGRAMAR' => 'bg-slate-500 text-white',
+                'PROGRAMADO'    => 'bg-blue-600 text-white',
+                'IMPRESIÓN'     => 'bg-fuchsia-600 text-white',
+                'CORTE'         => 'bg-amber-600 text-white',
+                'COSTURA'       => 'bg-orange-600 text-white',
+                'ENTREGA'       => 'bg-emerald-600 text-white',
+                'FACTURACIÓN'   => 'bg-indigo-700 text-white',
+                'COMPLETADO'    => 'bg-green-700 text-white',
+                'RECHAZADO'     => 'bg-red-700 text-white',
             ];
+
         @endphp
         {{-- Header con búsqueda --}}
     <div     x-data="{
@@ -407,15 +411,19 @@
                                     @break
 
                                     @case('estado_produccion')
-                                    <label class="block text-xs text-gray-600 mb-1">Estado Producción</label>
-                                    <select class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                            wire:model.live.debounce.400ms="filters.estado_produccion">
-                                        <option value="">Todos</option>
-                                        @foreach($this->estadosProduccion as $s)
-                                        <option value="{{ $s }}">{{ $s }}</option>
-                                        @endforeach
-                                    </select>
+                                        <label class="block text-xs text-gray-600 mb-1">Estado Producción</label>
+
+                                        <select
+                                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                            wire:model.live.debounce.400ms="filters.estado_produccion"
+                                        >
+                                            <option value="">Todos</option>
+                                            @foreach($this->estadosProduccion as $s)
+                                                <option value="{{ $s }}">{{ $s }}</option>
+                                            @endforeach
+                                        </select>
                                     @break
+
 
                                     @case('total')
                                     <label class="block text-xs text-gray-600 mb-1">Total</label>
@@ -663,7 +671,7 @@
                                                         {{ $estadoProduccion }}
                                                     </span>
                                                 @break       
-                                                                                      
+
                                                 @case('total')
                                                     @if( $acciones['bulk_edit_total'])
                                                         <div x-data="{
@@ -826,14 +834,12 @@
                                                 @endif
 
 
-
-
                                                 <button
                                                     type="button"
                                                     class="w-full text-left"
                                                     wire:click.stop="openProduccionModal({{ $pedido->id }})"
                                                 >
-                                                    <x-dropdown.item label="Siguiente estado (Producción)" />
+                                                    <x-dropdown.item label="Siguiente estado" />
                                                 </button>
 
 

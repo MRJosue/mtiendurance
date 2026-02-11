@@ -648,6 +648,12 @@
                             <span class="text-sm text-gray-700">Estado del Pedido</span>
                             <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.bulk_edit_estado">
                         </label>
+
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Estado de Producción</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.bulk_edit_estado_produccion">
+                        </label>
+
                         <label class="flex items-center justify-between py-1">
                             <span class="text-sm text-gray-700">Fecha de Producción</span>
                             <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.bulk_edit_fecha_produccion">

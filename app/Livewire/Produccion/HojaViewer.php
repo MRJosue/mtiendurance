@@ -80,6 +80,7 @@ class HojaViewer extends Component
             'eliminar_pedido' => false,
             'entregar_pedido' => false,
             'rechazar_diseno' => false,
+            'bulk_edit_estado_produccion' => false,
             'bulk_edit_estado' => false,
             'programar_pedido' => false,
             'seleccion_multiple' => true,
@@ -446,6 +447,9 @@ class HojaViewer extends Component
     ->when(($ed = trim((string)Arr::get($this->filters, 'estado_disenio', ''))) !== '',
         fn($qq) => $qq->where('pr.estado', $ed))
 
+    ->when(($sp = trim((string)Arr::get($this->filters, 'estado_produccion', ''))) !== '',
+        fn($qq) => $qq->where('pedido.estado_produccion', $sp))
+
     ->when(($t = trim((string)Arr::get($this->filters, 'total', ''))) !== '',
         fn($qq) => $qq->where('pedido.total', $t))
 
@@ -523,7 +527,12 @@ class HojaViewer extends Component
                     break;
                 case 'estado_disenio':
                     $q->orderBy('pr.estado', $dir)->orderBy('pedido.id', 'desc');
+                break;
+                
+                case 'estado_produccion':
+                    $q->orderBy('pedido.estado_produccion', $dir)->orderBy('pedido.id', 'desc');
                     break;
+
                 case 'total':
                     $q->orderBy('pedido.total', $dir);
                     break;
@@ -590,16 +599,17 @@ class HojaViewer extends Component
 
         public function updateField(int $pedidoId, string $field, $value): void
     {
-        $permitidos = ['total','fecha_produccion','fecha_embarque','fecha_entrega','estado_id'];
+        $permitidos = ['total','fecha_produccion','fecha_embarque','fecha_entrega','estado_id','estado_produccion'];
         if (!in_array($field, $permitidos, true)) return;
         
         // Reglas por campo según permisos
         $puedeEditar = $this->can('editar_pedido')
-            || ($field === 'total'           && $this->can('bulk_edit_total'))
-            || ($field === 'estado_id'       && $this->can('bulk_edit_estado'))
-            || ($field === 'fecha_produccion'&& $this->can('bulk_edit_fecha_produccion'))
-            || ($field === 'fecha_embarque'  && $this->can('bulk_edit_fecha_embarque'))
-            || ($field === 'fecha_entrega'   && $this->can('bulk_edit_fecha_entrega'));
+            || ($field === 'total'             && $this->can('bulk_edit_total'))
+            || ($field === 'estado_id'         && $this->can('bulk_edit_estado'))
+            || ($field === 'estado_produccion' && $this->can('bulk_edit_estado_produccion'))
+            || ($field === 'fecha_produccion'  && $this->can('bulk_edit_fecha_produccion'))
+            || ($field === 'fecha_embarque'    && $this->can('bulk_edit_fecha_embarque'))
+            || ($field === 'fecha_entrega'     && $this->can('bulk_edit_fecha_entrega'));
 
         if (!$puedeEditar) {
             $this->dispatch('toast', message: 'No tienes permiso para editar este campo', type: 'error');
@@ -620,7 +630,19 @@ class HojaViewer extends Component
                 break;
             case 'estado_id':
                 $value = (int) $value;
-                break;
+            break;
+            case 'estado_produccion':
+            $value = trim((string)$value);
+
+            // valida contra catálogo permitido
+            if ($value !== '' && !in_array($value, $this->estadosProduccion, true)) {
+                $this->dispatch('toast', message: 'Estado de producción inválido', type: 'error');
+                return;
+            }
+
+            // permite vacío como null
+            $value = $value === '' ? null : $value;
+            break;
         }
 
         $pedido->{$field} = $value;

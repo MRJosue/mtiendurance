@@ -163,6 +163,7 @@ public array $form = [
 
             'bulk_edit_total'   => true,
             'bulk_edit_estado'  => true,
+            'bulk_edit_estado_produccion'  => true,
             'bulk_edit_fecha_produccion'  => true,
             'bulk_edit_fecha_embarque'  => true,
             'bulk_edit_fecha_entrega'  => true,
