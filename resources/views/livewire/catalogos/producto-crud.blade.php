@@ -144,6 +144,17 @@
                     </div>
 
 
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-1">Flujo de Producción</label>
+                        <select wire:model="flujo_id" class="w-full border border-gray-300 rounded p-2">
+                            <option value="">Sin flujo</option>
+                            @foreach ($flujos as $fl)
+                                <option value="{{ $fl->id }}">{{ $fl->nombre }}</option>
+                            @endforeach
+                        </select>
+                        @error('flujo_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    </div>
+
                     <!-- Características - Se muestra solo si hay características asociadas -->
                     @if($mostrarCaracteristicas)
                     <div class="mb-4">

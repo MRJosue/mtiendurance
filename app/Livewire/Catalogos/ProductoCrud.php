@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Producto;
 use App\Models\Categoria;
 use App\Models\Pedido;
+use App\Models\FlujoProduccion;
 use App\Models\Caracteristica;
 use App\Models\ProductoCaracteristica;
 use App\Models\GrupoTalla;
@@ -37,12 +38,16 @@ class ProductoCrud extends Component
 
     public $bloquear_nombre = false;
 
+    public $flujo_id = null;
+
+
     protected $rules = [
         'nombre' => 'required|string|max:255',
         'categoria_id' => 'required|exists:categorias,id',
         'dias_produccion' => 'required|integer|min:1',
         'flag_armado' => 'required|boolean',
         'flag_requiere_proveedor' => 'required|boolean', // NUEVA REGLA
+        'flujo_id' => 'nullable|exists:flujos_produccion,id',
     ];
 
     public function onCategoriaChange()
@@ -85,7 +90,7 @@ class ProductoCrud extends Component
 
     public function render()
     {
-        $query = Producto::with(['categoria', 'caracteristicas', 'caracteristicasNoArmado', 'gruposTallas'])
+        $query = Producto::with(['categoria', 'caracteristicas', 'caracteristicasNoArmado', 'gruposTallas', 'flujoProduccion'])
             ->where('ind_activo', $this->filtroActivo);
 
         if (!empty($this->search)) {
@@ -101,6 +106,7 @@ class ProductoCrud extends Component
             'categorias' => Categoria::where('ind_activo', 1)->orderBy('nombre')->get(),
             'caracteristicas' => Caracteristica::where('ind_activo', 1)->orderBy('nombre')->get(),
             'gruposTallasDisponibles' => GrupoTalla::where('ind_activo', 1)->orderBy('nombre')->get(),
+            'flujos' => FlujoProduccion::orderBy('nombre')->get(['id','nombre']),
         ]);
     }
 
@@ -135,6 +141,7 @@ class ProductoCrud extends Component
         $this->caracteristicasNoArmado = [];
         $this->bloquear_nombre = false;
         $this->ind_activo = true;
+        $this->flujo_id = null;
     }
 
     public function guardar()
@@ -151,6 +158,7 @@ class ProductoCrud extends Component
                 'flag_requiere_proveedor' => $this->flag_requiere_proveedor, // GUARDAR FLAG
                 'categoria_id' => $this->categoria_id,
                 'ind_activo' => $this->ind_activo,
+                'flujo_id' => $this->flujo_id,
             ]
         );
 
@@ -208,6 +216,8 @@ class ProductoCrud extends Component
         $this->flag_requiere_proveedor = $producto->flag_requiere_proveedor ?? 0; // CARGAR FLAG
         $this->categoria_id = $producto->categoria ? $producto->categoria->id : null;
         $this->ind_activo = (bool) $producto->ind_activo;
+        $this->flujo_id = $producto->flujo_id;
+
 
         $this->bloquear_nombre = $producto->caracteristicas()->exists()
             || Pedido::where('producto_id', $producto->id)->count() > 1;

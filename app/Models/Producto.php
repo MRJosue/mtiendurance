@@ -22,7 +22,8 @@ class Producto extends Model
         'dias_produccion',
         'flag_armado',
         'flag_requiere_proveedor',
-        'ind_activo'
+        'ind_activo',
+        'flujo_id'
     ];
 
 
@@ -63,6 +64,11 @@ class Producto extends Model
     public function layout()
     {
         return $this->hasOne(Layout::class, 'producto_id');
+    }
+
+    public function flujoProduccion()
+    {
+        return $this->belongsTo(FlujoProduccion::class, 'flujo_id');
     }
 
 }

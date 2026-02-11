@@ -785,6 +785,18 @@
                                                     />
                                                 @endif
 
+
+
+
+                                                <button
+                                                    type="button"
+                                                    class="w-full text-left"
+                                                    wire:click.stop="openProduccionModal({{ $pedido->id }})"
+                                                >
+                                                    <x-dropdown.item label="Siguiente estado (Producción)" />
+                                                </button>
+
+
                                                 @if($acciones['programar_pedido'])
                                                     <x-dropdown.item
                                                         @click="if (confirm('¿Programar este pedido?')) $wire.programarPedido({{ $pedido->id }})"
@@ -883,6 +895,98 @@
 
         </div>
 
+<div
+    x-data="{ open: @entangle('showProduccionModal').live }"
+    x-cloak
+    x-show="open"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4"
+>
+    <div class="absolute inset-0 bg-black/50" @click="$wire.closeProduccionModal()"></div>
+
+    <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="p-4 sm:p-6 border-b">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h3 class="text-lg font-bold">Cambiar estado de producción</h3>
+                    <p class="text-sm text-gray-600">
+                        Pedido #{{ $pedidoProduccionId ?? '—' }}
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    class="text-gray-500 hover:text-gray-700"
+                    @click="$wire.closeProduccionModal()"
+                    aria-label="Cerrar"
+                >
+                    ✕
+                </button>
+            </div>
+        </div>
+
+        <div class="p-4 sm:p-6 space-y-4">
+            <div class="rounded-lg border bg-gray-50 p-3">
+                <div class="text-xs text-gray-500">Estado actual</div>
+                <div class="font-semibold text-gray-800">
+                    {{ $prodCurrent ?? '—' }}
+                </div>
+                @if(!empty($prodStepMeta['descripcion']))
+                    <div class="text-sm text-gray-600 mt-1">
+                        {{ $prodStepMeta['descripcion'] }}
+                    </div>
+                @endif
+            </div>
+
+            <div class="rounded-lg border p-3">
+                <div class="text-xs text-gray-500 mb-1">Siguiente</div>
+
+                {{-- Por ahora: “click siguiente” (si hay varios, dejamos el primero) --}}
+                @if(!empty($prodNextOptions))
+                    <div class="text-sm text-gray-700">
+                        Se cambiará a:
+                        <span class="font-semibold">{{ $prodNext ?? ($prodNextOptions[0] ?? '—') }}</span>
+                    </div>
+
+                    {{-- Si luego quieres permitir seleccionar entre varios next, descomenta esto:
+                    <select class="mt-2 w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                            wire:model.live="prodNext">
+                        @foreach($prodNextOptions as $nx)
+                            <option value="{{ $nx }}">{{ $nx }}</option>
+                        @endforeach
+                    </select>
+                    --}}
+                @else
+                    <div class="text-sm text-gray-600">
+                        Este estado no tiene siguiente paso configurado.
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <div class="p-4 sm:p-6 border-t flex flex-col sm:flex-row gap-2 sm:justify-end">
+            <button
+                type="button"
+                class="w-full sm:w-auto px-4 py-2 rounded-lg border bg-white hover:bg-gray-50"
+                @click="$wire.closeProduccionModal()"
+            >
+                Cancelar
+            </button>
+
+            <button
+                type="button"
+                class="w-full sm:w-auto px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                wire:click="confirmarSiguienteProduccion"
+                wire:loading.attr="disabled"
+                wire:target="confirmarSiguienteProduccion"
+                @disabled(empty($prodNextOptions))
+            >
+                <span wire:loading.remove wire:target="confirmarSiguienteProduccion">Siguiente</span>
+                <span wire:loading wire:target="confirmarSiguienteProduccion">Guardando...</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+        
  
 
     @if(method_exists($pedidos,'links'))

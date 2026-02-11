@@ -108,10 +108,42 @@
 
                     <template x-for="(step, index) in steps" :key="index">
                         <div class="border rounded p-3 mb-3 bg-white shadow">
-                            <div class="flex justify-between items-center mb-2">
-                                <strong x-text="'Paso ' + (index + 1) + ': ' + step.name"></strong>
-                                <button @click="removeStep(index)" class="text-red-500 hover:text-red-700" type="button">Eliminar</button>
+
+
+                            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-2">
+                                <strong class="text-sm sm:text-base" x-text="'Paso ' + (index + 1) + ': ' + (step.name || '—')"></strong>
+
+                                <div class="flex flex-wrap gap-2">
+                                    <button
+                                        type="button"
+                                        class="px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        @click="moveStepUp(index)"
+                                        :disabled="index === 0"
+                                        title="Subir"
+                                    >
+                                        ▲ Subir
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        @click="moveStepDown(index)"
+                                        :disabled="index === steps.length - 1"
+                                        title="Bajar"
+                                    >
+                                        ▼ Bajar
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="px-2 py-1 text-xs text-white bg-red-500 rounded hover:bg-red-600"
+                                        @click="removeStep(index)"
+                                    >
+                                        Eliminar
+                                    </button>
+                                </div>
                             </div>
+
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div>
@@ -168,48 +200,86 @@
         </div>
     </div>
     @endif
+    <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                window.flujoEditor = () => ({
+                    steps: [],
+                    opciones: [
+                        'POR APROBAR',
+                        'POR PROGRAMAR',
+                        'PROGRAMADO',
+                        'IMPRESIÓN',
+                        'CORTE',
+                        'COSTURA',
+                        'ENTREGA',
+                        'FACTURACIÓN',
+                        'COMPLETADO',
+                        'RECHAZADO',
+                    ],
 
+                    // Normaliza para comparar sin importar mayúsculas/acentos
+                    normalize(str) {
+                        return (str ?? '')
+                            .toString()
+                            .trim()
+                            .normalize('NFD')
+                            .replace(/\p{Diacritic}/gu, '')
+                            .toUpperCase();
+                    },
+
+                    init(initialJson = '{}') {
+                        try {
+                            const obj = typeof initialJson === 'string' ? JSON.parse(initialJson) : initialJson;
+
+                            const opcionesNorm = this.opciones.map(o => this.normalize(o));
+
+                            this.steps = (obj.steps || []).map(step => {
+                                const nombreNorm = this.normalize(step.name ?? '');
+                                const matchIndex = opcionesNorm.indexOf(nombreNorm);
+
+                                return {
+                                    ...step,
+                                    name: matchIndex !== -1 ? this.opciones[matchIndex] : '',
+                                    grupo: Number(step.grupo ?? 1),
+                                    descripcion: step.descripcion ?? '',
+                                    next: Array.isArray(step.next) ? step.next : [],
+                                    nextText: (Array.isArray(step.next) ? step.next : []).join(', '),
+                                };
+                            });
+                        } catch (e) {
+                            this.steps = [];
+                        }
+                    },
+
+                    addStep() {
+                        this.steps.push({
+                            name: '',
+                            grupo: 1,
+                            descripcion: '',
+                            next: [],
+                            nextText: '',
+                        });
+                    },
+
+                    removeStep(index) {
+                        this.steps.splice(index, 1);
+                    },
+
+                    moveStepUp(index) {
+                        if (index <= 0) return;
+                        const tmp = this.steps[index - 1];
+                        this.steps[index - 1] = this.steps[index];
+                        this.steps[index] = tmp;
+                    },
+
+                    moveStepDown(index) {
+                        if (index >= this.steps.length - 1) return;
+                        const tmp = this.steps[index + 1];
+                        this.steps[index + 1] = this.steps[index];
+                        this.steps[index] = tmp;
+                    },
+                });
+            });
+    </script>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    window.flujoEditor = () => ({
-        steps: [],
-        opciones: ['CORTE','SUBLIMADO','COSTURA','MAQUILA','FACTURACION','ENVIO','OTRO','RECHAZADO'],
-
-        init(initialJson = '{}') {
-            try {
-                const obj = typeof initialJson === 'string' ? JSON.parse(initialJson) : initialJson;
-                const opcionesUpper = this.opciones.map(o => o.toUpperCase());
-                this.steps = (obj.steps || []).map(step => {
-                    const nombreRaw = step.name ? step.name.trim() : '';
-                    const nombreUpper = nombreRaw.toUpperCase();
-                    const matchIndex = opcionesUpper.indexOf(nombreUpper);
-                    return {
-                        ...step,
-                        name: matchIndex !== -1 ? this.opciones[matchIndex] : '',
-                        nextText: (step.next || []).join(', '),
-                    };
-                });
-            } catch (e) {
-                this.steps = [];
-            }
-        },
-
-        addStep() {
-            this.steps.push({
-                name: '',
-                grupo: 1,
-                descripcion: '',
-                next: [],
-                nextText: '',
-            });
-        },
-
-        removeStep(index) {
-            this.steps.splice(index, 1);
-        },
-    });
-});
-
-</script>

@@ -12,6 +12,7 @@ use Livewire\WithPagination;
 use App\Models\Proyecto;
 use Illuminate\Support\Arr;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 
 class HojaViewer extends Component
@@ -112,6 +113,21 @@ class HojaViewer extends Component
     ];
 
     public array $idsPagina   = []; // <- nuevos IDs de la página actual
+
+
+
+    // Datos de modales para cambio de estado 
+
+    public bool $showProduccionModal = false;
+    public ?int $pedidoProduccionId = null;
+
+    public ?string $prodCurrent = null;
+    public ?string $prodNext = null;
+
+    public array $prodNextOptions = []; // por si un step tiene varios next
+    public array $prodStepMeta = [];    // name/descripcion/grupo...
+
+
 
     /** Computed: catálogo de estados para el select */
     public function getEstadosProperty()
@@ -749,20 +765,212 @@ class HojaViewer extends Component
 
 
 
-    public function toggleSelectAllOnPage(bool $checked): void
-    {
-        // Normaliza a enteros
-        $pagina   = array_map('intval', $this->idsPagina ?? []);
-        $selected = array_map('intval', $this->selectedIds ?? []);
+            public function toggleSelectAllOnPage(bool $checked): void
+            {
+                // Normaliza a enteros
+                $pagina   = array_map('intval', $this->idsPagina ?? []);
+                $selected = array_map('intval', $this->selectedIds ?? []);
 
-        if ($checked) {
-            // Unir y quitar duplicados
-            $this->selectedIds = array_values(array_unique(array_merge($selected, $pagina)));
-        } else {
-            // Quitar los de la página actual
-            $this->selectedIds = array_values(array_diff($selected, $pagina));
-        }
-    }
+                if ($checked) {
+                    // Unir y quitar duplicados
+                    $this->selectedIds = array_values(array_unique(array_merge($selected, $pagina)));
+                } else {
+                    // Quitar los de la página actual
+                    $this->selectedIds = array_values(array_diff($selected, $pagina));
+                }
+            }
+
+
+            public function openProduccionModal(int $pedidoId): void
+            {
+                $pedido = \App\Models\Pedido::query()
+                    ->with(['producto.flujoProduccion'])
+                    ->find($pedidoId);
+
+                if (!$pedido) {
+                    $this->dispatch('toast', message: 'Pedido no encontrado', type: 'error');
+                    return;
+                }
+
+                $this->pedidoProduccionId = $pedidoId;
+
+                $flujo = $this->getFlujoForPedido($pedido);
+                $steps = $this->stepsFromFlujo($flujo);
+
+                if (empty($steps)) {
+                    $this->prodCurrent     = $pedido->estado_produccion ?: '—';
+                    $this->prodNextOptions = [];
+                    $this->prodNext        = null;
+                    $this->prodStepMeta    = [];
+                    $this->showProduccionModal = true;
+
+                    $this->dispatch('toast', message: 'Este producto no tiene flujo de producción asignado', type: 'info');
+                    return;
+                }
+
+                // Estado actual: si está vacío, usa el primer step del flujo
+                $actual = trim((string)($pedido->estado_produccion ?? ''));
+                if ($actual === '') $actual = (string)($steps[0]['name'] ?? '');
+
+                // Busca step meta
+                $step = $this->findStep($steps, $actual);
+                if (!$step) {
+                    // Si el estado guardado no existe en el flujo, forzamos al primer paso
+                    $actual = (string)($steps[0]['name'] ?? '');
+                    $step = $this->findStep($steps, $actual);
+                }
+
+                $this->prodCurrent = $actual;
+                $this->prodStepMeta = is_array($step) ? $step : [];
+
+                $nexts = $this->prodStepMeta['next'] ?? [];
+                $nexts = is_array($nexts) ? array_values(array_filter($nexts)) : [];
+
+                $this->prodNextOptions = $nexts;
+                $this->prodNext        = $nexts[0] ?? null;
+
+                $this->showProduccionModal = true;
+            }
+
+
+
+
+            protected function getFlujoForPedido(\App\Models\Pedido $pedido): ?\App\Models\FlujoProduccion
+            {
+                return $pedido->producto?->flujoProduccion ?? null;
+            }
+
+            protected function stepsFromFlujo(?\App\Models\FlujoProduccion $flujo): array
+            {
+                if (!$flujo) return [];
+
+                $config = $flujo->config;
+
+                if (is_string($config)) {
+                    $config = json_decode($config, true) ?: [];
+                }
+
+                $steps = $config['steps'] ?? [];
+                return is_array($steps) ? $steps : [];
+            }
+
+            protected function findStep(array $steps, string $name): ?array
+            {
+                foreach ($steps as $s) {
+                    if (($s['name'] ?? null) === $name) return $s;
+                }
+                return null;
+            }
+
+
+            public function confirmarSiguienteProduccion(): void
+            {
+
+                
+                if (!$this->pedidoProduccionId) return;
+
+                $pedido = \App\Models\Pedido::query()
+                    ->with(['producto.flujoProduccion'])
+                    ->find($this->pedidoProduccionId);
+
+                if (!$pedido) return;
+
+                $flujo = $this->getFlujoForPedido($pedido);
+                $steps = $this->stepsFromFlujo($flujo);
+
+                Log::debug('entramos al proceso ', ['steps' => $steps, 'pedido' => $pedido->toArray()]);
+
+                if (empty($steps)) {
+                    $this->dispatch('toast', message: 'No hay flujo configurado para este producto.', type: 'error');
+                    return;
+                }
+
+                Log::debug('ok if steps');
+                
+                Log::warning('Mismatch estado_produccion vs flujo', [
+                    'pedido_id' => $pedido->id,
+                    'db' => $pedido->estado_produccion,
+                    'steps' => collect($steps)->pluck('name')->all(),
+                ]);
+
+                $actual = trim((string)($pedido->estado_produccion ?? ''));
+                if ($actual === '') $actual = (string)($steps[0]['name'] ?? '');
+
+
+                Log::warning('Mismatch estado_produccion vs flujo B', [
+                    'pedido_id' => $pedido->id,
+                    'db' => $pedido->estado_produccion,
+                    'steps' => collect($steps)->pluck('name')->all(),
+                ]);
+
+                $step = $this->findStep($steps, $actual);
+                if (!$step) {
+
+                    Log::warning('El estado actual no existe en el flujo', [
+                        'pedido_id' => $pedido->id,
+                        'db' => $pedido->estado_produccion,
+                        'steps' => collect($steps)->pluck('name')->all(),
+                    ]);
+                    
+                    $this->dispatch('toast', message: 'El estado actual no existe en el flujo.', type: 'error');
+                    return;
+                }
+
+                
+                Log::debug('ok if steps 2');
+
+                $nexts = $step['next'] ?? [];
+                $nexts = is_array($nexts) ? array_values($nexts) : [];
+
+                if (empty($nexts)) {
+                    $this->dispatch('toast', message: 'Este estado no tiene siguiente paso.', type: 'info');
+                    return;
+                }
+
+                Log::debug('ok if nexts');
+
+
+                $siguiente = $this->prodNext ?: $nexts[0];
+
+                if (!in_array($siguiente, $nexts, true)) {
+                    $this->dispatch('toast', message: 'El siguiente estado no es válido para este flujo.', type: 'error');
+                    return;
+                }
+
+                
+
+                Log::debug('Datos del usuario procesados:', [
+                    'pedido_id' => $pedido->id,
+                    'estado_actual' => $actual,
+                    'estado_siguiente' => $siguiente,
+                ]);
+
+                $pedido->estado_produccion = $siguiente;
+                $pedido->save();
+
+
+                Log::debug('se guarda ', ['pedido_id' => $pedido->id, 'nuevo_estado_produccion' => $pedido->estado_produccion]);
+
+                $this->dispatch('toast', message: "Estado de producción actualizado a {$siguiente}", type: 'success');
+
+                $this->closeProduccionModal();
+                $this->resetPage();
+            }
+
+
+            public function closeProduccionModal(): void
+            {
+                $this->showProduccionModal = false;
+
+                $this->pedidoProduccionId = null;
+                $this->prodCurrent = null;
+                $this->prodNext = null;
+                $this->prodNextOptions = [];
+                $this->prodStepMeta = [];
+            }
+
+
+
 
     /** Útil si quieres consultarlo desde Blade (opcional) */
     public function isPageFullySelected(): bool
