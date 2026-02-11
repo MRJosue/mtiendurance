@@ -71,6 +71,7 @@ class HojaFiltroProduccion extends Model
                 ['key' => 'total',    'label' => 'Total',     'visible' => true,  'fixed' => false, 'orden' => 5],
                 ['key' => 'estado',   'label' => 'Estado',    'visible' => true,  'fixed' => false, 'orden' => 6],
                 ['key' => 'estado_disenio', 'label' => 'Estado Diseño', 'visible' => true, 'fixed' => false, 'orden' => 7],
+                ['key' => 'estado_produccion', 'label' => 'Estado Producción', 'visible' => true, 'fixed' => false, 'orden' => 8],
             ];
 
 
@@ -116,6 +117,7 @@ class HojaFiltroProduccion extends Model
 
         $ensure('estado',           'Estado');
         $ensure('estado_disenio',   'Estado Diseño'); 
+        $ensure('estado_produccion', 'Estado Producción');
         $ensure('fecha_produccion', 'F. Producción');
         $ensure('fecha_embarque',   'F. Embarque');
         $ensure('fecha_entrega',    'F. Entrega');

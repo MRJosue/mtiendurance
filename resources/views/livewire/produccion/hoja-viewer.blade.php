@@ -11,6 +11,16 @@
                 'DISEÑO RECHAZADO' => 'bg-red-600 text-white',
                 'CANCELADO'        => 'bg-gray-500 text-white',
             ];
+
+            $coloresEstadoProduccion = [
+                'PENDIENTE'        => 'bg-yellow-400 text-black',
+                'ASIGNADO'         => 'bg-blue-500 text-white',
+                'EN PROCESO'       => 'bg-orange-500 text-white',
+                'REVISION'         => 'bg-purple-600 text-white',
+                'DISEÑO APROBADO'  => 'bg-emerald-600 text-white',
+                'DISEÑO RECHAZADO' => 'bg-red-600 text-white',
+                'CANCELADO'        => 'bg-gray-500 text-white',
+            ];
         @endphp
         {{-- Header con búsqueda --}}
     <div     x-data="{
@@ -222,6 +232,7 @@
                                         'cliente'        => 'cliente',
                                         'estado'         => 'estado',
                                         'estado_disenio' => 'estado_disenio',
+                                        'estado_produccion' => 'estado_produccion',
                                         'total'          => 'total',
                                         'fecha_produccion','fecha_embarque','fecha_entrega' => $bc['key'],
                                         default => null,
@@ -324,6 +335,9 @@
                                 @case('estado_disenio')
                                     <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600" x-show="$wire.get('filters.estado_disenio')?.length"></span>
                                     @break
+                                @case('estado_produccion')
+                                    <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600" x-show="$wire.get('filters.estado_produccion')?.length"></span>
+                                    @break
                                 @case('total')
                                     <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600" x-show="$wire.get('filters.total')?.length"></span>
                                     @break
@@ -387,6 +401,17 @@
                                             wire:model.live.debounce.400ms="filters.estado_disenio">
                                         <option value="">Todos</option>
                                         @foreach($this->estadosDiseno as $s)
+                                        <option value="{{ $s }}">{{ $s }}</option>
+                                        @endforeach
+                                    </select>
+                                    @break
+
+                                    @case('estado_produccion')
+                                    <label class="block text-xs text-gray-600 mb-1">Estado Producción</label>
+                                    <select class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                            wire:model.live.debounce.400ms="filters.estado_produccion">
+                                        <option value="">Todos</option>
+                                        @foreach($this->estadosProduccion as $s)
                                         <option value="{{ $s }}">{{ $s }}</option>
                                         @endforeach
                                     </select>
@@ -470,7 +495,10 @@
                                         @break
                                     @case('estado_disenio')
                                         <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.estado_disenio','')">Limpiar</button>
-                                        @break
+                                    @break
+                                    @case('estado_produccion')
+                                        <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.estado_produccion','')">Limpiar</button>
+                                    @break
                                     @case('total')
                                         <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.total','')">Limpiar</button>
                                         @break
@@ -624,6 +652,18 @@
                                                         {{ $estadoDiseno }}
                                                     </span>
                                                 @break
+
+                                                @case('estado_produccion')
+                                                    @php
+                                                        $estadoProduccion = trim((string)($pedido->estado_produccion ?? ''));
+                                                        if ($estadoProduccion === '') $estadoProduccion = '—';
+                                                        $claseProduccion  = $coloresEstadoProduccion[$estadoProduccion] ?? 'bg-gray-200 text-gray-700';
+                                                    @endphp
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[11rem] justify-center {{ $claseProduccion }}">
+                                                        {{ $estadoProduccion }}
+                                                    </span>
+                                                @break       
+                                                                                      
                                                 @case('total')
                                                     @if( $acciones['bulk_edit_total'])
                                                         <div x-data="{

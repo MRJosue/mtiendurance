@@ -43,6 +43,7 @@ class HojaViewer extends Component
         'cliente'          => '',
         'estado_id'        => null,
         'estado_disenio'   => '',
+        'estado_produccion'=> '',
         'total'            => '',
         'fecha_produccion_from' => null,
         'fecha_produccion_to'   => null,
@@ -167,6 +168,14 @@ class HojaViewer extends Component
             ->select('id', 'nombre')
             ->orderByRaw('COALESCE(orden, 999999), nombre')
             ->get();
+    }
+
+    public function getEstadosProduccionProperty(): array
+    {
+        return [
+            'POR APROBAR','POR PROGRAMAR','PROGRAMADO','IMPRESIÓN','CORTE','COSTURA',
+            'ENTREGA','FACTURACIÓN','COMPLETADO','RECHAZADO'
+        ];
     }
 
 

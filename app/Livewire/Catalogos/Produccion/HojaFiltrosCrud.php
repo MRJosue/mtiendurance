@@ -237,9 +237,12 @@ public array $form = [
         $this->form['base_columnas'] = \App\Models\HojaFiltroProduccion::defaultBaseColumnas();
 
         $this->ensureEstadoBaseCol();
-        $this->ensureEstadoDisenioBaseCol(); // ← NUEVO
+        $this->ensureEstadoProduccionBaseCol(); // ✅
+        $this->ensureEstadoDisenioBaseCol();    // (también te faltaba aquí)
         $this->ensureFechasBaseCols();
         $this->ensureClienteBaseCol();
+        $this->normalizeBaseCols();
+
 
         $this->roles = \Spatie\Permission\Models\Role::query()->orderBy('name')->pluck('name','id')->toArray();
         $this->hydrateEstadosPermitidos();     // pedidos
@@ -327,6 +330,7 @@ public array $form = [
         ];
 
         $this->ensureEstadoBaseCol();
+        $this->ensureEstadoProduccionBaseCol();
         $this->ensureEstadoDisenioBaseCol();
         $this->ensureFechasBaseCols();
         $this->ensureClienteBaseCol();
@@ -877,6 +881,36 @@ public array $form = [
 
         // Si el filtro editado está asignado a la hoja, no hay que tocar $filtro_ids.
         // Si cambió el nombre, la UI lo reflejará al re-renderizar.
+    }
+
+
+
+    private function ensureEstadoProduccionBaseCol(): void
+    {
+        $cols = $this->form['base_columnas'] ?? [];
+        $has = collect($cols)->contains(fn($c) => ($c['key'] ?? null) === 'estado_produccion');
+
+        if (!$has) {
+            $orden = (int) (collect($cols)->max('orden') ?? 0) + 1;
+            $cols[] = [
+                'key'     => 'estado_produccion',
+                'label'   => 'Estado Producción',
+                'visible' => true,
+                'fixed'   => false,
+                'orden'   => $orden,
+            ];
+        } else {
+            foreach ($cols as &$c) {
+                if (($c['key'] ?? null) === 'estado_produccion') {
+                    $c['label']   = $c['label'] ?? 'Estado Producción';
+                    $c['visible'] = $c['visible'] ?? true;
+                    $c['fixed']   = (bool)($c['fixed'] ?? false);
+                }
+            }
+            unset($c);
+        }
+
+        $this->form['base_columnas'] = array_values($cols);
     }
 
 
