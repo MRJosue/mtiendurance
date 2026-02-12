@@ -664,13 +664,52 @@
                                                 @case('estado_produccion')
                                                     @php
                                                         $estadoProduccion = trim((string)($pedido->estado_produccion ?? ''));
-                                                        if ($estadoProduccion === '') $estadoProduccion = '—';
+                                                        $estadoLabel = $estadoProduccion !== '' ? $estadoProduccion : '—';
                                                         $claseProduccion  = $coloresEstadoProduccion[$estadoProduccion] ?? 'bg-gray-200 text-gray-700';
                                                     @endphp
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[11rem] justify-center {{ $claseProduccion }}">
-                                                        {{ $estadoProduccion }}
-                                                    </span>
-                                                @break       
+
+                                                    @if($acciones['bulk_edit_estado_produccion'])
+                                                        <div
+                                                            x-data="{ edit:false, value:@js($estadoProduccion) }"
+                                                            wire:key="cell-estado-produccion-{{ $pedido->id }}"
+                                                            class="inline-flex items-center gap-2"
+                                                        >
+                                                            <span
+                                                                x-cloak
+                                                                x-show="!edit"
+                                                                @dblclick="edit=true"
+                                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[11rem] justify-center {{ $claseProduccion }} cursor-pointer"
+                                                                title="Doble click para editar"
+                                                            >
+                                                                {{ $estadoLabel }}
+                                                            </span>
+
+                                                            <select
+                                                                x-cloak
+                                                                x-show="edit"
+                                                                x-model="value"
+                                                                @change="$wire.updateField({{ $pedido->id }}, 'estado_produccion', value); edit=false;"
+                                                                class="w-44 rounded-lg border-gray-300 focus:ring-blue-500 text-xs"
+                                                            >
+                                                                <option value="">—</option>
+                                                                @foreach($this->estadosProduccion as $s)
+                                                                    <option value="{{ $s }}">{{ $s }}</option>
+                                                                @endforeach
+                                                            </select>
+
+                                                            <button
+                                                                type="button"
+                                                                class="text-xs text-blue-600 hover:underline"
+                                                                @click="edit = !edit"
+                                                                x-text="edit ? 'Cancelar' : 'Editar'"
+                                                            ></button>
+                                                        </div>
+                                                    @else
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[11rem] justify-center {{ $claseProduccion }}">
+                                                            {{ $estadoLabel }}
+                                                        </span>
+                                                    @endif
+                                                @break     
 
                                                 @case('total')
                                                     @if( $acciones['bulk_edit_total'])
@@ -823,106 +862,166 @@
                                 @endforeach
 
 
-                                    {{-- Aqui irian las acciones --}}
-                                        <td class="px-3 py-2 text-sm text-gray-700">
-                                            <x-dropdown>
-                                                @if($acciones['ver_detalle'])
-                                                    <x-dropdown.item
-                                                        @click="$wire.dispatch('ir-a-detalle', { id: {{ $pedido->id }} })"
-                                                        label="Ver detalle"
-                                                    />
-                                                @endif
+{{-- Aqui irian las acciones (DROPDOWN PRO flotante) --}}
+<td class="px-3 py-2 text-sm text-gray-700">
+    <div x-data="dropdownFloating()" class="inline-block">
+        {{-- Trigger --}}
+        <button
+            type="button"
+            class="px-3 py-1.5 rounded-lg border bg-white hover:bg-gray-50 text-sm"
+            @click="toggle($event)"
+        >
+            Acciones ▾
+        </button>
 
+        {{-- Menu (teleport a body para flotar sobre la tabla) --}}
+        <template x-teleport="body">
+            <div
+                x-cloak
+                x-show="open"
+                x-transition.opacity
+                @keydown.escape.window="close()"
+                @click.away="close()"
+                class="fixed z-[99999]"
+                :style="`top:${top}px; left:${left}px; width:${width}px`"
+            >
+                <div class="bg-white border rounded-lg shadow-lg overflow-hidden">
+                    {{-- Items --}}
+                    @if($acciones['ver_detalle'])
+                        <button
+                            type="button"
+                            class="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
+                            @click="close(); $wire.dispatch('ir-a-detalle', { id: {{ $pedido->id }} })"
+                        >
+                            Ver detalle
+                        </button>
+                    @endif
 
-                                                <button
-                                                    type="button"
-                                                    class="w-full text-left"
-                                                    wire:click.stop="openProduccionModal({{ $pedido->id }})"
-                                                >
-                                                    <x-dropdown.item label="Siguiente estado" />
-                                                </button>
+                    <button
+                        type="button"
+                        class="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
+                        @click="close(); $wire.openProduccionModal({{ $pedido->id }})"
+                    >
+                        Siguiente estado
+                    </button>
 
+                    @if($acciones['programar_pedido'])
+                        <button
+                            type="button"
+                            class="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
+                            @click="close(); if (confirm('¿Programar este pedido?')) { $wire.programarPedido({{ $pedido->id }}) }"
+                        >
+                            Programar pedido
+                        </button>
+                    @endif
 
-                                                @if($acciones['programar_pedido'])
-                                                    <x-dropdown.item
-                                                        @click="if (confirm('¿Programar este pedido?')) $wire.programarPedido({{ $pedido->id }})"
-                                                        label="Programar pedido"
-                                                    />
-                                                @endif
+                    @if($acciones['aprobar_pedido'])
+                        <button
+                            type="button"
+                            class="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
+                            @click="close(); if (confirm('¿Aprobar este pedido?')) { $wire.aprobarPedido({{ $pedido->id }}) }"
+                        >
+                            Aprobar pedido
+                        </button>
+                    @endif
 
-                                                @if($acciones['aprobar_pedido'])
-                                                    <x-dropdown.item
-                                                        @click="if (confirm('¿Aprobar este pedido?')) $wire.aprobarPedido({{ $pedido->id }})"
-                                                        label="Aprobar pedido"
-                                                    />
-                                                @endif
+                    @if($acciones['abrir_chat'])
+                        <button
+                            type="button"
+                            class="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
+                            @click="close(); $wire.dispatch('abrir-chat', { proyecto_id: {{ $pedido->proyecto_id }} })"
+                        >
+                            Abrir chat
+                        </button>
+                    @endif
 
-                                                @if($acciones['abrir_chat'])
-                                                    <x-dropdown.item
-                                                        @click="$wire.dispatch('abrir-chat', { proyecto_id: {{ $pedido->proyecto_id }} })"
-                                                        label="Abrir chat"
-                                                    />
-                                                @endif
+                    @if($acciones['crear_tarea'])
+                        <button
+                            type="button"
+                            class="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
+                            @click="close(); $wire.dispatch('abrir-modal-tarea', { pedido_id: {{ $pedido->id }} })"
+                        >
+                            Crear tarea
+                        </button>
+                    @endif
 
-                                                @if($acciones['crear_tarea'])
-                                                    <x-dropdown.item
-                                                        @click="$wire.dispatch('abrir-modal-tarea', { pedido_id: {{ $pedido->id }} })"
-                                                        label="Crear tarea"
-                                                    />
-                                                @endif
+                    @if($acciones['editar_pedido'])
+                        <button
+                            type="button"
+                            class="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
+                            @click="close(); $wire.dispatch('editar-pedido', { id: {{ $pedido->id }} })"
+                        >
+                            Editar pedido
+                        </button>
+                    @endif
 
-                                                @if($acciones['editar_pedido'])
-                                                    <x-dropdown.item
-                                                        @click="$wire.dispatch('editar-pedido', { id: {{ $pedido->id }} })"
-                                                        label="Editar pedido"
-                                                    />
-                                                @endif
+                    @if($acciones['duplicar_pedido'])
+                        <button
+                            type="button"
+                            class="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
+                            @click="close(); $wire.dispatch('duplicar-pedido', { id: {{ $pedido->id }} })"
+                        >
+                            Duplicar pedido
+                        </button>
+                    @endif
 
-                                                @if($acciones['duplicar_pedido'])
-                                                    <x-dropdown.item
-                                                        @click="$wire.dispatch('duplicar-pedido', { id: {{ $pedido->id }} })"
-                                                        label="Duplicar pedido"
-                                                    />
-                                                @endif
+                    @if($acciones['eliminar_pedido'])
+                        <div class="border-t"></div>
+                        <button
+                            type="button"
+                            class="w-full text-left px-3 py-2 hover:bg-red-50 text-red-700 text-sm"
+                            @click="close(); if (confirm('¿Eliminar este pedido?')) { $wire.dispatch('eliminar-pedido', { id: {{ $pedido->id }} }) }"
+                        >
+                            Archivar pedido
+                        </button>
+                    @endif
 
-                                                @if($acciones['eliminar_pedido'])
-                                                    <x-dropdown.item separator
-                                                        @click="if (confirm('¿Eliminar este pedido?')) $wire.dispatch('eliminar-pedido', { id: {{ $pedido->id }} })"
-                                                        label="Archivar pedido"
-                                                    />
-                                                @endif
+                    @if($acciones['entregar_pedido'])
+                        <button
+                            type="button"
+                            class="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
+                            @click="close(); $wire.dispatch('abrir-modal-entrega', { id: {{ $pedido->id }} })"
+                        >
+                            Entregar pedido
+                        </button>
+                    @endif
 
+                    @if($acciones['cancelar_pedido'])
+                        <button
+                            type="button"
+                            class="w-full text-left px-3 py-2 hover:bg-red-50 text-red-700 text-sm"
+                            @click="close(); if (confirm('¿Cancelar este pedido?')) { $wire.dispatch('cancelar-pedido', { id: {{ $pedido->id }} }) }"
+                        >
+                            Cancelar pedido
+                        </button>
+                    @endif
 
+                    @if($acciones['subir_archivos'])
+                        <button
+                            type="button"
+                            class="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
+                            @click="close(); $wire.dispatch('subir-archivos', { id: {{ $pedido->id }} })"
+                        >
+                            Subir archivos
+                        </button>
+                    @endif
 
-                                                @if($acciones['entregar_pedido'])
-                                                    <x-dropdown.item
-                                                        @click="$wire.dispatch('abrir-modal-entrega', { id: {{ $pedido->id }} })"
-                                                        label="Entregar pedido"
-                                                    />
-                                                @endif
+                    @if($acciones['exportar_excel'])
+                        <div class="border-t"></div>
+                        <button
+                            type="button"
+                            class="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
+                            @click="close(); $wire.dispatch('exportar-excel-pedido', { id: {{ $pedido->id }} })"
+                        >
+                            Exportar a Excel
+                        </button>
+                    @endif
+                </div>
+            </div>
+        </template>
+    </div>
+</td>
 
-                                                @if($acciones['cancelar_pedido'])
-                                                    <x-dropdown.item
-                                                        @click="if (confirm('¿Cancelar este pedido?')) $wire.dispatch('cancelar-pedido', { id: {{ $pedido->id }} })"
-                                                        label="Cancelar pedido"
-                                                    />
-                                                @endif
-
-                                                @if($acciones['subir_archivos'])
-                                                    <x-dropdown.item
-                                                        @click="$wire.dispatch('subir-archivos', { id: {{ $pedido->id }} })"
-                                                        label="Subir archivos"
-                                                    />
-                                                @endif
-
-                                                @if($acciones['exportar_excel'])
-                                                    <x-dropdown.item separator
-                                                        @click="$wire.dispatch('exportar-excel-pedido', { id: {{ $pedido->id }} })"
-                                                        label="Exportar a Excel"
-                                                    />
-                                                @endif
-                                            </x-dropdown>
-                                        </td>
                             
                             </tr>
                         @endforeach
@@ -938,7 +1037,6 @@
                     @endif
                 </tbody>
             </table>
-
         </div>
 
 <div
@@ -1033,15 +1131,71 @@
 </div>
 
         
- 
+ <script>
+document.addEventListener('alpine:init', () => {
+  Alpine.data('dropdownFloating', () => ({
+    open: false,
+    top: 0,
+    left: 0,
+    width: 260,
+    btn: null,
+
+    toggle(e) {
+      this.open ? this.close() : this.openAt(e);
+    },
+
+    openAt(e) {
+      this.btn = e.currentTarget;
+      this.reposition();
+      this.open = true;
+
+      this._onRelayout = () => this.reposition();
+      window.addEventListener('scroll', this._onRelayout, true);
+      window.addEventListener('resize', this._onRelayout);
+    },
+
+    reposition() {
+      if (!this.btn) return;
+
+      const r = this.btn.getBoundingClientRect();
+      const menuW = this.width;
+
+      // base: abajo del botón
+      let top = r.bottom + 8;
+      let left = r.left;
+
+      // clamp horizontal (evita salirse por la derecha)
+      const maxLeft = window.innerWidth - menuW - 10;
+      left = Math.min(left, maxLeft);
+      left = Math.max(10, left);
+
+      // si no cabe abajo, abrir hacia arriba (estimación)
+      const estimatedHeight = 380;
+      if (top + estimatedHeight > window.innerHeight) {
+        top = Math.max(10, r.top - estimatedHeight - 8);
+      }
+
+      this.top = Math.round(top);
+      this.left = Math.round(left);
+    },
+
+    close() {
+      this.open = false;
+
+      if (this._onRelayout) {
+        window.removeEventListener('scroll', this._onRelayout, true);
+        window.removeEventListener('resize', this._onRelayout);
+        this._onRelayout = null;
+      }
+    }
+  }));
+});
+</script>
+
+
 
     @if(method_exists($pedidos,'links'))
         <div class="mt-4">{{ $pedidos->links() }}</div>
     @endif
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // Aquí puedes agregar toasts o listeners si necesitas
-});
-</script>
