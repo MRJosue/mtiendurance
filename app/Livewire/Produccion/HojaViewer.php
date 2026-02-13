@@ -101,6 +101,8 @@ class HojaViewer extends Component
 
     public array $chipEstadosDiseno = []; // para el chip informativo
 
+    public array $chipEstadosProduccion = [];
+
     /** Ordenamiento */
     public ?string $sortColumn = null;   // ej. 'id','proyecto','producto','cliente','estado','estado_disenio','total','fecha_*'
     public string $sortDirection = 'asc'; // 'asc'|'desc'
@@ -171,14 +173,39 @@ class HojaViewer extends Component
             ->get();
     }
 
-    public function getEstadosProduccionProperty(): array
+    public function getAllEstadosProduccionProperty(): array
     {
-        return [
+        $db = DB::table('pedido')
+            ->whereNotNull('estado_produccion')
+            ->where('estado_produccion', '!=', '')
+            ->distinct()
+            ->orderBy('estado_produccion')
+            ->pluck('estado_produccion')
+            ->all();
+
+        // Mantén tus “base” al inicio y añade los nuevos de BD
+        $base = [
             'POR APROBAR','POR PROGRAMAR','PROGRAMADO','IMPRESIÓN','CORTE','COSTURA',
             'ENTREGA','FACTURACIÓN','COMPLETADO','RECHAZADO'
         ];
+
+        return array_values(array_unique(array_merge($base, $db)));
     }
 
+    public function getEstadosProduccionProperty(): array
+    {
+        $todos = $this->allEstadosProduccion;
+
+        $permitidos = is_array($this->hoja->estado_produccion_permitidos ?? null)
+            ? array_values(array_filter($this->hoja->estado_produccion_permitidos))
+            : [];
+
+        // si no hay configurados => todos
+        if (empty($permitidos)) return $todos;
+
+        // devuelve solo los permitidos, preservando orden del arreglo configurado
+        return array_values(array_intersect($permitidos, $todos));
+    }
 
 
         public function getAccionesAttribute(): array
@@ -256,6 +283,10 @@ class HojaViewer extends Component
             $hoja->estados_diseno_permitidos = json_decode($hoja->estados_diseno_permitidos, true) ?: [];
         }
 
+        if (is_string($hoja->estado_produccion_permitidos ?? null)) {
+            $hoja->estado_produccion_permitidos = json_decode($hoja->estado_produccion_permitidos, true) ?: [];
+        }
+
         return $hoja;
     }
 
@@ -266,7 +297,7 @@ class HojaViewer extends Component
         $this->hojaId = $hojaId;
 
 
-                // Normaliza perPage si viene “raro” en la URL
+        // Normaliza perPage si viene “raro” en la URL
         if (!in_array($this->perPage, $this->perPageOptions, true)) {
             $this->perPage = 15;
         }
@@ -277,6 +308,8 @@ class HojaViewer extends Component
             ? Proyecto::estadosDiseno()
             : ['PENDIENTE','ASIGNADO','EN PROCESO','REVISION','DISEÑO APROBADO','DISEÑO RECHAZADO','CANCELADO'];
 
+        
+
 
         $ids = is_array($this->hoja->estados_permitidos) ? $this->hoja->estados_permitidos : [];
         $this->chipEstados = empty($ids)
@@ -285,6 +318,10 @@ class HojaViewer extends Component
 
         $this->chipEstadosDiseno = is_array($this->hoja->estados_diseno_permitidos) && !empty($this->hoja->estados_diseno_permitidos)
             ? array_values($this->hoja->estados_diseno_permitidos)
+            : [];
+
+        $this->chipEstadosProduccion = is_array($this->hoja->estado_produccion_permitidos) && !empty($this->hoja->estado_produccion_permitidos)
+            ? array_values($this->hoja->estado_produccion_permitidos)
             : [];
     }
 
@@ -334,6 +371,8 @@ class HojaViewer extends Component
     {
         $hoja = $this->hoja;
 
+         $this->syncChips();
+
         $filtros = $hoja->filtros()->get(['filtros_produccion.id','filtros_produccion.nombre']);
         if (!$this->activeFiltroId && $filtros->isNotEmpty()) {
             $this->activeFiltroId = (int) $filtros->first()->id;
@@ -378,7 +417,20 @@ class HojaViewer extends Component
         $permitidos = array_map(fn ($s) => $s === 'RECHAZADO' ? 'DISEÑO RECHAZADO' : $s, $hoja->estados_diseno_permitidos);
         $qq->whereIn('pr.estado', $permitidos);
     })
+    ->when(!empty($hoja->estado_produccion_permitidos), function ($qq) use ($hoja) {
+        $permitidos = array_values(array_filter($hoja->estado_produccion_permitidos));
 
+        if (!empty($permitidos)) {
+            // incluye variantes canonical + legacy sin acento (IMPRESIÓN/IMPRESION)
+            $permitidosSQL = [];
+            foreach ($permitidos as $p) {
+                $permitidosSQL = array_merge($permitidosSQL, $this->estadoProduccionVariants($p));
+            }
+            $permitidosSQL = array_values(array_unique(array_filter($permitidosSQL)));
+
+            $qq->whereIn('pedido.estado_produccion', $permitidosSQL);
+        }
+    })
     // búsqueda global (prefijo indexable en columnas unidas)
 ->when(($term = trim((string)$this->search)) !== '', function ($qq) use ($term) {
     $prefix   = $term.'%';      // empieza con
@@ -447,8 +499,12 @@ class HojaViewer extends Component
     ->when(($ed = trim((string)Arr::get($this->filters, 'estado_disenio', ''))) !== '',
         fn($qq) => $qq->where('pr.estado', $ed))
 
-    ->when(($sp = trim((string)Arr::get($this->filters, 'estado_produccion', ''))) !== '',
-        fn($qq) => $qq->where('pedido.estado_produccion', $sp))
+    ->when(($sp = trim((string)Arr::get($this->filters, 'estado_produccion', ''))) !== '', function ($qq) use ($sp) {
+        $variants = $this->estadoProduccionVariants($sp);
+        if (empty($variants)) return;
+
+        $qq->whereIn('pedido.estado_produccion', $variants);
+    })
 
     ->when(($t = trim((string)Arr::get($this->filters, 'total', ''))) !== '',
         fn($qq) => $qq->where('pedido.total', $t))
@@ -632,16 +688,21 @@ class HojaViewer extends Component
                 $value = (int) $value;
             break;
             case 'estado_produccion':
-            $value = trim((string)$value);
+                $value = $this->canonicalEstadoProduccion($value); // <- canonicaliza
 
-            // valida contra catálogo permitido
-            if ($value !== '' && !in_array($value, $this->estadosProduccion, true)) {
-                $this->dispatch('toast', message: 'Estado de producción inválido', type: 'error');
-                return;
-            }
+                // permite vacío como null
+                if ($value === null) {
+                    $pedido->{$field} = null;
+                    $pedido->save();
+                    $this->dispatch('toast', message: 'Guardado', type: 'success');
+                    return;
+                }
 
-            // permite vacío como null
-            $value = $value === '' ? null : $value;
+                // valida contra catálogo permitido (tu select ya sale de estadosProduccion)
+                if (!in_array($value, $this->estadosProduccion, true)) {
+                    $this->dispatch('toast', message: 'Estado de producción inválido', type: 'error');
+                    return;
+                }
             break;
         }
 
@@ -844,11 +905,11 @@ class HojaViewer extends Component
                 if ($actual === '') $actual = (string)($steps[0]['name'] ?? '');
 
                 // Busca step meta
-                $step = $this->findStep($steps, $actual);
+               $step = $this->findStepNormalized($steps, $actual);
                 if (!$step) {
                     // Si el estado guardado no existe en el flujo, forzamos al primer paso
                     $actual = (string)($steps[0]['name'] ?? '');
-                    $step = $this->findStep($steps, $actual);
+                    $step = $this->findStepNormalized($steps, $actual);
                 }
 
                 $this->prodCurrent = $actual;
@@ -934,7 +995,7 @@ class HojaViewer extends Component
                     'steps' => collect($steps)->pluck('name')->all(),
                 ]);
 
-                $step = $this->findStep($steps, $actual);
+                $step = $this->findStepNormalized($steps, $actual);
                 if (!$step) {
 
                     Log::warning('El estado actual no existe en el flujo', [
@@ -1000,6 +1061,92 @@ class HojaViewer extends Component
                 $this->prodStepMeta = [];
             }
 
+
+                /** Normaliza string: trim, UPPER, sin acentos */
+            protected function normalizeKey(?string $value): string
+            {
+                $value = trim((string) $value);
+                if ($value === '') return '';
+
+                $upper = mb_strtoupper($value, 'UTF-8');
+
+                // quita acentos
+                $ascii = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $upper);
+                $ascii = $ascii !== false ? $ascii : $upper;
+
+                // colapsa espacios
+                $ascii = preg_replace('/\s+/', ' ', $ascii);
+
+                return trim($ascii);
+            }
+
+            /** Mapa de alias legacy -> canonical (con acentos) */
+            protected function canonicalEstadoProduccion(?string $value): ?string
+            {
+                $v = trim((string)$value);
+                if ($v === '') return null;
+
+                $k = $this->normalizeKey($v);
+
+                $map = [
+                    'IMPRESION'   => 'IMPRESIÓN',
+                    'FACTURACION' => 'FACTURACIÓN',
+                    // agrega aquí más alias si aparecen en tu BD/legacy
+                ];
+
+                // si ya viene canonical, respétalo
+                if (in_array($v, $this->allEstadosProduccion, true)) {
+                    return $v;
+                }
+
+                return $map[$k] ?? $v;
+            }
+
+            /** Devuelve variantes para filtrar en SQL (canonical + legacy sin acento) */
+            protected function estadoProduccionVariants(?string $value): array
+            {
+                $canonical = $this->canonicalEstadoProduccion($value);
+                if (!$canonical) return [];
+
+                $variants = [$canonical];
+
+                // legacy sin acento (ej: IMPRESIÓN -> IMPRESION)
+                $legacy = $this->normalizeKey($canonical); // ya regresa sin acento y UPPER
+                // pero queremos mantenerlo “humano”, no con UPPER raro (ya lo es)
+                $variants[] = $legacy;
+
+                return array_values(array_unique(array_filter($variants)));
+            }
+
+            /** Comparación de steps ignorando acentos/espacios/case */
+            protected function findStepNormalized(array $steps, string $name): ?array
+            {
+                $target = $this->normalizeKey($name);
+                foreach ($steps as $s) {
+                    $n = $this->normalizeKey($s['name'] ?? '');
+                    if ($n !== '' && $n === $target) return $s;
+                }
+                return null;
+            }
+
+
+            protected function syncChips(): void
+            {
+                $hoja = $this->hoja; // <- siempre trae lo último y ya decodificado
+
+                $ids = is_array($hoja->estados_permitidos) ? array_filter($hoja->estados_permitidos) : [];
+                $this->chipEstados = empty($ids)
+                    ? []
+                    : DB::table('estados_pedido')->whereIn('id', $ids)->pluck('nombre')->all();
+
+                $this->chipEstadosDiseno = is_array($hoja->estados_diseno_permitidos ?? null)
+                    ? array_values(array_filter($hoja->estados_diseno_permitidos))
+                    : [];
+
+                $this->chipEstadosProduccion = is_array($hoja->estado_produccion_permitidos ?? null)
+                    ? array_values(array_filter($hoja->estado_produccion_permitidos))
+                    : [];
+            }
 
 
 

@@ -29,6 +29,19 @@ class HojaFiltrosCrud extends Component
     public bool $modalOpen = false;
     public ?int $editId = null;
 
+    public array $estadosProduccion = [
+    'POR APROBAR',
+    'POR PROGRAMAR',
+    'PROGRAMADO',
+    'IMPRESIÓN',
+    'CORTE',
+    'COSTURA',
+    'ENTREGA',
+    'FACTURACIÓN',
+    'COMPLETADO',
+    'RECHAZADO',
+];
+
     public array $menusDisponibles = [
     // key => label (puedes agregar más o renombrar)
     // ['key' => 'principal.produccion', 'label' => 'Principal > Producción'],
@@ -53,6 +66,7 @@ public array $form = [
     'role_id' => null,
     'estados_permitidos' => [],
     'estados_diseno_permitidos' => [],
+    'estado_produccion_permitidos' => [], 
     'base_columnas' => [],
     'menu_config' => [ // 👇 estructura por defecto
         'ubicaciones' => [],   // array de keys del catálogo $menusDisponibles
@@ -184,6 +198,9 @@ public array $form = [
             'form.estados_permitidos'   => ['array'],
             'form.estados_permitidos.*' => ['integer','exists:estados_pedido,id'],
 
+            'form.estado_produccion_permitidos'   => ['array'],
+            'form.estado_produccion_permitidos.*' => [Rule::in($this->estadosProduccion)],
+
             'form.estados_diseno_permitidos'   => ['array'],
             'form.estados_diseno_permitidos.*' => [Rule::in($this->estadosDiseno)],
 
@@ -285,6 +302,7 @@ public array $form = [
             'nombre'=>'','slug'=>'','descripcion'=>'','role_id'=>null,
             'estados_permitidos'=>[],
             'estados_diseno_permitidos'=>[],
+            'estado_produccion_permitidos'=>[],
             'base_columnas'=>HojaFiltroProduccion::defaultBaseColumnas(),
             'menu_config' => [
                 'ubicaciones' => [],
@@ -318,6 +336,7 @@ public array $form = [
             'role_id'=>$hoja->role_id,
             'estados_permitidos'=>$hoja->estados_permitidos ?? [],
             'estados_diseno_permitidos'=>$hoja->estados_diseno_permitidos ?? [],
+            'estado_produccion_permitidos' => $hoja->estado_produccion_permitidos ?? [],
             'base_columnas'=>$hoja->base_columnas ?: HojaFiltroProduccion::defaultBaseColumnas(),
             'menu_config' => array_merge([
                 'ubicaciones' => [],
@@ -354,11 +373,22 @@ public array $form = [
             array_values(array_filter($this->form['estados_diseno_permitidos'] ?? [], fn($v) => in_array($v, $valid, true)))
         ));
 
+        $validProd = $this->estadosProduccion;
+
+        $this->form['estado_produccion_permitidos'] = array_values(array_unique(
+            array_values(array_filter(
+                $this->form['estado_produccion_permitidos'] ?? [],
+                fn($v) => in_array($v, $validProd, true)
+            ))
+        ));
+
         // Menú: limpia ubicaciones a válidas
         $validMenuKeys = collect($this->menusDisponibles)->pluck('key')->all();
         $this->form['menu_config']['ubicaciones'] = array_values(array_unique(
             array_values(array_filter($this->form['menu_config']['ubicaciones'] ?? [], fn($k) => in_array($k, $validMenuKeys, true)))
         ));
+
+
 
         $this->validate();
 
@@ -380,6 +410,7 @@ public array $form = [
                 'role_id'=>$this->form['role_id'],
                 'estados_permitidos'=>$this->form['estados_permitidos'] ?: [],
                 'estados_diseno_permitidos'=>$this->form['estados_diseno_permitidos'] ?: [],
+                'estado_produccion_permitidos' => $this->form['estado_produccion_permitidos'] ?: [],
                 'base_columnas'=>$this->form['base_columnas'] ?: HojaFiltroProduccion::defaultBaseColumnas(),
                 'menu_config' => $this->form['menu_config'] ?: ['ubicaciones'=>[],'etiqueta'=>null,'icono'=>null,'orden'=>null,'activo'=>true],
                 'visible'=>(bool)$this->form['visible'],

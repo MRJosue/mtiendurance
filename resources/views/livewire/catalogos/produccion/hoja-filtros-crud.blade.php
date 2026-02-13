@@ -347,6 +347,36 @@
                             @error('form.estados_diseno_permitidos') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
                             <p class="text-xs text-gray-500 mt-1">Si no seleccionas ninguno, se mostrarán <em>todos</em> los estatus de diseño.</p>
                         </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mt-4">Estados de Producción Permitidos</label>
+
+                            <div class="mt-1 rounded-lg border p-2 max-h-40 overflow-y-auto">
+                                @foreach($this->estadosProduccion as $statusProd)
+                                    <label class="inline-flex items-center gap-2 mr-3 mb-2">
+                                        <input
+                                            type="checkbox"
+                                            class="rounded border-gray-300"
+                                            value="{{ $statusProd }}"
+                                            @checked(in_array($statusProd, $form['estado_produccion_permitidos'] ?? []))
+
+                                            @change="$event.target.checked
+                                                ? @this.form.estado_produccion_permitidos.push('{{ $statusProd }}')
+                                                : @this.form.estado_produccion_permitidos =
+                                                    @this.form.estado_produccion_permitidos.filter(x => x !== '{{ $statusProd }}')"
+                                        >
+                                        <span class="text-sm text-gray-700">{{ $statusProd }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+
+                            @error('form.estado_produccion_permitidos') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            @error('form.estado_produccion_permitidos.*') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+
+                            <p class="text-xs text-gray-500 mt-1">
+                                Si no seleccionas ninguno, se mostrarán <em>todos</em> los estados de producción.
+                            </p>
+                        </div>
                     </div>
 
                 </div>

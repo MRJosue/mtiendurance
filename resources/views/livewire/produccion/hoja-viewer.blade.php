@@ -174,6 +174,9 @@
             <span class="px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border">
                 Estados Diseño: {{ !empty($chipEstadosDiseno) ? implode(', ', $chipEstadosDiseno) : 'Todos' }}
             </span>
+            <span class="px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border">
+                Estados Produccion: {{ !empty($chipEstadosProduccion) ? implode(', ', $chipEstadosProduccion) : 'Todos' }}
+            </span>
             <span class="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border">
                 Rol: {{ $this->hoja->rol->name ?? '—' }}
             </span>

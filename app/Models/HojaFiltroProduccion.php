@@ -15,6 +15,7 @@ class HojaFiltroProduccion extends Model
     protected $fillable = [
         'nombre','slug','descripcion','role_id',
         'estados_permitidos','estados_diseno_permitidos',
+          'estado_produccion_permitidos',
         'base_columnas','menu_config','acciones_config', 
         'visible','orden',
     ];
@@ -22,10 +23,12 @@ class HojaFiltroProduccion extends Model
     protected $casts = [
         'estados_permitidos' => 'array',
         'estados_diseno_permitidos' => 'array',
+        'estado_produccion_permitidos' => 'array',
         'base_columnas' => 'array',
         'menu_config' => 'array',
         'acciones_config' => 'array', 
         'visible' => 'boolean',
+        
     ];
 
 
