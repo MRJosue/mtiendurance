@@ -54,7 +54,8 @@ class Proyecto extends Model
         'caracteristicas_sel',
         'opciones_sel',
         'total_piezas_sel',
-        'ind_activo'
+        'ind_activo',
+        'flag_reconfigurado',
     ];
 
     protected $casts = [
@@ -67,6 +68,7 @@ class Proyecto extends Model
         'caracteristicas_sel' => 'array',
         'opciones_sel' => 'array',
         'total_piezas_sel' => 'array',
+        'flag_reconfigurado' => 'boolean',
     ];
 
 

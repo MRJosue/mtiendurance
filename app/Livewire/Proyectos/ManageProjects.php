@@ -536,10 +536,15 @@ class ManageProjects extends Component
             if (in_array($this->activeTab, $this->estados, true)) {
                 $query->where('estado', $this->activeTab);
             }
+
             if ($this->activeTab === 'DISEÑO APROBADO') {
-                $query->whereHas('pedidos', fn($q) =>
-                    $q->where('tipo','PEDIDO')->where('estado_id','1')
-                );
+                $query->where(function ($q) {
+                    $q->whereHas('pedidos', function ($sub) {
+                        $sub->where('tipo', 'PEDIDO')
+                            ->where('estado_id', '1');
+                    })
+                    ->orWhere('flag_reconfigurado', 1);
+                });
             }
 
             // --- Restricción por rol/permiso (UNA sola vez) ---

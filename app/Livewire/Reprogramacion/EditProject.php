@@ -210,6 +210,7 @@ public function update()
         'caracteristicas_sel' => json_encode($this->caracteristicas_sel),
         'opciones_sel' => json_encode($this->opciones_sel),
         'flag_reconfigurar' => 0,
+        'flag_reconfigurado' => 1,
         'flag_solicitud_reconfigurar' => 0,
         'total_piezas_sel' => json_encode([
             'total' => $totalPiezasFinal,
