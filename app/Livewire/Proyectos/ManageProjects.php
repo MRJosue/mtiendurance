@@ -207,9 +207,13 @@ class ManageProjects extends Component
                 )
                 // Filtro adicional para DISEÑO APROBADO
                 ->when($this->activeTab === 'DISEÑO APROBADO', function ($q) {
-                    $q->whereHas('pedidos', fn($sub) =>
-                        $sub->where('tipo', 'PEDIDO')->where('estado_id', '1')
-                    );
+                    $q->where(function ($qq) {
+                        $qq->whereHas('pedidos', function ($sub) {
+                            $sub->where('tipo', 'PEDIDO')
+                                ->where('estado_id', '1');
+                        })
+                        ->orWhere('flag_reconfigurado', 1);
+                    });
                 });
 
             // Restricción por rol también aquí
