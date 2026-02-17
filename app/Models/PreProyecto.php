@@ -5,6 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
+use App\Models\MensajeChat;
+
+use App\Models\Chat;
+use App\Models\ArchivoProyecto;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+
 
 class PreProyecto extends Model
 {
@@ -127,9 +134,78 @@ class PreProyecto extends Model
 
 
                     // Creamos el chat
-                    Chat::create([
-                        'proyecto_id'=>  $proyecto->id,
+                    $chat = Chat::create([
+                        'proyecto_id'     => $proyecto->id,
+                        'fecha_creacion'  => now(),
+                        'tipo_chat'       => 1, // cliente
                     ]);
+
+
+                    
+                    // ====== INSERTAR ENTRADAS DE CHAT CON LOS EVENTOS DEL LOG DE ARCHIVOS (NUEVA ESTRUCTURA) ======
+                    $archivosPre = ArchivoProyecto::where('pre_proyecto_id', $this->id)->get();
+
+                    foreach ($archivosPre as $archivo) {
+
+                        $log = $archivo->log;
+
+                        // 1) Normalizar (puede venir string JSON, null, array)
+                        if (is_string($log)) {
+                            $log = json_decode($log, true);
+                        }
+                        if (!is_array($log)) {
+                            $log = [];
+                        }
+
+                        // 2) Si viene como lista numérica, conviértelo a objeto indexado "0","1",...
+                        $isList = array_keys($log) === range(0, count($log) - 1);
+                        if ($isList) {
+                            $tmp = [];
+                            foreach ($log as $i => $row) {
+                                $tmp[(string)$i] = $row;
+                            }
+                            $log = $tmp;
+                        }
+
+                        // 3) Ordenar por índice (0,1,2...) por si acaso viene desordenado
+                        $keys = array_keys($log);
+                        usort($keys, fn($a, $b) => ((int)$a) <=> ((int)$b));
+
+                        foreach ($keys as $k) {
+                            $ev = $log[$k] ?? [];
+                            if (!is_array($ev)) continue;
+
+                            $accion = $ev['accion'] ?? 'evento';
+                            $fecha  = $ev['fecha']  ?? null;
+
+                            // Texto del mensaje (compacto y consistente)
+                            $texto = "📎 Archivo: {$archivo->nombre_archivo}\n"
+                                . "Acción: {$accion}"
+                                . ($fecha ? "\nFecha: {$fecha}" : "");
+
+                            if (!empty($archivo->descripcion)) {
+                                $texto .= "\nDescripción: {$archivo->descripcion}";
+                            }
+
+                            // (Opcional) si quieres mostrar banderas cuando existan
+                            if (isset($ev['flag_descarga_antes']) || isset($ev['flag_descarga_despues'])) {
+                                $texto .= "\nDescarga: "
+                                    . ((int)($ev['flag_descarga_antes'] ?? 0))
+                                    . " → "
+                                    . ((int)($ev['flag_descarga_despues'] ?? 0));
+                            }
+
+                            // Usuario del evento (si no viene, usa el dueño del archivo o el auth)
+                            $usuarioEvento = (int)($ev['usuario_id'] ?? $archivo->usuario_id ?? Auth::id());
+
+                            $chat->mensajes()->create([
+                                'usuario_id'  => $usuarioEvento,
+                                'tipo'        => 1, // ajusta si tu app usa otro tipo
+                                'mensaje'     => $texto,
+                                'fecha_envio' => $fecha ? Carbon::parse($fecha) : now(),
+                            ]);
+                        }
+                    }
 
 
                     // Insertar características del pedido

@@ -48,13 +48,35 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">RFC</label>
+
+                {{-- Botones arriba del input --}}
+                <div class="mt-1 flex flex-col sm:flex-row gap-2">
+                    <button
+                        type="button"
+                        class="w-full sm:w-auto px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm"
+                        wire:click="$set('rfc','XAXX010101000')"
+                    >
+                        RFC genérico (MX)
+                    </button>
+
+                    <button
+                        type="button"
+                        class="w-full sm:w-auto px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm"
+                        wire:click="$set('rfc','XEXX010101000')"
+                    >
+                        RFC genérico (Extranjero)
+                    </button>
+                </div>
+
+                {{-- Input --}}
                 <input
                     type="text"
                     wire:model.defer="rfc"
                     maxlength="13"
-                    class="mt-1 w-full uppercase rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                    class="mt-2 w-full uppercase rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
                     placeholder="XAXX010101000"
                 >
+
                 @error('rfc') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
             </div>
 
@@ -293,6 +315,16 @@
          ÚNICO botón final
          ======================= --}}
     <div class="flex justify-end">
+
+            <form method="POST" action="{{ route('logout') }}" class="w-full sm:w-auto">
+                @csrf
+                <button
+                    type="submit"
+                    class="w-full sm:w-auto px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
+                >
+                    Cerrar sesión
+                </button>
+            </form>
         <button
             type="button"
             wire:click="guardarYContinuar"

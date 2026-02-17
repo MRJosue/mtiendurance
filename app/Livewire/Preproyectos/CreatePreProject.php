@@ -309,6 +309,9 @@ class CreatePreProject extends Component
         foreach ($this->files as $index => $file) {
             $path = $file->store('archivos_proyectos', 'public');
 
+
+        
+
             ArchivoProyecto::create([
                 'pre_proyecto_id' => $preProyecto->id,
                 'usuario_id' => Auth::id(),
@@ -316,7 +319,17 @@ class CreatePreProject extends Component
                 'ruta_archivo' => $path,
                 'tipo_archivo' => $file->getClientMimeType(),
                 'descripcion' => $this->fileDescriptions[$index] ?? '',
-                'tipo_carga' => 2
+                'tipo_carga' => 2,
+                'log' => [
+                    "0" => [
+                        "ip"                    => request()->ip(),
+                        "fecha"                 => now()->format('Y-m-d H:i:s'),
+                        "accion"                => "Cargado",
+                        "usuario_id"            => Auth::id(),
+                        "flag_descarga_antes"   => 0,
+                        "flag_descarga_despues" => 0,
+                    ]
+                ],
             ]);
         }
 

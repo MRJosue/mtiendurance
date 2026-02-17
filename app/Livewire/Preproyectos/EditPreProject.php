@@ -327,13 +327,25 @@ class EditPreProject extends Component
         // Guardar nuevos archivos
         foreach ($this->files as $index => $file) {
             $path = $file->store('archivos_proyectos', 'public');
-            ArchivoProyecto::create([
+
+            $archivo = ArchivoProyecto::create([
                 'pre_proyecto_id' => $this->preProyectoId,
-                'usuario_id' => Auth::id(),
-                'nombre_archivo' => $file->getClientOriginalName(),
-                'ruta_archivo' => $path,
-                'tipo_archivo' => $file->getClientMimeType(),
-                'descripcion' => $this->fileDescriptions[$index] ?? '',
+                'usuario_id'      => Auth::id(),
+                'nombre_archivo'  => $file->getClientOriginalName(),
+                'ruta_archivo'    => $path,
+                'tipo_archivo'    => $file->getClientMimeType(),
+                'descripcion'     => $this->fileDescriptions[$index] ?? '',
+                'log'             => [], // inicializamos
+            ]);
+
+            $this->appendArchivoLog($archivo, 'subido', [
+                'tipo_carga'     => (int)($archivo->tipo_carga ?? 1),
+                'mime'           => $archivo->tipo_archivo,
+                'ruta'           => $archivo->ruta_archivo,
+                'nombre'         => $archivo->nombre_archivo,
+                'descripcion'    => $archivo->descripcion,
+                'pre_proyecto_id'=> $archivo->pre_proyecto_id,
+                'proyecto_id'    => $archivo->proyecto_id,
             ]);
         }
 
@@ -363,6 +375,14 @@ class EditPreProject extends Component
     public function deleteFile($fileId)
     {
         $file = ArchivoProyecto::findOrFail($fileId);
+
+        // Log antes de borrar
+        $this->appendArchivoLog($file, 'eliminado', [
+            'ruta'   => $file->ruta_archivo,
+            'nombre' => $file->nombre_archivo,
+            'motivo' => 'eliminado_manual', // puedes cambiarlo
+        ]);
+
         Storage::disk('public')->delete($file->ruta_archivo);
         $file->delete();
 
@@ -905,17 +925,23 @@ class EditPreProject extends Component
 
     public function downloadFile(int $fileId)
     {
-        // 1) Recupera y marca
         $archivo = ArchivoProyecto::where('id', $fileId)
             ->where('pre_proyecto_id', $this->preProyectoId)
             ->firstOrFail();
 
-        $archivo->update(attributes: ['flag_descarga' => 1]);
+        $antes = (int) ($archivo->flag_descarga ?? 0);
 
-        // Refresca la lista para actualizar el badge “(Descargado)”
+        // actualiza flag
+        $archivo->update(['flag_descarga' => 1]);
+
+        // agrega entrada "descargado" con antes/después correctos
+        $this->appendArchivoLog($archivo, 'descargado', [
+            'flag_descarga_antes'   => $antes,
+            'flag_descarga_despues' => 1,
+        ]);
+
         $this->existingFiles = ArchivoProyecto::where('pre_proyecto_id', $this->preProyectoId)->get();
 
-        // 2) Delegar en el modelo la descarga real
         return $archivo->descargar();
     }
 
@@ -938,6 +964,12 @@ protected function userEsCliente(int $userId): bool
 protected function setupUsuarioSelector(): void
 {
     $user = Auth::user();
+
+    // Si no hay sesión, no se puede buscar
+    if (!$user) {
+        $this->puedeBuscarUsuarios = false;
+        return;
+    }
 
     // si estás en modo lectura, no permitas búsqueda
     if ($this->modoLectura) {
@@ -1064,6 +1096,66 @@ public function cargarDirecciones(): void
     {
         $this->isUploading = false;
     }
+
+
+    protected function appendArchivoLog(ArchivoProyecto $archivo, string $accion, array $extra = []): void
+    {
+        // 1) Traer el valor actual "real" desde DB
+        $archivo->refresh();
+
+        // 2) Normalizar el log a array asociativo (puede venir string JSON)
+        $current = $archivo->getAttribute('log');
+
+        if (is_string($current)) {
+            $current = json_decode($current, true);
+        }
+        if (!is_array($current)) {
+            $current = [];
+        }
+
+        // Si viene como lista (0,1,2 numéricos), lo convertimos a objeto indexado "0","1","2"
+        $isList = array_keys($current) === range(0, count($current) - 1);
+        if ($isList) {
+            $tmp = [];
+            foreach ($current as $i => $row) {
+                $tmp[(string)$i] = $row;
+            }
+            $current = $tmp;
+        }
+
+        // 3) Siguiente índice como string
+        $idx = (string) count($current);
+
+        // 4) Construir entrada (formato EXACTO como tu ejemplo)
+        $current[$idx] = array_merge([
+            'ip'                    => request()->ip(),
+            'fecha'                 => now()->format('Y-m-d H:i:s'),
+            'accion'                => $accion,          // "Cargado" / "descargado" / etc
+            'usuario_id'            => Auth::id(),
+            'flag_descarga_antes'   => (int) ($archivo->flag_descarga ?? 0),
+            'flag_descarga_despues' => (int) ($archivo->flag_descarga ?? 0),
+        ], $extra);
+
+        // 5) Limitar tamaño (opcional)
+        $max = 200;
+        if (count($current) > $max) {
+            // conservar los últimos $max manteniendo keys ordenadas
+            $keys = array_keys($current);
+            $sliceKeys = array_slice($keys, -$max);
+            $current = array_intersect_key($current, array_flip($sliceKeys));
+        }
+
+        // 6) Guardar
+        $archivo->forceFill(['log' => $current])->save();
+
+        Log::debug('appendArchivoLog OK', [
+            'archivo_id' => $archivo->id,
+            'accion'     => $accion,
+            'log_count'  => count($current),
+        ]);
+    }
+
+
 }
 
 

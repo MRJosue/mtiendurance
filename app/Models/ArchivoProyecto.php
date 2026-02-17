@@ -24,6 +24,12 @@ class ArchivoProyecto extends Model
         'usuario_id',
         'descripcion',
         'version',
+        'log',
+    ];
+
+
+    protected $casts = [
+    'log' => 'array',
     ];
 
 
