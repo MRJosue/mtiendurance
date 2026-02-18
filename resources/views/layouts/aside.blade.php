@@ -481,6 +481,37 @@
                         </div>
                     </div>
                     @endcan
+
+                       @hasanyrole('admin')
+                        <div>
+                            <button
+                                @click="toggleSection('config_admin')"
+                                :class="openSections.config_admin ? 'underline text-blue-400' : ''"
+                                class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
+                            >
+                                <span>{{ __('menu.admin') }}</span>
+                                <svg :class="openSections.config_admin ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
+                                    class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </button>
+                            <div x-show="openSections.config_admin" x-transition class="pl-6 mt-1 space-y-1">
+
+
+                                    <a href="{{ route('admin.databasebackup') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{-- {{ __('menu.permissions') }} --}}
+                                       database backup  
+                                    </a>
+
+
+
+                       
+
+
+                            </div>
+                        </div>
+                       @endhasanyrole
                 </div>
             </div>
       

@@ -33,10 +33,12 @@ use App\Http\Controllers\ProduccionController;
 use App\Http\Controllers\ReprogramacionProyecto;
 use App\Http\Controllers\tareasproduccion;
 use App\Http\Controllers\HojasViewerController;
-
+use App\Http\Controllers\DatabaseBackupController;
 
 use App\Livewire\Produccion\HojasCrud;
 use App\Livewire\Produccion\HojaViewer;
+
+use Illuminate\Support\Facades\Storage;
 
 use App\Http\Controllers\PreproyectoUploadController;
 
@@ -354,6 +356,9 @@ Route::get('catalogos/flujoFiltrosProduccion', [TallasController::class, 'flujoF
 
 Route::get('catalogos/hojaFiltrosProduccion', [TallasController::class, 'hojaFiltrosProduccion'])->middleware(['auth', 'verified'])->name('catalogos.hojaFiltrosProduccion');
 
+
+Route::get('admin/databasebackup', [DatabaseBackupController::class, 'index'])->middleware(['auth', 'verified'])->name('admin.databasebackup');
+
     // Route::middleware(['auth'])->group(function () {
     //     // CRUD (solo admin/gestores)
     //     // CRUD (solo admin/gestores)
@@ -388,6 +393,24 @@ Route::middleware(['auth'])->group(function () {
 
 // Prueba de funcionalidad de los web sokets
 
+
+Route::get('/admin/db-backup/download', function () {
+    if (!auth()->check() || (!auth()->user()->hasRole('admin') && !auth()->user()->can('db.backup'))) {
+        abort(403);
+    }
+
+    $path = session('db_backup_path');
+    $name = session('db_backup_name');
+
+    if (!$path || !$name || !Storage::disk('local')->exists($path)) {
+        abort(404);
+    }
+
+    // Limpia sesión para evitar descargas repetidas por error
+    session()->forget(['db_backup_path', 'db_backup_name']);
+
+    return Storage::disk('local')->download($path, $name)->deleteFileAfterSend(true);
+})->name('admin.db-backup.download');
 
 
 
