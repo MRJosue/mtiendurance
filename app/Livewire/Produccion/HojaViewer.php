@@ -133,6 +133,17 @@ class HojaViewer extends Component
 
 
 
+    // Modales
+
+        // Modal Programar (individual)
+        public bool $showProgramarModal = false;
+        public ?int $programarPedidoId = null;
+
+        public ?string $programarFechaProduccion = null; // Y-m-d
+        public ?string $programarFechaEmbarque   = null; // Y-m-d
+
+
+
     /** Computed: catálogo de estados para el select */
     public function getEstadosProperty()
     {
@@ -208,7 +219,7 @@ class HojaViewer extends Component
     }
 
 
-        public function getAccionesAttribute(): array
+    public function getAccionesAttribute(): array
     {
         $cfg = $this->acciones_config ?? [];
         if (is_string($cfg)) {
@@ -1160,5 +1171,114 @@ class HojaViewer extends Component
         // ¿Todos los de la página están en selected?
         return empty(array_diff($pagina, $selected));
     }
+
+
+
+    
+
+    public function openProgramarModal(int $pedidoId): void
+    {
+        if (!$this->can('programar_pedido')) {
+            $this->dispatch('toast', message: 'No tienes permiso para programar pedidos', type: 'error');
+            return;
+        }
+
+        $pedido = \App\Models\Pedido::query()->find($pedidoId);
+        if (!$pedido) {
+            $this->dispatch('toast', message: 'Pedido no encontrado', type: 'error');
+            return;
+        }
+
+        // ✅ Validación: solo APROBADO
+        $aprobadoId = $this->estadoId('APROBADO');
+        if (!$aprobadoId) {
+            $this->dispatch('toast', message: 'No existe el estado "APROBADO" en el catálogo', type: 'error');
+            return;
+        }
+
+        $estadoDiseno = trim((string)($pedido->proyecto->estado ?? ''));
+        if ($estadoDiseno !== 'DISEÑO APROBADO') {
+            $this->dispatch('toast', message: 'Para programar, el diseño debe estar en "DISEÑO APROBADO"', type: 'error');
+            return;
+        }
+
+        if ((int)$pedido->estado_id !== (int)$aprobadoId) {
+            $this->dispatch('toast', message: 'Solo puedes programar pedidos en estado APROBADO', type: 'error');
+            return;
+        }
+
+        $this->resetValidation();
+
+        $this->programarPedidoId = $pedidoId;
+        $this->programarFechaProduccion = $pedido->fecha_produccion?->format('Y-m-d');
+        $this->programarFechaEmbarque   = $pedido->fecha_embarque?->format('Y-m-d');
+
+        $this->showProgramarModal = true;
+    }
+
+    public function closeProgramarModal(): void
+    {
+        $this->showProgramarModal = false;
+        $this->programarPedidoId = null;
+        $this->programarFechaProduccion = null;
+        $this->programarFechaEmbarque = null;
+        $this->resetValidation();
+    }
+
+    public function confirmarProgramacion(): void
+    {
+        if (!$this->programarPedidoId) return;
+
+        if (!$this->can('programar_pedido')) {
+            $this->dispatch('toast', message: 'No tienes permiso para programar pedidos', type: 'error');
+            return;
+        }
+
+        $pedido = \App\Models\Pedido::query()->find($this->programarPedidoId);
+        if (!$pedido) {
+            $this->dispatch('toast', message: 'Pedido no encontrado', type: 'error');
+            return;
+        }
+
+        // ✅ Validación: sigue siendo APROBADO al confirmar
+        $aprobadoId = $this->estadoId('APROBADO');
+        if (!$aprobadoId || (int)$pedido->estado_id !== (int)$aprobadoId) {
+            $this->dispatch('toast', message: 'El pedido ya no está en APROBADO, no se puede programar', type: 'error');
+            return;
+        }
+
+        // ✅ Validación fechas (requeridas por tu requerimiento)
+        $this->validate([
+            'programarFechaProduccion' => ['required', 'date'],
+            'programarFechaEmbarque'   => ['required', 'date'],
+        ], [
+            'programarFechaProduccion.required' => 'La fecha de producción es obligatoria.',
+            'programarFechaEmarque.required'    => 'La fecha de embarque es obligatoria.',
+        ]);
+
+        $enProduccionId = $this->estadoId('EN PRODUCCION');
+        if (!$enProduccionId) {
+            $this->dispatch('toast', message: 'No existe el estado "EN PRODUCCION" en el catálogo', type: 'error');
+            return;
+        }
+
+        $pedido->fecha_produccion  = Carbon::parse($this->programarFechaProduccion)->toDateString();
+        $pedido->fecha_embarque    = Carbon::parse($this->programarFechaEmbarque)->toDateString();
+
+        $pedido->estado_id         = $enProduccionId;
+        $pedido->estado            = 'EN PRODUCCION';
+
+        // ✅ estado_produccion a PROGRAMADO
+        $pedido->estado_produccion = 'PROGRAMADO';
+
+        $pedido->save();
+
+        $this->dispatch('toast', message: "Pedido #{$pedido->id} programado", type: 'success');
+
+        $this->closeProgramarModal();
+        $this->resetPage();
+    }
+
+
 
 }

@@ -912,7 +912,7 @@
                         <button
                             type="button"
                             class="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
-                            @click="close(); if (confirm('¿Programar este pedido?')) { $wire.programarPedido({{ $pedido->id }}) }"
+                            @click="close(); $wire.openProgramarModal({{ $pedido->id }})"
                         >
                             Programar pedido
                         </button>
@@ -1133,65 +1133,166 @@
     </div>
 </div>
 
+
+{{-- Modal: Programar pedido (individual) --}}
+<div
+    x-data="{ open: @entangle('showProgramarModal').live }"
+    x-cloak
+    x-show="open"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4"
+>
+    <div class="absolute inset-0 bg-black/50" @click="$wire.closeProgramarModal()"></div>
+
+    <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="p-4 sm:p-6 border-b">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h3 class="text-lg font-bold">Programar pedido</h3>
+                    <p class="text-sm text-gray-600">
+                        Pedido #{{ $programarPedidoId ?? '—' }}
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    class="text-gray-500 hover:text-gray-700"
+                    @click="$wire.closeProgramarModal()"
+                    aria-label="Cerrar"
+                >
+                    ✕
+                </button>
+            </div>
+        </div>
+
+        <div class="p-4 sm:p-6 space-y-4">
+            <div class="rounded-lg border bg-gray-50 p-3">
+                <div class="text-xs text-gray-500">Requisito</div>
+                <div class="text-sm text-gray-700">
+                    Este pedido debe estar en estado <span class="font-semibold">APROBADO</span> para poder programarse.
+                </div>
+            </div>
+
+            {{-- Errores --}}
+            @error('programarFechaProduccion')
+                <div class="rounded-lg border border-red-200 bg-red-50 text-red-800 p-2 text-sm">
+                    {{ $message }}
+                </div>
+            @enderror
+            @error('programarFechaEmbarque')
+                <div class="rounded-lg border border-red-200 bg-red-50 text-red-800 p-2 text-sm">
+                    {{ $message }}
+                </div>
+            @enderror
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de producción</label>
+                    <input
+                        type="date"
+                        class="w-full rounded-lg border-gray-300 focus:ring-blue-500"
+                        wire:model.live="programarFechaProduccion"
+                    >
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de embarque</label>
+                    <input
+                        type="date"
+                        class="w-full rounded-lg border-gray-300 focus:ring-blue-500"
+                        wire:model.live="programarFechaEmbarque"
+                    >
+                </div>
+            </div>
+
+            <div class="rounded-lg border p-3">
+                <div class="text-xs text-gray-500 mb-1">Al confirmar</div>
+                <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
+                    <li>Estado del pedido → <span class="font-semibold">EN PRODUCCION</span></li>
+                    <li>Estado de producción → <span class="font-semibold">PROGRAMADO</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="p-4 sm:p-6 border-t flex flex-col sm:flex-row gap-2 sm:justify-end">
+            <button
+                type="button"
+                class="w-full sm:w-auto px-4 py-2 rounded-lg border bg-white hover:bg-gray-50"
+                @click="$wire.closeProgramarModal()"
+            >
+                Cancelar
+            </button>
+
+            <button
+                type="button"
+                class="w-full sm:w-auto px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                wire:click="confirmarProgramacion"
+                wire:loading.attr="disabled"
+                wire:target="confirmarProgramacion"
+            >
+                <span wire:loading.remove wire:target="confirmarProgramacion">Confirmar</span>
+                <span wire:loading wire:target="confirmarProgramacion">Guardando...</span>
+            </button>
+        </div>
+    </div>
+</div>
+
         
- <script>
-document.addEventListener('alpine:init', () => {
-  Alpine.data('dropdownFloating', () => ({
-    open: false,
-    top: 0,
-    left: 0,
-    width: 260,
-    btn: null,
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('dropdownFloating', () => ({
+            open: false,
+            top: 0,
+            left: 0,
+            width: 260,
+            btn: null,
 
-    toggle(e) {
-      this.open ? this.close() : this.openAt(e);
-    },
+            toggle(e) {
+                this.open ? this.close() : this.openAt(e);
+            },
 
-    openAt(e) {
-      this.btn = e.currentTarget;
-      this.reposition();
-      this.open = true;
+            openAt(e) {
+                this.btn = e.currentTarget;
+                this.reposition();
+                this.open = true;
 
-      this._onRelayout = () => this.reposition();
-      window.addEventListener('scroll', this._onRelayout, true);
-      window.addEventListener('resize', this._onRelayout);
-    },
+                this._onRelayout = () => this.reposition();
+                window.addEventListener('scroll', this._onRelayout, true);
+                window.addEventListener('resize', this._onRelayout);
+            },
 
-    reposition() {
-      if (!this.btn) return;
+            reposition() {
+                if (!this.btn) return;
 
-      const r = this.btn.getBoundingClientRect();
-      const menuW = this.width;
+                const r = this.btn.getBoundingClientRect();
+                const menuW = this.width;
 
-      // base: abajo del botón
-      let top = r.bottom + 8;
-      let left = r.left;
+                let top = r.bottom + 8;
+                let left = r.left;
 
-      // clamp horizontal (evita salirse por la derecha)
-      const maxLeft = window.innerWidth - menuW - 10;
-      left = Math.min(left, maxLeft);
-      left = Math.max(10, left);
+                const maxLeft = window.innerWidth - menuW - 10;
+                left = Math.min(left, maxLeft);
+                left = Math.max(10, left);
 
-      // si no cabe abajo, abrir hacia arriba (estimación)
-      const estimatedHeight = 380;
-      if (top + estimatedHeight > window.innerHeight) {
-        top = Math.max(10, r.top - estimatedHeight - 8);
-      }
+                const estimatedHeight = 380;
+                if (top + estimatedHeight > window.innerHeight) {
+                    top = Math.max(10, r.top - estimatedHeight - 8);
+                }
 
-      this.top = Math.round(top);
-      this.left = Math.round(left);
-    },
+                this.top = Math.round(top);
+                this.left = Math.round(left);
+            },
 
-    close() {
-      this.open = false;
+            close() {
+                this.open = false;
 
-      if (this._onRelayout) {
-        window.removeEventListener('scroll', this._onRelayout, true);
-        window.removeEventListener('resize', this._onRelayout);
-        this._onRelayout = null;
-      }
-    }
-  }));
+                if (this._onRelayout) {
+                    window.removeEventListener('scroll', this._onRelayout, true);
+                    window.removeEventListener('resize', this._onRelayout);
+                    this._onRelayout = null;
+                }
+            }
+        }));
+    });
 });
 </script>
 
