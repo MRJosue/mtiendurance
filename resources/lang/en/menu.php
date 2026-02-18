@@ -16,7 +16,7 @@ return [
     'design_admin' => 'Design Manager',
     'design_tasks' => 'Design Tasks',
     'samples_admin' => 'Samples Administration',
-    'solicitudes_reconfiguracion' => 'Por Reprogramar',
+    'solicitudes_reconfiguracion' => 'Por Reconfigurar',
 
     'production' => 'Production',
     'special_approvals' => 'Special Approvals',

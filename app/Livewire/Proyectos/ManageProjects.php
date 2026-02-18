@@ -79,7 +79,7 @@ class ManageProjects extends Component
 
 
             /* ---------- Props UI ---------- */
-        public array  $tabs      = ['TODOS','PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION','DISEÑO RECHAZADO', 'DISEÑO APROBADO', 'CANCELADO', 'REPROGRAMAR'];
+        public array  $tabs      = ['TODOS','PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION','DISEÑO RECHAZADO', 'DISEÑO APROBADO', 'CANCELADO', 'RECONFIGURAR'];
         public string $activeTab = 'TODOS';              // tab inicial
     
 
@@ -197,8 +197,8 @@ class ManageProjects extends Component
                     $q->where('ind_activo', 1)
                 )
                 
-                // Tab REPROGRAMAR
-                ->when($this->activeTab === 'REPROGRAMAR', fn($q) =>
+                // Tab RECONFIGURAR
+                ->when($this->activeTab === 'RECONFIGURAR', fn($q) =>
                     $q->where('estado', 'DISEÑO APROBADO')->where('flag_reconfigurar', 1)
                 )
                 // Estados normales
@@ -534,7 +534,7 @@ class ManageProjects extends Component
 
 
             // --- Tabs ---
-            if ($this->activeTab === 'REPROGRAMAR') {
+            if ($this->activeTab === 'RECONFIGURAR') {
                 $query->where('estado', 'DISEÑO APROBADO')->where('flag_reconfigurar', 1);
             }
             if (in_array($this->activeTab, $this->estados, true)) {

@@ -45,7 +45,7 @@ class ReconfigurarProyectos extends Component
 
 
             /* ---------- Props UI ---------- */
-        public array  $tabs      = [ 'POR REPROGRAMAR'];
+        public array  $tabs      = [ 'POR RECONFIGURAR'];
         public string $activeTab = 'TODOS';              // tab inicial
     
 
@@ -142,13 +142,13 @@ public array $filters = [
                     $q->where('ind_activo', 1);
                 })
 
-                // NUEVO: Tab POR REPROGRAMAR => ambos flags en 1
-                ->when($this->activeTab === 'POR REPROGRAMAR', function ($q) {
+                // NUEVO: Tab POR RECONFIGURAR => ambos flags en 1
+                ->when($this->activeTab === 'POR RECONFIGURAR', function ($q) {
                     $q->where('flag_solicitud_reconfigurar', 1)
                     ->where('flag_reconfigurar', 1);
                 })
-                // Ya existía: REPROGRAMAR => aprobado + flag_reconfigurar = 1
-                ->when($this->activeTab === 'REPROGRAMAR', function ($q) {
+                // Ya existía: RECONFIGURAR => aprobado + flag_reconfigurar = 1
+                ->when($this->activeTab === 'RECONFIGURAR', function ($q) {
                     $q->where('estado', 'DISEÑO APROBADO')
                     ->where('flag_reconfigurar', 1);
                 })
@@ -371,13 +371,13 @@ public array $filters = [
             /* ====== NUEVO: Tab POR REPROGRAMAR ======
             Muestra todos los proyectos con ambos flags en 1,
             sin importar el estado. */
-            if ($this->activeTab === 'POR REPROGRAMAR') {
+            if ($this->activeTab === 'POR RECONFIGURAR') {
                 $query->where('flag_solicitud_reconfigurar', 1)
                     ->where('flag_reconfigurar', 1);
             }
 
-            // Ya existía: REPROGRAMAR => DISEÑO APROBADO + flag_reconfigurar = 1
-            if ($this->activeTab === 'REPROGRAMAR') {
+            // Ya existía: RECONFIGURAR => DISEÑO APROBADO + flag_reconfigurar = 1
+            if ($this->activeTab === 'RECONFIGURAR') {
                 $query->where('estado', 'DISEÑO APROBADO')
                     ->where('flag_reconfigurar', 1);
             }

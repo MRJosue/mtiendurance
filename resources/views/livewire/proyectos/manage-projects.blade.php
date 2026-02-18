@@ -756,111 +756,111 @@
 
 
 
-{{-- Modal INACTIVAR PROYECTO --}}
-<div
-    x-cloak
-    x-show="showDeactivate"
-    x-transition
-    class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
->
-    <div class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative">
-        <h2 class="text-lg sm:text-xl font-bold mb-4 text-red-600">
-            Confirmar inactivación de proyecto
-        </h2>
+    {{-- Modal INACTIVAR PROYECTO --}}
+    <div
+        x-cloak
+        x-show="showDeactivate"
+        x-transition
+        class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
+    >
+        <div class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative">
+            <h2 class="text-lg sm:text-xl font-bold mb-4 text-red-600">
+                Confirmar inactivación de proyecto
+            </h2>
 
-        <p class="text-sm text-gray-700 mb-4">
-            Estás a punto de inactivar el proyecto
-            <span class="font-semibold">
-                #{{ $deactivateStats['id'] ?? '' }} - {{ $deactivateStats['nombre'] ?? '' }}
-            </span>.
-        </p>
-
-        <div class="mb-4 text-sm text-gray-700 space-y-1">
-            <p class="font-semibold">
-                Se aplicará lo siguiente:
+            <p class="text-sm text-gray-700 mb-4">
+                Estás a punto de inactivar el proyecto
+                <span class="font-semibold">
+                    #{{ $deactivateStats['id'] ?? '' }} - {{ $deactivateStats['nombre'] ?? '' }}
+                </span>.
             </p>
-            <ul class="list-disc list-inside space-y-1">
-                <li>El proyecto quedará marcado como <strong>Inactivo</strong>.</li>
-                <li>Estado actual de diseño: <strong>{{ $deactivateStats['estado'] ?? 'Sin estado' }}</strong>.</li>
-                <li>Pedidos activos asociados (tipo PEDIDO, estado_id = 1): 
-                    <span class="font-semibold">{{ $deactivateStats['total_pedidos'] ?? 0 }}</span>
-                </li>
-            </ul>
-        </div>
 
-        <p class="text-xs text-red-500 mb-4">
-            Esta acción no elimina el proyecto ni sus pedidos, pero dejará de mostrarse en las vistas que solo consideran proyectos activos.
-        </p>
+            <div class="mb-4 text-sm text-gray-700 space-y-1">
+                <p class="font-semibold">
+                    Se aplicará lo siguiente:
+                </p>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>El proyecto quedará marcado como <strong>Inactivo</strong>.</li>
+                    <li>Estado actual de diseño: <strong>{{ $deactivateStats['estado'] ?? 'Sin estado' }}</strong>.</li>
+                    <li>Pedidos activos asociados (tipo PEDIDO, estado_id = 1): 
+                        <span class="font-semibold">{{ $deactivateStats['total_pedidos'] ?? 0 }}</span>
+                    </li>
+                </ul>
+            </div>
 
-        <div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
-            <button
-                type="button"
-                class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
-                @click="showDeactivate = false"
-            >
-                Cancelar
-            </button>
-            <button
-                type="button"
-                class="w-full sm:w-auto px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
-                wire:click="inactivarProyectoConfirmado"
-            >
-                Sí, inactivar
-            </button>
+            <p class="text-xs text-red-500 mb-4">
+                Esta acción no elimina el proyecto ni sus pedidos, pero dejará de mostrarse en las vistas que solo consideran proyectos activos.
+            </p>
+
+            <div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
+                <button
+                    type="button"
+                    class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                    @click="showDeactivate = false"
+                >
+                    Cancelar
+                </button>
+                <button
+                    type="button"
+                    class="w-full sm:w-auto px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                    wire:click="inactivarProyectoConfirmado"
+                >
+                    Sí, inactivar
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-{{-- Modal ACTIVAR PROYECTO --}}
-<div
-    x-cloak
-    x-show="showActivate"
-    x-transition
-    class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
->
-    <div class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative">
-        <h2 class="text-lg sm:text-xl font-bold mb-4 text-emerald-700">
-            Confirmar activación de proyecto
-        </h2>
+    {{-- Modal ACTIVAR PROYECTO --}}
+    <div
+        x-cloak
+        x-show="showActivate"
+        x-transition
+        class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
+    >
+        <div class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative">
+            <h2 class="text-lg sm:text-xl font-bold mb-4 text-emerald-700">
+                Confirmar activación de proyecto
+            </h2>
 
-        <p class="text-sm text-gray-700 mb-4">
-            Vas a activar el proyecto
-            <span class="font-semibold">
-                #{{ $activateStats['id'] ?? '' }} - {{ $activateStats['nombre'] ?? '' }}
-            </span>.
-        </p>
-
-        <div class="mb-4 text-sm text-gray-700 space-y-1">
-            <p class="font-semibold">
-                Se realizará lo siguiente:
+            <p class="text-sm text-gray-700 mb-4">
+                Vas a activar el proyecto
+                <span class="font-semibold">
+                    #{{ $activateStats['id'] ?? '' }} - {{ $activateStats['nombre'] ?? '' }}
+                </span>.
             </p>
-            <ul class="list-disc list-inside space-y-1">
-                <li>El proyecto quedará marcado como <strong>Activo</strong>.</li>
-                <li>Estado de diseño: <strong>{{ $activateStats['estado'] ?? 'Sin estado' }}</strong>.</li>
-                <li>Pedidos activos asociados (tipo PEDIDO, estado_id = 1): 
-                    <span class="font-semibold">{{ $activateStats['total_pedidos'] ?? 0 }}</span>
-                </li>
-            </ul>
-        </div>
 
-        <div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
-            <button
-                type="button"
-                class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
-                @click="showActivate = false"
-            >
-                Cancelar
-            </button>
-            <button
-                type="button"
-                class="w-full sm:w-auto px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
-                wire:click="activarProyectoConfirmado"
-            >
-                Sí, activar
-            </button>
+            <div class="mb-4 text-sm text-gray-700 space-y-1">
+                <p class="font-semibold">
+                    Se realizará lo siguiente:
+                </p>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>El proyecto quedará marcado como <strong>Activo</strong>.</li>
+                    <li>Estado de diseño: <strong>{{ $activateStats['estado'] ?? 'Sin estado' }}</strong>.</li>
+                    <li>Pedidos activos asociados (tipo PEDIDO, estado_id = 1): 
+                        <span class="font-semibold">{{ $activateStats['total_pedidos'] ?? 0 }}</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
+                <button
+                    type="button"
+                    class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                    @click="showActivate = false"
+                >
+                    Cancelar
+                </button>
+                <button
+                    type="button"
+                    class="w-full sm:w-auto px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+                    wire:click="activarProyectoConfirmado"
+                >
+                    Sí, activar
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
 
     <script>
