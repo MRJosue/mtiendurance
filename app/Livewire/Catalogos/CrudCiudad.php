@@ -4,6 +4,7 @@ namespace App\Livewire\Catalogos;
 
 use App\Models\Ciudad;
 use App\Models\Estado;
+use App\Models\Pais;
 use App\Models\TipoEnvio;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -26,11 +27,10 @@ class CrudCiudad extends Component
     public int $perPage = 10;
     public array $perPageOptions = [10, 20, 30, 50, 100];
 
-    
-
     public array $filters = [
         'id'            => null,
         'nombre'        => null,
+        'pais_id'       => null, // ✅ NUEVO
         'estado_id'     => null,
         'tipo_envio_id' => null,
     ];
@@ -60,6 +60,7 @@ class CrudCiudad extends Component
         $this->filters = [
             'id'            => null,
             'nombre'        => null,
+            'pais_id'       => null, // ✅ NUEVO
             'estado_id'     => null,
             'tipo_envio_id' => null,
         ];
@@ -119,7 +120,6 @@ class CrudCiudad extends Component
             'estado_id' => $this->estado_id,
         ]);
 
-        // Asumiendo que existe tu helper en el modelo:
         $ciudad->syncTiposEnvio($this->selectedTiposEnvio);
 
         session()->flash('message', 'Ciudad creada exitosamente.');
@@ -156,7 +156,8 @@ class CrudCiudad extends Component
 
     public function render()
     {
-        $query = Ciudad::query()->with(['estado', 'tipoEnvios']);
+        // ✅ Cargar país vía estado.pais
+        $query = Ciudad::query()->with(['estado.pais', 'tipoEnvios']);
 
         // Filtro ID (soporta lista)
         $query->when($this->filters['id'], function ($q, $v) {
@@ -174,6 +175,12 @@ class CrudCiudad extends Component
             $q->where('nombre', 'like', '%'.trim((string)$v).'%')
         );
 
+        // ✅ País (filtra por pais_id en la tabla estados)
+        $query->when($this->filters['pais_id'], function ($q, $v) {
+            $paisId = (int) $v;
+            $q->whereHas('estado', fn($sub) => $sub->where('pais_id', $paisId));
+        });
+
         // Estado
         $query->when($this->filters['estado_id'], fn($q, $v) =>
             $q->where('estado_id', (int)$v)
@@ -189,6 +196,7 @@ class CrudCiudad extends Component
 
         return view('livewire.catalogos.crud-ciudad', [
             'ciudades'   => $ciudades,
+            'paises'     => Pais::orderBy('nombre')->get(),   // ✅ NUEVO
             'estados'    => Estado::orderBy('nombre')->get(),
             'tiposEnvio' => TipoEnvio::orderBy('nombre')->get(),
         ]);

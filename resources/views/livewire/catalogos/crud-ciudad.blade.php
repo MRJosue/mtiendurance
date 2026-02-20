@@ -144,6 +144,41 @@
                         </div>
                     </th>
 
+
+                    {{-- País --}}
+                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600 align-top">
+                        <div class="flex items-start justify-between gap-2 min-w-[14rem]">
+                            <span>País</span>
+
+                            <div x-data="{ open:false }" class="relative shrink-0">
+                                <button @click="open=!open" class="p-1 rounded hover:bg-gray-200" title="Filtrar País">⋮</button>
+                                <div
+                                    x-cloak x-show="open" @click.away="open=false" x-transition
+                                    class="absolute right-0 z-50 mt-1 w-72 rounded-lg border bg-white shadow p-3"
+                                >
+                                    <label class="block text-xs text-gray-600 mb-1">País</label>
+                                    <select
+                                        class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                        wire:model.live.debounce.400ms="filters.pais_id"
+                                    >
+                                        <option value="">Todos</option>
+                                        @foreach($paises as $pais)
+                                            <option value="{{ $pais->id }}">{{ $pais->nombre }}</option>
+                                        @endforeach
+                                    </select>
+
+                                    <div class="mt-2 flex justify-end gap-2">
+                                        <button type="button" class="px-2 py-1 text-xs rounded border"
+                                            @click="$wire.set('filters.pais_id','')">Limpiar</button>
+                                        <button type="button" class="px-2 py-1 text-xs rounded border"
+                                            @click="open=false">Cerrar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </th>
+
+
                     {{-- Tipos de envío --}}
                     <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600 align-top">
                         <div class="flex items-start justify-between gap-2 min-w-[16rem]">
@@ -187,6 +222,12 @@
                         <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $ciudad->id }}</td>
                         <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $ciudad->nombre }}</td>
                         <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $ciudad->estado->nombre ?? '—' }}</td>
+                        
+                        <td class="border-b px-4 py-2 text-gray-700 text-sm">
+                            {{ $ciudad->estado?->pais?->nombre ?? '—' }}
+                        </td>
+
+
                         <td class="border-b px-4 py-2 text-gray-700 text-sm">
                             @if($ciudad->tipoEnvios->isNotEmpty())
                                 <ul class="list-disc list-inside space-y-1">
@@ -222,7 +263,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-4 py-6 text-center text-sm text-gray-500">
+                        <td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500">
                             No hay ciudades para mostrar.
                         </td>
                     </tr>
@@ -300,7 +341,11 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                         @foreach($tiposEnvio as $tipo)
-                            <label class="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 border rounded-lg p-3 cursor-pointer transition">
+                            <label
+    x-data="{ checked: @entangle('selectedTiposEnvio').live.includes({{ $tipo->id }}) }"
+    class="flex items-center gap-2 border rounded-lg p-3 cursor-pointer transition"
+    :class="checked ? 'bg-blue-50 border-blue-400' : 'bg-gray-50 hover:bg-gray-100'"
+>
                                 <input
                                     type="checkbox"
                                     value="{{ $tipo->id }}"

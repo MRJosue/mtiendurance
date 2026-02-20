@@ -121,7 +121,9 @@ Route::get('/notificacion', [DemoController::class, 'mostrarNotificacion']);
 
 //resources\views\auth\login.blade.php
 Route::get('/', function () {
-    return view('auth.login');
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : view('auth.login');
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -235,11 +237,16 @@ Route::get('/pedidos/proveedor',[PedidosController::class, 'pedidosproveedor'])-
 
 //preproyectos
 Route::get('/preproyectos',[PreproyectosController::class, 'index'])->middleware(['auth','verified'])->name('preproyectos.index');
-Route::get('/preproyectos/show/{preproyecto}', [PreproyectosController::class, 'show'])->name('preproyectos.show');
+
+Route::get('/preproyectos/show/{preproyecto}', [PreproyectosController::class, 'show'])
+    ->middleware(['auth','verified'])
+    ->name('preproyectos.show');
+
 Route::get('/preproyectos/create',[PreproyectosController::class, 'create'])->middleware(['auth','verified'])->name('preproyectos.create');
 
-Route::post('/preproyecto/upload-temporal', [PreproyectoUploadController::class, 'upload'])->name('preproyecto.upload-temporal');
-
+Route::post('/preproyecto/upload-temporal', [PreproyectoUploadController::class, 'upload'])
+    ->middleware(['auth','verified'])
+    ->name('preproyecto.upload-temporal');
 
 //Administracion de usuarios
 // Route::get('/usuarios',[UserController::class, 'index'])->middleware(['auth','verified'])->name('usuarios.index');
@@ -262,32 +269,31 @@ Route::get('/usuarios/permisos',[permisoscontroller::class, 'index'])->middlewar
 
 Route::get('/usuarios/empresas',[permisoscontroller::class, 'showempresas'])->middleware(['auth','verified'])->name('permisos.empresas');
 
+Route::middleware(['auth','verified'])->group(function () {
+    Route::get('/users/appi', [UserController::class, 'getusersselect'])->name('api.users.index');
+    Route::get('/users/appi/preproyecto', [UserController::class, 'getusersselectpreproyecto'])->name('api.users.preproyecto.index');
 
-Route::get('/users/appi', [UserController::class, 'getusersselect'])->name('api.users.index');
+    Route::get('/api/users/index', function (Request $request) {
+        $search = (string) $request->input('search', '');
 
-Route::get('/users/appi/preproyecto', [UserController::class, 'getusersselectpreproyecto'])->name('api.users.preproyecto.index');
+        $q = User::query()->select('id','name','email');
 
-Route::get('/api/users/index', function (Request $request) {
-    $search = (string) $request->input('search', '');
+        if ($search !== '') {
+            $q->where(function($qq) use ($search) {
+                $qq->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
 
-    $q = User::query()->select('id','name','email');
+        return $q->limit(15)->get()
+            ->map(fn($u) => [
+                'id'   => $u->id,
+                'name' => "{$u->name} ({$u->email})",
+            ]);
+            
+    })->name('api.users.index')->middleware('auth');
 
-    if ($search !== '') {
-        $q->where(function($qq) use ($search) {
-            $qq->where('name', 'like', "%{$search}%")
-               ->orWhere('email', 'like', "%{$search}%");
-        });
-    }
-
-    return $q->limit(15)->get()
-        ->map(fn($u) => [
-            'id'   => $u->id,
-            'name' => "{$u->name} ({$u->email})",
-        ]);
-        
-})->name('api.users.index')->middleware('auth');
-
-
+});
 
 //Rutas Panel de diseño
 Route::get('/diseño',[DisenioController::class, 'index'])->middleware(['auth','verified'])->name('disenio.index');

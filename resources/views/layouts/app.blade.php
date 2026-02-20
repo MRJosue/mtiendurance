@@ -105,6 +105,27 @@
     <x-notify::notify />
     @notifyJs
 
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+    const goLogin = () => window.location.href = "{{ route('login') }}";
+
+    const origFetch = window.fetch;
+    window.fetch = async (...args) => {
+        const res = await origFetch(...args);
+        if (res.status === 401 || res.status === 419) goLogin();
+        return res;
+    };
+
+    const origOpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function(...args) {
+        this.addEventListener('load', function() {
+        if (this.status === 401 || this.status === 419) goLogin();
+        });
+        return origOpen.apply(this, args);
+    };
+    });
+    </script>
+
     <style>[x-cloak]{ display:none !important; }</style>
 </body>
 
