@@ -2,13 +2,11 @@
 
 namespace App\Livewire\Usuarios;
 
-
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\DireccionFiscal;
 use App\Models\Pais;
 use App\Models\Estado;
-use App\Models\Ciudad;
 
 class DireccionesFiscalesCrud extends Component
 {
@@ -17,27 +15,29 @@ class DireccionesFiscalesCrud extends Component
     public $userId;
 
     public $razon_social;
-
-
     public $rfc;
     public $calle;
+
     public $pais_id;
     public $estado_id;
-    public $ciudad_id;
+
+    public $ciudad; // ✅ NUEVO texto
+
     public $codigo_postal;
     public $direccion_id;
+
     public $modal = false;
     public $search = '';
     public $query = '';
 
     protected $rules = [
-         'razon_social' => 'required|string|max:255', 
-        'rfc' => 'required|string|max:13',
-        'calle' => 'required|string|max:255',
-        'pais_id' => 'required|exists:paises,id',
-        'estado_id' => 'required|exists:estados,id',
-        'ciudad_id' => 'required|exists:ciudades,id',
-        'codigo_postal' => 'required|string|max:10',
+        'razon_social'   => 'required|string|max:255',
+        'rfc'            => 'required|string|max:13',
+        'calle'          => 'required|string|max:255',
+        'pais_id'        => 'required|exists:paises,id',
+        'estado_id'      => 'required|exists:estados,id',
+        'ciudad'         => 'required|string|max:255', // ✅
+        'codigo_postal'  => 'required|string|max:10',
     ];
 
     public function mount($userId)
@@ -51,6 +51,12 @@ class DireccionesFiscalesCrud extends Component
         $this->resetPage();
     }
 
+    public function updatedPaisId(): void
+    {
+        // Si cambia país, reinicia estado
+        $this->estado_id = null;
+    }
+
     public function render()
     {
         $query = DireccionFiscal::where('usuario_id', $this->userId);
@@ -60,10 +66,13 @@ class DireccionesFiscalesCrud extends Component
         }
 
         return view('livewire.usuarios.direcciones-fiscales-crud', [
-            'direcciones' => $query->with(['ciudad', 'ciudad.estado', 'ciudad.estado.pais'])->orderBy('created_at', 'desc')->paginate(5),
-            'paises' => Pais::all(),
-            'estados' => $this->pais_id ? Estado::where('pais_id', $this->pais_id)->get() : [],
-            'ciudades' => $this->estado_id ? Ciudad::where('estado_id', $this->estado_id)->get() : [],
+            'direcciones' => $query
+                ->with(['estado', 'pais', 'estado.pais'])
+                ->orderBy('created_at', 'desc')
+                ->paginate(5),
+
+            'paises' => Pais::orderBy('nombre')->get(),
+            'estados' => $this->pais_id ? Estado::where('pais_id', $this->pais_id)->orderBy('nombre')->get() : [],
         ]);
     }
 
@@ -90,7 +99,7 @@ class DireccionesFiscalesCrud extends Component
         $this->calle = '';
         $this->pais_id = null;
         $this->estado_id = null;
-        $this->ciudad_id = null;
+        $this->ciudad = ''; // ✅
         $this->codigo_postal = '';
         $this->direccion_id = null;
     }
@@ -100,13 +109,13 @@ class DireccionesFiscalesCrud extends Component
         $this->validate();
 
         $data = [
-            'usuario_id' => $this->userId,
-            'razon_social' => $this->razon_social, 
-            'rfc' => $this->rfc,
-            'calle' => $this->calle,
-            'pais_id' => $this->pais_id,
-            'estado_id' => $this->estado_id,
-            'ciudad_id' => $this->ciudad_id,
+            'usuario_id'    => $this->userId,
+            'razon_social'  => $this->razon_social,
+            'rfc'           => $this->rfc,
+            'calle'         => $this->calle,
+            'pais_id'       => $this->pais_id,
+            'estado_id'     => $this->estado_id,
+            'ciudad'        => $this->ciudad, // ✅
             'codigo_postal' => $this->codigo_postal,
         ];
 
@@ -125,15 +134,20 @@ class DireccionesFiscalesCrud extends Component
 
     public function editar($id)
     {
-        $direccion = DireccionFiscal::with(['ciudad', 'ciudad.estado', 'ciudad.estado.pais'])->findOrFail($id);
+        $direccion = DireccionFiscal::with(['estado', 'pais', 'estado.pais'])->findOrFail($id);
+
         $this->direccion_id = $direccion->id;
         $this->razon_social = $direccion->razon_social;
-        $this->rfc = $direccion->rfc;
-        $this->calle = $direccion->calle;
-        $this->pais_id = $direccion->pais_id;
-        $this->estado_id = $direccion->estado_id;
-        $this->ciudad_id = $direccion->ciudad_id;
+        $this->rfc          = $direccion->rfc;
+        $this->calle        = $direccion->calle;
+
+        $this->pais_id      = $direccion->pais_id;
+        $this->estado_id    = $direccion->estado_id;
+
+        $this->ciudad       = $direccion->ciudad ?? ''; // ✅
+
         $this->codigo_postal = $direccion->codigo_postal;
+
         $this->abrirModal();
     }
 
@@ -152,6 +166,3 @@ class DireccionesFiscalesCrud extends Component
         session()->flash('message', '¡Dirección fiscal predeterminada actualizada exitosamente!');
     }
 }
-
-
-//return view('livewire.usuarios.direcciones-fiscales-crud');

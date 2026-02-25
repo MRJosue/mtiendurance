@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Usuarios;
 
-use App\Models\Ciudad;
 use App\Models\DireccionEntrega;
 use App\Models\DireccionFiscal;
 use App\Models\Estado;
@@ -43,12 +42,14 @@ class ConfigInicial extends Component
     public string $f_calle = '';
     public ?int $f_pais_id = null;
     public ?int $f_estado_id = null;
-    public ?int $f_ciudad_id = null;
+
+    public string $f_ciudad = '';
+
     public string $f_codigo_postal = '';
 
     public $f_paisesList;
     public $f_estadosList;
-    public $f_ciudadesList;
+ 
 
     /** =======================
      *  Direcciones Entrega (listado + modal)
@@ -63,13 +64,12 @@ class ConfigInicial extends Component
     public string $e_calle = '';
     public ?int $e_pais_id = null;
     public ?int $e_estado_id = null;
-    public ?int $e_ciudad_id = null;
+    public string $e_ciudad = '';
     public string $e_codigo_postal = '';
     public string $e_telefono = '';
 
     public $e_paisesList;
     public $e_estadosList;
-    public $e_ciudadesList;
 
 
     public bool $faltaFiscal = false;
@@ -107,11 +107,11 @@ class ConfigInicial extends Component
 
                 $this->f_paisesList = $paises;
                 $this->f_estadosList = collect();
-                $this->f_ciudadesList = collect();
+
 
                 $this->e_paisesList = $paises;
                 $this->e_estadosList = collect();
-                $this->e_ciudadesList = collect();
+             
 
 
                 // if ($u->esStaffOAdmin()) {
@@ -139,7 +139,7 @@ class ConfigInicial extends Component
             'f_calle' => ['required','string','max:255'],
             'f_pais_id' => ['required','exists:paises,id'],
             'f_estado_id' => ['required','exists:estados,id'],
-            'f_ciudad_id' => ['required','exists:ciudades,id'],
+            'f_ciudad' => ['required','string','max:255'],
             'f_codigo_postal' => ['required','string','max:10'],
         ];
     }
@@ -152,7 +152,7 @@ class ConfigInicial extends Component
             'e_calle' => ['required','string','max:255'],
             'e_pais_id' => ['required','exists:paises,id'],
             'e_estado_id' => ['required','exists:estados,id'],
-            'e_ciudad_id' => ['required','exists:ciudades,id'],
+            'e_ciudad' => ['required','string','max:255'],
             'e_codigo_postal' => ['required','string','max:10'],
             'e_telefono' => ['nullable','string','max:15'],
         ];
@@ -162,43 +162,37 @@ class ConfigInicial extends Component
     public function updatedFPaisId($paisId): void
     {
         $this->f_estado_id = null;
-        $this->f_ciudad_id = null;
-        $this->f_ciudadesList = collect();
-
         $this->f_estadosList = $paisId
             ? Estado::where('pais_id', $paisId)->orderBy('nombre')->get(['id','nombre'])
             : collect();
     }
 
-    public function updatedFEstadoId($estadoId): void
-    {
-        $this->f_ciudad_id = null;
+    // public function updatedFEstadoId($estadoId): void
+    // {
+    //     $this->f_ciudad_id = null;
 
-        $this->f_ciudadesList = $estadoId
-            ? Ciudad::where('estado_id', $estadoId)->orderBy('nombre')->get(['id','nombre'])
-            : collect();
-    }
+    //     $this->f_ciudadesList = $estadoId
+    //         ? Ciudad::where('estado_id', $estadoId)->orderBy('nombre')->get(['id','nombre'])
+    //         : collect();
+    // }
 
     /** ========= Cascadas: Entrega ========= */
     public function updatedEPaisId($paisId): void
     {
         $this->e_estado_id = null;
-        $this->e_ciudad_id = null;
-        $this->e_ciudadesList = collect();
-
         $this->e_estadosList = $paisId
             ? Estado::where('pais_id', $paisId)->orderBy('nombre')->get(['id','nombre'])
             : collect();
     }
 
-    public function updatedEEstadoId($estadoId): void
-    {
-        $this->e_ciudad_id = null;
+    // public function updatedEEstadoId($estadoId): void
+    // {
+    //     $this->e_ciudad_id = null;
 
-        $this->e_ciudadesList = $estadoId
-            ? Ciudad::where('estado_id', $estadoId)->orderBy('nombre')->get(['id','nombre'])
-            : collect();
-    }
+    //     $this->e_ciudadesList = $estadoId
+    //         ? Ciudad::where('estado_id', $estadoId)->orderBy('nombre')->get(['id','nombre'])
+    //         : collect();
+    // }
 
     /** ========= Buscar ========= */
     public function buscarFiscal(): void
@@ -235,8 +229,7 @@ class ConfigInicial extends Component
         $this->f_estadosList = Estado::where('pais_id', $this->f_pais_id)->orderBy('nombre')->get(['id','nombre']);
         $this->f_estado_id = $d->estado_id;
 
-        $this->f_ciudadesList = Ciudad::where('estado_id', $this->f_estado_id)->orderBy('nombre')->get(['id','nombre']);
-        $this->f_ciudad_id = $d->ciudad_id;
+        $this->f_ciudad = (string)($d->ciudad ?? '');
 
         $this->f_codigo_postal = $d->codigo_postal;
 
@@ -254,7 +247,7 @@ class ConfigInicial extends Component
             'calle' => $this->f_calle,
             'pais_id' => $this->f_pais_id,
             'estado_id' => $this->f_estado_id,
-            'ciudad_id' => $this->f_ciudad_id,
+           'ciudad' => $this->f_ciudad,
             'codigo_postal' => $this->f_codigo_postal,
         ];
 
@@ -320,11 +313,11 @@ class ConfigInicial extends Component
         $this->f_calle = '';
         $this->f_pais_id = null;
         $this->f_estado_id = null;
-        $this->f_ciudad_id = null;
+        $this->f_ciudad = '';
         $this->f_codigo_postal = '';
 
         $this->f_estadosList = collect();
-        $this->f_ciudadesList = collect();
+        
         $this->resetValidation();
     }
 
@@ -350,8 +343,7 @@ class ConfigInicial extends Component
         $this->e_estadosList = Estado::where('pais_id', $this->e_pais_id)->orderBy('nombre')->get(['id','nombre']);
         $this->e_estado_id = $d->estado_id;
 
-        $this->e_ciudadesList = Ciudad::where('estado_id', $this->e_estado_id)->orderBy('nombre')->get(['id','nombre']);
-        $this->e_ciudad_id = $d->ciudad_id;
+        $this->e_ciudad = (string)($d->ciudad ?? '');
 
         $this->e_codigo_postal = $d->codigo_postal;
         $this->e_telefono = $d->telefono;
@@ -370,7 +362,7 @@ class ConfigInicial extends Component
             'calle' => $this->e_calle,
             'pais_id' => $this->e_pais_id,
             'estado_id' => $this->e_estado_id,
-            'ciudad_id' => $this->e_ciudad_id,
+           'ciudad' => $this->e_ciudad,
             'codigo_postal' => $this->e_codigo_postal,
             'telefono' => $this->e_telefono,
         ];
@@ -432,12 +424,11 @@ class ConfigInicial extends Component
         $this->e_calle = '';
         $this->e_pais_id = null;
         $this->e_estado_id = null;
-        $this->e_ciudad_id = null;
+        $this->e_ciudad = '';
         $this->e_codigo_postal = '';
         $this->e_telefono = '';
 
         $this->e_estadosList = collect();
-        $this->e_ciudadesList = collect();
         $this->resetValidation();
     }
 
@@ -547,11 +538,11 @@ class ConfigInicial extends Component
         }
 
         return view('livewire.usuarios.config-inicial', [
-            'direccionesFiscales' => $qFiscal->with(['ciudad.estado.pais'])
+            'direccionesFiscales' => $qFiscal->with(['estado.pais','pais'])
                 ->orderByDesc('created_at')
                 ->paginate(5, ['*'], 'fiscalPage'),
 
-            'direccionesEntrega' => $qEntrega->with(['ciudad.estado.pais'])
+            'direccionesEntrega' => $qEntrega->with(['estado.pais','pais'])
                 ->orderByDesc('created_at')
                 ->paginate(10, ['*'], 'entregaPage'),
         ]);

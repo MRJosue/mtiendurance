@@ -172,9 +172,10 @@ class EditPreProject extends Component
         $this->direccion_entrega_id = $preProyecto->direccion_entrega_id;
 
         // cargamos los tipos de envio
-        $this->cargarTiposEnvio();
-
-        $this->id_tipo_envio = $preProyecto->id_tipo_envio;
+        $this->id_tipo_envio = $preProyecto->id_tipo_envio; // primero
+        $this->cargarTiposEnvio(); // después (ya trae tipos por estado)
+        // y fuerza cálculo final (por si cargarTiposEnvio autoselecciona o resetea)
+        $this->on_Calcula_Fechas_Entrega();
 
         // Cargar productos de la categoría seleccionada
         $this->productos = Producto::where('categoria_id', $this->categoria_id)->get();
@@ -295,6 +296,19 @@ class EditPreProject extends Component
         }
 
 
+
+        $direccion = DireccionEntrega::find($this->direccion_entrega_id);
+        if ($direccion && $direccion->estado_id) {
+            $permitidos = Estado::find($direccion->estado_id)
+                ?->tipoEnvios()
+                ->pluck('tipo_envio.id')
+                ->toArray() ?? [];
+
+            if (!in_array((int)$this->id_tipo_envio, array_map('intval', $permitidos), true)) {
+                $this->addError('id_tipo_envio', 'El tipo de envío no pertenece al estado de la dirección seleccionada.');
+                return;
+            }
+        }
 
 
 
@@ -697,23 +711,54 @@ class EditPreProject extends Component
     }
 
 
-    public function updatedDireccionEntregaId()
+    public function updatedDireccionEntregaId($value = null): void
     {
+        $this->direccion_entrega_id = $value ? (int)$value : null;
+
+        // limpia selección previa del tipo de envío
+        $this->id_tipo_envio = null;
+        $this->tipos_envio = [];
+
         $this->cargarTiposEnvio();
     }
 
-    public function cargarTiposEnvio()
+    public function cargarTiposEnvio(): void
     {
-        if ($this->direccion_entrega_id) {
-            $direccion = DireccionEntrega::find($this->direccion_entrega_id);
-            if ($direccion && $direccion->ciudad) {
-                $this->tipos_envio = $direccion->ciudad->tipoEnvios()->get();
-            } else {
-                $this->tipos_envio = [];
-            }
-        } else {
-            $this->tipos_envio = [];
+        $this->tipos_envio = [];
+        //$this->id_tipo_envio = null;
+        // Solo limpiar si el tipo actual no pertenece a la nueva lista
+        // (lo validamos al final)
+        if (!$this->direccion_entrega_id) {
+            return;
         }
+
+        $direccion = DireccionEntrega::find($this->direccion_entrega_id);
+
+        // ✅ Debe existir y tener estado_id (directo en la dirección)
+        if (!$direccion || empty($direccion->estado_id)) {
+            return;
+        }
+
+        $estado = Estado::find($direccion->estado_id);
+
+        $this->tipos_envio = $estado
+            ? $estado->tipoEnvios()->orderBy('nombre')->get()
+            : [];
+
+        // Opcional: autoselecciona si solo hay 1
+        if (count($this->tipos_envio) === 1) {
+            $this->id_tipo_envio = $this->tipos_envio[0]->id;
+        }
+
+        if (!empty($this->id_tipo_envio)) {
+            $existe = collect($this->tipos_envio)->pluck('id')->contains((int)$this->id_tipo_envio);
+            if (!$existe) {
+                $this->id_tipo_envio = null;
+            }
+        }
+
+        // recalcula si ya hay fecha de entrega
+        $this->on_Calcula_Fechas_Entrega();
     }
 
 
@@ -733,99 +778,80 @@ class EditPreProject extends Component
         }
     }
 
-    public function on_Calcula_Fechas_Entrega()
+    public function on_Calcula_Fechas_Entrega(): void
     {
-
-
-     if ( $this->fecha_entrega) {
-               // Registrar la fecha ingresada
-               Log::debug('Fecha de entrega ingresada', ['fecha_entrega' => $this->fecha_entrega]);
-    
-               // Convertir la fecha ingresada a un objeto Carbon
-               $fecha_entrega = Carbon::parse($this->fecha_entrega);
-               $ahora = Carbon::now();
-               // Definir los días requeridos
-               $dias_produccion_producto = 6;
-               $dias_envio = 2;
-       
-                   // Consultar el tipo de envío seleccionado
-                   if (!empty($this->id_tipo_envio)) {
-                       $tipoEnvio = TipoEnvio::find($this->id_tipo_envio);
-       
-                       if ($tipoEnvio) {
-                           $dias_envio = $tipoEnvio->dias_envio;
-                           Log::debug('Días de envío obtenidos de la BD', ['dias_envio' => $dias_envio]);
-                       } else {
-                           Log::warning('No se encontró el tipo de envío en la BD', ['id_tipo_envio' => $this->id_tipo_envio]);
-                       }
-                   }
-       
-                   // Consultar el producto seleccionado almacenado en dias_produccion
-       
-                   if (!empty($this->producto_id)) {
-                       $tipoEnvio = Producto::find($this->producto_id);
-       
-                       if ($tipoEnvio) {
-                           $dias_produccion_producto = $tipoEnvio->dias_produccion;
-                           Log::debug('Días de Producto obtenidos de la BD', ['dias_produccion' => $dias_produccion_producto]);
-                       } else {
-                           Log::warning('No se encontró el tipo de envío en la BD', ['producto_id' => $this->producto_id]);
-                       }
-                   }
-           
-               // Calcular fechas
-            
-               $fecha_embarque = $fecha_entrega->copy()->subDays($dias_envio);
-               $fecha_produccion = $fecha_embarque->copy()->subDays($dias_produccion_producto);
-
-                           // Ajustar las fechas para que no caigan en sábado o domingo
-                $fecha_embarque = Carbon::parse($this->ajustarFechaSinFinesDeSemana($fecha_embarque));
-                $fecha_produccion = Carbon::parse($this->ajustarFechaSinFinesDeSemana($fecha_produccion));
-            
-               // Guardar las fechas en el formato adecuado para los inputs de tipo "date"
-               $this->fecha_produccion = $fecha_produccion->format('Y-m-d'); // Correcto para input date
-               $this->fecha_embarque = $fecha_embarque->format('Y-m-d');
-       
-       
-               // Evaluamos si la fecha de produccion esta en tiempo de produccion
-       
-               if ($fecha_produccion->lt($ahora)) {
-                   $this->mensaje_produccion = "⚠️ La fecha de producción calculada ({$this->fecha_produccion}) ya ha pasado. Se requiere una autorización adicional para continuar.";
-                   Log::warning('Este proyecto requiere autorización adicional para producción.');
-               }else{
-                   $this->mensaje_produccion = NULL;
-               }
-           
-               // Log para depuración
-               Log::debug('Fechas calculadas', [
-                   'fecha_produccion' => $this->fecha_produccion,
-                   'fecha_embarque' => $this->fecha_embarque,
-               ]);
-     }
-
-    }
-
-    public function validarFechaEntrega()
-    {
-        if ($this->fecha_entrega) {
-            $fecha = Carbon::parse($this->fecha_entrega);
-            $diaSemana = $fecha->dayOfWeek; // 0 = Domingo, 6 = Sábado
-
-            if ($diaSemana === 6) {
-                // Si es sábado, mover al lunes siguiente
-                $fecha->addDays(2);
-            } elseif ($diaSemana === 0) {
-                // Si es domingo, mover al lunes siguiente
-                $fecha->addDay();
-            }
-
-            // Asignar la nueva fecha corregida
-            $this->fecha_entrega = $fecha->format('Y-m-d');
-
-            $this->on_Calcula_Fechas_Entrega();
+        if (!$this->fecha_entrega) {
+            return;
         }
+
+        // ✅ Si aún no hay tipo envío seleccionado, no calcules (evitas saltos raros)
+        if (empty($this->id_tipo_envio)) {
+            $this->fecha_embarque = null;
+            $this->fecha_produccion = null;
+            $this->mensaje_produccion = null;
+            return;
+        }
+
+        Log::debug('Fecha de entrega ingresada', ['fecha_entrega' => $this->fecha_entrega]);
+
+        $fecha_entrega = Carbon::parse($this->fecha_entrega);
+        $fecha_entrega = $this->normalizaFechaLaboral($fecha_entrega);
+
+        $ahora = Carbon::now();
+
+        // defaults
+        $dias_produccion_producto = 6;
+        $dias_envio = 2;
+
+        // ✅ Tipo de envío (ya viene filtrado por estado)
+        $tipoEnvio = TipoEnvio::find($this->id_tipo_envio);
+        if ($tipoEnvio) {
+            $dias_envio = (int) $tipoEnvio->dias_envio;
+            Log::debug('Días de envío (tipo)', ['dias_envio' => $dias_envio]);
+        }
+
+        // ✅ Producto: dias_produccion
+        if (!empty($this->producto_id)) {
+            $prod = Producto::find($this->producto_id);
+            if ($prod) {
+                $dias_produccion_producto = (int) ($prod->dias_produccion ?? $dias_produccion_producto);
+                Log::debug('Días de producción (producto)', ['dias_produccion' => $dias_produccion_producto]);
+            }
+        }
+
+        // ✅ Calcular restando DÍAS HÁBILES
+        $fecha_embarque   = $this->restarDiasHabiles($fecha_entrega, $dias_envio);
+        $fecha_produccion = $this->restarDiasHabiles($fecha_embarque, $dias_produccion_producto);
+
+        $this->fecha_embarque   = $fecha_embarque->format('Y-m-d');
+        $this->fecha_produccion = $fecha_produccion->format('Y-m-d');
+
+        // Mensaje de producción vencida
+        if ($fecha_produccion->lt($ahora)) {
+            $this->mensaje_produccion = "⚠️ La fecha de producción calculada ({$this->fecha_produccion}) ya ha pasado. Se requiere una autorización adicional para continuar.";
+            Log::warning('Este proyecto requiere autorización adicional para producción.');
+        } else {
+            $this->mensaje_produccion = null;
+        }
+
+        Log::debug('Fechas calculadas', [
+            'fecha_entrega'    => $fecha_entrega->format('Y-m-d'),
+            'fecha_embarque'   => $this->fecha_embarque,
+            'fecha_produccion' => $this->fecha_produccion,
+        ]);
     }
 
+    public function validarFechaEntrega(): void
+    {
+        if (!$this->fecha_entrega) return;
+
+        $fecha = Carbon::parse($this->fecha_entrega);
+        $fecha = $this->normalizaFechaLaboral($fecha);
+
+        $this->fecha_entrega = $fecha->format('Y-m-d');
+
+        $this->on_Calcula_Fechas_Entrega();
+    }
 
     public function ajustarFechaSinFinesDeSemana($fecha)
     {
@@ -1155,6 +1181,29 @@ public function cargarDirecciones(): void
         ]);
     }
 
+
+        protected function restarDiasHabiles(Carbon $fecha, int $dias): Carbon
+        {
+            $f = $fecha->copy();
+            $contador = 0;
+
+            while ($contador < $dias) {
+                $f->subDay();
+                if ($f->isWeekday()) {
+                    $contador++;
+                }
+            }
+
+            return $f;
+        }
+
+        protected function normalizaFechaLaboral(Carbon $fecha): Carbon
+        {
+            // Si cae sábado o domingo, la movemos al lunes siguiente
+            if ($fecha->isSaturday()) return $fecha->addDays(2);
+            if ($fecha->isSunday())   return $fecha->addDay();
+            return $fecha;
+        }
 
 }
 

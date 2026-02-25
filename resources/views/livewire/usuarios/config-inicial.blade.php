@@ -170,7 +170,7 @@
                             <td class="border-b px-4 py-2 text-sm text-gray-700 dark:text-gray-200">{{ $dir->razon_social }}</td>
                             <td class="border-b px-4 py-2 text-sm text-gray-700 dark:text-gray-200">{{ $dir->rfc }}</td>
                             <td class="border-b px-4 py-2 text-sm text-gray-700 dark:text-gray-200">{{ $dir->calle }}</td>
-                            <td class="border-b px-4 py-2 text-sm text-gray-700 dark:text-gray-200">{{ $dir->ciudad->nombre ?? '-' }}</td>
+                            <td class="border-b px-4 py-2 text-sm text-gray-700 dark:text-gray-200">{{ $dir->ciudad ?? '-' }}</td>
                             <td class="border-b px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
                                 @if($dir->flag_default)
                                     <span class="text-green-600 font-semibold">Sí</span>
@@ -268,7 +268,7 @@
                             <td class="border-b px-4 py-2 text-sm text-gray-700 dark:text-gray-200">{{ $dir->nombre_contacto }}</td>
                             <td class="border-b px-4 py-2 text-sm text-gray-700 dark:text-gray-200">{{ $dir->nombre_empresa }}</td>
                             <td class="border-b px-4 py-2 text-sm text-gray-700 dark:text-gray-200">{{ $dir->calle }}</td>
-                            <td class="border-b px-4 py-2 text-sm text-gray-700 dark:text-gray-200">{{ $dir->ciudad->nombre ?? '-' }}</td>
+                            <td class="border-b px-4 py-2 text-sm text-gray-700 dark:text-gray-200">{{ $dir->ciudad ?? '-' }}</td>
                             <td class="border-b px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
                                 @if($dir->flag_default)
                                     <span class="text-green-600 font-semibold">Sí</span>
@@ -394,13 +394,14 @@
 
                         <div>
                             <label class="block text-sm text-gray-700 dark:text-gray-200 mb-1">Ciudad</label>
-                            <select wire:model.live="f_ciudad_id" class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100" @disabled(!$f_estado_id)>
-                                <option value="">Seleccione una Ciudad</option>
-                                @foreach($f_ciudadesList as $c)
-                                    <option value="{{ $c->id }}">{{ $c->nombre }}</option>
-                                @endforeach
-                            </select>
-                            @error('f_ciudad_id') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
+                            <input
+                                type="text"
+                                wire:model.defer="f_ciudad"
+                                class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                                placeholder="Ej. Puebla"
+                                @disabled(!$f_estado_id)
+                            >
+                            @error('f_ciudad') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
                         </div>
 
                         <div>
@@ -486,13 +487,14 @@
 
                         <div>
                             <label class="block text-sm text-gray-700 dark:text-gray-200 mb-1">Ciudad</label>
-                            <select wire:model.live="e_ciudad_id" class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100" @disabled(!$e_estado_id)>
-                                <option value="">Seleccione una Ciudad</option>
-                                @foreach($e_ciudadesList as $c)
-                                    <option value="{{ $c->id }}">{{ $c->nombre }}</option>
-                                @endforeach
-                            </select>
-                            @error('e_ciudad_id') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
+                            <input
+                                type="text"
+                                wire:model.defer="e_ciudad"
+                                class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                                placeholder="Ej. Puebla"
+                                @disabled(!$e_estado_id)
+                            >
+                            @error('e_ciudad') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
                         </div>
 
                         <div>

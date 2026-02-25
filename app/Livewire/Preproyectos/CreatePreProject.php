@@ -9,7 +9,6 @@ use App\Models\user;
 use App\Models\PreProyecto;
 use App\Models\DireccionEntrega;
 use App\Models\DireccionFiscal;
-use App\Models\Ciudad;
 use App\Models\Pais;
 use App\Models\Estado;
 use App\Models\TipoEnvio;
@@ -113,7 +112,7 @@ class CreatePreProject extends Component
         'calle'          => '',
         'pais_id'        => null,
         'estado_id'      => null,
-        'ciudad_id'      => null,
+        'ciudad'         => '',
         'codigo_postal'  => '',
         'telefono'       => '',
         'flag_default'   => false,
@@ -231,20 +230,21 @@ class CreatePreProject extends Component
 
 
         // Obtener los nombres de país, estado y ciudad para la dirección de entrega
-        $direccionEntrega = DireccionEntrega::find($this->direccion_entrega_id);
-        $pais_name = $direccionEntrega->ciudad->estado->pais->nombre ?? '';
-        $estado_name = $direccionEntrega->ciudad->estado->nombre ?? '';
-        $ciudades_name = $direccionEntrega->ciudad->nombre ?? '';
+        $direccionEntrega = DireccionEntrega::with(['estado.pais','pais'])->find($this->direccion_entrega_id);
+        $pais_name   = $direccionEntrega?->pais?->nombre ?? '';
+        $estado_name = $direccionEntrega?->estado?->nombre ?? '';
+        $ciudad_name = $direccionEntrega?->ciudad ?? '';
+
 
         // Obtener los nombres de país, estado y ciudad para la dirección fiscal
-        $direccionFiscal = DireccionFiscal::find($this->direccion_fiscal_id);
-        $fiscal_pais_name = $direccionFiscal->ciudad->estado->pais->nombre ?? '';
-        $fiscal_estado_name = $direccionFiscal->ciudad->estado->nombre ?? '';
-        $fiscal_ciudades_name = $direccionFiscal->ciudad->nombre ?? '';
+        $direccionFiscal  = DireccionFiscal::with(['estado.pais','pais'])->find($this->direccion_fiscal_id);
+        $fiscal_pais_name   = $direccionFiscal?->pais?->nombre ?? '';
+        $fiscal_estado_name = $direccionFiscal?->estado?->nombre ?? '';
+        $fiscal_ciudad_name = $direccionFiscal?->ciudad ?? '';
 
         // Construcción de dirección como texto
-        $Auxiliar_direccion_entrega = trim("$ciudades_name, $estado_name, $pais_name");
-        $Auxiliar_direccion_fiscal = trim("$fiscal_ciudades_name, $fiscal_estado_name, $fiscal_pais_name");
+        $Auxiliar_direccion_entrega = trim("{$ciudad_name}, {$estado_name}, {$pais_name}", " ,");
+        $Auxiliar_direccion_fiscal  = trim("{$fiscal_ciudad_name}, {$fiscal_estado_name}, {$fiscal_pais_name}", " ,");
 
 
         // Filtrar solo grupos que tienen tallas con cantidad > 0
@@ -593,18 +593,31 @@ class CreatePreProject extends Component
 
   
 
-    public function cargarTiposEnvio()
+    public function cargarTiposEnvio(): void
     {
-        if ($this->direccion_entrega_id) {
-            $direccion = DireccionEntrega::find($this->direccion_entrega_id);
-            if ($direccion && $direccion->ciudad) {
-                $this->tipos_envio = $direccion->ciudad->tipoEnvios()->get();
-            } else {
-                $this->tipos_envio = [];
-            }
-        } else {
-            $this->tipos_envio = [];
+        $this->tipos_envio = [];
+        $this->id_tipo_envio = null;
+
+        if (!$this->direccion_entrega_id) return;
+
+        $direccion = DireccionEntrega::find($this->direccion_entrega_id);
+
+        if (!$direccion || !$direccion->estado_id) return;
+
+        // ✅ Cargar por estado
+        $estado = Estado::find($direccion->estado_id);
+
+        $this->tipos_envio = $estado
+            ? $estado->tipoEnvios()->orderBy('nombre')->get()
+            : [];
+
+        // Opcional: si solo hay 1 tipo, seleccionarlo automático
+        if (count($this->tipos_envio) === 1) {
+            $this->id_tipo_envio = $this->tipos_envio[0]->id;
         }
+
+        // recalcula fechas si ya hay fecha_entrega
+        $this->on_Calcula_Fechas_Entrega();
     }
 
 
@@ -645,76 +658,42 @@ class CreatePreProject extends Component
     }
 
 
-    public function on_Calcula_Fechas_Entrega()
+    public function on_Calcula_Fechas_Entrega(): void
     {
+        if (!$this->fecha_entrega) return;
 
+        $fecha_entrega = Carbon::parse($this->fecha_entrega)->startOfDay();
+        $ahora = Carbon::now()->startOfDay();
 
-     if ( $this->fecha_entrega) {
-               // Registrar la fecha ingresada
-               Log::debug('Fecha de entrega ingresada', ['fecha_entrega' => $this->fecha_entrega]);
-    
-               // Convertir la fecha ingresada a un objeto Carbon
-               $fecha_entrega = Carbon::parse($this->fecha_entrega);
-               $ahora = Carbon::now();
-               // Definir los días requeridos
-               $dias_produccion_producto = 6;
-               $dias_envio = 2;
-       
-                   // Consultar el tipo de envío seleccionado
-                   if (!empty($this->id_tipo_envio)) {
-                       $tipoEnvio = TipoEnvio::find($this->id_tipo_envio);
-       
-                       if ($tipoEnvio) {
-                           $dias_envio = $tipoEnvio->dias_envio;
-                           Log::debug('Días de envío obtenidos de la BD', ['dias_envio' => $dias_envio]);
-                       } else {
-                           Log::warning('No se encontró el tipo de envío en la BD', ['id_tipo_envio' => $this->id_tipo_envio]);
-                       }
-                   }
-       
-                   // Consultar el producto seleccionado almacenado en dias_produccion
-       
-                   if (!empty($this->producto_id)) {
-                       $tipoEnvio = Producto::find($this->producto_id);
-       
-                       if ($tipoEnvio) {
-                           $dias_produccion_producto = $tipoEnvio->dias_produccion;
-                           Log::debug('Días de Producto obtenidos de la BD', ['dias_produccion' => $dias_produccion_producto]);
-                       } else {
-                           Log::warning('No se encontró el tipo de envío en la BD', ['producto_id' => $this->producto_id]);
-                       }
-                   }
-           
-               // Calcular fechas
-            
-               $fecha_embarque = $this->restarDiasHabiles($fecha_entrega, $dias_envio);
-               $fecha_produccion = $this->restarDiasHabiles($fecha_embarque, $dias_produccion_producto);
+        // defaults
+        $dias_produccion_producto = 6;
+        $dias_envio = 2;
 
-                           // Ajustar las fechas para que no caigan en sábado o domingo
-                // $fecha_embarque = Carbon::parse($this->ajustarFechaSinFinesDeSemana($fecha_embarque));
-                // $fecha_produccion = Carbon::parse($this->ajustarFechaSinFinesDeSemana($fecha_produccion));
-            
-               // Guardar las fechas en el formato adecuado para los inputs de tipo "date"
-               $this->fecha_produccion = $fecha_produccion->format('Y-m-d'); // Correcto para input date
-               $this->fecha_embarque = $fecha_embarque->format('Y-m-d');
-       
-       
-               // Evaluamos si la fecha de produccion esta en tiempo de produccion
-       
-               if ($fecha_produccion->lt($ahora)) {
-                   $this->mensaje_produccion = "⚠️ La fecha de producción calculada ({$this->fecha_produccion}) ya ha pasado. Se requiere una autorización adicional para continuar.";
-                   Log::warning('Este proyecto requiere autorización adicional para producción.');
-               }else{
-                   $this->mensaje_produccion = NULL;
-               }
-           
-               // Log para depuración
-               Log::debug('Fechas calculadas', [
-                   'fecha_produccion' => $this->fecha_produccion,
-                   'fecha_embarque' => $this->fecha_embarque,
-               ]);
-     }
+        // 1) Tipo envío
+        if (!empty($this->id_tipo_envio)) {
+            $tipo = TipoEnvio::find($this->id_tipo_envio);
+            if ($tipo) $dias_envio = (int) ($tipo->dias_envio ?? 0);
+        }
 
+        // 2) Producto -> dias_produccion
+        if (!empty($this->producto_id)) {
+            $prod = Producto::find($this->producto_id);
+            if ($prod) $dias_produccion_producto = (int) ($prod->dias_produccion ?? $dias_produccion_producto);
+        }
+
+        // cálculo hacia atrás en días hábiles
+        $fecha_embarque = $this->restarDiasHabiles($fecha_entrega, $dias_envio);
+        $fecha_produccion = $this->restarDiasHabiles($fecha_embarque, $dias_produccion_producto);
+
+        $this->fecha_embarque = $fecha_embarque->format('Y-m-d');
+        $this->fecha_produccion = $fecha_produccion->format('Y-m-d');
+
+        if ($fecha_produccion->lt($ahora)) {
+            $this->mensaje_produccion =
+                "⚠️ La fecha de producción calculada ({$this->fecha_produccion}) ya ha pasado. Se requiere autorización adicional.";
+        } else {
+            $this->mensaje_produccion = null;
+        }
     }
 
     public function validarFechaEntrega()
@@ -803,10 +782,18 @@ class CreatePreProject extends Component
     public function guardarCliente()
     {
         $this->validate([
-            'nuevoCliente.nombre_empresa' => 'required|string|max:255',
-            'nuevoCliente.contacto_principal' => 'nullable|string|max:255',
-            'nuevoCliente.telefono' => 'nullable|string|max:20',
-            'nuevoCliente.email' => 'nullable|email|max:255',
+            'nombre' => 'required|string|max:255',
+            'categoria_id' => 'required|exists:categorias,id',
+            'producto_id' => 'required|exists:productos,id',
+
+            'direccion_fiscal_id'  => 'required|exists:direcciones_fiscales,id',
+            'direccion_entrega_id' => 'required|exists:direcciones_entrega,id',
+
+            'id_tipo_envio' => 'required|exists:tipo_envio,id',
+
+            'fecha_entrega' => 'required|date',
+            'total_piezas' => 'required|integer|min:1',
+            'files.*' => 'nullable|file|max:10240',
         ]);
 
         // Crear el cliente y asociarlo al usuario autenticado
@@ -872,17 +859,15 @@ public function usuarioSeleccionadoCambio($usuarioId)
     public function updatedFormDireccionPaisId($value)
     {
         $this->formDireccion['estado_id'] = null;
-        $this->formDireccion['ciudad_id'] = null;
-        $this->estados = $value ? \App\Models\Estado::where('pais_id', $value)->orderBy('nombre')->get() : [];
-        $this->ciudades = [];
+        $this->formDireccion['ciudad'] = '';
+        $this->estados = $value ? Estado::where('pais_id', $value)->orderBy('nombre')->get() : [];
     }
+
 
     public function updatedFormDireccionEstadoId($value)
-    {
-        $this->formDireccion['ciudad_id'] = null;
-        $this->ciudades = $value ? \App\Models\Ciudad::where('estado_id', $value)->orderBy('nombre')->get() : [];
-    }
-
+{
+    $this->formDireccion['ciudad'] = '';
+}
 
     public function guardarDireccion()
     {
@@ -891,7 +876,7 @@ public function usuarioSeleccionadoCambio($usuarioId)
             'formDireccion.calle'         => 'required|string|max:255',
             'formDireccion.pais_id'       => 'required|exists:paises,id',
             'formDireccion.estado_id'     => 'required|exists:estados,id',
-            'formDireccion.ciudad_id'     => 'required|exists:ciudades,id',
+            'formDireccion.ciudad'        => 'required|string|max:255',
             'formDireccion.codigo_postal' => 'required|string|max:10',
             'formDireccion.flag_default'  => 'boolean',
         ];
@@ -919,16 +904,16 @@ public function usuarioSeleccionadoCambio($usuarioId)
         if ($this->tipoDireccion === 'fiscal') {
             // Si se marca default, limpia los demás del usuario
             if ($this->formDireccion['flag_default']) {
-                \App\Models\DireccionFiscal::where('usuario_id', $this->UsuarioSeleccionado)->update(['flag_default' => false]);
+                DireccionFiscal::where('usuario_id', $this->UsuarioSeleccionado)->update(['flag_default' => false]);
             }
 
-            $dir = \App\Models\DireccionFiscal::create([
+            $dir = DireccionFiscal::create([
                 'usuario_id'    => $this->UsuarioSeleccionado,
                 'rfc'           => $this->formDireccion['rfc'],
                 'calle'         => $this->formDireccion['calle'],
                 'pais_id'       => $this->formDireccion['pais_id'],
                 'estado_id'     => $this->formDireccion['estado_id'],
-                'ciudad_id'     => $this->formDireccion['ciudad_id'],
+                'ciudad'        => $this->formDireccion['ciudad'],   // ✅
                 'codigo_postal' => $this->formDireccion['codigo_postal'],
                 'flag_default'  => (bool)$this->formDireccion['flag_default'],
             ]);
@@ -938,17 +923,17 @@ public function usuarioSeleccionadoCambio($usuarioId)
 
         } else { // entrega
             if ($this->formDireccion['flag_default']) {
-                \App\Models\DireccionEntrega::where('usuario_id', $this->UsuarioSeleccionado)->update(['flag_default' => false]);
+                DireccionEntrega::where('usuario_id', $this->UsuarioSeleccionado)->update(['flag_default' => false]);
             }
 
-            $dir = \App\Models\DireccionEntrega::create([
+            $dir = DireccionEntrega::create([
                 'usuario_id'     => $this->UsuarioSeleccionado,
                 'nombre_contacto'=> $this->formDireccion['nombre_contacto'],
                 'nombre_empresa' => $this->formDireccion['nombre_empresa'],
                 'calle'          => $this->formDireccion['calle'],
                 'pais_id'        => $this->formDireccion['pais_id'],
                 'estado_id'      => $this->formDireccion['estado_id'],
-                'ciudad_id'      => $this->formDireccion['ciudad_id'],
+                'ciudad'         => $this->formDireccion['ciudad'],  // ✅
                 'codigo_postal'  => $this->formDireccion['codigo_postal'],
                 'telefono'       => $this->formDireccion['telefono'],
                 'flag_default'   => (bool)$this->formDireccion['flag_default'],
@@ -987,9 +972,9 @@ public function usuarioSeleccionadoCambio($usuarioId)
         // Limpia ciudad al cambiar estado
         $this->formDireccion['ciudad_id'] = null;
 
-        $this->ciudades = $estadoId
-            ? Ciudad::where('estado_id', $estadoId)->orderBy('nombre')->get()
-            : collect();
+        // $this->ciudades = $estadoId
+        //     ? Ciudad::where('estado_id', $estadoId)->orderBy('nombre')->get()
+        //     : collect();
     }
 
 
@@ -1024,11 +1009,10 @@ public function usuarioSeleccionadoCambio($usuarioId)
 
     public function updatedDireccionEntregaId($value)
     {
-    $this->direccion_entrega_id = (int) $value;
-    $this->id_tipo_envio = null; // limpia selección previa
-    $this->cargarTiposEnvio();
+        $this->direccion_entrega_id = (int) $value;
+        $this->id_tipo_envio = null;
+        $this->cargarTiposEnvio();
     }
-
 
     public function uploadStarted()
     {
@@ -1040,6 +1024,22 @@ public function usuarioSeleccionadoCambio($usuarioId)
         $this->isUploading = false;
     }
 
+
+    public function updatedIdTipoEnvio(): void
+    {
+        $this->on_Calcula_Fechas_Entrega();
+    }
+
+    public function updatedProductoId(): void
+    {
+        $this->on_Calcula_Fechas_Entrega();
+    }
+
+    public function updatedFechaEntrega(): void
+    {
+        // esto mantiene tu validación de fin de semana
+        $this->validarFechaEntrega();
+    }
 
   
 

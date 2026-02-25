@@ -9,6 +9,8 @@ use App\Models\Ciudad;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+
+
 class DireccionesEntregaCrud extends Component
 {
     use WithPagination;
@@ -21,7 +23,7 @@ class DireccionesEntregaCrud extends Component
     public $calle;
     public $pais_id;
     public $estado_id;
-    public $ciudad_id;
+    public $ciudad; // ✅ texto
     public $codigo_postal;
     public $telefono;
 
@@ -30,10 +32,9 @@ class DireccionesEntregaCrud extends Component
     public $search = '';
     public $query = '';
 
-    // Catálogos en memoria (colecciones)
+    // Catálogos en memoria
     public $paisesList;
     public $estadosList;
-    public $ciudadesList;
 
     protected $rules = [
         'nombre_contacto' => 'required|string|max:255',
@@ -41,7 +42,7 @@ class DireccionesEntregaCrud extends Component
         'calle'           => 'required|string|max:255',
         'pais_id'         => 'required|exists:paises,id',
         'estado_id'       => 'required|exists:estados,id',
-        'ciudad_id'       => 'required|exists:ciudades,id',
+        'ciudad'          => 'required|string|max:255', // ✅
         'codigo_postal'   => 'required|string|max:10',
         'telefono'        => 'nullable|string|max:15',
     ];
@@ -51,27 +52,15 @@ class DireccionesEntregaCrud extends Component
         $this->userId = $userId;
         $this->paisesList  = Pais::orderBy('nombre')->get(['id','nombre']);
         $this->estadosList = collect();
-        $this->ciudadesList = collect();
     }
 
-    /** Cuando cambia el país, reinicia estados y ciudades */
+    /** Cuando cambia el país, reinicia estados */
     public function updatedPaisId($paisId)
     {
-        $this->estado_id    = null;
-        $this->ciudad_id    = null;
-        $this->ciudadesList = collect();
+        $this->estado_id = null;
 
         $this->estadosList = $paisId
             ? Estado::where('pais_id', $paisId)->orderBy('nombre')->get(['id','nombre'])
-            : collect();
-    }
-
-    /** Cuando cambia el estado, reinicia ciudades */
-    public function updatedEstadoId($estadoId)
-    {
-        $this->ciudad_id    = null;
-        $this->ciudadesList = $estadoId
-            ? Ciudad::where('estado_id', $estadoId)->orderBy('nombre')->get(['id','nombre'])
             : collect();
     }
 
@@ -90,7 +79,8 @@ class DireccionesEntregaCrud extends Component
         }
 
         return view('livewire.usuarios.direcciones-entrega-crud', [
-            'direcciones' => $query->with(['ciudad.estado.pais'])
+            'direcciones' => $query
+                ->with(['estado', 'pais', 'estado.pais'])
                 ->orderByDesc('created_at')
                 ->paginate(15),
         ]);
@@ -114,13 +104,11 @@ class DireccionesEntregaCrud extends Component
         $this->calle            = '';
         $this->pais_id          = null;
         $this->estado_id        = null;
-        $this->ciudad_id        = null;
+        $this->ciudad           = '';   // ✅
         $this->codigo_postal    = '';
         $this->telefono         = '';
 
-        // Limpia las listas dependientes
-        $this->estadosList   = collect();
-        $this->ciudadesList  = collect();
+        $this->estadosList      = collect();
     }
 
     public function guardar()
@@ -128,15 +116,15 @@ class DireccionesEntregaCrud extends Component
         $this->validate();
 
         $data = [
-            'usuario_id'     => $this->userId,
-            'nombre_contacto'=> $this->nombre_contacto,
-            'nombre_empresa' => $this->nombre_empresa,
-            'calle'          => $this->calle,
-            'pais_id'        => $this->pais_id,
-            'estado_id'      => $this->estado_id,
-            'ciudad_id'      => $this->ciudad_id,
-            'codigo_postal'  => $this->codigo_postal,
-            'telefono'       => $this->telefono,
+            'usuario_id'      => $this->userId,
+            'nombre_contacto' => $this->nombre_contacto,
+            'nombre_empresa'  => $this->nombre_empresa,
+            'calle'           => $this->calle,
+            'pais_id'         => $this->pais_id,
+            'estado_id'       => $this->estado_id,
+            'ciudad'          => $this->ciudad, // ✅
+            'codigo_postal'   => $this->codigo_postal,
+            'telefono'        => $this->telefono,
         ];
 
         if ($this->direccion_id) {
@@ -153,25 +141,24 @@ class DireccionesEntregaCrud extends Component
 
     public function editar($id)
     {
-        $d = DireccionEntrega::with(['ciudad.estado.pais'])->findOrFail($id);
+        $d = DireccionEntrega::with(['estado', 'pais', 'estado.pais'])->findOrFail($id);
 
         $this->direccion_id    = $d->id;
         $this->nombre_contacto = $d->nombre_contacto;
         $this->nombre_empresa  = $d->nombre_empresa;
         $this->calle           = $d->calle;
 
-        // Cargar cascada en orden
+        // Cargar cascada País -> Estados
         $this->pais_id = $d->pais_id;
         $this->estadosList = $this->pais_id
             ? Estado::where('pais_id', $this->pais_id)->orderBy('nombre')->get(['id','nombre'])
             : collect();
 
         $this->estado_id = $d->estado_id;
-        $this->ciudadesList = $this->estado_id
-            ? Ciudad::where('estado_id', $this->estado_id)->orderBy('nombre')->get(['id','nombre'])
-            : collect();
 
-        $this->ciudad_id      = $d->ciudad_id;
+        // ciudad texto
+        $this->ciudad = $d->ciudad ?? '';
+
         $this->codigo_postal  = $d->codigo_postal;
         $this->telefono       = $d->telefono;
 

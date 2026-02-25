@@ -37,9 +37,9 @@
                         <td class="border border-gray-300 px-4 py-2">{{ $dir->razon_social }}</td>
                         <td class="border border-gray-300 px-4 py-2">{{ $dir->rfc }}</td>
                         <td class="border border-gray-300 px-4 py-2">{{ $dir->calle }}</td>
-                        <td class="border border-gray-300 px-4 py-2">{{ $dir->ciudad->nombre ?? '-' }}</td>
-                        <td class="border border-gray-300 px-4 py-2">{{ $dir->ciudad->estado->nombre ?? '-' }}</td>
-                        <td class="border border-gray-300 px-4 py-2">{{ $dir->ciudad->estado->pais->nombre ?? '-' }}</td>
+                        <td class="border border-gray-300 px-4 py-2">{{ $dir->ciudad ?? '-' }}</td>
+                        <td class="border border-gray-300 px-4 py-2">{{ $dir->estado->nombre ?? '-' }}</td>
+                        <td class="border border-gray-300 px-4 py-2">{{ $dir->pais->nombre ?? ($dir->estado->pais->nombre ?? '-') }}</td>
                         <td class="border border-gray-300 px-4 py-2 text-center">
                             @if ($dir->flag_default)
                                 <span class="text-green-600 font-semibold">Sí</span>
@@ -122,19 +122,17 @@
 
 <div class="mb-4">
     <label class="block text-gray-700 mb-1">Ciudad</label>
-    <select
-        wire:key="ciudad-{{ $estado_id ?? 'x' }}"
-        wire:model.live="ciudad_id"
+    <input
+        type="text"
         class="w-full border border-gray-300 rounded p-2"
+        wire:model.defer="ciudad"
+        placeholder="Ej. Puebla"
         @disabled(!$estado_id)
     >
-        <option value="">Seleccione una Ciudad</option>
-        @foreach($ciudades as $ciudad)
-            <option value="{{ $ciudad->id }}">{{ $ciudad->nombre }}</option>
-        @endforeach
-    </select>
-    @error('ciudad_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+    @error('ciudad') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
 </div>
+
+
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-1">Código Postal</label>
                         <input type="text" class="w-full border border-gray-300 rounded p-2" wire:model="codigo_postal">

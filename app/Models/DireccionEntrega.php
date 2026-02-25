@@ -16,7 +16,7 @@ class DireccionEntrega extends Model
         'nombre_contacto',
         'nombre_empresa',
         'calle',
-        'ciudad_id',
+        'ciudad',        // ✅ texto
         'estado_id',
         'pais_id',
         'codigo_postal',
@@ -29,10 +29,7 @@ class DireccionEntrega extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function ciudad()
-    {
-        return $this->belongsTo(Ciudad::class);
-    }
+ 
 
     public function estado()
     {

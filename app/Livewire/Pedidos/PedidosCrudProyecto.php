@@ -274,15 +274,15 @@ class PedidosCrudProyecto extends Component
     
         // Obtener los nombres de país, estado y ciudad para la dirección de entrega
         $direccionEntrega = DireccionEntrega::find($this->direccion_entrega_id);
-        $pais_name = $direccionEntrega->ciudad->estado->pais->nombre ?? '';
-        $estado_name = $direccionEntrega->ciudad->estado->nombre ?? '';
-        $ciudades_name = $direccionEntrega->ciudad->nombre ?? '';
-    
+        $pais_name    = $direccionEntrega?->estado?->pais?->nombre ?? '';
+        $estado_name  = $direccionEntrega?->estado?->nombre ?? '';
+        $ciudades_name= $direccionEntrega?->ciudad ?? '';
+
         // Obtener los nombres de país, estado y ciudad para la dirección fiscal
         $direccionFiscal = DireccionFiscal::find($this->direccion_fiscal_id);
-        $fiscal_pais_name = $direccionFiscal->ciudad->estado->pais->nombre ?? '';
-        $fiscal_estado_name = $direccionFiscal->ciudad->estado->nombre ?? '';
-        $fiscal_ciudades_name = $direccionFiscal->ciudad->nombre ?? '';
+        $fiscal_pais_name     = $direccionFiscal?->estado?->pais?->nombre ?? '';
+        $fiscal_estado_name   = $direccionFiscal?->estado?->nombre ?? '';
+        $fiscal_ciudades_name = $direccionFiscal?->ciudad ?? '';
     
         // Construcción de dirección como texto
         $Auxiliar_direccion_entrega = trim("$ciudades_name, $estado_name, $pais_name");
@@ -439,18 +439,109 @@ class PedidosCrudProyecto extends Component
         }
     }
 
-    public function cargarTiposEnvio()
+    public function cargarTiposEnvio(): void
     {
-        if ($this->direccion_entrega_id) {
-            $direccion = DireccionEntrega::find($this->direccion_entrega_id);
-            if ($direccion && $direccion->ciudad) {
-                $this->tipos_envio = $direccion->ciudad->tipoEnvios()->get();
-            } else {
-                $this->tipos_envio = [];
+        $this->tipos_envio = [];
+        // (opcional) no resetees si estás editando y el id sigue siendo válido
+        // $this->id_tipo_envio = null;
+
+        if (!$this->direccion_entrega_id) {
+            return;
+        }
+
+        $direccion = DireccionEntrega::find($this->direccion_entrega_id);
+        if (!$direccion) {
+            return;
+        }
+
+        // 1) estado_id directo en la dirección (recomendado)
+        $estadoId = $direccion->estado_id ?? null;
+
+        // 2) fallback: si NO tienes estado_id en dirección, intenta obtenerlo vía ciudad_id
+        if (!$estadoId && !empty($direccion->ciudad_id)) {
+            $ciudad = \App\Models\Ciudad::find($direccion->ciudad_id);
+            $estadoId = $ciudad?->estado_id;
+        }
+
+        if (!$estadoId) {
+            $this->tipos_envio = [];
+            $this->id_tipo_envio = null;
+            return;
+        }
+
+        $estado = \App\Models\Estado::find($estadoId);
+        $this->tipos_envio = $estado
+            ? $estado->tipoEnvios()->orderBy('nombre')->get()
+            : [];
+
+        // Si solo hay 1, autoselecciona
+        if (count($this->tipos_envio) === 1) {
+            $this->id_tipo_envio = $this->tipos_envio[0]->id;
+        }
+
+        // Si ya había uno seleccionado pero no existe en la nueva lista, lo limpias
+        if (!empty($this->id_tipo_envio)) {
+            $existe = collect($this->tipos_envio)->pluck('id')->contains((int)$this->id_tipo_envio);
+            if (!$existe) {
+                $this->id_tipo_envio = null;
+            }
+        }
+
+        // Recalcular si aplica
+        $this->on_Calcula_Fechas_Entrega();
+    }
+
+    private function validarFechasParaAprobar(Pedido $pedido): array
+    {
+        // Devuelve: [ok(bool), msg(string), requiereEdicion(bool)]
+
+        // Si NO se permite aprobar sin fechas, entonces deben existir
+        if ((int)$pedido->flag_aprobar_sin_fechas === 0) {
+
+            if (empty($pedido->fecha_entrega) || empty($pedido->fecha_embarque) || empty($pedido->fecha_produccion)) {
+                return [false, 'Faltan fechas (producción/embarque/entrega). Debes completar las fechas antes de aprobar.', true];
             }
         } else {
-            $this->tipos_envio = [];
+            // Si sí se permite aprobar sin fechas, no bloqueamos por null
+            // (pero si existen, validamos consistencia mínima)
+            if (empty($pedido->fecha_entrega) && empty($pedido->fecha_embarque) && empty($pedido->fecha_produccion)) {
+                return [true, '', false];
+            }
         }
+
+        // Si hay fechas, validamos orden y calendario
+        $fp = $pedido->fecha_produccion ? Carbon::parse($pedido->fecha_produccion)->startOfDay() : null;
+        $fe = $pedido->fecha_embarque   ? Carbon::parse($pedido->fecha_embarque)->startOfDay()   : null;
+        $fd = $pedido->fecha_entrega    ? Carbon::parse($pedido->fecha_entrega)->startOfDay()    : null;
+
+        // Orden lógico si existen
+        if ($fp && $fe && $fp->gt($fe)) {
+            return [false, 'La fecha de producción no puede ser posterior a la fecha de embarque.', true];
+        }
+        if ($fe && $fd && $fe->gt($fd)) {
+            return [false, 'La fecha de embarque no puede ser posterior a la fecha de entrega.', true];
+        }
+        if ($fp && $fd && $fp->gt($fd)) {
+            return [false, 'La fecha de producción no puede ser posterior a la fecha de entrega.', true];
+        }
+
+        // Evitar fines de semana (si el usuario editó manual)
+        foreach (['producción' => $fp, 'embarque' => $fe, 'entrega' => $fd] as $label => $date) {
+            if ($date && ($date->isSaturday() || $date->isSunday())) {
+                return [false, "La fecha de {$label} cae en fin de semana. Ajusta a un día hábil.", true];
+            }
+        }
+
+        // Regla principal: producción no puede estar en el pasado (salvo aprobación especial)
+        if ((int)$pedido->flag_aprobar_sin_fechas === 0 && $fp) {
+            $hoy = now()->startOfDay();
+            if ($fp->lt($hoy)) {
+                // Aquí NO aprobamos normal: requiere edición / autorización
+                return [false, 'La fecha de producción ya pasó. Requiere autorización o reprogramación.', true];
+            }
+        }
+
+        return [true, '', false];
     }
 
     public function on_Calcula_Fechas_Entrega()
@@ -585,55 +676,52 @@ class PedidosCrudProyecto extends Component
     {
         $pedido = Pedido::findOrFail($this->pedidoId);
 
-
+        // 1) Validar configuración del proyecto
         if (!$this->validarConfiguracionProyecto()) {
             $this->modal_confirmar_aprobacion = false;
             $this->modal_reconfigurar_proyecto = true;
             return;
         }
 
+        // 2) Validar estado de diseño (extra recomendado)
+        if (($pedido->proyecto?->estado ?? null) !== 'DISEÑO APROBADO') {
+            $this->modal_confirmar_aprobacion = false;
+            session()->flash('error', 'No puedes aprobar el pedido si el diseño no está aprobado.');
+            return;
+        }
 
-        // Validaciones del pedido 
-        $ahora = now();
-        $fechaProduccion = \Carbon\Carbon::parse($pedido->fecha_produccion);
+        // 3) Validar fechas
+        [$ok, $msg, $requiereEdicion] = $this->validarFechasParaAprobar($pedido);
 
+        if (!$ok) {
+            $this->modal_confirmar_aprobacion = false;
 
-        // Validar fechas si el flag indica que NO se puede aprobar sin ellas
-        if ($pedido->flag_aprobar_sin_fechas == 0) {
-
-            if ($fechaProduccion->lt($ahora)) {
-                $this->modal_confirmar_aprobacion = false;
-    
-                // Redirigir a edición si la fecha es inválida
+            // Si requiere edición, abre modal edición
+            if ($requiereEdicion) {
+                session()->flash('error', $msg);
                 $this->dispatch('abrirModalEdicion', pedidoId: $pedido->id);
                 return;
             }
+
+            session()->flash('error', $msg);
+            return;
         }
 
+        // 4) Aprobar
+        // OJO: NO hardcodees estado_id=3, mejor búscalo por nombre si puedes:
+        $estadoAprobadoId = \App\Models\EstadoPedido::idPorNombre('APROBADO') ?? 3;
 
-        // Validar si la configuracion del proyecto esta coorectamente configurado 
-        // Tomamos el proyecto
-        // categoria_sel, Producto_sel, caracterisiticas_sel, total_piezas_sel
-        
-        // tomamos cada id y evaluamos Ind_activo
-        // si no hay errores regresar true si hay errores regresa false
-        // Si hay error en esta parte cierra el modal de aprobacion 
-        // Muestra un nuevo modal donde indicamos que el proyecto necesita reconfiguracion
-        // mostrar si decea solicitar la reconfiguracion
-        // al seleccionar si. enviar notificacion  
-
-        // Aprobar el pedido
         $pedido->update([
-            'estado' => 'APROBADO',
-            'estado_id' => 3,
+            'estado'            => 'APROBADO',
+            'estado_id'         => $estadoAprobadoId,
             'estado_produccion' => 'POR PROGRAMAR',
+            'flag_solicitud_aprobar_sin_fechas' => 0, // limpia solicitud si existía
         ]);
 
         $this->modal_confirmar_aprobacion = false;
         $this->dispatch('ActualizarTablaPedido');
         session()->flash('message', '✅ Pedido aprobado correctamente.');
     }
-
 
     public function confirmarAprobacionEspecial($id_pedido)
     {
@@ -645,51 +733,30 @@ class PedidosCrudProyecto extends Component
     {
         $pedido = Pedido::findOrFail($this->pedidoId);
 
-
         if (!$this->validarConfiguracionProyecto()) {
             $this->modal_confirmar_aprobacion_especial = false;
             $this->modal_reconfigurar_proyecto = true;
             return;
         }
 
+        // Si ya es aprobable normal, avisa y no marques solicitud
+        [$ok, $msg] = $this->validarFechasParaAprobar($pedido);
 
-        // Validaciones del pedido 
-        $ahora = now();
-        $fechaProduccion = \Carbon\Carbon::parse($pedido->fecha_produccion);
-
-
-        // Validar fechas si el flag indica que NO se puede aprobar sin ellas
-        if ($pedido->flag_aprobar_sin_fechas == 0) {
-
-            if ($fechaProduccion->lt($ahora)) {
-
-
-
-                $pedido->update([
-                  
-                    'flag_solicitud_aprobar_sin_fechas' => 1,
-                ]);
-            }
-        }else{
-
-            // si la fecha es valida este pedido pude aprobarse de forma normal 
-
-             session()->flash('message', ' Este pedido puede aprobarse de forma normal .');
-                // $this->modal_confirmar_aprobacion_especial = false;
-    
-                // // Redirigir a edición si la fecha es inválida
-                // $this->dispatch('abrirModalEdicion', pedidoId: $pedido->id);
-                // return;
-
+        if ($ok) {
+            $this->modal_confirmar_aprobacion_especial = false;
+            session()->flash('message', 'Este pedido puede aprobarse de forma normal.');
+            return;
         }
 
+        // Marca solicitud especial
+        $pedido->update([
+            'flag_solicitud_aprobar_sin_fechas' => 1,
+        ]);
 
         $this->modal_confirmar_aprobacion_especial = false;
         $this->dispatch('ActualizarTablaPedido');
-        session()->flash('message', '✅ Solicitud enviada correctamente.');
+        session()->flash('message', '✅ Solicitud de aprobación especial enviada correctamente.');
     }
-
-
 
     public function validarConfiguracionProyecto(): bool
     {
@@ -793,8 +860,10 @@ class PedidosCrudProyecto extends Component
 
         return view('livewire.pedidos.pedidos-crud-proyecto', [
             'tiposEnvio'         => TipoEnvio::all(),
-            'direccionesFiscales'=> DireccionFiscal::where('usuario_id', $proyecto->usuario_id)->get(),
-            'direccionesEntrega' => DireccionEntrega::where('usuario_id', $proyecto->usuario_id)->get(),
+            'direccionesFiscales' => DireccionFiscal::with(['estado','pais'])->where('usuario_id', $proyecto->usuario_id)->get(),
+
+            'direccionesEntrega' => DireccionEntrega::with(['estado','pais'])->where('usuario_id', $proyecto->usuario_id)->get(),
+
             'pedidos'            => $query->paginate(6),
         ]);
     }

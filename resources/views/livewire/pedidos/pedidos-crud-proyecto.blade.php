@@ -363,9 +363,13 @@
                         <label class="block text-sm font-medium text-gray-700">Dirección Fiscal</label>
                         <select wire:model="direccion_fiscal_id" class="w-full border border-gray-300 rounded p-2">
                             <option value="">Seleccionar Dirección Fiscal</option>
-                            @foreach ($direccionesFiscales as $direccion)
-                                <option value="{{ $direccion->id }}">{{ $direccion->calle }}, {{ $direccion->ciudad->nombre }}, {{ $direccion->ciudad->estado->nombre }}</option>
-                            @endforeach
+                                @foreach ($direccionesFiscales as $direccion)
+                                <option value="{{ $direccion->id }}">
+                                    {{ $direccion->calle }},
+                                    {{ $direccion->ciudad }},
+                                    {{ $direccion->estado?->nombre ?? 'Sin estado' }}
+                                </option>
+                                @endforeach
                         </select>
                     </div>
 
@@ -373,9 +377,13 @@
                         <label class="block text-sm font-medium text-gray-700">Dirección de Entrega</label>
                         <select wire:change='cargarTiposEnvio' wire:model="direccion_entrega_id" class="w-full border border-gray-300 rounded p-2">
                             <option value="">Selecciona una dirección</option>
-                            @foreach ($direccionesEntrega as $direccion)
-                                <option value="{{ $direccion->id }}">{{ $direccion->calle }}, {{ $direccion->ciudad->nombre }}, {{ $direccion->ciudad->estado->nombre }}</option>
-                            @endforeach
+                                @foreach ($direccionesEntrega as $direccion)
+                                <option value="{{ $direccion->id }}">
+                                    {{ $direccion->calle }},
+                                    {{ $direccion->ciudad }},
+                                    {{ $direccion->estado?->nombre ?? 'Sin estado' }}
+                                </option>
+                                @endforeach
                         </select>
                     </div>
                 </div>

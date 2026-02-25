@@ -7,17 +7,28 @@ use Illuminate\Database\Eloquent\Model;
 
 class Estado extends Model
 {
-    protected $fillable = ['nombre','pais_id'];
-
-    public function ciudades()
-    {
-        return $this->hasMany(Ciudad::class);
-    }
+    protected $fillable = ['nombre', 'pais_id'];
 
     public function pais()
     {
         return $this->belongsTo(Pais::class);
     }
 
- 
+    public function tipoEnvios()
+    {
+        return $this->belongsToMany(
+            \App\Models\TipoEnvio::class,
+            'estado_tipo_envio',   // ✅ tu tabla pivote real
+            'estado_id',
+            'tipo_envio_id'
+        );
+    }
+
+
+    public function syncTiposEnvio(array $tipoEnvioIds)
+    {
+        $this->tipoEnvios()->sync($tipoEnvioIds);
+    }
+
+    
 }

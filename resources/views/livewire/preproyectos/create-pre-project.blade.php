@@ -416,6 +416,7 @@
 
         <select
             wire:model="id_tipo_envio"
+            wire:change="on_Calcula_Fechas_Entrega"
             class="w-full mt-1 border rounded-lg p-2"
             @disabled(!$direccion_entrega_id)
         >
@@ -606,16 +607,14 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Ciudad</label>
-                            <select
-                                class="w-full border rounded-lg p-2"
-                                wire:model="formDireccion.ciudad_id"
-                            >
-                                <option value="">Seleccione</option>
-                                @foreach($ciudades as $ciudad)
-                                    <option value="{{ $ciudad->id }}">{{ $ciudad->nombre }}</option>
-                                @endforeach
-                            </select>
-                        @error('formDireccion.ciudad_id') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+                        <input
+                            type="text"
+                            class="w-full border rounded-lg p-2"
+                            wire:model.defer="formDireccion.ciudad"
+                            placeholder="Ej. Puebla"
+                            @disabled(!($formDireccion['estado_id'] ?? null))
+                        >
+                        @error('formDireccion.ciudad') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                     </div>
                 </div>
 
