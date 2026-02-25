@@ -112,6 +112,11 @@ class FiltrosProduccionCrud extends Component
             ->limit(200)
             ->get(['id','nombre']);
 
+        $productosSeleccionados = Producto::query()
+        ->whereIn('id', $this->producto_ids)
+        ->orderBy('nombre')
+        ->get(['id','nombre']);
+
         $caracteristicas = Caracteristica::query()
             ->when($this->caracteristicaSearch, fn($qq) => $qq->where('nombre', 'like', "%{$this->caracteristicaSearch}%"))
             ->orderBy('nombre')
@@ -121,6 +126,7 @@ class FiltrosProduccionCrud extends Component
         return view('livewire.catalogos.produccion.filtros-produccion-crud', [
             'filtros'         => $filtros,
             'productos'       => $productos,
+            'productosSeleccionados' => $productosSeleccionados,
             'caracteristicas' => $caracteristicas,
         ]);
     }
@@ -368,6 +374,75 @@ class FiltrosProduccionCrud extends Component
 
         $this->dispatch('filtro-notify', message: 'Columnas reordenadas.');
     }
+
+    public function addProducto(int $productoId): void
+    {
+        // Evitar duplicados
+        if (in_array($productoId, $this->producto_ids, true)) {
+            return;
+        }
+
+        // Validar existencia (por si llega algo raro)
+        if (!Producto::whereKey($productoId)->exists()) {
+            $this->dispatch('filtro-notify', message: 'Producto no válido.');
+            return;
+        }
+
+        $this->producto_ids[] = $productoId;
+
+        $this->dispatch('filtro-notify', message: 'Producto añadido.');
+    }
+
+    public function removeProducto(int $productoId): void
+    {
+        $this->producto_ids = array_values(
+            array_filter($this->producto_ids, fn ($id) => (int)$id !== (int)$productoId)
+        );
+
+        $this->dispatch('filtro-notify', message: 'Producto quitado.');
+    }
+
+    public function clearProductos(): void
+    {
+        $this->producto_ids = [];
+        $this->dispatch('filtro-notify', message: 'Lista de productos limpiada.');
+    }
+
+    public function addAllFilteredProductos(): void
+    {
+        // Respeta la misma lógica del render (limit 200)
+        $ids = Producto::query()
+            ->when($this->productoSearch, fn($qq) => $qq->where('nombre', 'like', "%{$this->productoSearch}%"))
+            ->orderBy('nombre')
+            ->limit(200)
+            ->pluck('id')
+            ->all();
+
+        if (empty($ids)) return;
+
+        $merged = array_values(array_unique(array_merge($this->producto_ids, $ids)));
+        $this->producto_ids = $merged;
+
+        $this->dispatch('filtro-notify', message: 'Productos añadidos a la lista.');
+    }
+
+    public function sortProductosSelected(): void
+    {
+        if (count($this->producto_ids) < 2) return;
+
+        $ordenados = Producto::query()
+            ->whereIn('id', $this->producto_ids)
+            ->orderBy('nombre')
+            ->pluck('id')
+            ->all();
+
+        // Conserva solo IDs válidos y ordenados
+        $this->producto_ids = $ordenados;
+
+        $this->dispatch('filtro-notify', message: 'Productos ordenados.');
+    }
+
+
 }
 
 // namespace App\Livewire\Catalogos\Produccion;

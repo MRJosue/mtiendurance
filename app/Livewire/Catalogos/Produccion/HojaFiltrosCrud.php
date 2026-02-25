@@ -690,12 +690,17 @@ public array $form = [
             ->when($this->productoSearchFiltro, fn($qq)=>$qq->where('nombre','like',"%{$this->productoSearchFiltro}%"))
             ->orderBy('nombre')->limit(200)->get(['id','nombre']);
 
+        $productosSeleccionadosFiltro = Producto::query()
+            ->whereIn('id', $this->filtro_producto_ids)
+            ->orderBy('nombre')
+            ->get(['id','nombre']);
+
         $caracteristicas = Caracteristica::query()
             ->when($this->caracteristicaSearchFiltro, fn($qq)=>$qq->where('nombre','like',"%{$this->caracteristicaSearchFiltro}%"))
             ->orderBy('nombre')->limit(200)->get(['id','nombre']);
 
         return view('livewire.catalogos.produccion.hoja-filtros-crud', compact(
-            'hojas','filtros','productos','caracteristicas'
+            'hojas','filtros','productos','caracteristicas','productosSeleccionadosFiltro'
         ));
     }
 
@@ -946,7 +951,61 @@ public array $form = [
     }
 
 
+        public function filtroAddProducto(int $productoId): void
+        {
+            if (in_array($productoId, $this->filtro_producto_ids, true)) return;
 
+            if (!Producto::whereKey($productoId)->exists()) {
+                $this->dispatch('hojas-notify', message: 'Producto no válido.');
+                return;
+            }
+
+            $this->filtro_producto_ids[] = $productoId;
+            $this->dispatch('hojas-notify', message: 'Producto añadido.');
+        }
+
+        public function filtroRemoveProducto(int $productoId): void
+        {
+            $this->filtro_producto_ids = array_values(
+                array_filter($this->filtro_producto_ids, fn($id) => (int)$id !== (int)$productoId)
+            );
+
+            $this->dispatch('hojas-notify', message: 'Producto quitado.');
+        }
+
+        public function filtroClearProductos(): void
+        {
+            $this->filtro_producto_ids = [];
+            $this->dispatch('hojas-notify', message: 'Lista de productos limpiada.');
+        }
+
+        public function filtroAddAllFilteredProductos(): void
+        {
+            $ids = Producto::query()
+                ->when($this->productoSearchFiltro, fn($qq)=>$qq->where('nombre','like',"%{$this->productoSearchFiltro}%"))
+                ->orderBy('nombre')
+                ->limit(200)
+                ->pluck('id')
+                ->all();
+
+            if (empty($ids)) return;
+
+            $this->filtro_producto_ids = array_values(array_unique(array_merge($this->filtro_producto_ids, $ids)));
+            $this->dispatch('hojas-notify', message: 'Productos añadidos a la lista.');
+        }
+
+        public function filtroSortProductosSelected(): void
+        {
+            if (count($this->filtro_producto_ids) < 2) return;
+
+            $this->filtro_producto_ids = Producto::query()
+                ->whereIn('id', $this->filtro_producto_ids)
+                ->orderBy('nombre')
+                ->pluck('id')
+                ->all();
+
+            $this->dispatch('hojas-notify', message: 'Productos ordenados.');
+        }
 
 }
 

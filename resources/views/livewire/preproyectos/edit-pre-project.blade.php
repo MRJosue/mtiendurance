@@ -316,9 +316,12 @@
                                 <span class="ml-4 text-sm text-gray-500">(Descargado)</span>
                             @endif
                         </div>
-                        <button type="button" wire:click="deleteFile({{ $file->id }})" class="text-red-500 hover:underline">
-                            Eliminar
-                        </button>
+                        @can('eliminar-archivo-en-pre-proyecto')
+                            <button type="button" wire:click="deleteFile({{ $file->id }})" class="text-red-500 hover:underline">
+                                Eliminar
+                            </button>
+                        @endcan
+
                     </li>
             @endforeach
 

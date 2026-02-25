@@ -198,43 +198,126 @@
                 </div>
 
                 <!-- TAB: Productos -->
+                <!-- TAB: Productos -->
                 <div x-show="modalTab==='productos'">
-                    <div class="mb-3 flex items-center gap-2">
-                        <input type="text" placeholder="Buscar producto…"
-                               class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                               wire:model.live.debounce.300ms="productoSearch">
-                        <span class="text-xs text-gray-500">({{ $productos->count() }} mostrados)</span>
+                    <div class="mb-3 flex flex-col sm:flex-row sm:items-center gap-2">
+                        <input
+                            type="text"
+                            placeholder="Buscar producto…"
+                            class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                            wire:model.live.debounce.300ms="productoSearch"
+                        />
+
+                        <div class="flex gap-2">
+                            <button
+                                type="button"
+                                class="px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+                                wire:click="clearProductos"
+                                @disabled(count($producto_ids) === 0)
+                            >
+                                Limpiar
+                            </button>
+
+                            <button
+                                type="button"
+                                class="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                                wire:click="addAllFilteredProductos"
+                                @disabled($productos->count() === 0)
+                            >
+                                Añadir todos los mostrados
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Selecciona productos</label>
-                            <select multiple size="10"
-                                    class="mt-1 w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                                    wire:model="producto_ids">
-                                @foreach($productos as $prod)
-                                    <option value="{{ $prod->id }}">{{ $prod->nombre }}</option>
-                                @endforeach
-                            </select>
-                            <p class="text-xs text-gray-500 mt-1">Mantén Ctrl/Cmd para selección múltiple.</p>
-                            @error('producto_ids') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
-                        </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <!-- Panel izquierdo: catálogo / resultados -->
+                        <div class="bg-white rounded-lg border border-gray-200">
+                            <div class="p-3 border-b flex items-center justify-between">
+                                <h4 class="text-sm font-semibold text-gray-700">
+                                    Resultados ({{ $productos->count() }})
+                                </h4>
+                                <span class="text-xs text-gray-500">
+                                    Click en “Añadir” para agregarlos
+                                </span>
+                            </div>
 
-                        <div class="bg-gray-50 rounded-lg p-3">
-                            <h4 class="text-sm font-semibold text-gray-700">Seleccionados ({{ count($producto_ids) }})</h4>
-                            <div class="mt-2 text-xs text-gray-600 space-y-1 max-h-48 overflow-auto">
-                                @forelse($productos->whereIn('id', $producto_ids) as $p)
-                                    <div class="flex items-center justify-between">
-                                        <span class="truncate">{{ $p->nombre }}</span>
+                            <div class="max-h-[360px] overflow-auto divide-y">
+                                @forelse($productos as $prod)
+                                    <div class="p-3 flex items-center justify-between gap-3">
+                                        <div class="min-w-0">
+                                            <div class="text-sm font-medium text-gray-800 truncate">
+                                                {{ $prod->nombre }}
+                                            </div>
+                                            <div class="text-xs text-gray-500">ID: {{ $prod->id }}</div>
+                                        </div>
+
+                                        @php($ya = in_array($prod->id, $producto_ids, true))
+
                                         <button
-                                            class="text-red-600 hover:underline"
-                                            wire:click="$set('producto_ids', {{ json_encode(array_values(array_diff($producto_ids, [$p->id]))) }})"
-                                        >quitar</button>
+                                            type="button"
+                                            class="shrink-0 px-3 py-1.5 rounded-lg text-sm
+                                                {{ $ya ? 'bg-emerald-100 text-emerald-800 cursor-default' : 'bg-blue-600 text-white hover:bg-blue-700' }}"
+                                            wire:click="addProducto({{ $prod->id }})"
+                                            @disabled($ya)
+                                        >
+                                            {{ $ya ? 'Añadido' : 'Añadir a la lista' }}
+                                        </button>
                                     </div>
                                 @empty
-                                    <span class="text-gray-400">Aún no hay productos seleccionados.</span>
+                                    <div class="p-6 text-center text-sm text-gray-500">
+                                        No hay productos con ese filtro.
+                                    </div>
                                 @endforelse
                             </div>
+
+                            <div class="p-3 border-t text-xs text-gray-500">
+                                Tip: puedes buscar y añadir de uno en uno sin Ctrl/Cmd 👍
+                            </div>
+                        </div>
+
+                        <!-- Panel derecho: seleccionados -->
+                        <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-sm font-semibold text-gray-700">
+                                    Seleccionados ({{ count($producto_ids) }})
+                                </h4>
+
+                                <div class="flex gap-2">
+                                    <button
+                                        type="button"
+                                        class="text-xs px-2 py-1 rounded bg-white border border-gray-300 hover:bg-gray-100"
+                                        wire:click="sortProductosSelected"
+                                        @disabled(count($producto_ids) < 2)
+                                    >
+                                        Ordenar A–Z
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="mt-2 max-h-[360px] overflow-auto space-y-2">
+                                @forelse($productosSeleccionados as $pSel)
+                                    <div class="flex items-center justify-between gap-3 bg-white rounded-lg border border-gray-200 px-3 py-2">
+                                        <div class="min-w-0">
+                                            <div class="text-sm text-gray-800 truncate">{{ $pSel->nombre }}</div>
+                                            <div class="text-xs text-gray-500">ID: {{ $pSel->id }}</div>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            class="text-sm text-red-600 hover:underline"
+                                            wire:click="removeProducto({{ $pSel->id }})"
+                                        >
+                                            quitar
+                                        </button>
+                                    </div>
+                                @empty
+                                    <div class="text-sm text-gray-400">
+                                        Aún no hay productos seleccionados.
+                                    </div>
+                                @endforelse
+                            </div>
+
+                            @error('producto_ids') <p class="text-red-600 text-xs mt-2">{{ $message }}</p> @enderror
                         </div>
                     </div>
                 </div>

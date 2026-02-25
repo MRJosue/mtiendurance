@@ -56,7 +56,7 @@
         class="fixed inset-0 z-50 flex items-center justify-center">
         <div class="absolute inset-0 bg-black/40" @click="open=false"></div>
 
-        <div class="relative w-full max-w-5xl bg-white rounded-2xl shadow-xl p-5 sm:p-6">
+        <div class="relative w-[98%] sm:w-full max-w-7xl max-h-[92vh] overflow-y-auto bg-white rounded-2xl shadow-xl p-5 sm:p-6">
             {{-- Header --}}
             <div class="flex items-start justify-between">
                 <div>
@@ -726,7 +726,7 @@
         class="fixed inset-0 z-50 flex items-center justify-center">
         <div class="absolute inset-0 bg-black/40" @click="open=false"></div>
 
-        <div class="relative w-full max-w-5xl bg-white rounded-2xl shadow-xl p-5 sm:p-6">
+        <div class="relative w-[98%] sm:w-full max-w-7xl max-h-[92vh] overflow-y-auto bg-white rounded-2xl shadow-xl p-5 sm:p-6">
             {{-- Header --}}
             <div class="flex items-start justify-between">
                 <div>
@@ -794,48 +794,126 @@
                 </div>
             </div>
 
+            
             {{-- TAB: PRODUCTOS --}}
             <div x-show="tab==='productos'" class="mt-4">
-                <div class="mb-3 flex items-center gap-2">
-                    <input type="text" placeholder="Buscar producto…"
+                <div class="mb-3 flex flex-col sm:flex-row sm:items-center gap-2">
+                    <input
+                        type="text"
+                        placeholder="Buscar producto…"
                         class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                        wire:model.live.debounce.300ms="productoSearchFiltro">
-                    <span class="text-xs text-gray-500">({{ $productos->count() }} mostrados)</span>
+                        wire:model.live.debounce.300ms="productoSearchFiltro"
+                    />
+
+                    <div class="flex gap-2">
+                        <button
+                            type="button"
+                            class="px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            wire:click="filtroClearProductos"
+                            @disabled(count($filtro_producto_ids) === 0)
+                        >
+                            Limpiar
+                        </button>
+
+                        <button
+                            type="button"
+                            class="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            wire:click="filtroAddAllFilteredProductos"
+                            @disabled($productos->count() === 0)
+                        >
+                            Añadir todos los mostrados
+                        </button>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Selecciona productos</label>
-                        <select multiple size="10"
-                                class="mt-1 w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                                wire:model="filtro_producto_ids">
-                            @foreach($productos as $prod)
-                                <option value="{{ $prod->id }}">{{ $prod->nombre }}</option>
-                            @endforeach
-                        </select>
-                        <p class="text-xs text-gray-500 mt-1">Mantén Ctrl/Cmd para selección múltiple.</p>
-                        @error('filtro_producto_ids') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
-                    </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {{-- Resultados --}}
+                    <div class="bg-white rounded-lg border border-gray-200">
+                        <div class="p-3 border-b flex items-center justify-between">
+                            <h4 class="text-sm font-semibold text-gray-700">
+                                Resultados ({{ $productos->count() }})
+                            </h4>
+                            <span class="text-xs text-gray-500">Usa “Añadir a la lista”</span>
+                        </div>
 
-                    <div class="bg-gray-50 rounded-lg p-3">
-                        <h4 class="text-sm font-semibold text-gray-700">Seleccionados ({{ count($filtro_producto_ids) }})</h4>
-                        <div class="mt-2 text-xs text-gray-600 space-y-1 max-h-48 overflow-auto">
-                            @forelse($productos->whereIn('id', $filtro_producto_ids) as $p)
-                                <div class="flex items-center justify-between">
-                                    <span class="truncate">{{ $p->nombre }}</span>
+                        <div class="max-h-[360px] overflow-auto divide-y">
+                            @forelse($productos as $prod)
+                                @php($ya = in_array($prod->id, $filtro_producto_ids, true))
+
+                                <div class="p-3 flex items-center justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <div class="text-sm font-medium text-gray-800 truncate">
+                                            {{ $prod->nombre }}
+                                        </div>
+                                        <div class="text-xs text-gray-500">ID: {{ $prod->id }}</div>
+                                    </div>
+
                                     <button
-                                        class="text-red-600 hover:underline"
-                                        wire:click="$set('filtro_producto_ids', {{ json_encode(array_values(array_diff($filtro_producto_ids, [$p->id]))) }})"
-                                    >quitar</button>
+                                        type="button"
+                                        class="shrink-0 px-3 py-1.5 rounded-lg text-sm
+                                            {{ $ya ? 'bg-emerald-100 text-emerald-800 cursor-default' : 'bg-blue-600 text-white hover:bg-blue-700' }}"
+                                        wire:click="filtroAddProducto({{ $prod->id }})"
+                                        @disabled($ya)
+                                    >
+                                        {{ $ya ? 'Añadido' : 'Añadir a la lista' }}
+                                    </button>
                                 </div>
                             @empty
-                                <span class="text-gray-400">Sin productos seleccionados.</span>
+                                <div class="p-6 text-center text-sm text-gray-500">
+                                    No hay productos con ese filtro.
+                                </div>
                             @endforelse
                         </div>
+
+                        <div class="p-3 border-t text-xs text-gray-500">
+                            Tip: ya no necesitas Ctrl/Cmd 👍
+                        </div>
+                    </div>
+
+                    {{-- Seleccionados --}}
+                    <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-sm font-semibold text-gray-700">
+                                Seleccionados ({{ count($filtro_producto_ids) }})
+                            </h4>
+
+                            <button
+                                type="button"
+                                class="text-xs px-2 py-1 rounded bg-white border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                                wire:click="filtroSortProductosSelected"
+                                @disabled(count($filtro_producto_ids) < 2)
+                            >
+                                Ordenar A–Z
+                            </button>
+                        </div>
+
+                        <div class="mt-2 max-h-[360px] overflow-auto space-y-2">
+                            @forelse($productosSeleccionadosFiltro as $pSel)
+                                <div class="flex items-center justify-between gap-3 bg-white rounded-lg border border-gray-200 px-3 py-2">
+                                    <div class="min-w-0">
+                                        <div class="text-sm text-gray-800 truncate">{{ $pSel->nombre }}</div>
+                                        <div class="text-xs text-gray-500">ID: {{ $pSel->id }}</div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        class="text-sm text-red-600 hover:underline"
+                                        wire:click="filtroRemoveProducto({{ $pSel->id }})"
+                                    >
+                                        quitar
+                                    </button>
+                                </div>
+                            @empty
+                                <div class="text-sm text-gray-400">
+                                    Sin productos seleccionados.
+                                </div>
+                            @endforelse
+                        </div>
+
+                        @error('filtro_producto_ids') <p class="text-red-600 text-xs mt-2">{{ $message }}</p> @enderror
                     </div>
                 </div>
             </div>
-
             {{-- TAB: COLUMNAS --}}
             <div x-show="tab==='columnas'" class="mt-4">
                 <div class="mb-3 flex items-center gap-2">
@@ -961,7 +1039,7 @@
         class="fixed inset-0 z-50 flex items-center justify-center">
         <div class="absolute inset-0 bg-black/40" @click="open=false"></div>
 
-        <div class="relative w-full max-w-md bg-white rounded-2xl shadow-xl p-5 sm:p-6">
+        <div class="relative w-[95%] sm:w-full max-w-lg bg-white rounded-2xl shadow-xl p-5 sm:p-6">
             <h3 class="text-lg font-semibold text-gray-900">Eliminar hoja</h3>
             <p class="mt-2 text-sm text-gray-600">
                 Esta acción eliminará la hoja seleccionada. Los filtros asociados <strong>no</strong> se eliminarán,
