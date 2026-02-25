@@ -50,7 +50,7 @@ class HojaFiltrosCrud extends Component
     // ['key' => 'staff.panel',          'label' => 'Panel del Staff'],
     // ['key' => 'staff.panel',          'label' => 'Panel del Staff'],
     ['key' => 'pedidos',          'label' => 'Pedidos'],
-    ['key' => 'diseño',           'label' => 'diseño'],
+    ['key' => 'disenio',           'label' => 'diseño'],
     ['key' => 'produccion',       'label' => 'Producción'],
     ['key' => 'entregas',         'label' => 'entregas'],
     ['key' => 'facturacion',      'label' => 'facturacion'],

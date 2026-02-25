@@ -30,14 +30,3 @@
         <div class="text-sm text-gray-500 px-2 py-1">Sin hojas para esta ubicación.</div>
     @endif
 </nav>
-{{-- <nav class="space-y-1">
-    @foreach($hojas as $h)
-        @php
-            $isActive = request()->routeIs('produccion.hojas.show') && (request()->route('hoja')?->slug === $h->slug);
-        @endphp
-        <a href="{{ route('produccion.hojas.show', $h->slug) }}"
-          class="block px-2 py-1 rounded hover:bg-gray-800">
-            {{ $h->nombre }}
-        </a>
-    @endforeach
-</nav> --}}

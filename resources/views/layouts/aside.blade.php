@@ -133,7 +133,7 @@
 
 
 
-                    @livewire('aside-hojas', ['ubicacion' => 'diseño'])
+                    @livewire('aside-hojas', ['ubicacion' => 'disenio'])
                     
                 </div>
             </div>

@@ -25,7 +25,7 @@ class AsideHojas extends Component
         $q = HojaFiltroProduccion::query()
             ->visibles()
             ->accessibleBy($user)
-            // Debe tener la ubicación seleccionada
+            
             ->whereJsonContains('menu_config->ubicaciones', $this->ubicacion);
 
         if ($this->soloActivas) {
