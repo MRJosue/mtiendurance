@@ -45,6 +45,17 @@
                         <!-- Lado izquierdo: (deja lo que ya tengas: botones, chips, etc.) -->
                         <div class="flex flex-wrap items-center gap-2">
                             {{-- ... tus botones/acciones ... --}}
+
+                            <button
+                                type="button"
+                                class="w-full sm:w-auto px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+                                wire:click="exportExcel"
+                                wire:loading.attr="disabled"
+                                wire:target="exportExcel"
+                            >
+                                <span wire:loading.remove wire:target="exportExcel">Exportar Excel</span>
+                                <span wire:loading wire:target="exportExcel">Exportando...</span>
+                            </button>
                         </div>
 
                         <!-- Lado derecho: PerPage -->

@@ -12,8 +12,13 @@ use App\Models\proyecto_estados;
 use App\Notifications\NuevaNotificacion;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Arr;
-
 use Illuminate\Support\Facades\Auth;
+
+use App\Exports\ProjectsTabExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Database\Eloquent\Builder;
+
+
 class ManageProjects extends Component
 {
         use WithPagination;
@@ -479,6 +484,97 @@ class ManageProjects extends Component
         }
 
 
+        public function exportExcel()
+            {
+                $query = $this->buildProjectsQuery();
+
+                $tab = preg_replace('/[^A-Z0-9_ -]/', '', (string)$this->activeTab);
+                $fecha = now()->format('Y-m-d_His');
+
+                return Excel::download(
+                    new ProjectsTabExport($query),
+                    "proyectos_{$tab}_{$fecha}.xlsx"
+                );
+            }
+        private function buildProjectsQuery(): Builder
+            {
+                $query = Proyecto::query()->with([
+                    'user:id,name,email,empresa_id,sucursal_id',
+                    'proveedor:id,name',
+                    'user.empresa:id,nombre',
+                    'user.sucursal:id,nombre,empresa_id',
+                    'user.sucursal.empresa:id,nombre',
+                ]);
+
+                // --- Filtro base activo / inactivo ---
+                if ($this->filters['inactivos']) {
+                    $query->where('ind_activo', 0);
+                } else {
+                    $query->where('ind_activo', 1);
+                }
+
+                // --- Filtros por columna ---
+                $query
+                    ->when($this->filters['id'], function ($q, $v) {
+                        $ids = collect(preg_split('/[,;\s]+/', (string)$v, -1, PREG_SPLIT_NO_EMPTY))
+                            ->map(fn($i) => (int) trim($i))
+                            ->filter();
+                        if ($ids->count() === 1) $q->where('id', $ids->first());
+                        elseif ($ids->isNotEmpty()) $q->whereIn('id', $ids->all());
+                    })
+                    ->when($this->filters['nombre'], fn($q, $v) =>
+                        $q->where('nombre', 'like', '%'.$v.'%')
+                    )
+                    ->when($this->filters['cliente'] && Auth::user()->can('tablaProyectos-ver-todos-los-proyectos'), function ($q) {
+                        $v = trim((string)$this->filters['cliente']);
+                        $q->whereHas('user', fn($u) =>
+                            $u->where('name', 'like', '%'.$v.'%')
+                            ->orWhere('email', 'like', '%'.$v.'%')
+                        );
+                    })
+                    ->when($this->filters['estado'], fn($q, $v) =>
+                        $q->where('estado', $v)
+                    );
+
+                // --- Tabs ---
+                if ($this->activeTab === 'RECONFIGURAR') {
+                    $query->where('estado', 'DISEÑO APROBADO')->where('flag_reconfigurar', 1);
+                }
+
+                if (in_array($this->activeTab, $this->estados, true)) {
+                    $query->where('estado', $this->activeTab);
+                }
+
+                if ($this->activeTab === 'DISEÑO APROBADO') {
+                    $query->where(function ($q) {
+                        $q->whereHas('pedidos', function ($sub) {
+                            $sub->where('tipo', 'PEDIDO')
+                                ->where('estado_id', '1');
+                        })
+                        ->orWhere('flag_reconfigurado', 1);
+                    });
+                }
+
+                // --- Restricción por rol/permiso ---
+                $user = Auth::user();
+                if ($user->hasRole('admin') || $user->can('tablaProyectos-ver-todos-los-proyectos')) {
+                    // ve todo
+                } elseif ($user->hasRole('cliente_principal')) {
+                    $idsUsuarios = array_values(array_unique(array_merge([$user->id], $this->subordinateIds)));
+                    $query->whereIn('usuario_id', $idsUsuarios);
+                } else {
+                    $query->where('usuario_id', $user->id);
+                }
+
+                // --- Order by (seguro) ---
+                if (!in_array($this->sortField, $this->sortable, true)) {
+                    $this->sortField = 'id';
+                }
+                $query->orderBy($this->sortField, $this->sortDir);
+
+                return $query;
+            }
+
         public function render()
         {
             $query = Proyecto::query()
@@ -571,19 +667,27 @@ class ManageProjects extends Component
             }
             $query->orderBy($this->sortField, $this->sortDir);
 
+
+            $query = $this->buildProjectsQuery();
+
+
+
             // --- Paginar solo una vez ---
             $projects = $query->paginate($this->perPage);
 
-            // 👇 ids de la página actual (para checkbox maestro)
+
+
+
             $this->idsPagina = $projects->getCollection()
                 ->pluck('id')
                 ->map(fn($id) => (int) $id)
                 ->values()
                 ->all();
 
-
             return view('livewire.proyectos.manage-projects', compact('projects'));
         }
 
 
+
+        
 }
