@@ -27,79 +27,128 @@
                             >
 
                             
-                            <template x-if="abierto">
-                                <div 
-                                  
-                                    class="w-full bg-white border border-gray-200 shadow-md rounded-lg"
-                                >
-                                    <div class="flex justify-between items-center p-4 border-b">
-                                        <h2 class="text-lg font-bold text-gray-700">Filtros</h2>
-                                        <div class="flex items-center gap-2">
-                                            <button 
-                                                wire:click="buscarPorFiltros"
-                                                class="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-100 text-sm"
-                                            >
-                                                Filtrar
-                                            </button>
-                                            <button 
-                                                @click="abierto = false" 
-                                                class="text-gray-500 hover:text-gray-700 text-xl leading-none"
-                                            >
-                                                ✕
-                                            </button>
-                                        </div>
-                                    </div>
+<template x-if="abierto">
+    <div class="w-full bg-white border border-gray-200 shadow-md rounded-lg">
+        {{-- Header --}}
+        <div class="p-4 border-b">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex items-center justify-between sm:justify-start gap-3">
+                    <h2 class="text-lg font-bold text-gray-700">Filtros</h2>
 
-                                    <div class="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                               <div class="flex items-center space-x-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        id="no-aprobados"
-                                                        wire:model.defer="mostrarSoloNoAprobados"
-                                                        class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                                                    />
-                                                    <label for="no-aprobados" class="text-sm text-gray-700">
-                                                        Mostrar pedidos de diseños No aprobados
-                                                    </label>
-                                                </div>
+                    {{-- Cerrar (compacto) --}}
+                    <button
+                        type="button"
+                        @click="abierto = false"
+                        class="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                        title="Cerrar"
+                    >
+                        ✕
+                    </button>
+                </div>
 
-                                                <div class="flex flex-col gap-1">
-                                                    <label for="perPage" class="text-sm text-gray-700 font-medium">
-                                                        Registros por página
-                                                    </label>
+                {{-- Acciones --}}
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <button
+                        type="button"
+                        wire:click="buscarPorFiltros"
+                        class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 text-sm"
+                    >
+                        Filtrar
+                    </button>
 
-                                                    <select
-                                                        id="perPage"
-                                                        wire:model.live="perPage"
-                                                        class="w-full rounded-lg border-gray-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-sm"
-                                                    >
-                                                        <option value="10">10</option>
-                                                        <option value="20">20</option>
-                                                        <option value="30">30</option>
-                                                        <option value="50">50</option>
-                                                        <option value="100">100</option>
-                                                    </select>
-                                                </div>
+                    <button
+                        type="button"
+                        wire:click="clearFilters"
+                        class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 text-sm"
+                    >
+                        Limpiar
+                    </button>
 
-                                                {{-- 👇 NUEVO filtro activos / inactivos --}}
-                                                <div class="flex items-center space-x-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        id="solo-inactivos"
-                                                        wire:model.live="filters.inactivos"
-                                                        class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                                                    />
-                                                    <label for="solo-inactivos" class="text-sm text-gray-700">
-                                                        Mostrar solo pedidos inactivos
-                                                    </label>
-                                                </div>
+                    <button
+                        type="button"
+                        wire:click="exportExcel"
+                        wire:loading.attr="disabled"
+                        wire:target="exportExcel"
+                        class="w-full sm:w-auto bg-emerald-600 text-white px-3 py-2 rounded-lg hover:bg-emerald-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        @disabled(! $this->hasFilters)
+                        title="{{ $this->hasFilters ? 'Exportar Excel' : 'Aplica al menos 1 filtro para exportar' }}"
+                    >
+                        <span wire:loading.remove wire:target="exportExcel">Exportar Excel</span>
+                        <span wire:loading wire:target="exportExcel">Exportando...</span>
+                    </button>
 
+                    {{-- Cerrar (desktop) --}}
+                    <button
+                        type="button"
+                        @click="abierto = false"
+                        class="hidden sm:inline-flex items-center justify-center px-3 py-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 text-sm"
+                        title="Cerrar"
+                    >
+                        Cerrar ✕
+                    </button>
+                </div>
+            </div>
 
+            {{-- Hint --}}
+            <p class="mt-2 text-xs text-gray-500">
+                La exportación solo se habilita cuando hay al menos un filtro aplicado.
+            </p>
+        </div>
 
+        {{-- Body --}}
+        <div class="p-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {{-- No aprobados --}}
+                <div class="rounded-lg border border-gray-200 p-3">
+                    <label class="flex items-start gap-2 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            id="no-aprobados"
+                            wire:model.defer="mostrarSoloNoAprobados"
+                            class="mt-1 rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                        />
+                        <span class="text-sm text-gray-700">
+                            Mostrar pedidos de diseños <span class="font-semibold">No aprobados</span>
+                        </span>
+                    </label>
+                </div>
 
-                                    </div>
-                                </div>
-                            </template>
+                {{-- PerPage --}}
+                <div class="rounded-lg border border-gray-200 p-3">
+                    <label for="perPage" class="block text-sm text-gray-700 font-medium mb-1">
+                        Registros por página
+                    </label>
+                    <select
+                        id="perPage"
+                        wire:model.live="perPage"
+                        class="w-full rounded-lg border-gray-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-sm"
+                    >
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+
+                {{-- Inactivos --}}
+                <div class="rounded-lg border border-gray-200 p-3">
+                    <label class="flex items-start gap-2 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            id="solo-inactivos"
+                            wire:model.live="filters.inactivos"
+                            class="mt-1 rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                        />
+                        <span class="text-sm text-gray-700">
+                            Mostrar solo pedidos <span class="font-semibold">inactivos</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
                                 <template x-if="!abierto">
                                     <div class="mb-4">
                                         <button @click="abierto = true" class="text-sm text-blue-600 hover:underline">
