@@ -1235,6 +1235,53 @@
     </div>
 </div>
 
+
+
+{{-- Toaster global --}}
+<div
+    x-data="{
+        show:false, message:'', type:'info', timer:null,
+        fire(detail){
+            this.message = detail?.message ?? '';
+            this.type    = detail?.type ?? 'info';
+            this.show    = true;
+            clearTimeout(this.timer);
+            this.timer = setTimeout(() => this.show = false, 3000);
+        }
+    }"
+    x-on:toast.window="fire($event.detail)"
+    x-show="show"
+    x-transition.opacity
+    class="fixed top-4 right-4 z-[999999] w-[92vw] max-w-sm"
+    style="display:none;"
+>
+    <div
+        class="rounded-lg border shadow bg-white p-3"
+        :class="{
+            'border-red-200': type==='error',
+            'border-emerald-200': type==='success',
+            'border-sky-200': type==='info'
+        }"
+    >
+        <div
+            class="text-sm font-semibold"
+            :class="{
+                'text-red-700': type==='error',
+                'text-emerald-700': type==='success',
+                'text-sky-700': type==='info'
+            }"
+            x-text="message"
+        ></div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('livewire:init', () => {
+  Livewire.on('toast', (payload) => {
+    console.log('TOAST EVENT (Livewire.on):', payload);
+  });
+});
+</script>
         
 <script>
 document.addEventListener('DOMContentLoaded', () => {

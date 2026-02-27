@@ -1176,33 +1176,61 @@ class HojaViewer extends Component
 
     
 
-    public function openProgramarModal(int $pedidoId): void
-    {
+public function openProgramarModal(int $pedidoId): void
+{
+    try {
         if (!$this->can('programar_pedido')) {
             $this->dispatch('toast', message: 'No tienes permiso para programar pedidos', type: 'error');
+        Log::debug('Validando pedido para programar', ['pedido_id' => $pedidoId]);
+
             return;
         }
 
-        $pedido = \App\Models\Pedido::query()->find($pedidoId);
+
+        $pedido = \App\Models\Pedido::query()
+            ->with(['proyecto:id,estado'])   // 👈 IMPORTANTÍSIMO
+            ->find($pedidoId);
+
         if (!$pedido) {
             $this->dispatch('toast', message: 'Pedido no encontrado', type: 'error');
+        Log::debug('Validando Pedido no encontrado', ['pedido_id' => $pedidoId]);
+
             return;
         }
+
+
+        
+        if (!$pedido->proyecto) {
+            $this->dispatch('toast', message: 'Este pedido no tiene proyecto asociado', type: 'error');
+            Log::debug('Validando Este pedido no tiene proyecto asociado', ['pedido_id' => $pedidoId]);
+
+            return;
+        }
+
 
         // ✅ Validación: solo APROBADO
         $aprobadoId = $this->estadoId('APROBADO');
         if (!$aprobadoId) {
             $this->dispatch('toast', message: 'No existe el estado "APROBADO" en el catálogo', type: 'error');
+                    Log::debug('Validando No existe el estado "APROBADO" en el catálogo', ['pedido_id' => $pedidoId]);
+
             return;
         }
+        
 
         $estadoDiseno = trim((string)($pedido->proyecto->estado ?? ''));
         if ($estadoDiseno !== 'DISEÑO APROBADO') {
             $this->dispatch('toast', message: 'Para programar, el diseño debe estar en "DISEÑO APROBADO"', type: 'error');
+                   Log::debug('Para programar, el diseño debe estar en "DISEÑO APROBADO"', ['pedido_id' => $pedidoId]);
+
             return;
         }
 
+ 
+
         if ((int)$pedido->estado_id !== (int)$aprobadoId) {
+            
+             Log::debug('Solo puedes programar pedidos en estado APROBADO', ['pedido_id' => $pedidoId]);
             $this->dispatch('toast', message: 'Solo puedes programar pedidos en estado APROBADO', type: 'error');
             return;
         }
@@ -1214,7 +1242,16 @@ class HojaViewer extends Component
         $this->programarFechaEmbarque   = $pedido->fecha_embarque?->format('Y-m-d');
 
         $this->showProgramarModal = true;
+
+    } catch (\Throwable $e) {
+        \Log::error('openProgramarModal error', [
+            'pedido_id' => $pedidoId,
+            'msg' => $e->getMessage(),
+        ]);
+
+        $this->dispatch('toast', message: 'Ocurrió un error al validar el pedido.', type: 'error');
     }
+}
 
     public function closeProgramarModal(): void
     {
