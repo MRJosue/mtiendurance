@@ -13,7 +13,9 @@ use App\Models\Proyecto;
 use Illuminate\Support\Arr;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-
+use Livewire\Attributes\On;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\HojaPedidosSelectedExport;
 
 class HojaViewer extends Component
 {
@@ -141,6 +143,19 @@ class HojaViewer extends Component
 
         public ?string $programarFechaProduccion = null; // Y-m-d
         public ?string $programarFechaEmbarque   = null; // Y-m-d
+
+// Modal Programar (selección)
+public bool $showProgramarSeleccionModal = false;
+public array $programarSeleccionIds = [];
+
+public ?string $programarSeleccionFechaProduccion = null; // Y-m-d
+public ?string $programarSeleccionFechaEmbarque   = null; // Y-m-d
+
+public ?int $programarSeleccionProductoId = null;
+public ?string $programarSeleccionProductoNombre = null;
+
+
+
 
 
 
@@ -1316,6 +1331,218 @@ public function openProgramarModal(int $pedidoId): void
         $this->resetPage();
     }
 
+
+
+    public function openProgramarSeleccionModal(array $ids): void
+{
+    $ids = array_values(array_unique(array_map('intval', $ids)));
+
+    if (empty($ids)) {
+        $this->dispatch('toast', message: 'Selecciona al menos un pedido.', type: 'info');
+        return;
+    }
+
+    if (!$this->can('bulk_programar')) {
+        $this->dispatch('toast', message: 'No tienes permiso para programar en lote', type: 'error');
+        return;
+    }
+
+    $aprobadoId = $this->estadoId('APROBADO');
+    if (!$aprobadoId) {
+        $this->dispatch('toast', message: 'No existe el estado "APROBADO" en el catálogo', type: 'error');
+        return;
+    }
+
+    $pedidos = \App\Models\Pedido::query()
+        ->whereIn('id', $ids)
+        ->with([
+            'proyecto:id,estado',
+            'producto:id,nombre',
+        ])
+        ->get(['id','estado_id','proyecto_id','producto_id','fecha_produccion','fecha_embarque']);
+
+    if ($pedidos->isEmpty()) {
+        $this->dispatch('toast', message: 'Pedidos no encontrados.', type: 'error');
+        return;
+    }
+
+    // ✅ 1) Validar mismo producto
+    $productoId = (int) $pedidos->first()->producto_id;
+    $mismatchProducto = $pedidos->firstWhere(fn($p) => (int)$p->producto_id !== $productoId);
+
+    if ($mismatchProducto) {
+        $this->dispatch('toast', message: 'Para programar en lote, todos los pedidos deben ser del mismo producto.', type: 'error');
+        return;
+    }
+
+    // ✅ 2) Validar diseño aprobado
+    $badDiseno = $pedidos->firstWhere(function ($p) {
+        $estadoDiseno = trim((string)($p->proyecto->estado ?? ''));
+        return $estadoDiseno !== 'DISEÑO APROBADO';
+    });
+
+    if ($badDiseno) {
+        $this->dispatch('toast', message: 'Para programar, todos los pedidos deben tener el proyecto en "DISEÑO APROBADO".', type: 'error');
+        return;
+    }
+
+    // ✅ 3) Validar estado APROBADO
+    $badEstado = $pedidos->firstWhere(fn($p) => (int)$p->estado_id !== (int)$aprobadoId);
+    if ($badEstado) {
+        $this->dispatch('toast', message: 'Solo puedes programar pedidos en estado APROBADO.', type: 'error');
+        return;
+    }
+
+    $this->resetValidation();
+
+    $this->programarSeleccionIds = $ids;
+    $this->programarSeleccionProductoId = $productoId;
+    $this->programarSeleccionProductoNombre = $pedidos->first()->producto->nombre ?? null;
+
+    // si quieres “autollenar” con la primera fecha existente (opcional)
+    $first = $pedidos->first();
+    $this->programarSeleccionFechaProduccion = $first->fecha_produccion?->format('Y-m-d');
+    $this->programarSeleccionFechaEmbarque   = $first->fecha_embarque?->format('Y-m-d');
+
+    $this->showProgramarSeleccionModal = true;
+}
+
+public function closeProgramarSeleccionModal(): void
+{
+    $this->showProgramarSeleccionModal = false;
+
+    $this->programarSeleccionIds = [];
+    $this->programarSeleccionProductoId = null;
+    $this->programarSeleccionProductoNombre = null;
+
+    $this->programarSeleccionFechaProduccion = null;
+    $this->programarSeleccionFechaEmbarque = null;
+
+    $this->resetValidation();
+}
+
+
+public function confirmarProgramacionSeleccion(): void
+{
+    if (empty($this->programarSeleccionIds)) return;
+
+    if (!$this->can('bulk_programar')) {
+        $this->dispatch('toast', message: 'No tienes permiso para programar en lote', type: 'error');
+        return;
+    }
+
+    $this->validate([
+        'programarSeleccionFechaProduccion' => ['required', 'date'],
+        'programarSeleccionFechaEmbarque'   => ['required', 'date'],
+    ], [
+        'programarSeleccionFechaProduccion.required' => 'La fecha de producción es obligatoria.',
+        'programarSeleccionFechaEmbarque.required'   => 'La fecha de embarque es obligatoria.',
+    ]);
+
+    $aprobadoId = $this->estadoId('APROBADO');
+    $enProduccionId = $this->estadoId('EN PRODUCCION');
+
+    if (!$aprobadoId || !$enProduccionId) {
+        $this->dispatch('toast', message: 'Faltan estados en catálogo (APROBADO / EN PRODUCCION).', type: 'error');
+        return;
+    }
+
+    $ids = array_values(array_unique(array_map('intval', $this->programarSeleccionIds)));
+
+    // Revalidación server-side (por seguridad)
+    $pedidos = \App\Models\Pedido::query()
+        ->whereIn('id', $ids)
+        ->with(['proyecto:id,estado'])
+        ->get(['id','estado_id','producto_id','proyecto_id']);
+
+    if ($pedidos->isEmpty()) {
+        $this->dispatch('toast', message: 'Pedidos no encontrados.', type: 'error');
+        return;
+    }
+
+    $productoId = (int) ($pedidos->first()->producto_id ?? 0);
+
+    if ($pedidos->contains(fn($p) => (int)$p->producto_id !== $productoId)) {
+        $this->dispatch('toast', message: 'Los pedidos ya no son del mismo producto. Vuelve a intentar.', type: 'error');
+        return;
+    }
+
+    if ($pedidos->contains(fn($p) => (int)$p->estado_id !== (int)$aprobadoId)) {
+        $this->dispatch('toast', message: 'Algunos pedidos ya no están en APROBADO.', type: 'error');
+        return;
+    }
+
+    if ($pedidos->contains(function ($p) {
+        return trim((string)($p->proyecto->estado ?? '')) !== 'DISEÑO APROBADO';
+    })) {
+        $this->dispatch('toast', message: 'Algunos pedidos ya no tienen el diseño aprobado.', type: 'error');
+        return;
+    }
+
+    $fp = Carbon::parse($this->programarSeleccionFechaProduccion)->toDateString();
+    $fe = Carbon::parse($this->programarSeleccionFechaEmbarque)->toDateString();
+
+    \App\Models\Pedido::query()
+        ->whereIn('id', $ids)
+        ->update([
+            'fecha_produccion'  => $fp,
+            'fecha_embarque'    => $fe,
+            'estado_id'         => $enProduccionId,
+            'estado'            => 'EN PRODUCCION',
+            'estado_produccion' => 'PROGRAMADO',
+        ]);
+
+    $this->selectedIds = []; // limpia selección
+    $this->dispatch('toast', message: 'Pedidos programados (misma referencia de producto).', type: 'success');
+
+    $this->closeProgramarSeleccionModal();
+    $this->resetPage();
+}
+
+#[On('exportar-seleccion')]
+public function exportarSeleccion(array $ids)
+{
+    $ids = array_values(array_unique(array_map('intval', $ids)));
+
+    if (empty($ids)) {
+        $this->dispatch('toast', message: 'Selecciona al menos un pedido.', type: 'info');
+        return;
+    }
+
+    if (!$this->can('bulk_exportar')) {
+        $this->dispatch('toast', message: 'No tienes permiso para exportar en lote', type: 'error');
+        return;
+    }
+
+    $hoja = $this->hoja;
+
+    // Columnas base visibles (las mismas que en tabla)
+    $baseCols = collect($hoja->columnasBase() ?? [])
+        ->filter(fn($c) => ($c['visible'] ?? true) && (($c['key'] ?? '') !== 'id'))
+        ->values()
+        ->all();
+
+    // Columnas dinámicas del filtro activo
+    $columnasFiltro = collect();
+    if ($this->activeFiltroId) {
+        $filtro = \App\Models\FiltroProduccion::with('caracteristicas')->find($this->activeFiltroId);
+        $columnasFiltro = $filtro?->columnas()
+            ->filter(fn($c) => $c['visible'] ?? true)
+            ->sortBy('orden')
+            ->values() ?? collect();
+    }
+
+    $filename = 'hoja_'.$hoja->id.'_seleccionados_'.now()->format('Ymd_His').'.xlsx';
+
+    // (Opcional) limpiar selección al exportar
+    // $this->selectedIds = [];
+    // $this->dispatch('toast', message: 'Exportación generada', type: 'success');
+
+    return Excel::download(
+        new HojaPedidosSelectedExport($ids, $baseCols, $columnasFiltro->values()->all()),
+        $filename
+    );
+}
 
 
 }

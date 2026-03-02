@@ -118,9 +118,7 @@
                             <x-dropdown.item
                                 @click="
                                     if (!selected.length) { alert('Selecciona al menos un pedido.'); return; }
-                                    if (confirm('¿Programar los pedidos seleccionados?')) {
-                                        $wire.programarSeleccion(selected);
-                                    }
+                                    $wire.openProgramarSeleccionModal(selected);
                                 "
                                 label="Programar seleccionados"
                             />
@@ -1230,6 +1228,117 @@
             >
                 <span wire:loading.remove wire:target="confirmarProgramacion">Confirmar</span>
                 <span wire:loading wire:target="confirmarProgramacion">Guardando...</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+{{-- Modal: Programar seleccionados (bulk) --}}
+<div
+    x-data="{ open: @entangle('showProgramarSeleccionModal').live }"
+    x-cloak
+    x-show="open"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4"
+>
+    <div class="absolute inset-0 bg-black/50" @click="$wire.closeProgramarSeleccionModal()"></div>
+
+    <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="p-4 sm:p-6 border-b">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h3 class="text-lg font-bold">Programar pedidos seleccionados</h3>
+                    <p class="text-sm text-gray-600">
+                        Seleccionados: {{ count($programarSeleccionIds ?? []) }}
+                    </p>
+
+                    @if($programarSeleccionProductoNombre)
+                        <p class="text-xs text-gray-500 mt-1">
+                            Producto: <span class="font-semibold">{{ $programarSeleccionProductoNombre }}</span>
+                        </p>
+                    @endif
+                </div>
+
+                <button
+                    type="button"
+                    class="text-gray-500 hover:text-gray-700"
+                    @click="$wire.closeProgramarSeleccionModal()"
+                    aria-label="Cerrar"
+                >
+                    ✕
+                </button>
+            </div>
+        </div>
+
+        <div class="p-4 sm:p-6 space-y-4">
+            <div class="rounded-lg border bg-gray-50 p-3">
+                <div class="text-xs text-gray-500">Reglas</div>
+                <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
+                    <li>Todos deben ser del <span class="font-semibold">mismo producto</span>.</li>
+                    <li>Todos deben estar en <span class="font-semibold">APROBADO</span>.</li>
+                    <li>El proyecto debe estar en <span class="font-semibold">DISEÑO APROBADO</span>.</li>
+                </ul>
+            </div>
+
+            @error('programarSeleccionFechaProduccion')
+                <div class="rounded-lg border border-red-200 bg-red-50 text-red-800 p-2 text-sm">
+                    {{ $message }}
+                </div>
+            @enderror
+            @error('programarSeleccionFechaEmbarque')
+                <div class="rounded-lg border border-red-200 bg-red-50 text-red-800 p-2 text-sm">
+                    {{ $message }}
+                </div>
+            @enderror
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de producción</label>
+                    <input
+                        type="date"
+                        class="w-full rounded-lg border-gray-300 focus:ring-blue-500"
+                        wire:model.live="programarSeleccionFechaProduccion"
+                    >
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de embarque</label>
+                    <input
+                        type="date"
+                        class="w-full rounded-lg border-gray-300 focus:ring-blue-500"
+                        wire:model.live="programarSeleccionFechaEmbarque"
+                    >
+                </div>
+            </div>
+
+            <div class="rounded-lg border p-3">
+                <div class="text-xs text-gray-500 mb-1">Al confirmar</div>
+                <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
+                    <li>Estado del pedido → <span class="font-semibold">EN PRODUCCION</span></li>
+                    <li>Estado de producción → <span class="font-semibold">PROGRAMADO</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="p-4 sm:p-6 border-t flex flex-col sm:flex-row gap-2 sm:justify-end">
+            <button
+                type="button"
+                class="w-full sm:w-auto px-4 py-2 rounded-lg border bg-white hover:bg-gray-50"
+                @click="$wire.closeProgramarSeleccionModal()"
+            >
+                Cancelar
+            </button>
+
+            <button
+                type="button"
+                class="w-full sm:w-auto px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                wire:click="confirmarProgramacionSeleccion"
+                wire:loading.attr="disabled"
+                wire:target="confirmarProgramacionSeleccion"
+            >
+                <span wire:loading.remove wire:target="confirmarProgramacionSeleccion">Confirmar</span>
+                <span wire:loading wire:target="confirmarProgramacionSeleccion">Guardando...</span>
             </button>
         </div>
     </div>
