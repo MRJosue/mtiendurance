@@ -86,6 +86,7 @@
                                 class="disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                         </x-slot>
+                        
 
                         {{-- Rechazar (ya existente) --}}
                         @if($acciones['bulk_edit_estado'])
@@ -141,6 +142,8 @@
                                 label="Archivar seleccionados"
                             />
                         @endif
+
+                        
                     </x-dropdown>
                 </div>
             </div>
@@ -713,30 +716,61 @@
                                                 @break     
 
                                                 @case('total')
-                                                    @if( $acciones['bulk_edit_total'])
-                                                        <div x-data="{
-                                                                edit:false,
-                                                                value:'{{ number_format((float)($pedido->total ?? 0), 2, '.', '') }}',
-                                                                save(){ this.edit=false; $wire.updateField({{ $pedido->id }}, 'total', this.value); }
-                                                            }"
-                                                            wire:key="cell-fecha-produccion-{{ $pedido->id }}"
-                                                            wire:key="cell-total-{{ $pedido->id }}"
-                                                            class="inline-flex items-center gap-2">
-                                                            <template x-if="!edit">
-                                                                <span @dblclick="edit=true" class="cursor-pointer select-none">
-                                                                    {{ number_format((float)($pedido->total ?? 0), 2) }}
-                                                                </span>
-                                                            </template>
-                                                            <template x-if="edit">
-                                                                <input type="number" step="0.01" x-model="value"
-                                                                    @keydown.enter.prevent="save()" @blur="save()"
-                                                                    class="w-28 rounded-lg border-gray-300 focus:ring-blue-500 text-sm">
-                                                            </template>
-                                                            <button type="button" class="text-xs text-blue-600 hover:underline"
-                                                                    @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
+                                                    @php
+                                                        // Ajusta el flag real si tu campo se llama distinto
+                                                        $tieneTallas = (bool)($pedido->flag_tallas ?? false);
+
+                                                        // Reutiliza el mismo permiso que hoy permite editar en línea
+                                                        $puedeEditarInline = (bool)($acciones['bulk_edit_total'] ?? false);
+                                                    @endphp
+
+                                                    {{-- ✅ SI tiene tallas: NO edición inline, abre modal --}}
+                                                    @if($tieneTallas)
+                                                        <div class="inline-flex items-center gap-2">
+                                                            <span class="font-semibold">
+                                                                {{ number_format((float)($pedido->total ?? 0), 2) }}
+                                                            </span>
+
+                                                            <button
+                                                                type="button"
+                                                                class="text-xs text-blue-600 hover:underline"
+                                                                 wire:click="abrirModalEditarTallas({{ $pedido->id }})"
+                                                            >
+
+                                                              
+                                                                {{ $puedeEditarInline ? 'Editar' : 'Ver' }}
+                                                            </button>
                                                         </div>
+
+                                                    {{-- ✅ SI NO tiene tallas: se queda tu edición inline normal --}}
                                                     @else
-                                                        {{ number_format((float)($pedido->total ?? 0), 2) }}
+                                                        @if($acciones['bulk_edit_total'])
+                                                            <div x-data="{
+                                                                    edit:false,
+                                                                    value:'{{ number_format((float)($pedido->total ?? 0), 2, '.', '') }}',
+                                                                    save(){ this.edit=false; $wire.updateField({{ $pedido->id }}, 'total', this.value); }
+                                                                }"
+                                                                wire:key="cell-total-{{ $pedido->id }}"
+                                                                class="inline-flex items-center gap-2">
+
+                                                                <template x-if="!edit">
+                                                                    <span @dblclick="edit=true" class="cursor-pointer select-none">
+                                                                        {{ number_format((float)($pedido->total ?? 0), 2) }}
+                                                                    </span>
+                                                                </template>
+
+                                                                <template x-if="edit">
+                                                                    <input type="number" step="0.01" x-model="value"
+                                                                        @keydown.enter.prevent="save()" @blur="save()"
+                                                                        class="w-28 rounded-lg border-gray-300 focus:ring-blue-500 text-sm">
+                                                                </template>
+
+                                                                <button type="button" class="text-xs text-blue-600 hover:underline"
+                                                                        @click="edit = !edit" x-text="edit ? 'Guardar' : 'Editar'"></button>
+                                                            </div>
+                                                        @else
+                                                            {{ number_format((float)($pedido->total ?? 0), 2) }}
+                                                        @endif
                                                     @endif
                                                 @break
 
@@ -896,6 +930,20 @@
                         >
                             Ver detalle
                         </button>
+                    @endif
+
+
+                    @if ((int)($pedido->flag_tallas ?? 0) === 1)
+
+                           <x-dropdown.item >
+                            <b wire:click="abrirModalTallas({{ $pedido->id }})"> Ver tallas</b>
+                        </x-dropdown.item>
+                    @endif
+
+                    @if ((int)($pedido->flag_tallas ?? 0) === 1)
+                        <x-dropdown.item >
+                            <b wire:click="abrirModalEditarTallas({{ $pedido->id }})">Editar tallas</b>
+                        </x-dropdown.item>
                     @endif
 
                     <button
@@ -1344,6 +1392,126 @@
     </div>
 </div>
 
+@if ($modal_tallas)
+    <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div class="bg-white rounded shadow-lg w-full max-w-2xl flex flex-col">
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-gray-200 p-4">
+                <div>
+                    <h5 class="text-xl font-bold">Tallas del pedido #{{ $tallas_pedido_id }}</h5>
+                    <p class="text-sm text-gray-500">Total capturado: <b>{{ $tallas_total }}</b></p>
+                </div>
+                <button class="text-gray-500 hover:text-gray-700" wire:click="cerrarModalTallas">&times;</button>
+            </div>
+
+            <!-- Body -->
+            <div class="overflow-y-auto max-h-[60vh] p-4 space-y-4">
+                @if (empty($tallas_grupos))
+                    <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded">
+                        No hay cantidades por tallas registradas para este pedido.
+                    </div>
+                @else
+                    @foreach ($tallas_grupos as $g)
+                        <div class="border rounded-lg">
+                            <div class="flex items-center justify-between p-3 border-b bg-gray-50">
+                                <div class="font-semibold text-gray-800">{{ $g['grupo'] }}</div>
+                                <div class="text-sm text-gray-600">Subtotal: <b>{{ $g['subtotal'] }}</b></div>
+                            </div>
+
+                            <div class="p-3">
+                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                                    @foreach ($g['items'] as $it)
+                                        <div class="border rounded p-2">
+                                            <div class="text-xs text-gray-500">{{ $it['talla'] }}</div>
+                                            <div class="text-lg font-bold">{{ $it['cantidad'] }}</div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
+            </div>
+
+            <!-- Footer -->
+            <div class="border-t border-gray-200 p-4 flex justify-end">
+                <button wire:click="cerrarModalTallas"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+@endif
+
+@if ($modal_tallas_edit)
+    <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div class="bg-white rounded shadow-lg w-full max-w-3xl flex flex-col">
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-gray-200 p-4">
+                <div>
+                    <h5 class="text-xl font-bold">Editar tallas del pedido #{{ $tallas_edit_pedido_id }}</h5>
+                    <p class="text-sm text-gray-500">Captura cantidades por talla y guarda.</p>
+                </div>
+                <button class="text-gray-500 hover:text-gray-700" wire:click="cerrarModalEditarTallas">&times;</button>
+            </div>
+
+            <!-- Body -->
+            <div class="overflow-y-auto max-h-[65vh] p-4">
+                @if($error_tallas)
+                    <div class="bg-red-100 text-red-800 p-3 rounded mb-3">
+                        {{ $error_tallas }}
+                    </div>
+                @endif
+
+                @if(empty($tallas_disponibles))
+                    <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded">
+                        Este producto no tiene grupos de tallas configurados.
+                    </div>
+                @else
+                    @foreach ($tallas_disponibles as $grupoTalla)
+                        <div class="mb-5">
+                            <div class="font-semibold text-gray-700 border-b pb-2 mb-3">
+                                {{ $grupoTalla['nombre'] }}
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                @foreach ($grupoTalla['tallas'] as $talla)
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">
+                                            {{ $talla['nombre'] }}
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            class="w-full border border-gray-300 rounded p-2"
+                                            placeholder="0"
+                                            wire:model.defer="inputsTallas.{{ $grupoTalla['id'] }}_{{ $talla['id'] }}"
+                                        >
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
+            </div>
+
+            <!-- Footer -->
+            <div class="border-t border-gray-200 p-4 flex justify-end gap-2">
+                <button wire:click="cerrarModalEditarTallas"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">
+                    Cancelar
+                </button>
+
+                <button wire:click="guardarTallasEdit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">
+                    Guardar tallas
+                </button>
+            </div>
+        </div>
+    </div>
+@endif
 
 
 {{-- Toaster global --}}

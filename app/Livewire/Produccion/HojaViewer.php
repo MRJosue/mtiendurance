@@ -157,6 +157,31 @@ public ?string $programarSeleccionProductoNombre = null;
 
 
 
+    // Modal tallas (ver/editar)
+    public bool $showTallasModal = false;
+    public ?int $tallasPedidoId = null;
+    public bool $tallasReadOnly = true;
+
+    public array $tallasLayout = [];   // grupos/tallas
+    public array $tallasInputs = [];   // [talla_id => qty]
+    public int $tallasTotal = 0;
+
+    // ✅ Modal ver tallas (solo lectura)
+    public bool $modal_tallas = false;
+    public ?int $tallas_pedido_id = null;
+
+    public array $tallas_grupos = [];
+    public int $tallas_total = 0;
+
+    // ✅ Modal edición tallas
+    public bool $modal_tallas_edit = false;
+    public ?int $tallas_edit_pedido_id = null;
+
+    public array $tallas_disponibles = []; // layout (grupos y tallas)
+    public array $inputsTallas = [];       // ["grupoId_tallaId" => cantidad]
+    public array $cantidades_tallas = [];  // [grupoId => [tallaId => cantidad]]
+
+    public ?string $error_tallas = null;   // mensaje opcional
 
 
     /** Computed: catálogo de estados para el select */
@@ -1543,6 +1568,394 @@ public function exportarSeleccion(array $ids)
         $filename
     );
 }
+
+
+    public function openTallasModal(int $pedidoId, string $mode = 'view'): void
+    {
+        $pedido = \App\Models\Pedido::query()
+            ->with(['proyecto', 'producto']) // ajusta si ocupas más
+            ->find($pedidoId);
+
+        if (!$pedido) {
+            $this->dispatch('toast', message: 'Pedido no encontrado', type: 'error');
+            return;
+        }
+
+        // Ajusta este flag a tu realidad
+        $tieneTallas = (bool)($pedido->flag_tallas ?? false);
+        if (!$tieneTallas) {
+            $this->dispatch('toast', message: 'Este pedido no maneja tallas.', type: 'info');
+            return;
+        }
+
+        // ✅ Reusa el mismo permiso de edición en línea (ej: bulk_edit_total / editar_pedido)
+        $puedeEditarInline = $this->can('editar_pedido') || $this->can('bulk_edit_total');
+
+        if ($mode === 'edit' && !$puedeEditarInline) {
+            // si intentan abrir edit sin permiso, lo mandamos a vista o bloqueamos
+            $this->dispatch('toast', message: 'No tienes permiso para editar tallas', type: 'error');
+            return;
+        }
+
+        // ====== Cargar layout + cantidades (conecta a tu modelo real) ======
+        $layout  = $this->getLayoutTallasForPedido($pedido);      // <-- tú lo conectas
+        $current = $this->getCantidadesTallasForPedido($pedido);  // <-- tú lo conectas
+
+        $inputs = [];
+        $total  = 0;
+
+        foreach ($layout as $g) {
+            foreach (($g['tallas'] ?? []) as $t) {
+                $tid = (int)($t['id'] ?? 0);
+                if (!$tid) continue;
+
+                $qty = (int)($current[$tid] ?? 0);
+                $inputs[$tid] = $qty;
+                $total += $qty;
+            }
+        }
+
+        $this->resetValidation();
+
+        $this->tallasPedidoId  = $pedidoId;
+        $this->tallasReadOnly  = ($mode !== 'edit');
+        $this->tallasLayout    = $layout;
+        $this->tallasInputs    = $inputs;
+        $this->tallasTotal     = $total;
+
+        $this->showTallasModal = true;
+    }
+
+    public function closeTallasModal(): void
+    {
+        $this->showTallasModal = false;
+        $this->tallasPedidoId = null;
+        $this->tallasReadOnly = true;
+        $this->tallasLayout = [];
+        $this->tallasInputs = [];
+        $this->tallasTotal = 0;
+        $this->resetValidation();
+    }
+
+
+public function guardarTallasModal(): void
+{
+    if (!$this->tallasPedidoId) return;
+
+    if ($this->tallasReadOnly) {
+        $this->dispatch('toast', message: 'Solo lectura', type: 'error');
+        return;
+    }
+
+    // Reusa permiso inline
+    $puedeEditarInline = $this->can('editar_pedido') || $this->can('bulk_edit_total');
+    if (!$puedeEditarInline) {
+        $this->dispatch('toast', message: 'No tienes permiso para guardar tallas', type: 'error');
+        return;
+    }
+
+    foreach ($this->tallasInputs as $tid => $qty) {
+        if (!is_numeric($qty) || (int)$qty < 0) {
+            $this->dispatch('toast', message: 'Hay cantidades inválidas', type: 'error');
+            return;
+        }
+    }
+
+    $pedido = \App\Models\Pedido::query()->find($this->tallasPedidoId);
+    if (!$pedido) {
+        $this->dispatch('toast', message: 'Pedido no encontrado', type: 'error');
+        return;
+    }
+
+    $this->saveCantidadesTallasForPedido($pedido, $this->tallasInputs); // <-- tú lo conectas
+    $this->dispatch('toast', message: 'Tallas guardadas', type: 'success');
+
+    $this->closeTallasModal();
+    $this->resetPage();
+}
+
+
+/**
+ * Devuelve el layout de tallas agrupadas para renderizar el modal.
+ * Usa el accessor $pedido->tallas_agrupadas (ya lo tienes en el modelo Pedido).
+ *
+ * Formato esperado:
+ * [
+ *   ['grupo' => 'PLAYERA', 'tallas' => [ ['id'=>1,'nombre'=>'CH'], ... ]],
+ *   ...
+ * ]
+ */
+protected function getLayoutTallasForPedido(\App\Models\Pedido $pedido): array
+{
+    // OJO: asegúrate que el accesor exista como "tallas_agrupadas"
+    // y que devuelva un arreglo consistente.
+    $layout = $pedido->tallas_agrupadas ?? [];
+
+    // Normaliza por si viene como Collection o string
+    if ($layout instanceof \Illuminate\Support\Collection) {
+        $layout = $layout->toArray();
+    }
+    if (is_string($layout)) {
+        $layout = json_decode($layout, true) ?: [];
+    }
+
+    return is_array($layout) ? $layout : [];
+}
+
+/**
+ * Devuelve cantidades actuales por talla_id => cantidad.
+ * Idealmente sale de la relación/pivote del pedido (o del accessor si ya trae qty).
+ *
+ * AJUSTA AQUÍ según tu modelo real:
+ * - si tu accessor ya trae cantidad por talla, úsalo
+ * - si tienes relación, mejor leer de ahí
+ */
+protected function getCantidadesTallasForPedido(\App\Models\Pedido $pedido): array
+{
+    return DB::table('pedido_tallas')
+        ->where('pedido_id', $pedido->id)
+        ->pluck('cantidad', 'talla_id')
+        ->map(fn($v) => (int)$v)
+        ->all();
+}
+
+protected function saveCantidadesTallasForPedido(\App\Models\Pedido $pedido, array $inputs): void
+{
+    DB::transaction(function () use ($pedido, $inputs) {
+        DB::table('pedido_tallas')->where('pedido_id', $pedido->id)->delete();
+
+        $rows = [];
+        foreach ($inputs as $tallaId => $qty) {
+            $qty = (int)$qty;
+            if ($qty <= 0) continue;
+
+            $rows[] = [
+                'pedido_id' => $pedido->id,
+                'talla_id'  => (int)$tallaId,
+                'cantidad'  => $qty,
+                'created_at'=> now(),
+                'updated_at'=> now(),
+            ];
+        }
+
+        if (!empty($rows)) {
+            DB::table('pedido_tallas')->insert($rows);
+        }
+    });
+}
+
+
+public function abrirModalTallas(int $pedidoId): void
+{
+    $pedido = \App\Models\Pedido::query()
+        ->select('id', 'flag_tallas')
+        ->where('id', $pedidoId)
+        ->firstOrFail();
+
+    if ((int)($pedido->flag_tallas ?? 0) !== 1) {
+        $this->dispatch('toast', message: 'Este pedido no maneja tallas.', type: 'info');
+        return;
+    }
+
+    $ptTable = (new \App\Models\PedidoTalla)->getTable();
+    $gTable  = (new \App\Models\GrupoTalla)->getTable();
+    $tTable  = class_exists(\App\Models\Talla::class) ? (new \App\Models\Talla)->getTable() : 'tallas';
+
+    $rows = DB::table("$ptTable as pt")
+        ->join("$gTable as g", 'g.id', '=', 'pt.grupo_talla_id')
+        ->join("$tTable as t", 't.id', '=', 'pt.talla_id')
+        ->where('pt.pedido_id', $pedidoId)
+        ->selectRaw('
+            g.id as grupo_id,
+            g.nombre as grupo,
+            t.id as talla_id,
+            t.nombre as talla,
+            SUM(COALESCE(pt.cantidad,0)) as cantidad
+        ')
+        ->groupBy('g.id', 'g.nombre', 't.id', 't.nombre')
+        ->orderBy('g.nombre')
+        ->orderBy('t.nombre')
+        ->get();
+
+    $grupos = [];
+    foreach ($rows as $r) {
+        $gid = (int) $r->grupo_id;
+
+        if (!isset($grupos[$gid])) {
+            $grupos[$gid] = [
+                'grupo_id' => $gid,
+                'grupo'    => (string) $r->grupo,
+                'items'    => [],
+                'subtotal' => 0,
+            ];
+        }
+
+        $cant = (int) $r->cantidad;
+
+        $grupos[$gid]['items'][] = [
+            'talla_id' => (int) $r->talla_id,
+            'talla'    => (string) $r->talla,
+            'cantidad' => $cant,
+        ];
+
+        $grupos[$gid]['subtotal'] += $cant;
+    }
+
+    $this->tallas_grupos    = array_values($grupos);
+    $this->tallas_total     = array_sum(array_column($this->tallas_grupos, 'subtotal'));
+    $this->tallas_pedido_id = $pedidoId;
+
+    $this->modal_tallas = true;
+}
+
+public function cerrarModalTallas(): void
+{
+    $this->modal_tallas = false;
+    $this->tallas_pedido_id = null;
+    $this->tallas_grupos = [];
+    $this->tallas_total = 0;
+}
+
+public function cargarTallas(int $productoId): void
+{
+    $this->tallas_disponibles = [];
+
+    $gruposTallas = \App\Models\ProductoGrupoTalla::where('producto_id', $productoId)
+        ->pluck('grupo_talla_id');
+
+    if ($gruposTallas->isEmpty()) return;
+
+    $this->tallas_disponibles = \App\Models\GrupoTalla::whereIn('id', $gruposTallas)
+        ->with('tallas')
+        ->get()
+        ->map(function ($grupo) {
+            return [
+                'id'     => $grupo->id,
+                'nombre' => $grupo->nombre,
+                'tallas' => $grupo->tallas->map(fn($t) => [
+                    'id'     => $t->id,
+                    'nombre' => $t->nombre,
+                ])->toArray(),
+            ];
+        })->toArray();
+}
+
+public function abrirModalEditarTallas(int $pedidoId): void
+{
+    $this->resetTallasEdit();
+
+    $pedido = \App\Models\Pedido::query()
+        ->with(['pedidoTallas:id,pedido_id,grupo_talla_id,talla_id,cantidad'])
+        ->select('id', 'producto_id', 'flag_tallas', 'total')
+        ->findOrFail($pedidoId);
+
+    // Validación mínima
+    if (empty($pedido->producto_id)) {
+        $this->dispatch('toast', message: 'Este pedido no tiene producto asignado.', type: 'error');
+        return;
+    }
+
+    // Layout por producto
+    $this->cargarTallas((int)$pedido->producto_id);
+
+    if (empty($this->tallas_disponibles)) {
+        $this->dispatch('toast', message: 'Este producto no maneja tallas (no tiene grupos).', type: 'info');
+        return;
+    }
+
+    // Cargar cantidades existentes a inputsTallas
+    foreach ($pedido->pedidoTallas as $pt) {
+        $key = $pt->grupo_talla_id . '_' . $pt->talla_id;
+        $this->inputsTallas[$key] = (int)$pt->cantidad;
+    }
+
+    $this->tallas_edit_pedido_id = $pedidoId;
+    $this->modal_tallas_edit = true;
+}
+public function cerrarModalEditarTallas(): void
+{
+    $this->modal_tallas_edit = false;
+    $this->resetTallasEdit();
+}
+
+private function resetTallasEdit(): void
+{
+    $this->tallas_edit_pedido_id = null;
+    $this->tallas_disponibles = [];
+    $this->inputsTallas = [];
+    $this->cantidades_tallas = [];
+    $this->error_tallas = null;
+}
+
+public function recopilarCantidadesTallas(): void
+{
+    $this->cantidades_tallas = [];
+
+    foreach ($this->inputsTallas as $clave => $cantidad) {
+        if (!is_numeric($cantidad) || (int)$cantidad <= 0) continue;
+
+        [$grupoId, $tallaId] = explode('_', (string)$clave);
+        $this->cantidades_tallas[(int)$grupoId][(int)$tallaId] = (int)$cantidad;
+    }
+}
+
+
+public function guardarTallasEdit(): void
+{
+    if (!$this->tallas_edit_pedido_id) return;
+
+    $this->recopilarCantidadesTallas();
+
+    // total de tallas
+    $totalTallas = 0;
+    foreach ($this->cantidades_tallas as $tallas) {
+        foreach ($tallas as $cantidad) {
+            $totalTallas += (int)$cantidad;
+        }
+    }
+
+    if ($totalTallas <= 0) {
+        $this->error_tallas = 'Debes capturar al menos una talla con cantidad mayor a 0.';
+        return;
+    }
+
+    DB::transaction(function () use ($totalTallas) {
+
+        $pedido = \App\Models\Pedido::query()
+            ->select('id', 'producto_id', 'total')
+            ->findOrFail($this->tallas_edit_pedido_id);
+
+        // Limpia anteriores
+        \App\Models\PedidoTalla::where('pedido_id', $pedido->id)->delete();
+
+        // Inserta nuevas
+        foreach ($this->cantidades_tallas as $grupoId => $tallas) {
+            foreach ($tallas as $tallaId => $cantidad) {
+                if ((int)$cantidad <= 0) continue;
+
+                \App\Models\PedidoTalla::create([
+                    'pedido_id'      => $pedido->id,
+                    'grupo_talla_id' => (int)$grupoId,
+                    'talla_id'       => (int)$tallaId,
+                    'cantidad'       => (int)$cantidad,
+                ]);
+            }
+        }
+
+        // ✅ si el producto tiene grupos, forzamos total = suma tallas
+        $pedido->update([
+            'total'      => $totalTallas,
+            'flag_tallas'=> 1,
+        ]);
+    });
+
+    $this->dispatch('toast', message: '✅ Tallas guardadas correctamente.', type: 'success');
+
+    // refresca tabla si tienes evento
+    $this->dispatch('ActualizarTablaPedido'); // o el evento que use tu viewer
+    $this->cerrarModalEditarTallas();
+}
+
 
 
 }

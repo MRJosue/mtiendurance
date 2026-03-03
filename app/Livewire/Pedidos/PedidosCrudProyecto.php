@@ -27,6 +27,9 @@ use App\Models\PedidoTalla;
 use App\Models\GrupoTalla;
 use App\Models\ProductoGrupoTalla;
 
+use Illuminate\Support\Facades\DB;
+
+
 
 class PedidosCrudProyecto extends Component
 {
@@ -64,14 +67,25 @@ class PedidosCrudProyecto extends Component
     public $cliente_id; // Cliente seleccionado en el formulario
 
 
-    public ?int $estado_id = null;     // ⬅️ nuevo
-    public array $estados = [];        // ⬅️ nuevo
+    public ?int $estado_id = null;    
+    public array $estados = [];      
 
-        // 👇 NUEVO
+       
     public array $filters = [
         'inactivos' => false, // false = solo activos, true = solo inactivos
     ];
 
+
+
+    // ✅ Modal ver tallas (solo lectura)
+    public bool $modal_tallas = false;
+    public ?int $tallas_pedido_id = null;
+
+    public array $tallas_grupos = []; // estructura lista para Blade
+    public int $tallas_total = 0;
+
+
+    
 
     
     protected $listeners = ['abrirModalEdicion' => 'abrirModal',
@@ -897,6 +911,83 @@ class PedidosCrudProyecto extends Component
 public function updatedFilters()
 {
     $this->resetPage();
+}
+
+
+
+
+public function abrirModalTallas(int $pedidoId): void
+{
+    $pedido = Pedido::query()
+        ->select('id', 'flag_tallas')
+        ->where('id', $pedidoId)
+        ->firstOrFail();
+
+    if ((int)($pedido->flag_tallas ?? 0) !== 1) {
+        $this->dispatch('notify', message: 'Este pedido no maneja tallas.');
+        return;
+    }
+
+    // ✅ Tablas reales por modelo (evita grupo_tallas vs grupo_talla)
+    $ptTable = (new \App\Models\PedidoTalla)->getTable();
+    $gTable  = (new \App\Models\GrupoTalla)->getTable();
+
+    // Si tienes modelo Talla úsalo, si no, usa 'tallas'
+    $tTable  = class_exists(\App\Models\Talla::class) ? (new \App\Models\Talla)->getTable() : 'tallas';
+
+    $rows = DB::table("$ptTable as pt")
+        ->join("$gTable as g", 'g.id', '=', 'pt.grupo_talla_id')
+        ->join("$tTable as t", 't.id', '=', 'pt.talla_id')
+        ->where('pt.pedido_id', $pedidoId)
+        ->selectRaw('
+            g.id as grupo_id,
+            g.nombre as grupo,
+            t.id as talla_id,
+            t.nombre as talla,
+            SUM(COALESCE(pt.cantidad,0)) as cantidad
+        ')
+        ->groupBy('g.id', 'g.nombre', 't.id', 't.nombre')
+        ->orderBy('g.nombre')
+        ->orderBy('t.nombre')
+        ->get();
+
+    $grupos = [];
+    foreach ($rows as $r) {
+        $gid = (int) $r->grupo_id;
+
+        if (!isset($grupos[$gid])) {
+            $grupos[$gid] = [
+                'grupo_id' => $gid,
+                'grupo'    => (string) $r->grupo,
+                'items'    => [],
+                'subtotal' => 0,
+            ];
+        }
+
+        $cant = (int) $r->cantidad;
+
+        $grupos[$gid]['items'][] = [
+            'talla_id' => (int) $r->talla_id,
+            'talla'    => (string) $r->talla,
+            'cantidad' => $cant,
+        ];
+
+        $grupos[$gid]['subtotal'] += $cant;
+    }
+
+    $this->tallas_grupos   = array_values($grupos);
+    $this->tallas_total    = array_sum(array_column($this->tallas_grupos, 'subtotal'));
+    $this->tallas_pedido_id = $pedidoId;
+
+    $this->modal_tallas = true;
+}
+
+public function cerrarModalTallas(): void
+{
+    $this->modal_tallas = false;
+    $this->tallas_pedido_id = null;
+    $this->tallas_grupos = [];
+    $this->tallas_total = 0;
 }
 
 

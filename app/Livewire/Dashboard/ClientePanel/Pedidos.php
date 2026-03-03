@@ -13,7 +13,11 @@ use App\Models\User;
 use App\Exports\PedidosFilteredExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
+use App\Models\PedidoTalla;
+use App\Models\GrupoTalla;
+use App\Models\Talla;
 
 
 class Pedidos extends Component
@@ -34,7 +38,7 @@ class Pedidos extends Component
     public $infoProyecto = null;
 
     public string $sortField = 'created_at';
-public string $sortDir   = 'desc';
+    public string $sortDir   = 'desc';
 
     public array $filters = [
         'id'            => null,   
@@ -43,7 +47,7 @@ public string $sortDir   = 'desc';
         'estado_diseno' => null,   
         'fecha_desde'   => null,   
         'fecha_hasta'   => null,
-        'inactivos'     => false,   // 👈 NUEVO: por defecto solo activos
+        'inactivos'     => false,  
     ];
 
     public array $sortable = [
@@ -51,7 +55,15 @@ public string $sortDir   = 'desc';
     'estado_diseno','proyecto_nombre','cliente_nombre',
     ];
 
+    // modal tallas
+    public bool $modalTallas = false;
 
+    public ?int $tallasPedidoId = null;
+
+    // estructura: [ ['grupo' => 'Hombres', 'items' => [ ['talla'=>'CH','cantidad'=>10], ... ], 'subtotal'=>.. ], ... ]
+    public array $tallasDistribucionPorGrupo = [];
+
+    public int $tallasTotal = 0;
 
 
     /* ---- Manipuladores de UI ---- */
@@ -130,160 +142,226 @@ $proyecto = \App\Models\Proyecto::with([
     }
 
 
-    public function getHasFiltersProperty(): bool
-{
-    // Si el checkbox de inactivos está prendido = ya hay filtro
-    if (!empty($this->filters['inactivos'])) return true;
+        public function getHasFiltersProperty(): bool
+    {
+        // Si el checkbox de inactivos está prendido = ya hay filtro
+        if (!empty($this->filters['inactivos'])) return true;
 
-    // Cualquier campo con valor cuenta como filtro
-    $keys = [
-        'id','cliente','estado_pedido','estado_diseno',
-        'fecha_desde','fecha_hasta',
-        // si luego agregas más, inclúyelos aquí
-    ];
+        // Cualquier campo con valor cuenta como filtro
+        $keys = [
+            'id','cliente','estado_pedido','estado_diseno',
+            'fecha_desde','fecha_hasta',
+            // si luego agregas más, inclúyelos aquí
+        ];
 
-    foreach ($keys as $k) {
-        $v = $this->filters[$k] ?? null;
+        foreach ($keys as $k) {
+            $v = $this->filters[$k] ?? null;
 
-        if (is_string($v) && trim($v) !== '') return true;
-        if (!is_string($v) && !is_null($v)) return true;
+            if (is_string($v) && trim($v) !== '') return true;
+            if (!is_string($v) && !is_null($v)) return true;
+        }
+
+        return false;
     }
 
-    return false;
-}
+    private function buildPedidosQuery(): Builder
+    {
+        $user = auth()->user();
 
-private function buildPedidosQuery(): Builder
-{
-    $user = auth()->user();
+        $query = Pedido::with([
+            'producto.categoria',
+            'proyecto.user',
+            'usuario:id,name,empresa_id,sucursal_id',
+            'usuario.empresa:id,nombre',
+            'usuario.sucursal:id,nombre,empresa_id',
+            'usuario.sucursal.empresa:id,nombre',
+        ])->where('tipo', $this->activeTab === 'MUESTRAS' ? 'MUESTRA' : 'PEDIDO');
 
-    $query = Pedido::with([
-        'producto.categoria',
-        'proyecto.user',
-        'usuario:id,name,empresa_id,sucursal_id',
-        'usuario.empresa:id,nombre',
-        'usuario.sucursal:id,nombre,empresa_id',
-        'usuario.sucursal.empresa:id,nombre',
-    ])->where('tipo', $this->activeTab === 'MUESTRAS' ? 'MUESTRA' : 'PEDIDO');
+        // Activos / inactivos
+        if ($this->filters['inactivos']) $query->where('ind_activo', 0);
+        else $query->where('ind_activo', 1);
 
-    // Activos / inactivos
-    if ($this->filters['inactivos']) $query->where('ind_activo', 0);
-    else $query->where('ind_activo', 1);
+        // Filtros
+        $query
+            ->when($this->filters['id'], function ($q, $v) {
+                $ids = collect(preg_split('/[,;\s]+/', (string) $v, -1, PREG_SPLIT_NO_EMPTY))
+                    ->map(fn($i) => (int) trim($i))
+                    ->filter();
 
-    // Filtros
-    $query
-        ->when($this->filters['id'], function ($q, $v) {
-            $ids = collect(preg_split('/[,;\s]+/', (string) $v, -1, PREG_SPLIT_NO_EMPTY))
-                ->map(fn($i) => (int) trim($i))
-                ->filter();
+                if ($ids->isNotEmpty()) {
+                    $q->where(function($w) use ($ids) {
+                        $w->whereIn('id', $ids->all())
+                        ->orWhereIn('proyecto_id', $ids->all());
+                    });
+                }
+            })
+            ->when($this->filters['cliente'], function ($q, $v) {
+                $v = trim((string) $v);
+                $q->whereHas('proyecto.user', fn($u) =>
+                    $u->where('name', 'like', "%{$v}%")
+                    ->orWhere('email', 'like', "%{$v}%")
+                );
+            })
+            ->when($this->filters['estado_pedido'], fn($q, $v) => $q->where('estado', $v))
+            ->when($this->filters['estado_diseno'], fn($q, $v) =>
+                $q->whereHas('proyecto', fn($p) => $p->where('estado', $v))
+            )
+            ->when($this->filters['fecha_desde'] || $this->filters['fecha_hasta'], function ($q) {
+                $desde = $this->filters['fecha_desde'] ? Carbon::parse($this->filters['fecha_desde'])->startOfDay() : null;
+                $hasta = $this->filters['fecha_hasta'] ? Carbon::parse($this->filters['fecha_hasta'])->endOfDay() : null;
 
-            if ($ids->isNotEmpty()) {
-                $q->where(function($w) use ($ids) {
-                    $w->whereIn('id', $ids->all())
-                      ->orWhereIn('proyecto_id', $ids->all());
-                });
-            }
-        })
-        ->when($this->filters['cliente'], function ($q, $v) {
-            $v = trim((string) $v);
-            $q->whereHas('proyecto.user', fn($u) =>
-                $u->where('name', 'like', "%{$v}%")
-                  ->orWhere('email', 'like', "%{$v}%")
-            );
-        })
-        ->when($this->filters['estado_pedido'], fn($q, $v) => $q->where('estado', $v))
-        ->when($this->filters['estado_diseno'], fn($q, $v) =>
-            $q->whereHas('proyecto', fn($p) => $p->where('estado', $v))
-        )
-        ->when($this->filters['fecha_desde'] || $this->filters['fecha_hasta'], function ($q) {
-            $desde = $this->filters['fecha_desde'] ? Carbon::parse($this->filters['fecha_desde'])->startOfDay() : null;
-            $hasta = $this->filters['fecha_hasta'] ? Carbon::parse($this->filters['fecha_hasta'])->endOfDay() : null;
+                if ($desde && $hasta) $q->whereBetween('created_at', [$desde, $hasta]);
+                elseif ($desde) $q->where('created_at', '>=', $desde);
+                elseif ($hasta) $q->where('created_at', '<=', $hasta);
+            });
 
-            if ($desde && $hasta) $q->whereBetween('created_at', [$desde, $hasta]);
-            elseif ($desde) $q->where('created_at', '>=', $desde);
-            elseif ($hasta) $q->where('created_at', '<=', $hasta);
-        });
+        // Restricción por rol (igual)
+        if ($user->hasRole('admin') || $user->can('tablaPedidos-ver-todos-los-pedidos')) {
+            // ve todo
+        } elseif ($user->hasRole('cliente_principal')) {
+            $idsUsuarios = collect($user->subordinados ?? [])
+                ->map(fn ($id) => (int) $id)->filter(fn ($id) => $id > 0)
+                ->prepend($user->id)->unique()->values()->all();
 
-    // Restricción por rol (igual)
-    if ($user->hasRole('admin') || $user->can('tablaPedidos-ver-todos-los-pedidos')) {
-        // ve todo
-    } elseif ($user->hasRole('cliente_principal')) {
-        $idsUsuarios = collect($user->subordinados ?? [])
-            ->map(fn ($id) => (int) $id)->filter(fn ($id) => $id > 0)
-            ->prepend($user->id)->unique()->values()->all();
+            $query->whereHas('proyecto', fn($q) => $q->whereIn('usuario_id', $idsUsuarios));
+        } else {
+            $query->whereHas('proyecto', fn($q) => $q->where('usuario_id', $user->id));
+        }
 
-        $query->whereHas('proyecto', fn($q) => $q->whereIn('usuario_id', $idsUsuarios));
-    } else {
-        $query->whereHas('proyecto', fn($q) => $q->where('usuario_id', $user->id));
+        // Ordenamiento (reusando tu lógica actual)
+        $pedidoTable   = (new Pedido)->getTable();
+        $proyectoTable = (new Proyecto)->getTable();
+        $dir = $this->sortDir === 'asc' ? 'asc' : 'desc';
+
+        switch ($this->sortField) {
+            case 'id':
+            case 'created_at':
+            case 'total':
+            case 'estado':
+            case 'fecha_produccion':
+            case 'fecha_entrega':
+                $query->orderBy($pedidoTable.'.'.$this->sortField, $dir);
+                break;
+
+            case 'estado_diseno':
+                $query->orderBy(
+                    Proyecto::select('estado')
+                        ->whereColumn($proyectoTable.'.id', $pedidoTable.'.proyecto_id')
+                        ->limit(1),
+                    $dir
+                );
+                break;
+
+            case 'proyecto_nombre':
+                $query->orderBy(
+                    Proyecto::select('nombre')
+                        ->whereColumn($proyectoTable.'.id', $pedidoTable.'.proyecto_id')
+                        ->limit(1),
+                    $dir
+                );
+                break;
+
+            case 'cliente_nombre':
+                $query->orderByRaw(
+                    "(SELECT {$proyectoTable}.usuario_id
+                    FROM {$proyectoTable}
+                    WHERE {$proyectoTable}.id = {$pedidoTable}.proyecto_id
+                    LIMIT 1) {$dir}"
+                );
+                break;
+
+            default:
+                $query->orderBy($pedidoTable.'.created_at', 'desc');
+        }
+
+        return $query;
     }
 
-    // Ordenamiento (reusando tu lógica actual)
-    $pedidoTable   = (new Pedido)->getTable();
-    $proyectoTable = (new Proyecto)->getTable();
-    $dir = $this->sortDir === 'asc' ? 'asc' : 'desc';
 
-    switch ($this->sortField) {
-        case 'id':
-        case 'created_at':
-        case 'total':
-        case 'estado':
-        case 'fecha_produccion':
-        case 'fecha_entrega':
-            $query->orderBy($pedidoTable.'.'.$this->sortField, $dir);
-            break;
+    public function exportExcel()
+    {
+        if (! $this->hasFilters) {
+            $this->dispatch('notify', message: 'Para exportar primero aplica al menos 1 filtro.');
+            return;
+        }
 
-        case 'estado_diseno':
-            $query->orderBy(
-                Proyecto::select('estado')
-                    ->whereColumn($proyectoTable.'.id', $pedidoTable.'.proyecto_id')
-                    ->limit(1),
-                $dir
-            );
-            break;
+        $query = $this->buildPedidosQuery(); // Builder (sin paginate)
 
-        case 'proyecto_nombre':
-            $query->orderBy(
-                Proyecto::select('nombre')
-                    ->whereColumn($proyectoTable.'.id', $pedidoTable.'.proyecto_id')
-                    ->limit(1),
-                $dir
-            );
-            break;
+        $tipo  = $this->activeTab === 'MUESTRAS' ? 'MUESTRAS' : 'PEDIDOS';
+        $fecha = now()->format('Y-m-d_His');
 
-        case 'cliente_nombre':
-            $query->orderByRaw(
-                "(SELECT {$proyectoTable}.usuario_id
-                  FROM {$proyectoTable}
-                  WHERE {$proyectoTable}.id = {$pedidoTable}.proyecto_id
-                  LIMIT 1) {$dir}"
-            );
-            break;
-
-        default:
-            $query->orderBy($pedidoTable.'.created_at', 'desc');
+        return Excel::download(
+            new PedidosFilteredExport($query),
+            "pedidos_{$tipo}_{$fecha}.xlsx"
+        );
     }
 
-    return $query;
-}
-
-
-public function exportExcel()
+public function abrirModalTallas(int $pedidoId): void
 {
-    if (! $this->hasFilters) {
-        $this->dispatch('notify', message: 'Para exportar primero aplica al menos 1 filtro.');
+    $pedido = Pedido::query()
+        ->select('id', 'flag_tallas', 'total')
+        ->where('id', $pedidoId)
+        ->firstOrFail();
+
+    if ((int)($pedido->flag_tallas ?? 0) !== 1) {
+        $this->dispatch('notify', message: 'Este pedido no maneja tallas.');
         return;
     }
 
-    $query = $this->buildPedidosQuery(); // Builder (sin paginate)
+    $ptTable = (new PedidoTalla)->getTable();
+    $gTable  = (new GrupoTalla)->getTable();
 
-    $tipo  = $this->activeTab === 'MUESTRAS' ? 'MUESTRAS' : 'PEDIDOS';
-    $fecha = now()->format('Y-m-d_His');
+    // Si NO tienes modelo Talla, usa 'tallas' directo (ver alternativa abajo)
+    $tTable  = class_exists(\App\Models\Talla::class) ? (new \App\Models\Talla)->getTable() : 'tallas';
 
-    return Excel::download(
-        new PedidosFilteredExport($query),
-        "pedidos_{$tipo}_{$fecha}.xlsx"
-    );
+    $rows = DB::table("$ptTable as pt")
+        ->join("$gTable as g", 'g.id', '=', 'pt.grupo_talla_id')
+        ->join("$tTable as t", 't.id', '=', 'pt.talla_id')
+        ->where('pt.pedido_id', $pedidoId)
+        ->selectRaw('g.id as grupo_id, g.nombre as grupo, t.id as talla_id, t.nombre as talla, SUM(COALESCE(pt.cantidad,0)) as cantidad')
+        ->groupBy('g.id', 'g.nombre', 't.id', 't.nombre')
+        ->orderBy('g.nombre')
+        ->orderBy('t.nombre')
+        ->get();
+
+    $grupos = [];
+    foreach ($rows as $r) {
+        $gid = (int)$r->grupo_id;
+
+        if (!isset($grupos[$gid])) {
+            $grupos[$gid] = [
+                'grupo_id' => $gid,
+                'grupo'    => (string)$r->grupo,
+                'items'    => [],
+                'subtotal' => 0,
+            ];
+        }
+
+        $cant = (int)$r->cantidad;
+
+        $grupos[$gid]['items'][] = [
+            'talla_id' => (int)$r->talla_id,
+            'talla'    => (string)$r->talla,
+            'cantidad' => $cant,
+        ];
+
+        $grupos[$gid]['subtotal'] += $cant;
+    }
+
+    $this->tallasDistribucionPorGrupo = array_values($grupos);
+    $this->tallasTotal = array_sum(array_column($this->tallasDistribucionPorGrupo, 'subtotal'));
+
+    $this->tallasPedidoId = $pedidoId;
+    $this->modalTallas = true;
 }
 
+    public function cerrarModalTallas(): void
+    {
+        $this->modalTallas = false;
+        $this->tallasPedidoId = null;
+        $this->tallasDistribucionPorGrupo = [];
+        $this->tallasTotal = 0;
+    }
 
     /* ---- Render ---- */
 
@@ -420,5 +498,7 @@ public function exportExcel()
         ]);
     }
 
+
+    
     
 }

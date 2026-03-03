@@ -559,7 +559,20 @@
                         </td>
 
                         {{-- Total piezas --}}
-                        <td class="px-3 py-2">{{ number_format((float)($pedido->total ?? 0), 0) }} piezas</td>
+                        <td class="px-3 py-2">
+                            @if((int)($pedido->flag_tallas ?? 0) === 1)
+                                <button
+                                    type="button"
+                                    wire:click="abrirModalTallas({{ $pedido->id }})"
+                                    class="text-blue-600 hover:underline font-semibold"
+                                    title="Ver distribución de tallas"
+                                >
+                                    {{ number_format((float)($pedido->total ?? 0), 0) }} piezas
+                                </button>
+                            @else
+                                {{ number_format((float)($pedido->total ?? 0), 0) }} piezas
+                            @endif
+                        </td>
 
                         {{-- Estado Diseño (chips fijos estilo HojaViewer) --}}
                         <td class="px-3 py-2">
@@ -759,6 +772,64 @@
                     </div>
                 @endforeach
             </div>
+        </div>
+    </div>
+@endif
+
+@if($modalTallas)
+    <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl relative overflow-y-auto max-h-[90vh]">
+            <h2 class="text-xl font-bold mb-4">
+                Distribución de tallas
+                @if($tallasPedidoId)
+                    <span class="text-sm text-gray-500 font-semibold">Pedido #{{ $tallasPedidoId }}</span>
+                @endif
+            </h2>
+
+            <button
+                type="button"
+                wire:click="cerrarModalTallas"
+                class="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-2xl leading-none"
+                title="Cerrar"
+            >&times;</button>
+
+            @if(!empty($tallasDistribucionPorGrupo))
+
+                <div class="space-y-4">
+                    @foreach($tallasDistribucionPorGrupo as $grupo)
+                        <div class="border border-gray-200 rounded-lg overflow-hidden">
+                            <div class="px-4 py-2 bg-gray-100 flex items-center justify-between">
+                                <div class="font-semibold text-gray-700">
+                                    {{ $grupo['grupo'] }}
+                                </div>
+                                <div class="text-sm font-bold text-gray-700">
+                                    Subtotal: {{ number_format((int)$grupo['subtotal']) }}
+                                </div>
+                            </div>
+
+                            <div class="p-4">
+                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                                    @foreach($grupo['items'] as $it)
+                                        <div class="border rounded-lg p-2 flex items-center justify-between">
+                                            <span class="font-semibold text-gray-700">{{ $it['talla'] }}</span>
+                                            <span class="text-gray-900">{{ number_format((int)$it['cantidad']) }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="mt-4 flex justify-end">
+                    <div class="px-4 py-2 rounded-lg bg-gray-50 border font-bold text-gray-800">
+                        Total: {{ number_format((int)$tallasTotal) }} piezas
+                    </div>
+                </div>
+
+            @else
+                <p class="text-sm text-gray-500">No hay tallas registradas para este pedido.</p>
+            @endif
         </div>
     </div>
 @endif

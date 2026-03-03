@@ -257,7 +257,14 @@
                                     <b  wire:click="confirmarAprobacion({{ $pedido->id }})" >Aprobar</b>
                                 </x-dropdown.item>
                                 @endif
-                                
+
+
+                                @if ((int)($pedido->flag_tallas ?? 0) === 1)
+                                    <x-dropdown.item separator>
+                                        <b wire:click="abrirModalTallas({{ $pedido->id }})">Ver tallas</b>
+                                    </x-dropdown.item>
+                                @endif
+                                                                
                                 @hasanyrole('admin')
                                 <x-dropdown.item separator>
                                     <b wire:click="abrirModal({{ $pedido->id }})" >Editar</b>
@@ -560,5 +567,56 @@
         </div>
     @endif
 
+    @if ($modal_tallas)
+        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div class="bg-white rounded shadow-lg w-full max-w-2xl flex flex-col">
+                <!-- Header -->
+                <div class="flex items-center justify-between border-b border-gray-200 p-4">
+                    <div>
+                        <h5 class="text-xl font-bold">Tallas del pedido #{{ $tallas_pedido_id }}</h5>
+                        <p class="text-sm text-gray-500">Total capturado: <b>{{ $tallas_total }}</b></p>
+                    </div>
+                    <button class="text-gray-500 hover:text-gray-700" wire:click="cerrarModalTallas">&times;</button>
+                </div>
+
+                <!-- Body -->
+                <div class="overflow-y-auto max-h-[60vh] p-4 space-y-4">
+                    @if (empty($tallas_grupos))
+                        <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded">
+                            No hay cantidades por tallas registradas para este pedido.
+                        </div>
+                    @else
+                        @foreach ($tallas_grupos as $g)
+                            <div class="border rounded-lg">
+                                <div class="flex items-center justify-between p-3 border-b bg-gray-50">
+                                    <div class="font-semibold text-gray-800">{{ $g['grupo'] }}</div>
+                                    <div class="text-sm text-gray-600">Subtotal: <b>{{ $g['subtotal'] }}</b></div>
+                                </div>
+
+                                <div class="p-3">
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                                        @foreach ($g['items'] as $it)
+                                            <div class="border rounded p-2">
+                                                <div class="text-xs text-gray-500">{{ $it['talla'] }}</div>
+                                                <div class="text-lg font-bold">{{ $it['cantidad'] }}</div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
+
+                <!-- Footer -->
+                <div class="border-t border-gray-200 p-4 flex justify-end">
+                    <button wire:click="cerrarModalTallas"
+                            class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
     
 </div>
