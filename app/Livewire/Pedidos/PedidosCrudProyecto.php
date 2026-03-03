@@ -271,6 +271,21 @@ class PedidosCrudProyecto extends Component
             $this->error_total = "El total de las tallas ($totalTallas) no coincide con el total general ($this->total).";
             return;
         }
+
+        // ✅ Detectar si el producto requiere tallas (tiene grupos asignados)
+        $requiereTallas = false;
+        if (!empty($this->producto_id)) {
+            $requiereTallas = ProductoGrupoTalla::where('producto_id', $this->producto_id)->exists();
+        }
+
+        // ✅ Si requiere tallas, fuerza total = suma tallas
+        if ($requiereTallas) {
+            $this->total = $totalTallas; // <-- aquí está el fix clave (evita que se vaya 0)
+        }
+
+
+        $flagTallas = (bool) $requiereTallas;
+
     
         // Obtener los nombres de país, estado y ciudad para la dirección de entrega
         $direccionEntrega = DireccionEntrega::find($this->direccion_entrega_id);
@@ -296,6 +311,7 @@ class PedidosCrudProyecto extends Component
             Pedido::where('id', $this->pedidoId)->update([
                 'cliente_id' => $this->cliente_id,
                 'total' => $this->total,
+                 'flag_tallas' => (int) $flagTallas,
                 'estatus' => $this->estatus,
                 'tipo' => $this->tipo,
                 'estado_id' => $this->estado_id,        
@@ -334,6 +350,8 @@ class PedidosCrudProyecto extends Component
             $nuevoPedido = Pedido::crearDesdeProyecto($this->proyectoId, [
                 'cliente_id' => $this->cliente_id,
                 'total' => $this->total,
+                'cantidades_tallas' => $this->cantidades_tallas,
+                'flag_tallas' => (int) $flagTallas,
                 'estatus' => $this->estatus,
                 'tipo' => $this->tipo,
                 'estado_id' => $this->estado_id,        
@@ -347,6 +365,8 @@ class PedidosCrudProyecto extends Component
                 'direccion_entrega' => $Auxiliar_direccion_entrega,
                 'id_tipo_envio' => $this->id_tipo_envio,
             ]);
+
+            LOG::debug('Pedido creado desde proyecto', ['flag_tallas' => $flagTallas]);
     
             // Guardar tallas organizadas por grupos
             foreach ($this->cantidades_tallas as $grupoId => $tallas) {

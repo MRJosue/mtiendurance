@@ -96,15 +96,34 @@ class PreProyecto extends Model
                                     : $this->caracteristicas_sel;
 
 
-                                    $totalPiezas = is_string($this->total_piezas_sel) 
-                                    ? json_decode($this->total_piezas_sel, true)  // Convertir a array asociativo
-                                    : (is_object($this->total_piezas_sel) ? (array) $this->total_piezas_sel : $this->total_piezas_sel);
+                    // ✅ total_piezas_sel ya viene casteado a json (array) pero por seguridad normalizamos
+                    $totalPiezas = is_string($this->total_piezas_sel)
+                        ? json_decode($this->total_piezas_sel, true)
+                        : (array) $this->total_piezas_sel;
+
+                    $flagTallas = (int) ($totalPiezas['flag_tallas'] ?? 0) === 1;
+
+                    // fallback si tu JSON viejo no trae flag_tallas:
+                    if (!$flagTallas && !empty($totalPiezas['detalle_tallas']) && is_array($totalPiezas['detalle_tallas'])) {
+                        $flagTallas = true;
+                    }
+
+                    // ✅ total real: si hay tallas, total = suma tallas; si no, usa total guardado
+                    $totalReal = (int) ($totalPiezas['total'] ?? 0);
+
+                    if ($flagTallas) {
+                        $gruposValidos = array_filter($totalPiezas['detalle_tallas'] ?? [], 'is_array');
+
+                        $totalReal = (int) collect($gruposValidos)
+                            ->flatMap(fn($grupo) => array_values($grupo))
+                            ->map(fn($v) => (int)$v)
+                            ->filter(fn($v) => $v > 0)
+                            ->sum();
+                    }
                                 
 
 
                         // Verificar valor de detalle_tallas
-                    Log::info("Valor de detalle_tallas", ['detalle_tallas' => $this->detalle_tallas]);
-                    Log::info("Valor de total_piezas_sel", ['total_piezas_sel' => $this->total_piezas_sel]);
                     Log::info("Valor de totalPiezas", ['total_piezas' => $totalPiezas]);
 
 
@@ -116,7 +135,8 @@ class PreProyecto extends Model
                         'user_id' => $this->usuario_id, // Si el cliente es el mismo usuario, ajusta esto según sea necesario
                         'cliente_id' => null, // Si el cliente es el mismo usuario, ajusta esto según sea necesario
                         'fecha_creacion' => now(),
-                        'total' => $totalPiezas['total'] ?? 0,
+                        'total' => $totalReal,
+                        'flag_tallas' => (int) $flagTallas,
                         'estatus' => 'PENDIENTE',
 
                         'direccion_fiscal_id'=>  $this->direccion_fiscal_id,
@@ -233,17 +253,20 @@ class PreProyecto extends Model
 
                     // Si la categoría es "playeras", insertar tallas,
                     // isset($categoria['id']) && $categoria['id'] == 1 &&
-                    if (isset($totalPiezas['detalle_tallas'])) {
+                    if ($flagTallas && !empty($totalPiezas['detalle_tallas']) && is_array($totalPiezas['detalle_tallas'])) {
                         foreach ($totalPiezas['detalle_tallas'] as $grupoId => $tallas) {
+                            if (!is_array($tallas)) continue;
+
                             foreach ($tallas as $tallaId => $cantidad) {
-                                if (!empty($cantidad)) {
-                                    PedidoTalla::create([
-                                        'pedido_id' => $pedido->id,
-                                        'talla_id' => $tallaId,
-                                        'grupo_talla_id' => $grupoId, // Ahora se captura el grupo correctamente
-                                        'cantidad' => $cantidad,
-                                    ]);
-                                }
+                                $cantidad = (int) $cantidad;
+                                if ($cantidad <= 0) continue;
+
+                                PedidoTalla::create([
+                                    'pedido_id' => $pedido->id,
+                                    'talla_id' => (int) $tallaId,
+                                    'grupo_talla_id' => (int) $grupoId,
+                                    'cantidad' => $cantidad,
+                                ]);
                             }
                         }
                     }

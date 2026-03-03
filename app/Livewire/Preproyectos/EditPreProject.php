@@ -317,7 +317,16 @@ class EditPreProject extends Component
         }
 
       //  $totalPiezasFinal = $this->mostrarFormularioTallas ? array_sum($this->tallasSeleccionadas) : $this->total_piezas;
-        $totalPiezasFinal = $this->mostrarFormularioTallas ? array_sum((array) $this->tallasSeleccionadas) : $this->total_piezas;
+        $totalPiezasFinal = (int) $this->total_piezas;
+
+        if ($this->mostrarFormularioTallas) {
+            $gruposValidos = array_filter($this->tallasSeleccionadas, 'is_array');
+
+            $totalPiezasFinal = (int) collect($gruposValidos)
+                ->flatMap(fn($grupo) => array_values($grupo))
+                ->sum();
+        }
+
         // Actualizar el preproyecto
         $preProyecto = PreProyecto::findOrFail($this->preProyectoId);
         $preProyecto->update([
@@ -329,6 +338,7 @@ class EditPreProject extends Component
             'caracteristicas_sel' => json_encode($this->caracteristicas_sel),
             'total_piezas_sel' => json_encode([
                 'total' => $totalPiezasFinal,
+                'flag_tallas' => (int) $this->mostrarFormularioTallas,
                 'detalle_tallas' => $this->mostrarFormularioTallas ? $this->tallasSeleccionadas : null
             ]),
             'flag_armado'=> $this->seleccion_armado,

@@ -59,6 +59,9 @@ class Pedido extends Model
         'proveedor_visto_at',
         'proveedor_visto_por',
         'nota_proveedor',
+        'flag_tallas',
+
+
     ];
 
     protected $casts = [
@@ -66,6 +69,7 @@ class Pedido extends Model
         'fecha_embarque'   => 'date',
         'fecha_entrega'    => 'date',
         'proveedor_visto_at' => 'datetime',
+        'flag_tallas' => 'boolean',
     ];
     public function tareasProduccion()
     {
@@ -134,43 +138,48 @@ class Pedido extends Model
     }  
     public static function crearDesdeProyecto($proyectoId, $data)
     {
-
         Log::debug('ON crearDesdeProyecto');
-        // Buscar el proyecto
+
         $proyecto = Proyecto::findOrFail($proyectoId);
-        Log::debug('Proyecto cargado:', ['proyecto' => $proyecto]);
-    
-        // Decodificar producto_sel (si es JSON)
-        $producto = is_string($proyecto->producto_sel) 
-            ? json_decode($proyecto->producto_sel, true) 
+
+        $producto = is_string($proyecto->producto_sel)
+            ? json_decode($proyecto->producto_sel, true)
             : $proyecto->producto_sel;
-    
-        Log::debug('Producto decodificado:', ['producto' => $producto]);
-    
-        // Verificar si el producto tiene ID
+
         if (!isset($producto['id'])) {
             throw new \Exception("Error: No se encontró un producto válido en el proyecto.");
         }
-    
-        // Obtener cliente_id desde el proyecto o establecer un valor por defecto
+
         $clienteId = $data['cliente_id'] ?? $proyecto->usuario_id ?? null;
-    
-        // Si cliente_id sigue siendo null, lanzar un error
         if (!$clienteId) {
             throw new \Exception("Error: No se encontró un cliente válido para el pedido.");
         }
 
+        $cantidades = $data['cantidades_tallas'] ?? [];
 
-                        
-    
-        // Crear pedido
+        // 1) Si viene flag_tallas explícito, respétalo
+        $flagTallas = array_key_exists('flag_tallas', $data)
+            ? (bool) $data['flag_tallas']
+            : !empty($cantidades);
+
+        // 2) Total desde tallas (soporta estructura [grupo][talla] => cantidad)
+        $totalDesdeTallas = self::sumTallas($cantidades);
+
+        // 3) Total final
+        $totalFinal = ($flagTallas && $totalDesdeTallas > 0)
+            ? $totalDesdeTallas
+            : (int) ($data['total'] ?? 0);
+
         $pedido = self::create([
             'proyecto_id' => $proyecto->id,
             'producto_id' => $producto['id'],
-            'user_id' => $proyecto->usuario_id, // Ahora tiene un valor asegurado
-            'cliente_id' => $clienteId, // Ahora tiene un valor asegurado
+            'user_id' => $proyecto->usuario_id,
+            'cliente_id' => $clienteId,
             'fecha_creacion' => now(),
-            'total' => $data['total'] ?? 0,
+
+            'total' => $totalFinal,
+            'flag_tallas' => (int) $flagTallas, 
+
             'estatus' => $data['estatus'] ?? 'PENDIENTE',
             'direccion_fiscal_id' => $data['direccion_fiscal_id'] ?? null,
             'direccion_fiscal' => $data['direccion_fiscal'] ?? null,
@@ -183,25 +192,45 @@ class Pedido extends Model
             'fecha_embarque' => $data['fecha_embarque'] ?? null,
             'fecha_entrega' => $data['fecha_entrega'] ?? null,
             'id_tipo_envio' => $data['id_tipo_envio'] ?? null,
-            'url' =>null,
-            'last_uploaded_file_id'=>null
+            'url' => null,
+            'last_uploaded_file_id' => null,
         ]);
 
+        // Guardar tallas si están disponibles (igual que ya lo tenías)
+        if (!empty($cantidades)) {
 
-        // Guardar tallas si están disponibles
-        if (!empty($data['cantidades_tallas'])) {
-            foreach ($data['cantidades_tallas'] as $tallaId => $cantidad) {
-                if ($cantidad > 0) {
-                    PedidoTalla::create([
-                        'pedido_id' => $pedido->id,
-                        'talla_id' => $tallaId,
-                        'cantidad' => $cantidad,
-                    ]);
+            // anidado por grupo
+            if (is_array(reset($cantidades))) {
+                foreach ($cantidades as $grupoId => $tallas) {
+                    if (!is_array($tallas)) continue;
+
+                    foreach ($tallas as $tallaId => $cantidad) {
+                        $cantidad = (int) $cantidad;
+                        if ($cantidad > 0) {
+                            PedidoTalla::create([
+                                'pedido_id' => $pedido->id,
+                                'grupo_talla_id' => (int) $grupoId,
+                                'talla_id' => (int) $tallaId,
+                                'cantidad' => $cantidad,
+                            ]);
+                        }
+                    }
+                }
+            } else {
+                // plano (por compatibilidad)
+                foreach ($cantidades as $tallaId => $cantidad) {
+                    $cantidad = (int) $cantidad;
+                    if ($cantidad > 0) {
+                        PedidoTalla::create([
+                            'pedido_id' => $pedido->id,
+                            'talla_id' => (int) $tallaId,
+                            'cantidad' => $cantidad,
+                        ]);
+                    }
                 }
             }
         }
 
-    
         return $pedido;
     }
     public function archivo()
@@ -501,6 +530,31 @@ class Pedido extends Model
             e($href),
             e($texto)
         );
+    }
+
+    // Helper get tallas 
+
+    private static function sumTallas(?array $cantidadesTallas): int
+    {
+        if (empty($cantidadesTallas)) return 0;
+
+        // Si viene anidado por grupo: [grupoId => [tallaId => qty]]
+        $isNested = is_array(reset($cantidadesTallas));
+
+        if ($isNested) {
+            return (int) collect($cantidadesTallas)
+                ->filter(fn ($v) => is_array($v))
+                ->flatMap(fn ($grupo) => array_values($grupo))
+                ->map(fn ($v) => (int) $v)
+                ->filter(fn ($v) => $v > 0)
+                ->sum();
+        }
+
+        // Si viene plano: [tallaId => qty]
+        return (int) collect($cantidadesTallas)
+            ->map(fn ($v) => (int) $v)
+            ->filter(fn ($v) => $v > 0)
+            ->sum();
     }
 
 }
