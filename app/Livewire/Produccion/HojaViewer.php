@@ -144,27 +144,16 @@ class HojaViewer extends Component
         public ?string $programarFechaProduccion = null; // Y-m-d
         public ?string $programarFechaEmbarque   = null; // Y-m-d
 
-// Modal Programar (selección)
-public bool $showProgramarSeleccionModal = false;
-public array $programarSeleccionIds = [];
+        // Modal Programar (selección)
+        public bool $showProgramarSeleccionModal = false;
+        public array $programarSeleccionIds = [];
 
-public ?string $programarSeleccionFechaProduccion = null; // Y-m-d
-public ?string $programarSeleccionFechaEmbarque   = null; // Y-m-d
+        public ?string $programarSeleccionFechaProduccion = null; // Y-m-d
+        public ?string $programarSeleccionFechaEmbarque   = null; // Y-m-d
 
-public ?int $programarSeleccionProductoId = null;
-public ?string $programarSeleccionProductoNombre = null;
+        public ?int $programarSeleccionProductoId = null;
+        public ?string $programarSeleccionProductoNombre = null;
 
-
-
-
-    // Modal tallas (ver/editar)
-    public bool $showTallasModal = false;
-    public ?int $tallasPedidoId = null;
-    public bool $tallasReadOnly = true;
-
-    public array $tallasLayout = [];   // grupos/tallas
-    public array $tallasInputs = [];   // [talla_id => qty]
-    public int $tallasTotal = 0;
 
     // ✅ Modal ver tallas (solo lectura)
     public bool $modal_tallas = false;
@@ -791,7 +780,8 @@ public ?string $programarSeleccionProductoNombre = null;
                 'estado'    => 'RECHAZADO',
             ]);
 
-        $this->selectedIds = [];
+        $this->clearSelection();
+
         $this->dispatch('toast', message: 'Pedidos marcados como RECHAZADO', type: 'success');
     }
 
@@ -818,7 +808,7 @@ public ?string $programarSeleccionProductoNombre = null;
                     'estado'    => 'APROBADO',
                 ]);
 
-            $this->selectedIds = [];
+            $this->clearSelection();
             $this->dispatch('toast', message: 'Pedidos aprobados', type: 'success');
             $this->resetPage();
         }
@@ -850,7 +840,7 @@ public ?string $programarSeleccionProductoNombre = null;
 
                 
 
-            $this->selectedIds = [];
+            $this->clearSelection();
             $this->dispatch('toast', message: 'Pedidos programados', type: 'success');
             $this->resetPage();
         }
@@ -997,14 +987,7 @@ public ?string $programarSeleccionProductoNombre = null;
                 return is_array($steps) ? $steps : [];
             }
 
-            protected function findStep(array $steps, string $name): ?array
-            {
-                foreach ($steps as $s) {
-                    if (($s['name'] ?? null) === $name) return $s;
-                }
-                return null;
-            }
-
+           
 
             public function confirmarSiguienteProduccion(): void
             {
@@ -1517,7 +1500,7 @@ public function confirmarProgramacionSeleccion(): void
             'estado_produccion' => 'PROGRAMADO',
         ]);
 
-    $this->selectedIds = []; // limpia selección
+    $this->clearSelection();
     $this->dispatch('toast', message: 'Pedidos programados (misma referencia de producto).', type: 'success');
 
     $this->closeProgramarSeleccionModal();
@@ -1568,182 +1551,6 @@ public function exportarSeleccion(array $ids)
         $filename
     );
 }
-
-
-    public function openTallasModal(int $pedidoId, string $mode = 'view'): void
-    {
-        $pedido = \App\Models\Pedido::query()
-            ->with(['proyecto', 'producto']) // ajusta si ocupas más
-            ->find($pedidoId);
-
-        if (!$pedido) {
-            $this->dispatch('toast', message: 'Pedido no encontrado', type: 'error');
-            return;
-        }
-
-        // Ajusta este flag a tu realidad
-        $tieneTallas = (bool)($pedido->flag_tallas ?? false);
-        if (!$tieneTallas) {
-            $this->dispatch('toast', message: 'Este pedido no maneja tallas.', type: 'info');
-            return;
-        }
-
-        // ✅ Reusa el mismo permiso de edición en línea (ej: bulk_edit_total / editar_pedido)
-        $puedeEditarInline = $this->can('editar_pedido') || $this->can('bulk_edit_total');
-
-        if ($mode === 'edit' && !$puedeEditarInline) {
-            // si intentan abrir edit sin permiso, lo mandamos a vista o bloqueamos
-            $this->dispatch('toast', message: 'No tienes permiso para editar tallas', type: 'error');
-            return;
-        }
-
-        // ====== Cargar layout + cantidades (conecta a tu modelo real) ======
-        $layout  = $this->getLayoutTallasForPedido($pedido);      // <-- tú lo conectas
-        $current = $this->getCantidadesTallasForPedido($pedido);  // <-- tú lo conectas
-
-        $inputs = [];
-        $total  = 0;
-
-        foreach ($layout as $g) {
-            foreach (($g['tallas'] ?? []) as $t) {
-                $tid = (int)($t['id'] ?? 0);
-                if (!$tid) continue;
-
-                $qty = (int)($current[$tid] ?? 0);
-                $inputs[$tid] = $qty;
-                $total += $qty;
-            }
-        }
-
-        $this->resetValidation();
-
-        $this->tallasPedidoId  = $pedidoId;
-        $this->tallasReadOnly  = ($mode !== 'edit');
-        $this->tallasLayout    = $layout;
-        $this->tallasInputs    = $inputs;
-        $this->tallasTotal     = $total;
-
-        $this->showTallasModal = true;
-    }
-
-    public function closeTallasModal(): void
-    {
-        $this->showTallasModal = false;
-        $this->tallasPedidoId = null;
-        $this->tallasReadOnly = true;
-        $this->tallasLayout = [];
-        $this->tallasInputs = [];
-        $this->tallasTotal = 0;
-        $this->resetValidation();
-    }
-
-
-public function guardarTallasModal(): void
-{
-    if (!$this->tallasPedidoId) return;
-
-    if ($this->tallasReadOnly) {
-        $this->dispatch('toast', message: 'Solo lectura', type: 'error');
-        return;
-    }
-
-    // Reusa permiso inline
-    $puedeEditarInline = $this->can('editar_pedido') || $this->can('bulk_edit_total');
-    if (!$puedeEditarInline) {
-        $this->dispatch('toast', message: 'No tienes permiso para guardar tallas', type: 'error');
-        return;
-    }
-
-    foreach ($this->tallasInputs as $tid => $qty) {
-        if (!is_numeric($qty) || (int)$qty < 0) {
-            $this->dispatch('toast', message: 'Hay cantidades inválidas', type: 'error');
-            return;
-        }
-    }
-
-    $pedido = \App\Models\Pedido::query()->find($this->tallasPedidoId);
-    if (!$pedido) {
-        $this->dispatch('toast', message: 'Pedido no encontrado', type: 'error');
-        return;
-    }
-
-    $this->saveCantidadesTallasForPedido($pedido, $this->tallasInputs); // <-- tú lo conectas
-    $this->dispatch('toast', message: 'Tallas guardadas', type: 'success');
-
-    $this->closeTallasModal();
-    $this->resetPage();
-}
-
-
-/**
- * Devuelve el layout de tallas agrupadas para renderizar el modal.
- * Usa el accessor $pedido->tallas_agrupadas (ya lo tienes en el modelo Pedido).
- *
- * Formato esperado:
- * [
- *   ['grupo' => 'PLAYERA', 'tallas' => [ ['id'=>1,'nombre'=>'CH'], ... ]],
- *   ...
- * ]
- */
-protected function getLayoutTallasForPedido(\App\Models\Pedido $pedido): array
-{
-    // OJO: asegúrate que el accesor exista como "tallas_agrupadas"
-    // y que devuelva un arreglo consistente.
-    $layout = $pedido->tallas_agrupadas ?? [];
-
-    // Normaliza por si viene como Collection o string
-    if ($layout instanceof \Illuminate\Support\Collection) {
-        $layout = $layout->toArray();
-    }
-    if (is_string($layout)) {
-        $layout = json_decode($layout, true) ?: [];
-    }
-
-    return is_array($layout) ? $layout : [];
-}
-
-/**
- * Devuelve cantidades actuales por talla_id => cantidad.
- * Idealmente sale de la relación/pivote del pedido (o del accessor si ya trae qty).
- *
- * AJUSTA AQUÍ según tu modelo real:
- * - si tu accessor ya trae cantidad por talla, úsalo
- * - si tienes relación, mejor leer de ahí
- */
-protected function getCantidadesTallasForPedido(\App\Models\Pedido $pedido): array
-{
-    return DB::table('pedido_tallas')
-        ->where('pedido_id', $pedido->id)
-        ->pluck('cantidad', 'talla_id')
-        ->map(fn($v) => (int)$v)
-        ->all();
-}
-
-protected function saveCantidadesTallasForPedido(\App\Models\Pedido $pedido, array $inputs): void
-{
-    DB::transaction(function () use ($pedido, $inputs) {
-        DB::table('pedido_tallas')->where('pedido_id', $pedido->id)->delete();
-
-        $rows = [];
-        foreach ($inputs as $tallaId => $qty) {
-            $qty = (int)$qty;
-            if ($qty <= 0) continue;
-
-            $rows[] = [
-                'pedido_id' => $pedido->id,
-                'talla_id'  => (int)$tallaId,
-                'cantidad'  => $qty,
-                'created_at'=> now(),
-                'updated_at'=> now(),
-            ];
-        }
-
-        if (!empty($rows)) {
-            DB::table('pedido_tallas')->insert($rows);
-        }
-    });
-}
-
 
 public function abrirModalTallas(int $pedidoId): void
 {
@@ -1955,7 +1762,10 @@ public function guardarTallasEdit(): void
     $this->dispatch('ActualizarTablaPedido'); // o el evento que use tu viewer
     $this->cerrarModalEditarTallas();
 }
-
-
+//helper para limpiar selección (opcional, según UX)
+private function clearSelection(): void
+{
+    $this->selectedIds = [];
+}
 
 }
