@@ -128,7 +128,7 @@
                 <div class="border-t border-gray-200 dark:border-gray-600 pt-3 space-y-2">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div class="text-sm text-gray-700 dark:text-gray-200">
-                            <span class="font-semibold">Admin:</span> puedes iniciar reprogramación del proyecto.
+                            <span class="font-semibold">Admin:</span> puedes iniciar reconfiguracion del proyecto.
                         </div>
 
                         <button
@@ -136,7 +136,7 @@
                             wire:click="abrirModalAdminReprogramar"
                             class="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm"
                         >
-                            Reprogramar (Admin)
+                            Reconfigurar (Admin)
                         </button>
                     </div>
                 </div>
@@ -313,7 +313,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg w-full max-w-xl p-6 space-y-4 shadow-lg">
                 <div class="flex items-start justify-between">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        Iniciar reprogramación (Admin)
+                        Iniciar reconfiguracion (Admin)
                     </h2>
                     <button
                         type="button"
@@ -325,7 +325,7 @@
                 </div>
 
                 <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700 rounded p-3 text-sm text-indigo-900 dark:text-indigo-200">
-                    Esto activará los flags de reconfiguración y te llevará a la pantalla de reprogramación del proyecto.
+                    Esto activará los flags de reconfiguración y te llevará a la pantalla de reconfiguracion del proyecto.
                 </div>
 
                 <div class="flex flex-wrap justify-end gap-2 pt-2">
