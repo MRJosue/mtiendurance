@@ -244,34 +244,45 @@
 
 
                             <x-dropdown>
-
-                            
                                 @if ($pedido->estado == 'POR APROBAR' && $pedido->proyecto?->estado === 'DISEÑO APROBADO' && $pedido->flag_solicitud_aprobar_sin_fechas == '0')
-                                <x-dropdown.item >
-                                    <b   wire:click="confirmarAprobacionEspecial({{ $pedido->id }})" >Aprobacion Especial</b>
-                                </x-dropdown.item>
-                                @endif
-
-                                @if ($pedido->estado == 'POR APROBAR' && $pedido->proyecto?->estado === 'DISEÑO APROBADO'  )
-                                <x-dropdown.item separator>
-                                    <b  wire:click="confirmarAprobacion({{ $pedido->id }})" >Aprobar</b>
-                                </x-dropdown.item>
-                                @endif
-
-
-                                @if ((int)($pedido->flag_tallas ?? 0) === 1)
-                                    <x-dropdown.item separator>
-                                        <b wire:click="abrirModalTallas({{ $pedido->id }})">Ver tallas</b>
+                                    <x-dropdown.item
+                                        wire:click="confirmarAprobacionEspecial({{ $pedido->id }})"
+                                        class="w-full cursor-pointer"
+                                    >
+                                        <span class="block w-full font-semibold">Aprobacion Especial</span>
                                     </x-dropdown.item>
                                 @endif
-                                                                
+
+                                @if ($pedido->estado == 'POR APROBAR' && $pedido->proyecto?->estado === 'DISEÑO APROBADO')
+                                    <x-dropdown.item
+                                        separator
+                                        wire:click="confirmarAprobacion({{ $pedido->id }})"
+                                        class="w-full cursor-pointer"
+                                    >
+                                        <span class="block w-full font-semibold">Aprobar</span>
+                                    </x-dropdown.item>
+                                @endif
+
+                                @if ((int)($pedido->flag_tallas ?? 0) === 1)
+                                    <x-dropdown.item
+                                        separator
+                                        wire:click="abrirModalTallas({{ $pedido->id }})"
+                                        class="w-full cursor-pointer"
+                                    >
+                                        <span class="block w-full font-semibold">Ver tallas</span>
+                                    </x-dropdown.item>
+                                @endif
+
                                 @hasanyrole('admin')
-                                <x-dropdown.item separator>
-                                    <b wire:click="abrirModal({{ $pedido->id }})" >Editar</b>
-                                </x-dropdown.item>
+                                    <x-dropdown.item
+                                        separator
+                                        wire:click="abrirModal({{ $pedido->id }})"
+                                        class="w-full cursor-pointer"
+                                    >
+                                        <span class="block w-full font-semibold">Editar</span>
+                                    </x-dropdown.item>
                                 @endhasanyrole
                             </x-dropdown>
-
 
 
           

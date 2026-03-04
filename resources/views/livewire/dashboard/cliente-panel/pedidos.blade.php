@@ -626,8 +626,13 @@
                                     label="Ir a Diseño"
                                 />
 
-                                <x-dropdown.item separator>
-                                    <b wire:click="abrirModalVerInfo({{ $pedido->proyecto_id }})">Ver información</b>
+                                {{-- ✅ FIX: ahora el click es sobre TODO el item --}}
+                                <x-dropdown.item
+                                    separator
+                                    wire:click="abrirModalVerInfo({{ $pedido->proyecto_id }})"
+                                    class="w-full cursor-pointer"
+                                >
+                                    <span class="block w-full font-semibold">Ver información</span>
                                 </x-dropdown.item>
 
                                 @if(($acciones['aprobar_pedido'] ?? false))
@@ -673,7 +678,8 @@
                                 @endif
 
                                 @if(($acciones['eliminar_pedido'] ?? false))
-                                    <x-dropdown.item separator
+                                    <x-dropdown.item
+                                        separator
                                         @click="if (confirm('¿Archivar este pedido?')) $wire.dispatch('eliminar-pedido', { id: {{ $pedido->id }} })"
                                         label="Archivar pedido"
                                     />
@@ -701,7 +707,8 @@
                                 @endif
 
                                 @if(($acciones['exportar_excel'] ?? false))
-                                    <x-dropdown.item separator
+                                    <x-dropdown.item
+                                        separator
                                         @click="$wire.dispatch('exportar-excel-pedido', { id: {{ $pedido->id }} })"
                                         label="Exportar a Excel"
                                     />
