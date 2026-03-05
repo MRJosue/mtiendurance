@@ -23,61 +23,11 @@
              
                     </div>
                 </div>
-
-
-            {{-- <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
-                        @livewire('dashboard.cliente-panel')
-                    </div>
-                </div>
-                
-            </div> --}}
-
-
         @endhasanyrole
 
 
-        {{-- @hasanyrole('admin|proveedor')
-            <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
-
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
-                        @livewire('dashboard.proveedor-panel')
-                    </div>
-                </div>
-                    
-            </div>
-        @endhasanyrole --}}
-
-
-        {{-- @hasanyrole('admin|estaf|cliente_principal|cliente_subordinado')
-        <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100"> --}}
-                    {{-- @livewire('dashboard.estaf-panel') --}}
-                {{-- </div>
-            </div>
-        </div>
-
-        @endhasanyrole --}}
-
-
-        {{-- @hasanyrole('admin|jefediseñador')
-        <div class="w-full px-4 sm:px-6 lg:px-20 xl:px-32 mx-auto">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-
-                    @livewire('dashboard.jefe-disenador-panel')
-                </div>
-            </div>
-        </div>
-        @endhasanyrole --}}
       
         @hasanyrole('admin|diseñador')
-
-                
-
                 <div class="w-full mx-auto sm:px-6 lg:px-8">
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6 text-gray-900 dark:text-gray-100">
@@ -89,23 +39,11 @@
                      
                     </div>
                 </div>
-
-
         @endhasanyrole
       
 
         @hasanyrole('admin|operador')
-                <div class="w-full mx-auto sm:px-6 lg:px-8">
-                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                        <div class="p-6 text-gray-900 dark:text-gray-100">
-                            {{-- <h1 class="text-2xl font-bold mb-4">{{ $hoja->nombre }} ({{ $hoja->slug }})</h1> --}}
-                            {{-- <hr/> --}}
-                                    {{-- @livewire('dashboard.operador-panel') --}}
-                        </div>
 
-                     
-                    </div>
-                </div>
 
         @endhasanyrole
         

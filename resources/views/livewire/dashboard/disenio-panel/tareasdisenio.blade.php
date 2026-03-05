@@ -6,11 +6,11 @@
                                 localStorage.setItem('dashboard_admintareasdisenio_abierto', JSON.stringify(this.abierto));
                             }
                         }"
-                        class="container mx-auto p-6"
+                         class="p-2 sm:p-3 h-full min-h-0 flex flex-col"
                     >
                         <h2 
                             @click="toggle()"
-                            class="text-2xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
+                           class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
                         >
                            Administración de Tareas
                            <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
