@@ -434,12 +434,14 @@ class HojaViewer extends Component
             $productoIds = $filtro?->productoIds() ?? collect();
         }
 
+    $user = auth()->user();
+
     $q = Pedido::query()
     ->from('pedido')
     // JOINs tempranos y reutilizables para filtros/orden
     ->leftJoin('proyectos as pr', 'pr.id', '=', 'pedido.proyecto_id')
     ->leftJoin('productos as pd', 'pd.id', '=', 'pedido.producto_id')
-    ->leftJoin('users as us', 'us.id', '=', 'pedido.user_id')
+    ->leftJoin('users as us', 'us.id', '=', 'pr.usuario_id')
     ->leftJoin('estados_pedido as ep', 'ep.id', '=', 'pedido.estado_id')
     ->select('pedido.*')
     ->with([
@@ -448,7 +450,36 @@ class HojaViewer extends Component
         'estadoPedido:id,nombre,color',
         'usuario:id,name',
     ])
-     ->soloPedidos()
+
+
+    ->soloPedidos()
+        // ---------- Restricción por rol ----------
+        ->when($user, function ($qq) use ($user) {
+            if ($user->hasRole('admin') || $user->can('tablaPedidos-ver-todos-los-pedidos')) {
+                // ve todo
+                return;
+            }
+
+            if ($user->hasRole('cliente_principal')) {
+                $idsUsuarios = collect($user->subordinados ?? [])
+                    ->map(fn ($id) => (int) $id)
+                    ->filter(fn ($id) => $id > 0)
+                    ->prepend((int) $user->id)
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                $qq->whereIn('pr.usuario_id', $idsUsuarios);
+                return;
+            }
+
+            if ($user->hasAnyRole(['cliente_subordinado', 'estaf'])) {
+                $qq->where('pr.usuario_id', (int) $user->id);
+                return;
+            }
+
+            $qq->where('pr.usuario_id', (int) $user->id);
+        })
 
     // filtros por hoja/filtro
     ->when($productoIds->isNotEmpty(), fn($qq) => $qq->whereIn('pedido.producto_id', $productoIds))
@@ -472,37 +503,37 @@ class HojaViewer extends Component
         }
     })
     // búsqueda global (prefijo indexable en columnas unidas)
-->when(($term = trim((string)$this->search)) !== '', function ($qq) use ($term) {
-    $prefix   = $term.'%';      // empieza con
-    $contains = '%'.$term.'%';  // contiene
+    ->when(($term = trim((string)$this->search)) !== '', function ($qq) use ($term) {
+        $prefix   = $term.'%';      // empieza con
+        $contains = '%'.$term.'%';  // contiene
 
-    $qq->where(function ($s) use ($prefix, $contains, $term) {
+        $qq->where(function ($s) use ($prefix, $contains, $term) {
 
-        // 1) Texto en columnas de los JOINs (case-insensitive en MySQL por defecto)
-        $s->where('pr.nombre', 'like', $prefix)   // Proyecto
-          ->orWhere('pd.nombre', 'like', $prefix) // Producto
-          ->orWhere('us.name',   'like', $prefix) // Cliente/Usuario
-          ->orWhere('ep.nombre', 'like', $prefix);// Estado (nombre del catálogo)
+            // 1) Texto en columnas de los JOINs (case-insensitive en MySQL por defecto)
+            $s->where('pr.nombre', 'like', $prefix)   // Proyecto
+            ->orWhere('pd.nombre', 'like', $prefix) // Producto
+            ->orWhere('us.name',   'like', $prefix) // Cliente/Usuario
+            ->orWhere('ep.nombre', 'like', $prefix);// Estado (nombre del catálogo)
 
-        // 2) Si escriben "12-345", busca proyecto_id=12 y pedido.id=345
-        if (preg_match('/^\s*(\d+)\s*-\s*(\d+)\s*$/', $term, $m)) {
-            $proyectoId = (int)$m[1];
-            $pedidoId   = (int)$m[2];
-            $s->orWhere(function ($w) use ($proyectoId, $pedidoId) {
-                $w->where('pedido.proyecto_id', $proyectoId)
-                  ->where('pedido.id', $pedidoId);
-            });
-        }
+            // 2) Si escriben "12-345", busca proyecto_id=12 y pedido.id=345
+            if (preg_match('/^\s*(\d+)\s*-\s*(\d+)\s*$/', $term, $m)) {
+                $proyectoId = (int)$m[1];
+                $pedidoId   = (int)$m[2];
+                $s->orWhere(function ($w) use ($proyectoId, $pedidoId) {
+                    $w->where('pedido.proyecto_id', $proyectoId)
+                    ->where('pedido.id', $pedidoId);
+                });
+            }
 
-        // 3) Si el término es numérico, permite buscar por id del pedido o del proyecto
-        if (ctype_digit($term)) {
-            $n = (int)$term;
-            $s->orWhere('pedido.id', $n)
-              ->orWhere('pedido.proyecto_id', $n);
-        }
-    });
-})  
-    
+            // 3) Si el término es numérico, permite buscar por id del pedido o del proyecto
+            if (ctype_digit($term)) {
+                $n = (int)$term;
+                $s->orWhere('pedido.id', $n)
+                ->orWhere('pedido.proyecto_id', $n);
+            }
+        });
+    })  
+        
 
     // filtros base
     ->when(($idRaw = trim((string) Arr::get($this->filters, 'id', ''))) !== '', function ($qq) use ($idRaw) {
