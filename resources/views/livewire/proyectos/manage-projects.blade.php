@@ -253,7 +253,7 @@
                                 </div>
                             </th>
 
-                            {{-- Cliente --}}
+                            {{-- Cliente  Cambiar por premiso--}}
                             @role('admin|estaf|jefediseñador|cliente_principal')
                             <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
                                 <div class="flex items-center justify-between gap-2 min-w-[12rem]">
