@@ -8,91 +8,92 @@
     <div class="py-12">
 
         
-        @hasanyrole('admin|cliente|cliente_principal|cliente_subordinado|jefediseñador')
-            
-        
-
-                <div class="w-full mx-auto sm:px-6 lg:px-8">
-                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                        <div class="p-6 text-gray-900 dark:text-gray-100">
+        <div class="w-full mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
                             {{-- <h1 class="text-2xl font-bold mb-4">{{ $hoja->nombre }} ({{ $hoja->slug }})</h1> --}}
-                            <hr/>
-                            @livewire('dashboard.cliente-panel')
-                        </div>
+                    <hr/>
+                        @can('dashboardclientepreproyectos')
+                            @livewire('preproyectos.manage-preprojects')
+                        @endcan
 
-             
-                    </div>
-                </div>
-        @endhasanyrole
+                        @canany(['dashboardclienteproyectos', 'dashboardjefediseñadorproyectos'])
+                            @livewire('proyectos.manage-projects')
+                        @endcanany
+
+                        @can('dashboardclientepedidos')
+                            @livewire('dashboard.cliente-panel.pedidos')
+                        @endcan
+                        </div>
+            </div>
+        </div>
 
 
       
-        @hasanyrole('admin|diseñador')
-                <div class="w-full mx-auto sm:px-6 lg:px-8">
-                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                        <div class="p-6 text-gray-900 dark:text-gray-100">
-                            {{-- <h1 class="text-2xl font-bold mb-4">{{ $hoja->nombre }} ({{ $hoja->slug }})</h1> --}}
-                            <hr/>
-                              @livewire('dashboard.disenador-panel')
-                        </div>
-
-                     
+        {{-- @hasanyrole('admin|diseñador') --}}
+        @can('dashboardtareasdisenio')
+            <div class="w-full mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                        {-- <h1 class="text-2xl font-bold mb-4">{{ $hoja->nombre }} ({{ $hoja->slug }})</h1> --}}
+                        <hr/>
+                        @livewire('dashboard.disenio-panel.tareasdisenio')
+                            {{-- @livewire('dashboard.disenador-panel') --}}
                     </div>
                 </div>
-        @endhasanyrole
+            </div>
+        @endcan
+
+        {{-- @endhasanyrole --}}
       
 
-        @hasanyrole('admin|operador')
-
-
-        @endhasanyrole
+        {{-- @hasanyrole('admin|operador')
+        @endhasanyrole --}}
         
-
-        @hasanyrole('admin|proveedor')
-
+        {{-- @hasanyrole('admin|proveedor') --}}
+        @can('dashboarddiseniosproveedor')
             <div class="w-full mx-auto sm:px-6 lg:px-8">    
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                     
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                                 <hr/>
                                     @livewire('proveedores.disenos-proveedor')
-                                </div>
-                </div>
-            </div>
-
-            
-            <div class="w-full mx-auto sm:px-6 lg:px-8">
-                
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
-                                <hr/>
-                                    @livewire('dashboard.proveedor-panel.pedidos-proveedor-dashboard')
-                                </div>
-                </div>
-            </div>
-
-        @endhasanyrole
-
-
-
-                <div class="w-full mx-auto sm:px-6 lg:px-8">
-                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                        <div class="p-6 text-gray-900 dark:text-gray-100">
-                            {{-- <h1 class="text-2xl font-bold mb-4">{{ $hoja->nombre }} ({{ $hoja->slug }})</h1> --}}
-                            <hr/>
-                              <livewire:dashboard.notificaciones.notificaciones-lista />
-                        </div>
-
-                     
                     </div>
                 </div>
+            </div> 
+        @endcan
 
 
-            @role('admin')
+        @can('dashboardpedidosproveedor')
+            <div class="w-full mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">   
+                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                    <hr/>
+                        @livewire('dashboard.proveedor-panel.pedidos-proveedor-dashboard')
+                    </div>
+                </div>
+            </div>
+
+        @endcan           
 
 
-            @endrole
+        {{-- @endhasanyrole --}}
+
+
+        @can('dashboardnotificacion')        
+            <div class="w-full mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                        {{-- <h1 class="text-2xl font-bold mb-4">{{ $hoja->nombre }} ({{ $hoja->slug }})</h1> --}}
+                        <hr/>
+                            <livewire:dashboard.notificaciones.notificaciones-lista />
+                    </div>                     
+                </div>
+            </div>
+        @endcan
+
+
+
     </div>
 
 

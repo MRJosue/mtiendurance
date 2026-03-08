@@ -1,6 +1,6 @@
 <div >
     
-    @can('dashboardclientepreproyectos')
+    {{-- @can('dashboardclientepreproyectos')
         @livewire('preproyectos.manage-preprojects')
     @endcan
 
@@ -10,7 +10,7 @@
 
     @can('dashboardclientepedidos')
         @livewire('dashboard.cliente-panel.pedidos')
-    @endcan
+    @endcan --}}
 
 </div>
  

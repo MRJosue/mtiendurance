@@ -1,3 +1,3 @@
 <div>
-    @livewire('dashboard.disenio-panel.tareasdisenio')
+    {{-- @livewire('dashboard.disenio-panel.tareasdisenio') --}}
 </div>
