@@ -51,6 +51,14 @@
         <nav class="p-4 space-y-2 text-sm">
 
 
+            {{-- Perfil --}}
+            <div lass="h-16 flex items-center justify-center border-b border-gray-700">
+                <div class="text-sm">{{ Auth::user()->name }}</div>
+                <div class="text-xs text-gray-400">{{ Auth::user()->email }}</div>
+                <!-- <a href="{{ route('profile.edit') }}" class="block mt-2 text-blue-400 hover:underline text-sm">
+                    {{ __('menu.edit_profile') }}
+                </a> -->
+            </div>
 
             @can('asidedashboard')
             <a href="{{ route('dashboard') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
@@ -516,13 +524,8 @@
             </div>
       
 
-            {{-- Perfil --}}
+
             <div class="mt-6 border-t border-gray-700 pt-4 px-4">
-                <div class="text-sm">{{ Auth::user()->name }}</div>
-                <div class="text-xs text-gray-400">{{ Auth::user()->email }}</div>
-                <a href="{{ route('profile.edit') }}" class="block mt-2 text-blue-400 hover:underline text-sm">
-                    {{ __('menu.edit_profile') }}
-                </a>
                 <form method="POST" action="{{ route('logout') }}" class="mt-2">
                     @csrf
                     <button type="submit" class="text-red-400 hover:underline text-sm">
