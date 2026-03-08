@@ -8,25 +8,43 @@
     <div class="py-12">
 
         
+        @can('dashboardclientepreproyectos')
         <div class="w-full mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                            {{-- <h1 class="text-2xl font-bold mb-4">{{ $hoja->nombre }} ({{ $hoja->slug }})</h1> --}}
+                           
                     <hr/>
-                        @can('dashboardclientepreproyectos')
-                            @livewire('preproyectos.manage-preprojects')
-                        @endcan
+                    @livewire('preproyectos.manage-preprojects')
 
-                        @canany(['dashboardclienteproyectos', 'dashboardjefediseñadorproyectos'])
-                            @livewire('proyectos.manage-projects')
-                        @endcanany
-
-                        @can('dashboardclientepedidos')
-                            @livewire('dashboard.cliente-panel.pedidos')
-                        @endcan
-                        </div>
+                </div>
             </div>
         </div>
+        @endcan
+
+        @canany(['dashboardclienteproyectos', 'dashboardjefediseñadorproyectos'])
+        <div class="w-full mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">       
+                    <hr/>
+                    @livewire('proyectos.manage-projects')
+                </div>
+            </div>
+        </div>
+       
+        @endcanany
+
+        @can('dashboardclientepedidos')
+        <div class="w-full mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">       
+                    <hr/>
+                    @livewire('dashboard.cliente-panel.pedidos')
+                </div>
+            </div>
+        </div>
+            
+        @endcan
+
 
 
       
@@ -35,7 +53,7 @@
             <div class="w-full mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
-                        {-- <h1 class="text-2xl font-bold mb-4">{{ $hoja->nombre }} ({{ $hoja->slug }})</h1> --}}
+                        
                         <hr/>
                         @livewire('dashboard.disenio-panel.tareasdisenio')
                             {{-- @livewire('dashboard.disenador-panel') --}}
