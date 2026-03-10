@@ -99,11 +99,11 @@
                         </a>
                     @endcan
                     
-                    @can('asidedisenioAdministracion')
+                    {{-- @can('asidedisenioAdministracion')
                         <a href="{{ route('disenio.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                            {{ __('menu.design_admin') }}
+                            {{ __('menu.design_admin') }} asidedisenioAdministracion
                         </a>
-                    @endcan
+                    @endcan --}}
 
                     @can('asidedisenioTareas')
                         <a href="{{ route('disenio.admin_tarea') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
@@ -148,23 +148,23 @@
             @endcan
 
             {{-- Pedidos --}}
-            
-            <div>
-                <button
-                    @click="toggleSection('pedidos')"
-                    :class="openSections.pedidos ? 'underline text-blue-400' : ''"
-                    class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
-                >
-                    <span>{{ __('menu.custom_orders') }}</span>
-                    <svg :class="openSections.pedidos ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
-                         class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
-                         viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                    </svg>
+            @can('asidedipedidosdesplegable')
+                <div>
+                    <button
+                        @click="toggleSection('pedidos')"
+                        :class="openSections.pedidos ? 'underline text-blue-400' : ''"
+                        class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
+                    >
+                        <span>{{ __('menu.custom_orders') }}</span>
+                        <svg :class="openSections.pedidos ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
+                            class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
 
-                </button>
+                    </button>
 
-                <div x-show="openSections.pedidos" x-transition class="pl-6 mt-1 space-y-1">
+                    <div x-show="openSections.pedidos" x-transition class="pl-6 mt-1 space-y-1">
                      @can('pedidiosindex')
                     <a href="{{ route('pedidos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                         {{ __('menu.orders') }}
@@ -181,6 +181,8 @@
                        @livewire('aside-hojas', ['ubicacion' => 'pedidos'])
                 </div>
             </div>
+
+            @endcan
 
 
             {{-- Producción --}}
@@ -417,109 +419,109 @@
                         </div>
                         @endhasanyrole
 
-                    {{-- Usuarios --}}
-                    @can('asideusuariosdesplegable') 
-                    <div>
-                        <button
-                            @click="toggleSection('config_usuarios')"
-                            :class="openSections.config_usuarios ? 'underline text-blue-400' : ''"
-                            class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
-                        >
-                            <span>{{ __('menu.users') }}</span>
-                            <svg :class="openSections.config_usuarios ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
-                                 class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
-                                 viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                        </button>
-                        <div x-show="openSections.config_usuarios" x-transition class="pl-6 mt-1 space-y-1">
-
-
-                            {{-- <a href="{{ route('usuarios.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{ __('menu.users_list') }}
-                            </a> --}}
-                            @can('asideusuarios.administraclientes')
-                                <a href="{{ route('usuarios.clientes') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                    {{-- {{ __('menu.permissions') }} --}}
-                                    Clientes
-                                </a>
-
-                            @endcan
-
-                            @can('asideusuarios.administraproveedor')
-                        
-                                <a href="{{ route('usuarios.proveedor') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                    {{-- {{ __('menu.permissions') }} --}}
-                                    Proveedor
-                                </a>
-                            
-                                
-                            @endcan
-
-                            @can('asideusuarios.administrastaff')
-                                <a href="{{ route('usuarios.staff') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                    {{-- {{ __('menu.permissions') }} --}}
-                                    Staff
-                                </a>
-                            @endcan
-
-
-                            @can('asideusuarios.administraadmin')
-                                <a href="{{ route('usuarios.admin') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                    {{-- {{ __('menu.permissions') }} --}}
-                                    Admin
-                                </a>
-                                
-                            @endcan
-
-
-                           @hasanyrole('admin')
-                            <a href="{{ route('permisos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                {{ __('menu.permissions') }}
-                            </a>
-
-                            <a href="{{ route('permisos.empresas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
-                                Administra empresas
-                            </a>
-
-                            
-                            @endhasanyrole
-
-
-                        </div>
-                    </div>
-                    @endcan
-
-                       @hasanyrole('admin')
+                        {{-- Usuarios --}}
+                        @can('asideusuariosdesplegable') 
                         <div>
                             <button
-                                @click="toggleSection('config_admin')"
-                                :class="openSections.config_admin ? 'underline text-blue-400' : ''"
+                                @click="toggleSection('config_usuarios')"
+                                :class="openSections.config_usuarios ? 'underline text-blue-400' : ''"
                                 class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
                             >
-                                <span>{{ __('menu.admin') }}</span>
-                                <svg :class="openSections.config_admin ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
+                                <span>{{ __('menu.users') }}</span>
+                                <svg :class="openSections.config_usuarios ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
                                     class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                 </svg>
                             </button>
-                            <div x-show="openSections.config_admin" x-transition class="pl-6 mt-1 space-y-1">
+                            <div x-show="openSections.config_usuarios" x-transition class="pl-6 mt-1 space-y-1">
 
 
-                                    <a href="{{ route('admin.databasebackup') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                {{-- <a href="{{ route('usuarios.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                    {{ __('menu.users_list') }}
+                                </a> --}}
+                                @can('asideusuarios.administraclientes')
+                                    <a href="{{ route('usuarios.clientes') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                                         {{-- {{ __('menu.permissions') }} --}}
-                                       database backup  
+                                        Clientes
                                     </a>
 
+                                @endcan
+
+                                @can('asideusuarios.administraproveedor')
+                            
+                                    <a href="{{ route('usuarios.proveedor') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{-- {{ __('menu.permissions') }} --}}
+                                        Proveedor
+                                    </a>
+                                
+                                    
+                                @endcan
+
+                                @can('asideusuarios.administrastaff')
+                                    <a href="{{ route('usuarios.staff') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{-- {{ __('menu.permissions') }} --}}
+                                        Staff
+                                    </a>
+                                @endcan
 
 
-                       
+                                @can('asideusuarios.administraadmin')
+                                    <a href="{{ route('usuarios.admin') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                        {{-- {{ __('menu.permissions') }} --}}
+                                        Admin
+                                    </a>
+                                    
+                                @endcan
+
+
+                            @hasanyrole('admin')
+                                <a href="{{ route('permisos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                    {{ __('menu.permissions') }}
+                                </a>
+
+                                <a href="{{ route('permisos.empresas') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                    Administra empresas
+                                </a>
+
+                                
+                                @endhasanyrole
 
 
                             </div>
                         </div>
-                       @endhasanyrole
+                        @endcan
+
+                        @hasanyrole('admin')
+                            <div>
+                                <button
+                                    @click="toggleSection('config_admin')"
+                                    :class="openSections.config_admin ? 'underline text-blue-400' : ''"
+                                    class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
+                                >
+                                    <span>{{ __('menu.admin') }}</span>
+                                    <svg :class="openSections.config_admin ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
+                                        class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </button>
+                                <div x-show="openSections.config_admin" x-transition class="pl-6 mt-1 space-y-1">
+
+
+                                        <a href="{{ route('admin.databasebackup') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                                            {{-- {{ __('menu.permissions') }} --}}
+                                        database backup  
+                                        </a>
+
+
+
+                        
+
+
+                                </div>
+                            </div>
+                        @endhasanyrole
                 </div>
             </div>
       

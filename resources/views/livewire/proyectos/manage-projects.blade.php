@@ -254,8 +254,9 @@
                             </th>
 
                             {{-- Cliente  Cambiar por premiso--}}
-                            @role('admin|estaf|jefediseñador|cliente_principal')
-                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
+
+                            @can('tablaProyectos-ver-columna-cliente')
+                                                           <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
                                 <div class="flex items-center justify-between gap-2 min-w-[12rem]">
                                     <span>Cliente</span>
                                     <div x-data="{ open:false }" class="relative shrink-0">
@@ -280,8 +281,9 @@
                                         </div>
                                     </div>
                                 </div>
-                            </th>
-                            @endrole
+                            </th> 
+                            @endcan
+
 
 
                             {{-- Proveedor (solo si tiene permiso) --}}
@@ -413,7 +415,9 @@
                                 <td class="px-3 py-2 text-sm text-gray-700">{{ $project->nombre }}</td>
 
                                 {{-- Cliente --}}
-                                @role('admin|estaf|jefediseñador|cliente_principal')
+
+                                @can('tablaProyectos-ver-columna-cliente')
+                                
                                     <td class="px-3 py-2 text-sm text-gray-700">
                                         @if($project->user)
                                             <span
@@ -426,7 +430,8 @@
                                             <span class="text-gray-500">Sin Cliente</span>
                                         @endif
                                     </td>
-                                @endrole
+                                
+                                @endcan
 
                                 {{-- Proveedor (solo si tiene permiso) --}}
                                 @can('tablaProyectos-ver-columna-proveedor')
