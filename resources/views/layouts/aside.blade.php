@@ -445,17 +445,13 @@
                                         {{-- {{ __('menu.permissions') }} --}}
                                         Clientes
                                     </a>
-
                                 @endcan
 
                                 @can('asideusuarios.administraproveedor')
-                            
                                     <a href="{{ route('usuarios.proveedor') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
                                         {{-- {{ __('menu.permissions') }} --}}
                                         Proveedor
                                     </a>
-                                
-                                    
                                 @endcan
 
                                 @can('asideusuarios.administrastaff')
@@ -471,7 +467,6 @@
                                         {{-- {{ __('menu.permissions') }} --}}
                                         Admin
                                     </a>
-                                    
                                 @endcan
 
 

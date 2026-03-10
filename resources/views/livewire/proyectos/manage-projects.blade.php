@@ -343,8 +343,7 @@
                                 </div>
                             </th>
 
-                            {{-- Extras (si aplica) --}}
-                            {{-- @can('dashboardjefediseñadorproyectos') --}}
+                  
 
                             @can('dashboardDiseñosColumnaTareas')
                                 <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 w-[22rem] min-w-[22rem] max-w-[22rem]">
@@ -575,8 +574,9 @@
                                     // columnas visibles según roles/permiso
                                     $cols = 1 /* ID */ + 1 /* Nombre */ + 2 /* Estado proyecto + Estado diseño */ + 1 /* Acciones */;
                                     if(auth()->user()->hasAnyRole(['admin','estaf','jefediseñador','cliente_principal'])) $cols++;
+                                    if(auth()->user()->can('tablaProyectos-ver-columna-cliente')) $cols++;
                                     if(auth()->user()->can('tablaProyectos-ver-columna-pedidos')) $cols++;
-                                     if(auth()->user()->can('tablaProyectos-ver-columna-proveedor')) $cols++;
+                                    if(auth()->user()->can('tablaProyectos-ver-columna-proveedor')) $cols++;
                                     // checkbox maestro visible?
                                     if(auth()->user()->hasAnyRole(['admin','estaf']) || (auth()->user()->hasRole('cliente_principal') && ($isClientePrincipalConSub ?? false))) $cols++;
                                 @endphp
