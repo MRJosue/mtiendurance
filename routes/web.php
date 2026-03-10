@@ -259,6 +259,8 @@ Route::get('/usuarios/admin',[UserController::class, 'showadmin'])->middleware([
 Route::get('/usuarios',[UserController::class, 'index'])->middleware(['auth','verified'])->name('usuarios.index');
 Route::get('/usuarios/crear',[UserController::class, 'create'])->middleware(['auth','verified'])->name('usuarios.create');
 Route::get('/usuarios/detalles/{user}',[UserController::class, 'show'])->middleware(['auth','verified'])->name('usuarios.show');
+Route::get('/usuarios/editar/{user}',[UserController::class, 'edit'])->middleware(['auth','verified'])->name('usuarios.edit');
+
 Route::get('/usuarios/modal',[UserController::class, 'actions'])->middleware(['auth','verified'])->name('usuarios.actions');
 
 // Importacion 

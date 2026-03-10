@@ -51,14 +51,40 @@
         <nav class="p-4 space-y-2 text-sm">
 
 
-            {{-- Perfil --}}
-            <div lass="h-16 flex items-center justify-center border-b border-gray-700">
-                <div class="text-sm">{{ Auth::user()->name }}</div>
-                <div class="text-xs text-gray-400">{{ Auth::user()->email }}</div>
-                <!-- <a href="{{ route('profile.edit') }}" class="block mt-2 text-blue-400 hover:underline text-sm">
-                    {{ __('menu.edit_profile') }}
-                </a> -->
+{{-- Perfil --}}
+<div class="mb-3 border-b border-gray-700 pb-3">
+    <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0">
+            <div class="truncate text-sm font-semibold text-white">
+                {{ Auth::user()->name }}
             </div>
+            <div class="truncate text-[11px] text-gray-400">
+                {{ Auth::user()->email }}
+            </div>
+        </div>
+
+        <a
+            href="{{ route('usuarios.edit', Auth::id()) }}"
+            class="relative group flex-shrink-0 rounded-md p-1 text-gray-400 hover:bg-gray-800 hover:text-blue-400 transition"
+            aria-label="Editar perfil"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M11.983 2.25c.483 0 .955.04 1.414.118l.33 1.657a7.97 7.97 0 011.747.72l1.474-.94a9.985 9.985 0 012 2l-.94 1.474c.3.54.54 1.118.72 1.747l1.657.33c.078.459.118.931.118 1.414s-.04.955-.118 1.414l-1.657.33a7.97 7.97 0 01-.72 1.747l.94 1.474a9.985 9.985 0 01-2 2l-1.474-.94a7.97 7.97 0 01-1.747.72l-.33 1.657a9.965 9.965 0 01-2.828 0l-.33-1.657a7.97 7.97 0 01-1.747-.72l-1.474.94a9.985 9.985 0 01-2-2l.94-1.474a7.97 7.97 0 01-.72-1.747l-1.657-.33A9.965 9.965 0 012.25 12c0-.483.04-.955.118-1.414l1.657-.33c.18-.629.42-1.207.72-1.747l-.94-1.474a9.985 9.985 0 012-2l1.474.94a7.97 7.97 0 011.747-.72l.33-1.657c.459-.078.931-.118 1.414-.118z"
+                />
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+            </svg>
+
+            <span class="absolute right-full top-1/2 mr-2 -translate-y-1/2 whitespace-nowrap rounded bg-black px-2 py-1 text-[11px] text-white opacity-0 shadow group-hover:opacity-100 transition pointer-events-none">
+                Editar perfil
+            </span>
+        </a>
+    </div>
+</div>
+            
 
             @can('asidedashboard')
             <a href="{{ route('dashboard') }}" class="block px-2 py-1 rounded hover:bg-gray-800">

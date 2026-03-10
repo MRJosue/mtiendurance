@@ -9,7 +9,7 @@ class ReprogramacionProyecto extends Controller
 {
     public function index(Proyecto $Proyecto){
 
-        if (!auth()->user()->hasRole('admin')) {
+        if (!auth()->user()->can('proyectodiseñoreconfigurarproyecto')) {
             return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
         }
 
