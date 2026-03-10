@@ -6,7 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Spatie\Permission\Models\Role;
 use App\Models\GrupoOrden;
-use App\Models\Permission; // TU modelo extendido
+use App\Models\Permission;
 use Illuminate\Validation\Rule;
 
 class RolesCrud extends Component
@@ -35,13 +35,13 @@ class RolesCrud extends Component
     public $nombreRol = '';
     public $tipoRol = null; // 1=CLIENTE,2=PROVEEDOR,3=STAFF,4=ADMIN
 
-    // Permisos actuales del rol que se está editando (para checks en el modal)
+    // Permisos actuales del rol que se está editando
     public $role_permissions_ids = [];
 
     // ====== Form Permiso ======
     public $permiso_id = null;
-    public $permiso_name = '';    // machine
-    public $permiso_nombre = '';  // visible
+    public $permiso_name = '';
+    public $permiso_nombre = '';
     public $permiso_guard = 'web';
     public $permiso_orden = null;
     public $permiso_type_id = null;
@@ -54,20 +54,15 @@ class RolesCrud extends Component
     public $grupo_slug = '';
     public $grupo_orden = null;
 
-    public $grupo_permisos_sel = [];     // [permission_id, ...]
-    public $grupo_permisos_orden = [];   // [permission_id => orden]
+    public $grupo_permisos_sel = [];
+    public $grupo_permisos_orden = [];
 
-    // ====== Listeners (para togglePermiso desde JS) ======
     protected $listeners = ['togglePermiso' => 'togglePermiso'];
-
-    /* ============ RENDER ============ */
 
     public function render()
     {
-        // Sincroniza search con query (debounce desde Blade)
         $this->search = trim($this->query ?? '');
 
-        // Tabla de roles: ya no necesitamos cargar permisos aquí
         $rolesList = Role::query()
             ->select(['id', 'name', 'guard_name', 'tipo'])
             ->when($this->search, fn($q) =>
@@ -76,25 +71,25 @@ class RolesCrud extends Component
             ->orderBy('name')
             ->paginate(10);
 
-        // Grupos de permisos
         $grupos = GrupoOrden::query()
-            ->select(['id','nombre','slug','orden'])
+            ->select(['id', 'nombre', 'slug', 'orden'])
             ->withCount('permissions')
             ->with(['permissions' => function ($q) {
-                $q->select('permissions.id','permissions.name','permissions.nombre')
+                $q->select('permissions.id', 'permissions.name', 'permissions.nombre')
                     ->orderBy('grupo_orden_permission.orden')
                     ->orderBy('permissions.name');
             }])
-            ->orderBy('orden')->orderBy('nombre')
+            ->orderBy('orden')
+            ->orderBy('nombre')
             ->get();
 
-        // Permisos por tipo (para modal de grupos / permisos)
-        $permisos = Permission::select(['id','name','nombre','orden','permission_type_id'])
+        $permisos = Permission::select(['id', 'name', 'nombre', 'orden', 'permission_type_id'])
             ->with(['type:id,nombre'])
             ->orderByRaw('CASE WHEN permission_type_id IS NULL THEN 1 ELSE 0 END')
             ->orderByRaw('COALESCE(permission_type_id, 999999)')
             ->orderByRaw('CASE WHEN orden IS NULL THEN 1 ELSE 0 END')
-            ->orderBy('orden')->orderBy('name')
+            ->orderBy('orden')
+            ->orderBy('name')
             ->get();
 
         $permisosByType = $permisos->groupBy(fn($p) => $p->type->nombre ?? '— Sin tipo —');
@@ -103,20 +98,19 @@ class RolesCrud extends Component
             'rolesList'      => $rolesList,
             'grupos'         => $grupos,
             'permisos'       => $permisos,
-            'types'          => \DB::table('permission_types')->select(['id','nombre','orden'])->orderBy('orden')->get(),
+            'types'          => \DB::table('permission_types')
+                ->select(['id', 'nombre', 'orden'])
+                ->orderBy('orden')
+                ->get(),
             'permisosByType' => $permisosByType,
         ]);
     }
-
-    /* ============ BÚSQUEDA ============ */
 
     public function buscar()
     {
         $this->search = $this->query;
         $this->resetPage();
     }
-
-    /* ============ ROL: NUEVO / EDITAR / GUARDAR / ELIMINAR ============ */
 
     public function nuevoRol()
     {
@@ -130,12 +124,11 @@ class RolesCrud extends Component
 
         $this->role_id   = $rol->id;
         $this->nombreRol = $rol->name;
-        $this->tipoRol   = $rol->tipo; // puede ser null si aún no se ha seteado
+        $this->tipoRol   = $rol->tipo;
 
-        // Cargamos los permisos actuales del rol para pre-chequear en el modal grande
-        $this->role_permissions_ids = $rol->permissions->pluck('id')->map(fn($v) => (int)$v)->all();
+        $this->role_permissions_ids = $rol->permissions->pluck('id')->map(fn($v) => (int) $v)->all();
 
-        $this->modalRol  = true;
+        $this->modalRol = true;
     }
 
     public function guardarRol()
@@ -154,14 +147,12 @@ class RolesCrud extends Component
         $rol->tipo       = $this->tipoRol;
         $rol->save();
 
-        // Nota: permisos se manejan con togglePermiso, no aquí.
         if (!$this->role_id) {
-            // Si se acaba de crear, todavía no tiene permisos
             $this->role_permissions_ids = [];
             $this->role_id = $rol->id;
         }
 
-        $this->dispatch('toast', ['type' => 'success', 'msg' => 'Rol guardado correctamente.']);
+        $this->dispatch('toast', type: 'success', msg: 'Rol guardado correctamente.');
         $this->modalRol = false;
         $this->resetRolForm();
         $this->resetPage();
@@ -171,7 +162,7 @@ class RolesCrud extends Component
     {
         $rol = Role::findOrFail($id);
         $this->confirmType = 'rol';
-        $this->confirmId   = $rol->id;
+        $this->confirmId = $rol->id;
         $this->confirmName = $rol->name;
         $this->modalConfirm = true;
     }
@@ -183,21 +174,20 @@ class RolesCrud extends Component
             if ($rol) {
                 $rol->syncPermissions([]);
                 $rol->delete();
-                $this->dispatch('toast', ['type' => 'success', 'msg' => 'Rol eliminado.']);
+                $this->dispatch('toast', type: 'success', msg: 'Rol eliminado.');
             }
         }
+
         $this->cerrarConfirm();
     }
 
     protected function resetRolForm()
     {
-        $this->role_id   = null;
+        $this->role_id = null;
         $this->nombreRol = '';
-        $this->tipoRol   = null;
+        $this->tipoRol = null;
         $this->role_permissions_ids = [];
     }
-
-    /* ============ PERMISOS (MODAL PERMISO) ============ */
 
     public function nuevoPermiso()
     {
@@ -208,15 +198,16 @@ class RolesCrud extends Component
     public function editarPermiso($id)
     {
         $p = Permission::findOrFail($id);
-        $this->permiso_id     = $p->id;
-        $this->permiso_name   = $p->name;
+
+        $this->permiso_id = $p->id;
+        $this->permiso_name = $p->name;
         $this->permiso_nombre = $p->nombre ?? '';
-        $this->permiso_guard  = $p->guard_name ?? 'web';
-        $this->permiso_orden  = $p->orden;
+        $this->permiso_guard = $p->guard_name ?? 'web';
+        $this->permiso_orden = $p->orden;
         $this->permiso_type_id = $p->permission_type_id;
 
         $grupo = $p->groups()->first();
-        $this->permiso_grupo_id    = $grupo?->id;
+        $this->permiso_grupo_id = $grupo?->id;
         $this->permiso_grupo_orden = $grupo?->pivot?->orden;
 
         $this->modalPermiso = true;
@@ -225,21 +216,21 @@ class RolesCrud extends Component
     public function guardarPermiso()
     {
         $this->validate([
-            'permiso_name'       => ['required','string','max:255', Rule::unique('permissions','name')->ignore($this->permiso_id)],
-            'permiso_guard'      => ['required','string','max:50'],
-            'permiso_nombre'     => ['nullable','string','max:255'],
-            'permiso_orden'      => ['nullable','integer','min:0'],
-            'permiso_type_id'    => ['nullable','integer','exists:permission_types,id'],
-            'permiso_grupo_id'   => ['nullable','integer'],
-            'permiso_grupo_orden'=> ['nullable','integer','min:0'],
+            'permiso_name'        => ['required', 'string', 'max:255', Rule::unique('permissions', 'name')->ignore($this->permiso_id)],
+            'permiso_guard'       => ['required', 'string', 'max:50'],
+            'permiso_nombre'      => ['nullable', 'string', 'max:255'],
+            'permiso_orden'       => ['nullable', 'integer', 'min:0'],
+            'permiso_type_id'     => ['nullable', 'integer', 'exists:permission_types,id'],
+            'permiso_grupo_id'    => ['nullable', 'integer'],
+            'permiso_grupo_orden' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $p = $this->permiso_id ? Permission::findOrFail($this->permiso_id) : new Permission();
-        $p->name              = $this->permiso_name;
-        $p->guard_name        = $this->permiso_guard;
-        $p->nombre            = $this->permiso_nombre ?: $this->permiso_name;
-        $p->orden             = $this->permiso_orden;
-        $p->permission_type_id= $this->permiso_type_id;
+        $p->name = $this->permiso_name;
+        $p->guard_name = $this->permiso_guard;
+        $p->nombre = $this->permiso_nombre ?: $this->permiso_name;
+        $p->orden = $this->permiso_orden;
+        $p->permission_type_id = $this->permiso_type_id;
         $p->save();
 
         if ($this->permiso_grupo_id) {
@@ -251,7 +242,7 @@ class RolesCrud extends Component
             }
         }
 
-        $this->dispatch('toast', ['type' => 'success', 'msg' => 'Permiso guardado correctamente.']);
+        $this->dispatch('toast', type: 'success', msg: 'Permiso guardado correctamente.');
         $this->modalPermiso = false;
         $this->resetPermisoForm();
         $this->resetPage();
@@ -261,7 +252,7 @@ class RolesCrud extends Component
     {
         $p = Permission::findOrFail($id);
         $this->confirmType = 'permiso';
-        $this->confirmId   = $p->id;
+        $this->confirmId = $p->id;
         $this->confirmName = $p->nombre ?? $p->name;
         $this->modalConfirm = true;
     }
@@ -276,30 +267,29 @@ class RolesCrud extends Component
                     $p->groups()->detach();
                 }
                 $p->delete();
-                $this->dispatch('toast', ['type' => 'success', 'msg' => 'Permiso eliminado.']);
+                $this->dispatch('toast', type: 'success', msg: 'Permiso eliminado.');
             }
         }
+
         $this->cerrarConfirm();
     }
 
     protected function resetPermisoForm()
     {
-        $this->permiso_id        = null;
-        $this->permiso_name      = '';
-        $this->permiso_nombre    = '';
-        $this->permiso_guard     = 'web';
-        $this->permiso_orden     = null;
-        $this->permiso_type_id   = null;
-        $this->permiso_grupo_id  = null;
+        $this->permiso_id = null;
+        $this->permiso_name = '';
+        $this->permiso_nombre = '';
+        $this->permiso_guard = 'web';
+        $this->permiso_orden = null;
+        $this->permiso_type_id = null;
+        $this->permiso_grupo_id = null;
         $this->permiso_grupo_orden = null;
     }
-
-    /* ============ GRUPOS ============ */
 
     public function nuevoGrupo()
     {
         $this->resetGrupoForm();
-        $this->grupo_permisos_sel   = [];
+        $this->grupo_permisos_sel = [];
         $this->grupo_permisos_orden = [];
         $this->modalGrupo = true;
     }
@@ -308,14 +298,19 @@ class RolesCrud extends Component
     {
         $g = GrupoOrden::with('permissions')->findOrFail($id);
 
-        $this->grupo_id     = $g->id;
+        $this->grupo_id = $g->id;
         $this->grupo_nombre = $g->nombre;
-        $this->grupo_slug   = $g->slug;
-        $this->grupo_orden  = $g->orden;
+        $this->grupo_slug = $g->slug;
+        $this->grupo_orden = $g->orden;
 
-        $this->grupo_permisos_sel   = $g->permissions->pluck('id')->toArray();
+        $this->grupo_permisos_sel = $g->permissions
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->values()
+            ->toArray();
+
         $this->grupo_permisos_orden = $g->permissions
-            ->mapWithKeys(fn ($p) => [$p->id => (int)($p->pivot->orden ?? 0)])
+            ->mapWithKeys(fn($p) => [$p->id => (int) ($p->pivot->orden ?? 0)])
             ->toArray();
 
         $this->modalGrupo = true;
@@ -324,27 +319,33 @@ class RolesCrud extends Component
     public function guardarGrupo()
     {
         $this->validate([
-            'grupo_nombre' => ['required','string','max:255'],
-            'grupo_slug'   => ['required','string','max:255', Rule::unique('grupos_orden','slug')->ignore($this->grupo_id)],
-            'grupo_orden'  => ['nullable','integer','min:0'],
+            'grupo_nombre' => ['required', 'string', 'max:255'],
+            'grupo_slug'   => ['required', 'string', 'max:255', Rule::unique('grupos_orden', 'slug')->ignore($this->grupo_id)],
+            'grupo_orden'  => ['nullable', 'integer', 'min:1'],
         ]);
 
         $g = $this->grupo_id ? GrupoOrden::findOrFail($this->grupo_id) : new GrupoOrden();
+
         $g->nombre = $this->grupo_nombre;
-        $g->slug   = $this->grupo_slug;
-        $g->orden  = $this->grupo_orden;
+        $g->slug = $this->grupo_slug;
+        $g->orden = $this->grupo_orden ?: ((int) GrupoOrden::max('orden') + 1);
         $g->save();
 
         $sync = [];
         foreach ($this->grupo_permisos_sel as $pid) {
-            $sync[(int)$pid] = ['orden' => (int)($this->grupo_permisos_orden[$pid] ?? 0)];
+            $sync[(int) $pid] = [
+                'orden' => (int) ($this->grupo_permisos_orden[$pid] ?? 0)
+            ];
         }
+
         $g->permissions()->sync($sync);
 
-        $this->dispatch('toast', ['type' => 'success', 'msg' => 'Grupo guardado correctamente.']);
+        $this->reordenarGrupos();
+
+        $this->dispatch('toast', type: 'success', msg: 'Grupo guardado correctamente.');
         $this->modalGrupo = false;
         $this->resetGrupoForm();
-        $this->grupo_permisos_sel   = [];
+        $this->grupo_permisos_sel = [];
         $this->grupo_permisos_orden = [];
     }
 
@@ -352,7 +353,7 @@ class RolesCrud extends Component
     {
         $g = GrupoOrden::findOrFail($id);
         $this->confirmType = 'grupo';
-        $this->confirmId   = $g->id;
+        $this->confirmId = $g->id;
         $this->confirmName = $g->nombre;
         $this->modalConfirm = true;
     }
@@ -364,27 +365,26 @@ class RolesCrud extends Component
             if ($g) {
                 $g->permissions()->detach();
                 $g->delete();
-                $this->dispatch('toast', ['type' => 'success', 'msg' => 'Grupo eliminado.']);
+                $this->dispatch('toast', type: 'success', msg: 'Grupo eliminado.');
             }
         }
+
         $this->cerrarConfirm();
     }
 
     protected function resetGrupoForm()
     {
-        $this->grupo_id     = null;
+        $this->grupo_id = null;
         $this->grupo_nombre = '';
-        $this->grupo_slug   = '';
-        $this->grupo_orden  = null;
-        $this->grupo_permisos_sel   = [];
+        $this->grupo_slug = '';
+        $this->grupo_orden = null;
+        $this->grupo_permisos_sel = [];
         $this->grupo_permisos_orden = [];
     }
 
-    /* ============ ASIGNACIÓN RÁPIDA: ROL <-> PERMISO ============ */
-
     public function togglePermiso(int $role_id, int $permiso_id, bool $checked): void
     {
-        $role    = Role::find($role_id);
+        $role = Role::find($role_id);
         $permiso = Permission::find($permiso_id);
 
         if (!$role || !$permiso) {
@@ -401,7 +401,6 @@ class RolesCrud extends Component
             }
         }
 
-        // Refrescamos array local si coincide con el rol editado
         if ($this->role_id === $role_id) {
             if ($checked) {
                 if (!in_array($permiso_id, $this->role_permissions_ids)) {
@@ -411,42 +410,40 @@ class RolesCrud extends Component
                 $this->role_permissions_ids = array_values(
                     array_filter(
                         $this->role_permissions_ids,
-                        fn($id) => (int)$id !== (int)$permiso_id
+                        fn($id) => (int) $id !== (int) $permiso_id
                     )
                 );
             }
         }
 
-        $this->dispatch('toast', ['type' => 'success', 'msg' => 'Permiso actualizado.']);
+        $this->dispatch('toast', type: 'success', msg: 'Permiso actualizado.');
     }
 
     public function syncGrupoConRol(int $roleId, int $grupoId, bool $assign = true): void
     {
-        $role  = Role::findOrFail($roleId);
+        $role = Role::findOrFail($roleId);
         $grupo = GrupoOrden::with(['permissions:id,name'])->findOrFail($grupoId);
 
         $permNames = $grupo->permissions->pluck('name')->all();
 
         if ($assign) {
             $role->givePermissionTo($permNames);
-            $this->dispatch('toast', ['type' => 'success', 'msg' => 'Permisos del grupo asignados al rol.']);
+            $this->dispatch('toast', type: 'success', msg: 'Permisos del grupo asignados al rol.');
 
             if ($this->role_id === $roleId) {
-                $ids = $grupo->permissions->pluck('id')->map(fn($v) => (int)$v)->all();
-                $this->role_permissions_ids = array_values(
-                    array_unique(array_merge($this->role_permissions_ids, $ids))
-                );
+                $ids = $grupo->permissions->pluck('id')->map(fn($v) => (int) $v)->all();
+                $this->role_permissions_ids = array_values(array_unique(array_merge($this->role_permissions_ids, $ids)));
             }
         } else {
             $role->revokePermissionTo($permNames);
-            $this->dispatch('toast', ['type' => 'success', 'msg' => 'Permisos del grupo quitados del rol.']);
+            $this->dispatch('toast', type: 'success', msg: 'Permisos del grupo quitados del rol.');
 
             if ($this->role_id === $roleId) {
-                $ids = $grupo->permissions->pluck('id')->map(fn($v) => (int)$v)->all();
+                $ids = $grupo->permissions->pluck('id')->map(fn($v) => (int) $v)->all();
                 $this->role_permissions_ids = array_values(
                     array_filter(
                         $this->role_permissions_ids,
-                        fn($id) => !in_array((int)$id, $ids)
+                        fn($id) => !in_array((int) $id, $ids)
                     )
                 );
             }
@@ -458,15 +455,15 @@ class RolesCrud extends Component
         $g = GrupoOrden::findOrFail($grupoId);
         $p = Permission::findOrFail($permisoId);
 
-        $this->permiso_id     = $p->id;
-        $this->permiso_name   = $p->name;
+        $this->permiso_id = $p->id;
+        $this->permiso_name = $p->name;
         $this->permiso_nombre = $p->nombre ?? '';
-        $this->permiso_guard  = $p->guard_name ?? 'web';
-        $this->permiso_orden  = $p->orden;
+        $this->permiso_guard = $p->guard_name ?? 'web';
+        $this->permiso_orden = $p->orden;
         $this->permiso_type_id = $p->permission_type_id;
 
         $pivot = $g->permissions()->where('permission_id', $p->id)->first()?->pivot;
-        $this->permiso_grupo_id    = $g->id;
+        $this->permiso_grupo_id = $g->id;
         $this->permiso_grupo_orden = $pivot?->orden ?? 0;
 
         $this->modalPermiso = true;
@@ -478,21 +475,103 @@ class RolesCrud extends Component
         $g->permissions()->detach($permisoId);
 
         if ((int) $this->permiso_id === (int) $permisoId && (int) $this->permiso_grupo_id === (int) $grupoId) {
-            $this->permiso_grupo_id    = null;
+            $this->permiso_grupo_id = null;
             $this->permiso_grupo_orden = null;
         }
 
-        $this->dispatch('toast', ['type' => 'success', 'msg' => 'Permiso quitado del grupo.']);
+        $this->dispatch('toast', type: 'success', msg: 'Permiso quitado del grupo.');
         $this->resetPage();
     }
-
-    /* ============ CONFIRM ============ */
 
     public function cerrarConfirm()
     {
         $this->modalConfirm = false;
-        $this->confirmType  = null;
-        $this->confirmId    = null;
-        $this->confirmName  = null;
+        $this->confirmType = null;
+        $this->confirmId = null;
+        $this->confirmName = null;
     }
+
+    public function moverGrupoArriba(int $grupoId): void
+    {
+        $grupo = GrupoOrden::find($grupoId);
+
+        if (!$grupo) {
+            return;
+        }
+
+        $ordenActual = (int) ($grupo->orden ?? 0);
+
+        if ($ordenActual <= 1) {
+            return;
+        }
+
+        $grupoAnterior = GrupoOrden::query()
+            ->where('orden', '<', $ordenActual)
+            ->orderByDesc('orden')
+            ->first();
+
+        if (!$grupoAnterior) {
+            return;
+        }
+
+        $ordenAnterior = (int) $grupoAnterior->orden;
+
+        $grupo->orden = $ordenAnterior;
+        $grupoAnterior->orden = $ordenActual;
+
+        $grupo->save();
+        $grupoAnterior->save();
+
+        $this->reordenarGrupos();
+        $this->dispatch('toast', type: 'success', msg: 'Grupo movido hacia arriba.');
+    }
+
+    public function moverGrupoAbajo(int $grupoId): void
+    {
+        $grupo = GrupoOrden::find($grupoId);
+
+        if (!$grupo) {
+            return;
+        }
+
+        $ordenActual = (int) ($grupo->orden ?? 0);
+
+        $grupoSiguiente = GrupoOrden::query()
+            ->where('orden', '>', $ordenActual)
+            ->orderBy('orden')
+            ->first();
+
+        if (!$grupoSiguiente) {
+            return;
+        }
+
+        $ordenSiguiente = (int) $grupoSiguiente->orden;
+
+        $grupo->orden = $ordenSiguiente;
+        $grupoSiguiente->orden = $ordenActual;
+
+        $grupo->save();
+        $grupoSiguiente->save();
+
+        $this->reordenarGrupos();
+        $this->dispatch('toast', type: 'success', msg: 'Grupo movido hacia abajo.');
+    }
+
+    protected function reordenarGrupos(): void
+    {
+        $grupos = GrupoOrden::query()
+            ->orderBy('orden')
+            ->orderBy('nombre')
+            ->get();
+
+        foreach ($grupos as $index => $item) {
+            $ordenReal = $index + 1;
+
+            if ((int) $item->orden !== $ordenReal) {
+                $item->orden = $ordenReal;
+                $item->save();
+            }
+        }
+    }
+    
 }

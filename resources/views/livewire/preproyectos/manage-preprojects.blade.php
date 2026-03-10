@@ -22,10 +22,12 @@
     <!-- Contenido del panel -->
     <div x-show="abierto" x-transition>
 
+        @can('boton-crear-preproyecto')
         <div class="p-6 text-gray-900 dark:text-gray-100">
             <a class="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed" 
                     href="{{ route('preproyectos.create') }}">Crear Nueva Solicitud</a>
         </div>
+        @endcan
 
         <div x-data="{ selectedProjects: @entangle('selectedProjects') }" class="container mx-auto p-6">
             <!-- Botones de acción -->

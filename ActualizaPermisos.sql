@@ -12,14 +12,14 @@
 /*M!100616 SET @OLD_NOTE_VERBOSITY=@@NOTE_VERBOSITY, NOTE_VERBOSITY=0 */;
 
 set autocommit=0;
-INSERT INTO `permission_types` VALUES
+REPLACE INTO `permission_types` VALUES
 (1,'sistema','Sistema',1,'2025-11-21 05:06:10','2025-11-21 05:06:10'),
 (2,'modulo','Módulo',2,'2025-11-21 05:06:10','2025-11-21 05:06:10'),
 (3,'accion','Acción',3,'2025-11-21 05:06:10','2025-11-21 05:06:10');
 commit;
 
 set autocommit=0;
-INSERT INTO `permissions` VALUES
+REPLACE INTO `permissions` VALUES
 (1,'manage users',NULL,NULL,NULL,'web','2025-05-07 20:49:09','2025-05-07 20:49:09'),
 (2,'edit profile',NULL,NULL,NULL,'web','2025-05-07 20:49:09','2025-05-07 20:49:09'),
 (3,'view_users',NULL,NULL,NULL,'web','2025-05-07 20:49:20','2025-05-07 20:49:20'),
@@ -139,7 +139,7 @@ INSERT INTO `permissions` VALUES
 commit;
 
 set autocommit=0;
-INSERT INTO `roles` VALUES
+REPLACE INTO `roles` VALUES
 (1,'admin','web',4,'2025-06-10 15:36:06','2025-11-25 03:28:40'),
 (3,'proveedor','web',2,'2025-06-10 15:36:06','2025-11-25 05:08:28'),
 (4,'staff','web',3,'2025-06-10 15:36:06','2025-11-25 05:08:45'),
@@ -153,7 +153,7 @@ INSERT INTO `roles` VALUES
 commit;
 
 set autocommit=0;
-INSERT INTO `role_has_permissions` VALUES
+REPLACE INTO `role_has_permissions` VALUES
 (1,1),
 (2,1),
 (3,1),
@@ -507,7 +507,7 @@ INSERT INTO `role_has_permissions` VALUES
 commit;
 
 set autocommit=0;
-INSERT INTO `model_has_roles` VALUES
+REPLACE INTO `model_has_roles` VALUES
 (8,'App\\Models\\User',1),
 (8,'App\\Models\\User',2),
 (8,'App\\Models\\User',3),
@@ -1605,7 +1605,7 @@ set autocommit=0;
 commit;
 
 set autocommit=0;
-INSERT INTO `grupos_orden` VALUES
+REPLACE INTO `grupos_orden` VALUES
 (5,'Todos Los Permisos','Admin',0,'2025-05-20 15:52:21','2025-11-06 05:23:52'),
 (11,'Permisos en base de datos','general',1,'2025-11-01 04:02:01','2026-03-08 22:48:12'),
 (13,'Menu','Menu',1,'2025-11-01 05:23:27','2025-11-01 05:23:27'),
@@ -1627,7 +1627,7 @@ INSERT INTO `grupos_orden` VALUES
 commit;
 
 set autocommit=0;
-INSERT INTO `grupo_orden_permission` VALUES
+REPLACE INTO `grupo_orden_permission` VALUES
 (119,11,57,1,'2025-11-01 05:00:19','2026-03-08 22:48:12'),
 (120,11,58,1,'2025-11-01 05:17:47','2026-03-08 22:48:12'),
 (121,11,59,1,'2025-11-01 05:18:27','2026-03-08 22:48:12'),
@@ -1760,4 +1760,5 @@ commit;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
+11 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
