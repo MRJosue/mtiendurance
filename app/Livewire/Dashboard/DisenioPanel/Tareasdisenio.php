@@ -3,7 +3,6 @@
 namespace App\Livewire\Dashboard\DisenioPanel;
 
 use Livewire\Component;
-
 use Livewire\WithPagination;
 use App\Models\Tarea;
 use App\Models\proyecto_estados;
@@ -23,10 +22,12 @@ class Tareasdisenio extends Component
     public function abrirModal($taskId)
     {
         $this->selectedTask = Tarea::find($taskId);
+
         if (!$this->selectedTask) {
             session()->flash('error', 'Error: Tarea no encontrada.');
             return;
         }
+
         $this->newStatus = $this->selectedTask->estado;
         $this->modalOpen = true;
     }
@@ -39,7 +40,7 @@ class Tareasdisenio extends Component
         }
 
         $this->validate([
-            'newStatus' => 'required|in:PENDIENTE,EN PROCESO,COMPLETADA,RECHAZADO',
+            'newStatus' => 'required|in:PENDIENTE,EN PROCESO,COMPLETADA,RECHAZADO,CANCELADO',
         ]);
 
         $this->selectedTask->estado = $this->newStatus;
@@ -48,7 +49,7 @@ class Tareasdisenio extends Component
         $proyecto = $this->selectedTask->proyecto;
 
         if ($proyecto) {
-            if ($this->newStatus === 'EN PROCESO' || $this->newStatus === 'RECHAZADO') {
+            if (in_array($this->newStatus, ['EN PROCESO', 'RECHAZADO'])) {
                 $proyecto->estado = 'EN PROCESO';
             }
 
@@ -91,13 +92,17 @@ class Tareasdisenio extends Component
 
     public function confirmarInicioProceso()
     {
-        if (!$this->proyectoPendienteConfirmacion) return;
+        if (!$this->proyectoPendienteConfirmacion) {
+            return;
+        }
 
         $proyecto = $this->proyectoPendienteConfirmacion;
         $tarea = $proyecto->tareas()->first();
 
-        $tarea->disenio_flag_first_proceso = 1;
-        $tarea->save();
+        if ($tarea) {
+            $tarea->disenio_flag_first_proceso = 1;
+            $tarea->save();
+        }
 
         $proyecto->estado = 'EN PROCESO';
         $proyecto->save();
@@ -110,6 +115,8 @@ class Tareasdisenio extends Component
         ]);
 
         $this->mostrarModalConfirmacion = false;
+        $this->proyectoPendienteConfirmacion = null;
+
         return redirect()->route('proyecto.show', $proyecto->id);
     }
 
@@ -121,16 +128,25 @@ class Tareasdisenio extends Component
 
     public function render()
     {
-        $tasks = Tarea::with(['proyecto', 'staff']);
-        if (!auth()->user()->hasRole('admin')) {
-            $tasks->where('staff_id', auth()->id());
-        }
+        $user = auth()->user();
 
+        $puedeVerTodasLasTareas = $user->hasRole('admin') || $user->can('tareas-disenio-ver-todas');
 
-        return view('livewire.dashboard.disenio-panel.tareasdisenio', [
-            'tasks' => $tasks->paginate(10),
+        $tasks = Tarea::with([
+            'proyecto',
+            'proyecto.user',
+            'staff',
         ]);
 
-    }
+        if (!$puedeVerTodasLasTareas) {
+            $tasks->where('staff_id', $user->id);
+        }
 
+        $tasks = $tasks->orderByDesc('id')->paginate(10);
+
+        return view('livewire.dashboard.disenio-panel.tareasdisenio', [
+            'tasks' => $tasks,
+            'puedeVerTodasLasTareas' => $puedeVerTodasLasTareas,
+        ]);
+    }
 }
