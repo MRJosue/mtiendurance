@@ -110,18 +110,22 @@
                             <td class="border-b px-4 py-2 text-center text-sm">
                                 <x-dropdown>
                                     <x-dropdown.item>
-                                        <b wire:click="verificarProceso({{ $task->proyecto->id }})">
-                                            Ver detalles
-                                        </b>
+
+                                        @can('ir-detalles-tarea')
+                                            <b wire:click="verificarProceso({{ $task->proyecto->id }})">
+                                                Ver detalles
+                                            </b>
+                                        @endcan
+
                                     </x-dropdown.item>
                                     
                                     <x-dropdown.item separator>
 
-                                        @case('admin-disenio-cambiar-estado-tarea')
+                                        @can('admin-disenio-cambiar-estado-tarea')
                                             <b wire:click="abrirModal({{ $task->id }})">
                                                 Cambiar Estado
                                             </b>
-                                        @break
+                                        @endcan
 
                                     </x-dropdown.item>
                                 </x-dropdown>
