@@ -55,7 +55,9 @@
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         
                         <hr/>
-                        @livewire('dashboard.disenio-panel.tareasdisenio')
+                        {{-- @livewire('dashboard.disenio-panel.tareasdisenio') --}}
+                        @livewire('tareas.administra-tareas')
+
                             {{-- @livewire('dashboard.disenador-panel') --}}
                     </div>
                 </div>
