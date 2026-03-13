@@ -9,30 +9,38 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use App\Models\Proyecto;
 use App\Models\User;
-
 use App\Exports\PedidosFilteredExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
-
 use App\Models\PedidoTalla;
 use App\Models\GrupoTalla;
-use App\Models\Talla;
-
 
 class Pedidos extends Component
 {
     use WithPagination;
 
-    /* ---- UI: pestañas PEDIDOS | MUESTRAS ---- */
-    public array  $tabs      = ['PEDIDOS', 'MUESTRAS'];
-    public string $activeTab = 'PEDIDOS';
+    protected $paginationTheme = 'tailwind';
+
+    /* ---- Tabs por estado del pedido ---- */
+    public array $tabsEstado = [
+        'TODOS',
+        'PENDIENTE',
+        'APROBADO',
+        'POR PROGRAMAR',
+        'PROGRAMADO',
+        'ENTREGADO',
+        'RECHAZADO',
+        'CANCELADO',
+        'ARCHIVADO',
+    ];
+
+    public string $activeEstadoTab = 'TODOS';
 
     public int $perPage = 100;
 
-    /* ---- Filtros extra que ya tenías ---- */
-    public bool $mostrarFiltros          = false;
-    public bool $mostrarSoloNoAprobados  = true;
+    public bool $mostrarFiltros = false;
+    public bool $mostrarSoloNoAprobados = true;
 
     public $modalVerInfo = false;
     public $infoProyecto = null;
@@ -41,38 +49,46 @@ class Pedidos extends Component
     public string $sortDir   = 'desc';
 
     public array $filters = [
-        'id'            => null,   
-        'cliente'       => null,   
-        'estado_pedido' => null,   
-        'estado_diseno' => null,   
-        'fecha_desde'   => null,   
-        'fecha_hasta'   => null,
-        'inactivos'     => false,  
+        'id'                    => null,
+        'cliente'               => null,
+        'proyecto'              => null,
+        'total'                 => null,
+        'estado_pedido'         => null,
+        'estado_diseno'         => null,
+        'fecha_desde'           => null,
+        'fecha_hasta'           => null,
+        'fecha_produccion_from' => null,
+        'fecha_produccion_to'   => null,
+        'fecha_entrega_from'    => null,
+        'fecha_entrega_to'      => null,
+        'inactivos'             => false,
     ];
 
     public array $sortable = [
-    'id','created_at','total','estado','fecha_produccion','fecha_entrega',
-    'estado_diseno','proyecto_nombre','cliente_nombre',
+        'id',
+        'created_at',
+        'total',
+        'estado',
+        'fecha_produccion',
+        'fecha_entrega',
+        'estado_diseno',
+        'proyecto_nombre',
+        'cliente_nombre',
     ];
 
-    // modal tallas
     public bool $modalTallas = false;
-
     public ?int $tallasPedidoId = null;
-
-    // estructura: [ ['grupo' => 'Hombres', 'items' => [ ['talla'=>'CH','cantidad'=>10], ... ], 'subtotal'=>.. ], ... ]
     public array $tallasDistribucionPorGrupo = [];
-
     public int $tallasTotal = 0;
 
-
-    /* ---- Manipuladores de UI ---- */
-    public function setTab(string $tab): void
+    public function setEstadoTab(string $tab): void
     {
-        if ($this->activeTab !== $tab) {
-            $this->activeTab = $tab;
-            $this->resetPage();   // reinicia paginación al cambiar de pestaña
+        if (!in_array($tab, $this->tabsEstado, true)) {
+            return;
         }
+
+        $this->activeEstadoTab = $tab;
+        $this->resetPage();
     }
 
     public function buscarPorFiltros(): void
@@ -80,38 +96,41 @@ class Pedidos extends Component
         $this->resetPage();
     }
 
-    /** Cambia campo/dirección de orden y reinicia la página */
     public function sortBy(string $field): void
     {
-        if (! in_array($field, $this->sortable, true)) {
-            return; // ignorar campos no permitidos
+        if (!in_array($field, $this->sortable, true)) {
+            return;
         }
 
         if ($this->sortField === $field) {
             $this->sortDir = $this->sortDir === 'asc' ? 'desc' : 'asc';
         } else {
             $this->sortField = $field;
-            $this->sortDir   = 'asc';
+            $this->sortDir = 'asc';
         }
 
         $this->resetPage();
     }
 
-
-    public function abrirModalVerInfo($proyectoId)
+    public function abrirModalVerInfo($proyectoId): void
     {
-        Log::debug('Datos del usuario procesados Open modal');
+        $proyecto = \App\Models\Proyecto::with([
+            'user',
+            'categoria',
+        ])->findOrFail($proyectoId);
 
-$proyecto = \App\Models\Proyecto::with([
-    'user',
-    'categoria',
-])->findOrFail($proyectoId);
+        $proyecto->caracteristicas_sel = is_array($proyecto->caracteristicas_sel)
+            ? $proyecto->caracteristicas_sel
+            : json_decode($proyecto->caracteristicas_sel, true);
 
-        // Asegúrate de que los campos sean arrays
-        $proyecto->caracteristicas_sel = is_array($proyecto->caracteristicas_sel) ? $proyecto->caracteristicas_sel : json_decode($proyecto->caracteristicas_sel, true);
-        $proyecto->producto_sel        = is_array($proyecto->producto_sel)        ? $proyecto->producto_sel        : json_decode($proyecto->producto_sel, true);
-        $proyecto->categoria_sel       = is_array($proyecto->categoria_sel)       ? $proyecto->categoria_sel       : json_decode($proyecto->categoria_sel, true);
-        
+        $proyecto->producto_sel = is_array($proyecto->producto_sel)
+            ? $proyecto->producto_sel
+            : json_decode($proyecto->producto_sel, true);
+
+        $proyecto->categoria_sel = is_array($proyecto->categoria_sel)
+            ? $proyecto->categoria_sel
+            : json_decode($proyecto->categoria_sel, true);
+
         $this->infoProyecto = $proyecto;
         $this->modalVerInfo = true;
     }
@@ -121,44 +140,42 @@ $proyecto = \App\Models\Proyecto::with([
         $this->resetPage();
     }
 
-    public function clearFilters(): void
-    {
-        $this->filters = [
-            'id'            => null,
-            'cliente'       => null,
-            'estado_pedido' => null,
-            'estado_diseno' => null,
-            'fecha_desde'   => null,
-            'fecha_hasta'   => null,
-            'inactivos'     => false,   // 👈 vuelve a “solo activos”
-        ];
-        $this->resetPage();
-        $this->dispatch('filters-cleared');
-    }
-
     public function updatedPerPage(): void
     {
         $this->resetPage();
     }
 
-
-        public function getHasFiltersProperty(): bool
+    public function clearFilters(): void
     {
-        // Si el checkbox de inactivos está prendido = ya hay filtro
-        if (!empty($this->filters['inactivos'])) return true;
-
-        // Cualquier campo con valor cuenta como filtro
-        $keys = [
-            'id','cliente','estado_pedido','estado_diseno',
-            'fecha_desde','fecha_hasta',
-            // si luego agregas más, inclúyelos aquí
+        $this->filters = [
+            'id'                    => null,
+            'cliente'               => null,
+            'proyecto'              => null,
+            'total'                 => null,
+            'estado_pedido'         => null,
+            'estado_diseno'         => null,
+            'fecha_desde'           => null,
+            'fecha_hasta'           => null,
+            'fecha_produccion_from' => null,
+            'fecha_produccion_to'   => null,
+            'fecha_entrega_from'    => null,
+            'fecha_entrega_to'      => null,
+            'inactivos'             => false,
         ];
 
-        foreach ($keys as $k) {
-            $v = $this->filters[$k] ?? null;
+        $this->activeEstadoTab = 'TODOS';
+        $this->resetPage();
+        $this->dispatch('filters-cleared');
+    }
 
-            if (is_string($v) && trim($v) !== '') return true;
-            if (!is_string($v) && !is_null($v)) return true;
+    public function getHasFiltersProperty(): bool
+    {
+        if (!empty($this->filters['inactivos'])) return true;
+        if ($this->activeEstadoTab !== 'TODOS') return true;
+
+        foreach ($this->filters as $value) {
+            if (is_string($value) && trim($value) !== '') return true;
+            if (!is_string($value) && !is_null($value) && $value !== false) return true;
         }
 
         return false;
@@ -175,13 +192,20 @@ $proyecto = \App\Models\Proyecto::with([
             'usuario.empresa:id,nombre',
             'usuario.sucursal:id,nombre,empresa_id',
             'usuario.sucursal.empresa:id,nombre',
-        ])->where('tipo', $this->activeTab === 'MUESTRAS' ? 'MUESTRA' : 'PEDIDO');
+            'pedidoCaracteristicas.caracteristica',
+            'pedidoOpciones.opcion.caracteristicas',
+        ])->where('tipo', 'PEDIDO');
 
-        // Activos / inactivos
-        if ($this->filters['inactivos']) $query->where('ind_activo', 0);
-        else $query->where('ind_activo', 1);
+        if ($this->filters['inactivos']) {
+            $query->where('ind_activo', 0);
+        } else {
+            $query->where('ind_activo', 1);
+        }
 
-        // Filtros
+        if ($this->activeEstadoTab !== 'TODOS') {
+            $query->where('estado', $this->activeEstadoTab);
+        }
+
         $query
             ->when($this->filters['id'], function ($q, $v) {
                 $ids = collect(preg_split('/[,;\s]+/', (string) $v, -1, PREG_SPLIT_NO_EMPTY))
@@ -189,9 +213,9 @@ $proyecto = \App\Models\Proyecto::with([
                     ->filter();
 
                 if ($ids->isNotEmpty()) {
-                    $q->where(function($w) use ($ids) {
+                    $q->where(function ($w) use ($ids) {
                         $w->whereIn('id', $ids->all())
-                        ->orWhereIn('proyecto_id', $ids->all());
+                          ->orWhereIn('proyecto_id', $ids->all());
                     });
                 }
             })
@@ -199,36 +223,60 @@ $proyecto = \App\Models\Proyecto::with([
                 $v = trim((string) $v);
                 $q->whereHas('proyecto.user', fn($u) =>
                     $u->where('name', 'like', "%{$v}%")
-                    ->orWhere('email', 'like', "%{$v}%")
+                      ->orWhere('email', 'like', "%{$v}%")
                 );
+            })
+            ->when($this->filters['proyecto'], function ($q, $v) {
+                $v = trim((string) $v);
+                $q->whereHas('proyecto', fn($p) =>
+                    $p->where('nombre', 'like', "%{$v}%")
+                );
+            })
+            ->when($this->filters['total'], function ($q, $v) {
+                $q->where('total', 'like', '%' . trim((string) $v) . '%');
             })
             ->when($this->filters['estado_pedido'], fn($q, $v) => $q->where('estado', $v))
             ->when($this->filters['estado_diseno'], fn($q, $v) =>
                 $q->whereHas('proyecto', fn($p) => $p->where('estado', $v))
             )
             ->when($this->filters['fecha_desde'] || $this->filters['fecha_hasta'], function ($q) {
-                $desde = $this->filters['fecha_desde'] ? Carbon::parse($this->filters['fecha_desde'])->startOfDay() : null;
-                $hasta = $this->filters['fecha_hasta'] ? Carbon::parse($this->filters['fecha_hasta'])->endOfDay() : null;
+                $desde = $this->filters['fecha_desde']
+                    ? Carbon::parse($this->filters['fecha_desde'])->startOfDay()
+                    : null;
 
-                if ($desde && $hasta) $q->whereBetween('created_at', [$desde, $hasta]);
-                elseif ($desde) $q->where('created_at', '>=', $desde);
-                elseif ($hasta) $q->where('created_at', '<=', $hasta);
-            });
+                $hasta = $this->filters['fecha_hasta']
+                    ? Carbon::parse($this->filters['fecha_hasta'])->endOfDay()
+                    : null;
 
-        // Restricción por rol (igual)
+                if ($desde && $hasta) {
+                    $q->whereBetween('created_at', [$desde, $hasta]);
+                } elseif ($desde) {
+                    $q->where('created_at', '>=', $desde);
+                } elseif ($hasta) {
+                    $q->where('created_at', '<=', $hasta);
+                }
+            })
+            ->when($this->filters['fecha_produccion_from'], fn($q, $v) => $q->whereDate('fecha_produccion', '>=', $v))
+            ->when($this->filters['fecha_produccion_to'], fn($q, $v) => $q->whereDate('fecha_produccion', '<=', $v))
+            ->when($this->filters['fecha_entrega_from'], fn($q, $v) => $q->whereDate('fecha_entrega', '>=', $v))
+            ->when($this->filters['fecha_entrega_to'], fn($q, $v) => $q->whereDate('fecha_entrega', '<=', $v));
+
         if ($user->hasRole('admin') || $user->can('tablaPedidos-ver-todos-los-pedidos')) {
             // ve todo
         } elseif ($user->hasRole('cliente_principal')) {
             $idsUsuarios = collect($user->subordinados ?? [])
-                ->map(fn ($id) => (int) $id)->filter(fn ($id) => $id > 0)
-                ->prepend($user->id)->unique()->values()->all();
+                ->map(fn($id) => (int) $id)
+                ->filter(fn($id) => $id > 0)
+                ->prepend($user->id)
+                ->unique()
+                ->values()
+                ->all();
 
             $query->whereHas('proyecto', fn($q) => $q->whereIn('usuario_id', $idsUsuarios));
         } else {
             $query->whereHas('proyecto', fn($q) => $q->where('usuario_id', $user->id));
         }
 
-        // Ordenamiento (reusando tu lógica actual)
         $pedidoTable   = (new Pedido)->getTable();
         $proyectoTable = (new Proyecto)->getTable();
         $dir = $this->sortDir === 'asc' ? 'asc' : 'desc';
@@ -240,13 +288,13 @@ $proyecto = \App\Models\Proyecto::with([
             case 'estado':
             case 'fecha_produccion':
             case 'fecha_entrega':
-                $query->orderBy($pedidoTable.'.'.$this->sortField, $dir);
+                $query->orderBy($pedidoTable . '.' . $this->sortField, $dir);
                 break;
 
             case 'estado_diseno':
                 $query->orderBy(
                     Proyecto::select('estado')
-                        ->whereColumn($proyectoTable.'.id', $pedidoTable.'.proyecto_id')
+                        ->whereColumn($proyectoTable . '.id', $pedidoTable . '.proyecto_id')
                         ->limit(1),
                     $dir
                 );
@@ -255,7 +303,7 @@ $proyecto = \App\Models\Proyecto::with([
             case 'proyecto_nombre':
                 $query->orderBy(
                     Proyecto::select('nombre')
-                        ->whereColumn($proyectoTable.'.id', $pedidoTable.'.proyecto_id')
+                        ->whereColumn($proyectoTable . '.id', $pedidoTable . '.proyecto_id')
                         ->limit(1),
                     $dir
                 );
@@ -271,89 +319,85 @@ $proyecto = \App\Models\Proyecto::with([
                 break;
 
             default:
-                $query->orderBy($pedidoTable.'.created_at', 'desc');
+                $query->orderBy($pedidoTable . '.created_at', 'desc');
+                break;
         }
 
         return $query;
     }
 
-
     public function exportExcel()
     {
-        if (! $this->hasFilters) {
+        if (!$this->hasFilters) {
             $this->dispatch('notify', message: 'Para exportar primero aplica al menos 1 filtro.');
             return;
         }
 
-        $query = $this->buildPedidosQuery(); // Builder (sin paginate)
-
-        $tipo  = $this->activeTab === 'MUESTRAS' ? 'MUESTRAS' : 'PEDIDOS';
+        $query = $this->buildPedidosQuery();
         $fecha = now()->format('Y-m-d_His');
 
         return Excel::download(
             new PedidosFilteredExport($query),
-            "pedidos_{$tipo}_{$fecha}.xlsx"
+            "pedidos_{$fecha}.xlsx"
         );
     }
 
-public function abrirModalTallas(int $pedidoId): void
-{
-    $pedido = Pedido::query()
-        ->select('id', 'flag_tallas', 'total')
-        ->where('id', $pedidoId)
-        ->firstOrFail();
+    public function abrirModalTallas(int $pedidoId): void
+    {
+        $pedido = Pedido::query()
+            ->select('id', 'flag_tallas', 'total')
+            ->where('id', $pedidoId)
+            ->firstOrFail();
 
-    if ((int)($pedido->flag_tallas ?? 0) !== 1) {
-        $this->dispatch('notify', message: 'Este pedido no maneja tallas.');
-        return;
-    }
-
-    $ptTable = (new PedidoTalla)->getTable();
-    $gTable  = (new GrupoTalla)->getTable();
-
-    // Si NO tienes modelo Talla, usa 'tallas' directo (ver alternativa abajo)
-    $tTable  = class_exists(\App\Models\Talla::class) ? (new \App\Models\Talla)->getTable() : 'tallas';
-
-    $rows = DB::table("$ptTable as pt")
-        ->join("$gTable as g", 'g.id', '=', 'pt.grupo_talla_id')
-        ->join("$tTable as t", 't.id', '=', 'pt.talla_id')
-        ->where('pt.pedido_id', $pedidoId)
-        ->selectRaw('g.id as grupo_id, g.nombre as grupo, t.id as talla_id, t.nombre as talla, SUM(COALESCE(pt.cantidad,0)) as cantidad')
-        ->groupBy('g.id', 'g.nombre', 't.id', 't.nombre')
-        ->orderBy('g.nombre')
-        ->orderBy('t.nombre')
-        ->get();
-
-    $grupos = [];
-    foreach ($rows as $r) {
-        $gid = (int)$r->grupo_id;
-
-        if (!isset($grupos[$gid])) {
-            $grupos[$gid] = [
-                'grupo_id' => $gid,
-                'grupo'    => (string)$r->grupo,
-                'items'    => [],
-                'subtotal' => 0,
-            ];
+        if ((int) ($pedido->flag_tallas ?? 0) !== 1) {
+            $this->dispatch('notify', message: 'Este pedido no maneja tallas.');
+            return;
         }
 
-        $cant = (int)$r->cantidad;
+        $ptTable = (new PedidoTalla)->getTable();
+        $gTable  = (new GrupoTalla)->getTable();
+        $tTable  = class_exists(\App\Models\Talla::class) ? (new \App\Models\Talla)->getTable() : 'tallas';
 
-        $grupos[$gid]['items'][] = [
-            'talla_id' => (int)$r->talla_id,
-            'talla'    => (string)$r->talla,
-            'cantidad' => $cant,
-        ];
+        $rows = DB::table("$ptTable as pt")
+            ->join("$gTable as g", 'g.id', '=', 'pt.grupo_talla_id')
+            ->join("$tTable as t", 't.id', '=', 'pt.talla_id')
+            ->where('pt.pedido_id', $pedidoId)
+            ->selectRaw('g.id as grupo_id, g.nombre as grupo, t.id as talla_id, t.nombre as talla, SUM(COALESCE(pt.cantidad,0)) as cantidad')
+            ->groupBy('g.id', 'g.nombre', 't.id', 't.nombre')
+            ->orderBy('g.nombre')
+            ->orderBy('t.nombre')
+            ->get();
 
-        $grupos[$gid]['subtotal'] += $cant;
+        $grupos = [];
+
+        foreach ($rows as $r) {
+            $gid = (int) $r->grupo_id;
+
+            if (!isset($grupos[$gid])) {
+                $grupos[$gid] = [
+                    'grupo_id' => $gid,
+                    'grupo'    => (string) $r->grupo,
+                    'items'    => [],
+                    'subtotal' => 0,
+                ];
+            }
+
+            $cant = (int) $r->cantidad;
+
+            $grupos[$gid]['items'][] = [
+                'talla_id' => (int) $r->talla_id,
+                'talla'    => (string) $r->talla,
+                'cantidad' => $cant,
+            ];
+
+            $grupos[$gid]['subtotal'] += $cant;
+        }
+
+        $this->tallasDistribucionPorGrupo = array_values($grupos);
+        $this->tallasTotal = array_sum(array_column($this->tallasDistribucionPorGrupo, 'subtotal'));
+        $this->tallasPedidoId = $pedidoId;
+        $this->modalTallas = true;
     }
-
-    $this->tallasDistribucionPorGrupo = array_values($grupos);
-    $this->tallasTotal = array_sum(array_column($this->tallasDistribucionPorGrupo, 'subtotal'));
-
-    $this->tallasPedidoId = $pedidoId;
-    $this->modalTallas = true;
-}
 
     public function cerrarModalTallas(): void
     {
@@ -363,142 +407,10 @@ public function abrirModalTallas(int $pedidoId): void
         $this->tallasTotal = 0;
     }
 
-    /* ---- Render ---- */
-
     public function render()
     {
-        $user = auth()->user();
-
-        $query = Pedido::with([
-            'producto.categoria',
-            'proyecto.user',
-                'usuario:id,name,empresa_id,sucursal_id',
-                'usuario.empresa:id,nombre',
-                'usuario.sucursal:id,nombre,empresa_id',
-                'usuario.sucursal.empresa:id,nombre',
-
-            'pedidoCaracteristicas.caracteristica',
-            'pedidoOpciones.opcion.caracteristicas',
-            'usuario:id,name',
-        ])->where('tipo', $this->activeTab === 'MUESTRAS' ? 'MUESTRA' : 'PEDIDO');
-
-            /* 👇 Filtro base: activos / inactivos */
-        if ($this->filters['inactivos']) {
-            // Check marcado → solo inactivos
-            $query->where('ind_activo', 0);
-        } else {
-            // Sin check → solo activos
-            $query->where('ind_activo', 1);
-        }
-
-        // ---------- Filtros ----------
-        $query
-            // ID: pedido.id o pedido.proyecto_id
-            ->when($this->filters['id'], function ($q, $v) {
-                $ids = collect(preg_split('/[,;\s]+/', (string) $v, -1, PREG_SPLIT_NO_EMPTY))
-                    ->map(fn($i) => (int) trim($i))
-                    ->filter();
-                if ($ids->isNotEmpty()) {
-                    $q->where(function($w) use ($ids) {
-                        $w->whereIn('id', $ids->all())
-                        ->orWhereIn('proyecto_id', $ids->all());
-                    });
-                }
-            })
-            // Cliente: nombre o email del usuario dueño del proyecto
-            ->when($this->filters['cliente'], function ($q, $v) {
-                $v = trim((string) $v);
-                $q->whereHas('proyecto.user', fn($u) =>
-                    $u->where('name', 'like', "%{$v}%")
-                    ->orWhere('email', 'like', "%{$v}%")
-                );
-            })
-            // Estado del pedido
-            ->when($this->filters['estado_pedido'], fn($q, $v) =>
-                $q->where('estado', $v)
-            )
-            // Estado del diseño (en proyectos)
-            ->when($this->filters['estado_diseno'], fn($q, $v) =>
-                $q->whereHas('proyecto', fn($p) => $p->where('estado', $v))
-            )
-            // Rango de fechas por created_at del pedido
-            ->when($this->filters['fecha_desde'] || $this->filters['fecha_hasta'], function ($q) {
-                $desde = $this->filters['fecha_desde'] ? Carbon::parse($this->filters['fecha_desde'])->startOfDay() : null;
-                $hasta = $this->filters['fecha_hasta'] ? Carbon::parse($this->filters['fecha_hasta'])->endOfDay()   : null;
-                if ($desde && $hasta)      $q->whereBetween('created_at', [$desde, $hasta]);
-                elseif ($desde)            $q->where('created_at', '>=', $desde);
-                elseif ($hasta)            $q->where('created_at', '<=', $hasta);
-            });
-
-        // ---------- Restricción por rol (igual que ya tienes) ----------
-        if ($user->hasRole('admin') || $user->can('tablaPedidos-ver-todos-los-pedidos')) {
-            // ve todo
-        } elseif ($user->hasRole('cliente_principal')) {
-            $idsUsuarios = collect($user->subordinados ?? [])
-                ->map(fn ($id) => (int) $id)->filter(fn ($id) => $id > 0)
-                ->prepend($user->id)->unique()->values()->all();
-            $query->whereHas('proyecto', fn($q) => $q->whereIn('usuario_id', $idsUsuarios));
-        } elseif ($user->hasAnyRole(['cliente_subordinado','estaf'])) {
-            $query->whereHas('proyecto', fn($q) => $q->where('usuario_id', $user->id));
-        } else {
-            $query->whereHas('proyecto', fn($q) => $q->where('usuario_id', $user->id));
-        }
-
-        $pedidoTable   = (new Pedido)->getTable();    // 'pedido' o 'pedidos' según tu modelo
-        $proyectoTable = (new Proyecto)->getTable();  // normalmente 'proyectos'
-        $userTable     = (new User)->getTable();      // normalmente 'users'
-
-        // ---------- Ordenamiento ----------
-        $dir = $this->sortDir === 'asc' ? 'asc' : 'desc';
-
-        switch ($this->sortField) {
-            case 'id':
-            case 'created_at':
-            case 'total':
-            case 'estado':
-            case 'fecha_produccion':
-            case 'fecha_entrega':
-                $query->orderBy($pedidoTable.'.'.$this->sortField, $dir);
-                break;
-
-            case 'estado_diseno':
-                $query->orderBy(
-                    Proyecto::select('estado')
-                        ->whereColumn($proyectoTable.'.id', $pedidoTable.'.proyecto_id')
-                        ->limit(1),
-                    $dir
-                );
-                break;
-
-            case 'proyecto_nombre':
-                $query->orderBy(
-                    Proyecto::select('nombre')
-                        ->whereColumn($proyectoTable.'.id', $pedidoTable.'.proyecto_id')
-                        ->limit(1),
-                    $dir
-                );
-                break;
-
-            case 'cliente_nombre':
-                    // ⇩ Ordenar por ID del cliente/usuario (dueño del proyecto) con subselect crudo
-                    $query->orderByRaw(
-                        "(SELECT {$proyectoTable}.usuario_id
-                        FROM {$proyectoTable}
-                        WHERE {$proyectoTable}.id = {$pedidoTable}.proyecto_id
-                        LIMIT 1) {$dir}"
-                    );
-                break;
-
-            default:
-                $query->orderBy($pedidoTable.'.created_at', 'desc');
-        }
-
         return view('livewire.dashboard.cliente-panel.pedidos', [
-           'pedidos' => $query->paginate($this->perPage),
+            'pedidos' => $this->buildPedidosQuery()->paginate($this->perPage),
         ]);
     }
-
-
-    
-    
 }

@@ -12,7 +12,7 @@
         @click="toggle()"
         class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
     >
-        Pedidos de Proyecto
+        Muestras de Proyecto
     <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
     </h2>
 
@@ -166,34 +166,7 @@
                         @endif
             
 
-                <!-- PESTAÑAS POR ESTADO DEL PEDIDO -->
-                <div class="mb-4">
-                    <div class="overflow-x-auto">
-                        <ul class="flex flex-nowrap sm:flex-wrap border-b border-gray-200 gap-1 min-w-max sm:min-w-0">
-                            @foreach ($this->tabsEstado as $tab)
-                                <li>
-                                    <button
-                                        type="button"
-                                        wire:click="setEstadoTab('{{ $tab }}')"
-                                        @class([
-                                            'px-3 py-2 rounded-t-lg text-sm whitespace-nowrap transition',
-                                            'border-b-2 font-semibold bg-white border-blue-500 text-blue-600' => $activeEstadoTab === $tab,
-                                            'text-gray-600 hover:text-blue-500 border-b-2 border-transparent' => $activeEstadoTab !== $tab,
-                                        ])
-                                    >
-                                        {{ $tab }}
-                                    </button>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-                <div class="mb-3 flex items-center justify-between">
-                    <div class="text-sm text-gray-600">
-                        Mostrando:
-                        <span class="font-semibold text-blue-600">{{ $activeEstadoTab }}</span>
-                    </div>
-                </div>
+
 
             @php
                 $arrow = function(string $field) use ($sortField, $sortDir) {
@@ -202,7 +175,49 @@
                 };
             @endphp
 
-    
+            @php
+    $tabsMuestraStyles = [
+        'TODOS'         => 'bg-slate-100 text-slate-800',
+        'PENDIENTE'     => 'bg-yellow-100 text-yellow-800',
+        'SOLICITADA'    => 'bg-blue-100 text-blue-800',
+        'MUESTRA LISTA' => 'bg-emerald-100 text-emerald-800',
+        'ENTREGADA'     => 'bg-green-100 text-green-800',
+        'CANCELADA'     => 'bg-gray-100 text-gray-800',
+    ];
+@endphp
+
+<!-- PESTAÑAS POR ESTADO DE LA MUESTRA -->
+<div class="mb-4">
+    <div class="overflow-x-auto">
+        <ul class="flex flex-nowrap sm:flex-wrap border-b border-gray-200 gap-1 min-w-max sm:min-w-0">
+            @foreach ($this->tabsEstado as $tab)
+                <li>
+                    <button
+                        type="button"
+                        wire:click="setEstadoTab('{{ $tab }}')"
+                        @class([
+                            'px-3 py-2 rounded-t-lg text-sm whitespace-nowrap transition',
+                            'border-b-2 font-semibold bg-white border-blue-500 text-blue-600' => $activeEstadoTab === $tab,
+                            'text-gray-600 hover:text-blue-500 border-b-2 border-transparent' => $activeEstadoTab !== $tab,
+                        ])
+                    >
+                        {{ $tab }}
+
+                        @if($tab !== 'TODOS')
+                            <span class="ml-1 text-xs">
+                                ({{ $estadoTabsCounts[$tab] ?? 0 }})
+                            </span>
+                        @else
+                            <span class="ml-1 text-xs">
+                                ({{ $estadoTabsCounts['TODOS'] ?? 0 }})
+                            </span>
+                        @endif
+                    </button>
+                </li>
+            @endforeach
+        </ul>
+    </div>
+</div>
 
         <div class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8">
         <table class="w-full table-auto border-collapse border border-gray-200">
@@ -284,30 +299,9 @@
                     </th>
 
                     <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
-                        <button class="inline-flex items-center gap-1 hover:text-blue-600" wire:click="sortBy('estado_diseno')">
-                            <span>Estado del Diseño</span>
-                            <span class="text-xs">
-                                @if($sortField === 'estado_diseno')
-                                    {{ $sortDir === 'asc' ? '▲' : '▼' }}
-                                @else
-                                    ⇵
-                                @endif
-                            </span>
-                        </button>
+                        Estado de la Muestra
                     </th>
 
-                    <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
-                        <button class="inline-flex items-center gap-1 hover:text-blue-600" wire:click="sortBy('estado')">
-                            <span>Estado del Pedido</span>
-                            <span class="text-xs">
-                                @if($sortField === 'estado')
-                                    {{ $sortDir === 'asc' ? '▲' : '▼' }}
-                                @else
-                                    ⇵
-                                @endif
-                            </span>
-                        </button>
-                    </th>
 
                     <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
                         <button class="inline-flex items-center gap-1 hover:text-blue-600" wire:click="sortBy('fecha_produccion')">
@@ -420,54 +414,28 @@
                         </div>
                     </th>
 
-                    {{-- Filtro Estado Diseño --}}
-                    <th class="px-3 py-2">
-                        <div x-data="{ open:false }" class="relative inline-flex items-center">
-                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="Filtrar Estado Diseño">⋮</button>
-                            <div x-cloak x-show="open" @click.away="open=false" x-transition class="absolute z-50 mt-1 w-56 rounded-lg border bg-white shadow p-3">
-                                <label class="block text-xs text-gray-600 mb-1">Estado del Diseño</label>
-                                <select class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" wire:model.live="filters.estado_diseno">
-                                    <option value="">— Cualquiera —</option>
-                                    <option value="PENDIENTE">PENDIENTE</option>
-                                    <option value="ASIGNADO">ASIGNADO</option>
-                                    <option value="EN PROCESO">EN PROCESO</option>
-                                    <option value="REVISION">REVISION</option>
-                                    <option value="DISEÑO APROBADO">DISEÑO APROBADO</option>
-                                    <option value="DISEÑO RECHAZADO">DISEÑO RECHAZADO</option>
-                                    <option value="CANCELADO">CANCELADO</option>
-                                </select>
-                                <div class="mt-2 flex justify-end gap-2">
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.estado_diseno','')">Limpiar</button>
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
-                                </div>
-                            </div>
-                        </div>
-                    </th>
+                    {{-- Filtro Estado Muestra --}}
+<th class="px-3 py-2">
+    <div x-data="{ open:false }" class="relative inline-flex items-center">
+        <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="Filtrar Estado de la Muestra">⋮</button>
+        <div x-cloak x-show="open" @click.away="open=false" x-transition class="absolute z-50 mt-1 w-56 rounded-lg border bg-white shadow p-3">
+            <label class="block text-xs text-gray-600 mb-1">Estado de la Muestra</label>
+            <select class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" wire:model.live="filters.estado_pedido">
+                <option value="">— Cualquiera —</option>
+                <option value="PENDIENTE">PENDIENTE</option>
+                <option value="SOLICITADA">SOLICITADA</option>
+                <option value="MUESTRA LISTA">MUESTRA LISTA</option>
+                <option value="ENTREGADA">ENTREGADA</option>
+                <option value="CANCELADA">CANCELADA</option>
+            </select>
+            <div class="mt-2 flex justify-end gap-2">
+                <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.estado_pedido','')">Limpiar</button>
+                <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</th>
 
-                    {{-- Filtro Estado Pedido --}}
-                    <th class="px-3 py-2">
-                        <div x-data="{ open:false }" class="relative inline-flex items-center">
-                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="Filtrar Estado Pedido">⋮</button>
-                            <div x-cloak x-show="open" @click.away="open=false" x-transition class="absolute z-50 mt-1 w-56 rounded-lg border bg-white shadow p-3">
-                                <label class="block text-xs text-gray-600 mb-1">Estado del Pedido</label>
-                                <select class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" wire:model.live="filters.estado_pedido">
-                                    <option value="">— Cualquiera —</option>
-                                    <option value="PENDIENTE">PENDIENTE</option>
-                                    <option value="APROBADO">APROBADO</option>
-                                    <option value="POR PROGRAMAR">POR PROGRAMAR</option>
-                                    <option value="PROGRAMADO">PROGRAMADO</option>
-                                    <option value="ENTREGADO">ENTREGADO</option>
-                                    <option value="RECHAZADO">RECHAZADO</option>
-                                    <option value="CANCELADO">CANCELADO</option>
-                                    <option value="ARCHIVADO">ARCHIVADO</option>
-                                </select>
-                                <div class="mt-2 flex justify-end gap-2">
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.estado_pedido','')">Limpiar</button>
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
-                                </div>
-                            </div>
-                        </div>
-                    </th>
 
                     {{-- Fechas --}}
                     <th class="px-3 py-2">
@@ -586,38 +554,20 @@
                         {{-- Estado Diseño (chips fijos estilo HojaViewer) --}}
                         <td class="px-3 py-2">
                             @php
-                                $map = [
-                                    'PENDIENTE'        => 'bg-yellow-400 text-black',
-                                    'ASIGNADO'         => 'bg-blue-500 text-white',
-                                    'EN PROCESO'       => 'bg-orange-500 text-white',
-                                    'REVISION'         => 'bg-purple-600 text-white',
-                                    'DISEÑO APROBADO'  => 'bg-emerald-600 text-white',
-                                    'DISEÑO RECHAZADO' => 'bg-red-600 text-white',
-                                    'CANCELADO'        => 'bg-gray-500 text-white',
+                                $mapMuestra = [
+                                    'PENDIENTE'     => 'bg-yellow-400 text-black',
+                                    'SOLICITADA'    => 'bg-blue-500 text-white',
+                                    'MUESTRA LISTA' => 'bg-emerald-600 text-white',
+                                    'ENTREGADA'     => 'bg-green-600 text-white',
+                                    'CANCELADA'     => 'bg-gray-500 text-white',
                                 ];
-                                $estadoDiseno = strtoupper($pedido->proyecto->estado);
-                                $clase = $map[$estadoDiseno] ?? 'bg-gray-200 text-gray-700';
-                            @endphp
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[11rem] justify-center {{ $clase }}">
-                                {{ $estadoDiseno }}
-                            </span>
-                        </td>
 
-                        {{-- Estado Pedido --}}
-                        <td class="px-3 py-2">
-                            @php
-                                $color = match(strtoupper($pedido->estado)){
-                                    'APROBADO'      => 'bg-emerald-600 text-white',
-                                    'ENTREGADO'     => 'bg-blue-600 text-white',
-                                    'RECHAZADO'     => 'bg-red-600 text-white',
-                                    'ARCHIVADO'     => 'bg-gray-600 text-white',
-                                    'PROGRAMADO'    => 'bg-indigo-600 text-white',
-                                    'POR PROGRAMAR' => 'bg-amber-500 text-black',
-                                    default         => 'bg-yellow-400 text-black',
-                                };
+                                $estadoMuestra = strtoupper($pedido->estatus_muestra ?? 'PENDIENTE');
+                                $claseMuestra = $mapMuestra[$estadoMuestra] ?? 'bg-gray-200 text-gray-700';
                             @endphp
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[9rem] justify-center {{ $color }}">
-                                {{ strtoupper($pedido->estado) }}
+
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[11rem] justify-center {{ $claseMuestra }}">
+                                {{ $estadoMuestra }}
                             </span>
                         </td>
 
