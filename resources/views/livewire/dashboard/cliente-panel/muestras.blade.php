@@ -415,26 +415,26 @@
                     </th>
 
                     {{-- Filtro Estado Muestra --}}
-<th class="px-3 py-2">
-    <div x-data="{ open:false }" class="relative inline-flex items-center">
-        <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="Filtrar Estado de la Muestra">⋮</button>
-        <div x-cloak x-show="open" @click.away="open=false" x-transition class="absolute z-50 mt-1 w-56 rounded-lg border bg-white shadow p-3">
-            <label class="block text-xs text-gray-600 mb-1">Estado de la Muestra</label>
-            <select class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" wire:model.live="filters.estado_pedido">
-                <option value="">— Cualquiera —</option>
-                <option value="PENDIENTE">PENDIENTE</option>
-                <option value="SOLICITADA">SOLICITADA</option>
-                <option value="MUESTRA LISTA">MUESTRA LISTA</option>
-                <option value="ENTREGADA">ENTREGADA</option>
-                <option value="CANCELADA">CANCELADA</option>
-            </select>
-            <div class="mt-2 flex justify-end gap-2">
-                <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.estado_pedido','')">Limpiar</button>
-                <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
-            </div>
-        </div>
-    </div>
-</th>
+                <th class="px-3 py-2">
+                    <div x-data="{ open:false }" class="relative inline-flex items-center">
+                        <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="Filtrar Estado de la Muestra">⋮</button>
+                        <div x-cloak x-show="open" @click.away="open=false" x-transition class="absolute z-50 mt-1 w-56 rounded-lg border bg-white shadow p-3">
+                            <label class="block text-xs text-gray-600 mb-1">Estado de la Muestra</label>
+                            <select class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" wire:model.live="filters.estado_pedido">
+                                <option value="">— Cualquiera —</option>
+                                <option value="PENDIENTE">PENDIENTE</option>
+                                <option value="SOLICITADA">SOLICITADA</option>
+                                <option value="MUESTRA LISTA">MUESTRA LISTA</option>
+                                <option value="ENTREGADA">ENTREGADA</option>
+                                <option value="CANCELADA">CANCELADA</option>
+                            </select>
+                            <div class="mt-2 flex justify-end gap-2">
+                                <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.estado_pedido','')">Limpiar</button>
+                                <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                </th>
 
 
                     {{-- Fechas --}}

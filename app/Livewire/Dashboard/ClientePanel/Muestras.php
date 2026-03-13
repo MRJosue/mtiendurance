@@ -43,6 +43,15 @@ class Muestras extends Component
         'CANCELADA'     => 0,
     ];
 
+    public array $tabPermissions = [
+    'TODOS'         => null,
+    'PENDIENTE'     => 'muestras-tab-pendiente',
+    'SOLICITADA'    => 'muestras-tab-solicitada',
+    'MUESTRA LISTA' => 'muestras-tab-muestra-lista',
+    'ENTREGADA'     => 'muestras-tab-entregada',
+    'CANCELADA'     => 'muestras-tab-cancelada',
+    ];
+
     public string $activeEstadoTab = 'TODOS';
 
     public int $perPage = 100;
@@ -81,8 +90,8 @@ class Muestras extends Component
     {
         $this->loadEstadoTabsCounts();
 
-        if (!in_array($this->activeEstadoTab, $this->tabsEstado, true)) {
-            $this->activeEstadoTab = 'TODOS';
+        if (!in_array($this->activeEstadoTab, $this->tabsEstadoVisibles, true)) {
+            $this->activeEstadoTab = $this->tabsEstadoVisibles[0] ?? 'TODOS';
         }
     }
 
@@ -90,7 +99,7 @@ class Muestras extends Component
     {
         $tab = strtoupper(trim($tab));
 
-        if (! in_array($tab, $this->tabsEstado, true)) {
+        if (! in_array($tab, $this->tabsEstadoVisibles, true)) {
             return;
         }
 
@@ -113,7 +122,7 @@ class Muestras extends Component
         }
 
         // Restricción por rol
-        if ($user->hasRole('admin') || $user->can('tablaPedidos-ver-todos-los-pedidos')) {
+        if ($user->hasRole('admin') || $user->can('tablaPedidos-ver-todas-las-muestras')) {
             // ve todo
         } elseif ($user->hasRole('cliente_principal')) {
             $idsUsuarios = collect($user->subordinados ?? [])
@@ -135,15 +144,21 @@ class Muestras extends Component
             ->pluck('total', 'estatus_muestra')
             ->toArray();
 
-        $this->estadoTabsCounts = [
-            'TODOS'         => (int) array_sum($rows),
-            'PENDIENTE'     => (int) ($rows['PENDIENTE'] ?? 0),
-            'SOLICITADA'    => (int) ($rows['SOLICITADA'] ?? 0),
-            'MUESTRA LISTA' => (int) ($rows['MUESTRA LISTA'] ?? 0),
-            'ENTREGADA'     => (int) ($rows['ENTREGADA'] ?? 0),
-            'CANCELADA'     => (int) ($rows['CANCELADA'] ?? 0),
-        ];
-    }
+            $counts = [
+                'TODOS'         => (int) array_sum($rows),
+                'PENDIENTE'     => (int) ($rows['PENDIENTE'] ?? 0),
+                'SOLICITADA'    => (int) ($rows['SOLICITADA'] ?? 0),
+                'MUESTRA LISTA' => (int) ($rows['MUESTRA LISTA'] ?? 0),
+                'ENTREGADA'     => (int) ($rows['ENTREGADA'] ?? 0),
+                'CANCELADA'     => (int) ($rows['CANCELADA'] ?? 0),
+            ];
+
+            $this->estadoTabsCounts = collect($counts)
+                ->mapWithKeys(function ($value, $key) {
+                    return [$key => $this->canViewTab($key) ? $value : 0];
+                })
+                ->toArray();
+                }
 
     public function buscarPorFiltros(): void
     {
@@ -201,7 +216,9 @@ class Muestras extends Component
             'inactivos'     => false,
         ];
 
-        $this->activeEstadoTab = 'TODOS';
+        $this->activeEstadoTab = in_array('TODOS', $this->tabsEstadoVisibles, true)
+        ? 'TODOS'
+        : ($this->tabsEstadoVisibles[0] ?? 'TODOS');
 
         $this->resetPage();
         $this->loadEstadoTabsCounts();
@@ -287,7 +304,7 @@ class Muestras extends Component
                 elseif ($hasta) $q->where('created_at', '<=', $hasta);
             });
 
-        if ($user->hasRole('admin') || $user->can('tablaPedidos-ver-todos-los-pedidos')) {
+        if ($user->hasRole('admin') || $user->can('tablaPedidos-ver-todas-las-muestras')) {
             // ve todo
         } elseif ($user->hasRole('cliente_principal')) {
             $idsUsuarios = collect($user->subordinados ?? [])
@@ -429,6 +446,37 @@ class Muestras extends Component
         $this->tallasTotal = 0;
     }
 
+    public function getTabsEstadoVisiblesProperty(): array
+    {
+        return collect($this->tabsEstado)
+            ->filter(fn ($tab) => $this->canViewTab($tab))
+            ->values()
+            ->all();
+    }
+
+    protected function canViewTab(string $tab): bool
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return false;
+        }
+
+        // Admin ve todos los tabs
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        $permission = $this->tabPermissions[$tab] ?? null;
+
+        // Si no requiere permiso explícito, se permite
+        if (!$permission) {
+            return true;
+        }
+
+        return $user->can($permission);
+    }
+
     public function render()
     {
         $this->loadEstadoTabsCounts();
@@ -489,7 +537,7 @@ class Muestras extends Component
                 elseif ($hasta) $q->where('created_at', '<=', $hasta);
             });
 
-        if ($user->hasRole('admin') || $user->can('tablaPedidos-ver-todos-los-pedidos')) {
+        if ($user->hasRole('admin') || $user->can('tablaPedidos-ver-todas-las-muestras')) {
             // ve todo
         } elseif ($user->hasRole('cliente_principal')) {
             $idsUsuarios = collect($user->subordinados ?? [])
