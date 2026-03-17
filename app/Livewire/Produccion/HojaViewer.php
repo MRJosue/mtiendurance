@@ -64,6 +64,9 @@ class HojaViewer extends Component
             'abrir_chat' => false,
             'crear_tarea' => false,
             'ver_detalle' => true,
+            'ver-tallas'=>false,
+            'editar-tallas'=>false,
+            'editar_total_tallas'=>false,
             'bulk_aprobar' => false,
             'crear_pedido' => false,
             'editar_tarea' => false,
@@ -158,7 +161,7 @@ class HojaViewer extends Component
     // ✅ Modal ver tallas (solo lectura)
     public bool $modal_tallas = false;
     public ?int $tallas_pedido_id = null;
-
+    public ?int $tallas_edit_total = null;
     public array $tallas_grupos = [];
     public int $tallas_total = 0;
 
@@ -1682,7 +1685,7 @@ public function abrirModalEditarTallas(int $pedidoId): void
 {
     $this->resetTallasEdit();
 
-    $pedido = \App\Models\Pedido::query()
+    $pedido = Pedido::query()
         ->with(['pedidoTallas:id,pedido_id,grupo_talla_id,talla_id,cantidad'])
         ->select('id', 'producto_id', 'flag_tallas', 'total')
         ->findOrFail($pedidoId);
@@ -1706,7 +1709,8 @@ public function abrirModalEditarTallas(int $pedidoId): void
         $key = $pt->grupo_talla_id . '_' . $pt->talla_id;
         $this->inputsTallas[$key] = (int)$pt->cantidad;
     }
-
+    
+    $this->tallas_edit_total = (int) ($pedido->total ?? 0);
     $this->tallas_edit_pedido_id = $pedidoId;
     $this->modal_tallas_edit = true;
 }
@@ -1723,6 +1727,7 @@ private function resetTallasEdit(): void
     $this->inputsTallas = [];
     $this->cantidades_tallas = [];
     $this->error_tallas = null;
+    $this->tallas_edit_total = null;
 }
 
 public function recopilarCantidadesTallas(): void
@@ -1740,15 +1745,16 @@ public function recopilarCantidadesTallas(): void
 
 public function guardarTallasEdit(): void
 {
-    if (!$this->tallas_edit_pedido_id) return;
+    if (!$this->tallas_edit_pedido_id) {
+        return;
+    }
 
     $this->recopilarCantidadesTallas();
 
-    // total de tallas
     $totalTallas = 0;
     foreach ($this->cantidades_tallas as $tallas) {
         foreach ($tallas as $cantidad) {
-            $totalTallas += (int)$cantidad;
+            $totalTallas += (int) $cantidad;
         }
     }
 
@@ -1757,19 +1763,35 @@ public function guardarTallasEdit(): void
         return;
     }
 
-    DB::transaction(function () use ($totalTallas) {
+    $pedido = \App\Models\Pedido::query()
+        ->select('id', 'producto_id', 'total')
+        ->findOrFail($this->tallas_edit_pedido_id);
 
-        $pedido = \App\Models\Pedido::query()
-            ->select('id', 'producto_id', 'total')
-            ->findOrFail($this->tallas_edit_pedido_id);
+    $puedeEditarTotalTallas = $this->can('editar_total_tallas');
 
-        // Limpia anteriores
+    // Si no tiene permiso, el total esperado es el actual del pedido
+    $totalEsperado = $puedeEditarTotalTallas
+        ? (int) ($this->tallas_edit_total ?? 0)
+        : (int) ($pedido->total ?? 0);
+
+    if ($totalEsperado <= 0) {
+        $this->error_tallas = 'El total esperado debe ser mayor a 0.';
+        return;
+    }
+
+    if ($totalTallas !== $totalEsperado) {
+        $this->error_tallas = "La suma de tallas ({$totalTallas}) no coincide con el total esperado ({$totalEsperado}).";
+        return;
+    }
+
+    DB::transaction(function () use ($pedido, $totalEsperado) {
         \App\Models\PedidoTalla::where('pedido_id', $pedido->id)->delete();
 
-        // Inserta nuevas
         foreach ($this->cantidades_tallas as $grupoId => $tallas) {
             foreach ($tallas as $tallaId => $cantidad) {
-                if ((int)$cantidad <= 0) continue;
+                if ((int)$cantidad <= 0) {
+                    continue;
+                }
 
                 \App\Models\PedidoTalla::create([
                     'pedido_id'      => $pedido->id,
@@ -1780,17 +1802,14 @@ public function guardarTallasEdit(): void
             }
         }
 
-        // ✅ si el producto tiene grupos, forzamos total = suma tallas
         $pedido->update([
-            'total'      => $totalTallas,
-            'flag_tallas'=> 1,
+            'total'       => $totalEsperado,
+            'flag_tallas' => 1,
         ]);
     });
 
     $this->dispatch('toast', message: '✅ Tallas guardadas correctamente.', type: 'success');
-
-    // refresca tabla si tienes evento
-    $this->dispatch('ActualizarTablaPedido'); // o el evento que use tu viewer
+    $this->dispatch('ActualizarTablaPedido');
     $this->cerrarModalEditarTallas();
 }
 //helper para limpiar selección (opcional, según UX)
@@ -1798,5 +1817,11 @@ private function clearSelection(): void
 {
     $this->selectedIds = [];
 }
+
+public function irADetalle(int $proyectoId)
+{
+    return redirect()->route('proyecto.show', $proyectoId);
+}
+
 
 }

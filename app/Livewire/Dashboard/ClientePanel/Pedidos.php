@@ -22,7 +22,6 @@ class Pedidos extends Component
 
     protected $paginationTheme = 'tailwind';
 
-    /* ---- Tabs por estado del pedido ---- */
     public array $tabsEstado = [
         'TODOS',
         'PENDIENTE',
@@ -36,6 +35,22 @@ class Pedidos extends Component
     ];
 
     public string $activeEstadoTab = 'TODOS';
+
+    /**
+     * Si el valor es null, no requiere permiso.
+     * Cambia los nombres de permisos por los reales de tu sistema.
+     */
+    protected array $tabsEstadoPermisos = [
+        'TODOS'          => null,
+        'PENDIENTE'      => 'pedidos-tab-pendiente',
+        'APROBADO'       => 'pedidos-tab-aprobado',
+        'POR PROGRAMAR'  => 'pedidos-tab-por-programar',
+        'PROGRAMADO'     => 'pedidos-tab-programado',
+        'ENTREGADO'      => 'pedidos-tab-entregado',
+        'RECHAZADO'      => 'pedidos-tab-rechazado',
+        'CANCELADO'      => 'pedidos-tab-cancelado',
+        'ARCHIVADO'      => 'pedidos-tab-archivado',
+    ];
 
     public int $perPage = 100;
 
@@ -81,9 +96,34 @@ class Pedidos extends Component
     public array $tallasDistribucionPorGrupo = [];
     public int $tallasTotal = 0;
 
+    public function mount(): void
+    {
+        if (!in_array($this->activeEstadoTab, $this->tabsEstadoVisibles, true)) {
+            $this->activeEstadoTab = $this->tabsEstadoVisibles[0] ?? 'TODOS';
+        }
+    }
+
+    public function getTabsEstadoVisiblesProperty(): array
+    {
+        $user = auth()->user();
+
+        return collect($this->tabsEstado)
+            ->filter(function (string $tab) use ($user) {
+                $permiso = $this->tabsEstadoPermisos[$tab] ?? null;
+
+                if (blank($permiso)) {
+                    return true;
+                }
+
+                return $user?->hasRole('admin') || $user?->can($permiso);
+            })
+            ->values()
+            ->all();
+    }
+
     public function setEstadoTab(string $tab): void
     {
-        if (!in_array($tab, $this->tabsEstado, true)) {
+        if (!in_array($tab, $this->tabsEstadoVisibles, true)) {
             return;
         }
 
@@ -163,7 +203,10 @@ class Pedidos extends Component
             'inactivos'             => false,
         ];
 
-        $this->activeEstadoTab = 'TODOS';
+        $this->activeEstadoTab = in_array('TODOS', $this->tabsEstadoVisibles, true)
+            ? 'TODOS'
+            : ($this->tabsEstadoVisibles[0] ?? 'TODOS');
+
         $this->resetPage();
         $this->dispatch('filters-cleared');
     }
@@ -202,7 +245,10 @@ class Pedidos extends Component
             $query->where('ind_activo', 1);
         }
 
-        if ($this->activeEstadoTab !== 'TODOS') {
+        if (
+            $this->activeEstadoTab !== 'TODOS' &&
+            in_array($this->activeEstadoTab, $this->tabsEstadoVisibles, true)
+        ) {
             $query->where('estado', $this->activeEstadoTab);
         }
 

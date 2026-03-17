@@ -84,8 +84,8 @@ class ManageProjects extends Component
 
 
             /* ---------- Props UI ---------- */
-        public array  $tabs      = ['TODOS','PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION','DISEÑO RECHAZADO', 'DISEÑO APROBADO', 'CANCELADO', 'RECONFIGURAR'];
-        public string $activeTab = 'TODOS';              // tab inicial
+        public array  $tabs      = ['PENDIENTE', 'ASIGNADO', 'EN PROCESO', 'REVISION','DISEÑO RECHAZADO', 'DISEÑO APROBADO', 'CANCELADO', 'RECONFIGURAR','TODOS'];
+        public string $activeTab = 'PENDIENTE';              // tab inicial
     
 
         

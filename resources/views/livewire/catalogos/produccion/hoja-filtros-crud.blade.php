@@ -590,27 +590,29 @@
                         <label class="flex items items-center justify-between py-1">
                             <span class="text-sm text-gray-700">programar pedido</span>
                             <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.programar_pedido">
+                        </label>    
+
+                        <label for="ver-tallas" class="flex items items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">ver tallas</span>
+                            <input type="checkbox" id="ver-tallas" class="rounded border-gray-300" wire:model.live="form.acciones.ver_tallas">
                         </label>
+
+                        <label for="editar-tallas" class="flex items items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">editar tallas</span>
+                            <input type="checkbox" id="editar-tallas" class="rounded border-gray-300" wire:model.live="form.acciones.editar_tallas">
+                        </label>
+
+                        <label for="editar_total_tallas" class="flex items items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">editar total tallas </span>
+                            <input type="checkbox" id="editar_total_tallas" class="rounded border-gray-300" wire:model.live="form.acciones.editar_total_tallas">
+                        </label>
+
 
                         <label class="flex items items-center justify-between py-1">
                             <span class="text-sm text-gray-700">aprobar pedido</span>
                             <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.aprobar_pedido">
                         </label>
 
-                        <label class="flex items items-center justify-between py-1">
-                            <span class="text-sm text-gray-700">abrir chat</span>
-                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.abrir_chat">
-                        </label>
-
-                        <label class="flex items items-center justify-between py-1">
-                            <span class="text-sm text-gray-700">crear tarea</span>
-                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.crear_tarea">
-                        </label>
-
-                        <label class="flex items items-center justify-between py-1">
-                            <span class="text-sm text-gray-700">editar pedido</span>
-                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.editar_pedido">
-                        </label>
                         
                         <label class="flex items items-center justify-between py-1">
                             <span class="text-sm text-gray-700">duplicar pedido</span>
@@ -623,26 +625,14 @@
                         </label>
 
                         <label class="flex items items-center justify-between py-1">
-                            <span class="text-sm text-gray-700">entregar pedido</span>
-                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.entregar_pedido">
-                        </label>
-
-                        <label class="flex items items-center justify-between py-1">
                             <span class="text-sm text-gray-700">cancelar pedido</span>
                             <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.cancelar_pedido">
                         </label>
 
                         <label class="flex items items-center justify-between py-1">
-                            <span class="text-sm text-gray-700">subir archivos</span>
-                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.subir_archivos">
-                        </label>
-
-
-                        <label class="flex items items-center justify-between py-1">
                             <span class="text-sm text-gray-700">exportar excel</span>
                             <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.exportar_excel">
                         </label>
-                        
        
                     </div>
 

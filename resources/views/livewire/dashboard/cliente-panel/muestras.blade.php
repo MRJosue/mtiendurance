@@ -190,7 +190,7 @@
 <div class="mb-4">
     <div class="overflow-x-auto">
         <ul class="flex flex-nowrap sm:flex-wrap border-b border-gray-200 gap-1 min-w-max sm:min-w-0">
-            @foreach ($this->tabsEstado as $tab)
+            @foreach ($this->tabsEstadoVisibles as $tab)
                 <li>
                     <button
                         type="button"

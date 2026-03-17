@@ -578,8 +578,8 @@ class ComposerStaticInitd2ac04bfd9abce8c55b6a891a50bded9
         ),
         'Psr\\Http\\Message\\' => 
         array (
-            0 => __DIR__ . '/..' . '/psr/http-message/src',
-            1 => __DIR__ . '/..' . '/psr/http-factory/src',
+            0 => __DIR__ . '/..' . '/psr/http-factory/src',
+            1 => __DIR__ . '/..' . '/psr/http-message/src',
         ),
         'Psr\\Http\\Client\\' => 
         array (
@@ -627,8 +627,8 @@ class ComposerStaticInitd2ac04bfd9abce8c55b6a891a50bded9
         ),
         'Nette\\' => 
         array (
-            0 => __DIR__ . '/..' . '/nette/utils/src',
-            1 => __DIR__ . '/..' . '/nette/schema/src',
+            0 => __DIR__ . '/..' . '/nette/schema/src',
+            1 => __DIR__ . '/..' . '/nette/utils/src',
         ),
         'Monolog\\' => 
         array (
@@ -990,12 +990,12 @@ class ComposerStaticInitd2ac04bfd9abce8c55b6a891a50bded9
         'App\\Livewire\\CrearPermiso' => __DIR__ . '/../..' . '/app/Livewire/CrearPermiso.php',
         'App\\Livewire\\DashboardClientes' => __DIR__ . '/../..' . '/app/Livewire/DashboardClientes.php',
         'App\\Livewire\\Dashboard\\ClientePanel' => __DIR__ . '/../..' . '/app/Livewire/Dashboard/ClientePanel.php',
+        'App\\Livewire\\Dashboard\\ClientePanel\\Muestras' => __DIR__ . '/../..' . '/app/Livewire/Dashboard/ClientePanel/Muestras.php',
         'App\\Livewire\\Dashboard\\ClientePanel\\Pedidos' => __DIR__ . '/../..' . '/app/Livewire/Dashboard/ClientePanel/Pedidos.php',
         'App\\Livewire\\Dashboard\\ClientePanel\\Preproyectos' => __DIR__ . '/../..' . '/app/Livewire/Dashboard/ClientePanel/Preproyectos.php',
         'App\\Livewire\\Dashboard\\ClientePanel\\Proyectos' => __DIR__ . '/../..' . '/app/Livewire/Dashboard/ClientePanel/Proyectos.php',
         'App\\Livewire\\Dashboard\\DisenadorPanel' => __DIR__ . '/../..' . '/app/Livewire/Dashboard/DisenadorPanel.php',
         'App\\Livewire\\Dashboard\\DisenioPanel\\Adminproyectos' => __DIR__ . '/../..' . '/app/Livewire/Dashboard/DisenioPanel/Adminproyectos.php',
-        'App\\Livewire\\Dashboard\\DisenioPanel\\Tareasdisenio' => __DIR__ . '/../..' . '/app/Livewire/Dashboard/DisenioPanel/Tareasdisenio.php',
         'App\\Livewire\\Dashboard\\EstafPanel' => __DIR__ . '/../..' . '/app/Livewire/Dashboard/EstafPanel.php',
         'App\\Livewire\\Dashboard\\JefeDisenadorPanel' => __DIR__ . '/../..' . '/app/Livewire/Dashboard/JefeDisenadorPanel.php',
         'App\\Livewire\\Dashboard\\Notificaciones\\NotificacionesLista' => __DIR__ . '/../..' . '/app/Livewire/Dashboard/Notificaciones/NotificacionesLista.php',
@@ -1070,6 +1070,7 @@ class ComposerStaticInitd2ac04bfd9abce8c55b6a891a50bded9
         'App\\Livewire\\RolesPermissions' => __DIR__ . '/../..' . '/app/Livewire/RolesPermissions.php',
         'App\\Livewire\\SwitchUser' => __DIR__ . '/../..' . '/app/Livewire/SwitchUser.php',
         'App\\Livewire\\TableUsers' => __DIR__ . '/../..' . '/app/Livewire/TableUsers.php',
+        'App\\Livewire\\Tareas\\AdministraTareas' => __DIR__ . '/../..' . '/app/Livewire/Tareas/AdministraTareas.php',
         'App\\Livewire\\Tools\\ImportarProyectoManual' => __DIR__ . '/../..' . '/app/Livewire/Tools/ImportarProyectoManual.php',
         'App\\Livewire\\UserRolesPermissions' => __DIR__ . '/../..' . '/app/Livewire/UserRolesPermissions.php',
         'App\\Livewire\\UsersTable' => __DIR__ . '/../..' . '/app/Livewire/UsersTable.php',

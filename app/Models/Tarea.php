@@ -19,6 +19,7 @@ class Tarea extends Model
         'staff_id',
         'descripcion',
         'estado',
+        'tipo',
         'disenio_flag_first_proceso',
     ];
 

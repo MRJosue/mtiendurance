@@ -161,6 +161,9 @@ public array $form = [
 
             // Acciones individuales 
             'ver_detalle' => true,
+            'ver-tallas'=> true,
+            'editar-tallas' => true,
+            'editar_total_tallas' => true,
             'programar_pedido' => true,
             'aprobar_pedido' => true,
             'abrir_chat' => true,

@@ -926,25 +926,27 @@
                         <button
                             type="button"
                             class="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm"
-                            @click="close(); $wire.dispatch('ir-a-detalle', { id: {{ $pedido->id }} })"
+                            wire:click="irADetalle({{ $pedido->proyecto_id }})"
                         >
                             Ver detalle
                         </button>
                     @endif
 
-
-                    @if ((int)($pedido->flag_tallas ?? 0) === 1)
-
-                           <x-dropdown.item >
-                            <b wire:click="abrirModalTallas({{ $pedido->id }})"> Ver tallas</b>
-                        </x-dropdown.item>
+                    @if ($acciones['ver-tallas'])
+                        @if ((int)($pedido->flag_tallas ?? 0) === 1)
+                            <x-dropdown.item >
+                                <b wire:click="abrirModalTallas({{ $pedido->id }})"> Ver tallas</b>
+                            </x-dropdown.item>
+                        @endif
                     @endif
 
-                    @if ((int)($pedido->flag_tallas ?? 0) === 1)
-                        <x-dropdown.item >
-                            <b wire:click="abrirModalEditarTallas({{ $pedido->id }})">Editar tallas</b>
-                        </x-dropdown.item>
-                    @endif
+                    @if ($acciones['editar-tallas'])
+                        @if ((int)($pedido->flag_tallas ?? 0) === 1)
+                            <x-dropdown.item >
+                                <b wire:click="abrirModalEditarTallas({{ $pedido->id }})">Editar tallas</b>
+                            </x-dropdown.item>
+                        @endif
+                    @endif      
 
                     <button
                         type="button"
@@ -1463,6 +1465,42 @@
                         {{ $error_tallas }}
                     </div>
                 @endif
+
+                <div class="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Total esperado
+                        </label>
+
+                        <input
+                            type="number"
+                            min="1"
+                            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+                            wire:model.defer="tallas_edit_total"
+                            @disabled(!$acciones['editar_total_tallas'])
+                        >
+
+                        <p class="text-xs text-gray-500 mt-1">
+                            La suma de cantidades por talla debe coincidir con este total.
+                        </p>
+
+                        @if(!$acciones['editar_total_tallas'])
+                            <p class="text-xs text-amber-600 mt-1">
+                                No tienes permiso para editar el total esperado. Solo puedes ajustar las cantidades de tallas.
+                            </p>
+                        @endif
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Suma actual de tallas
+                        </label>
+
+                        <div class="w-full border border-gray-200 rounded-lg p-2 bg-gray-50 text-gray-700">
+                            {{ collect($inputsTallas)->filter(fn($v) => is_numeric($v) && (int)$v > 0)->sum(fn($v) => (int)$v) }}
+                        </div>
+                    </div>
+                </div>
 
                 @if(empty($tallas_disponibles))
                     <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded">
