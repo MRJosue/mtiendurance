@@ -4,7 +4,10 @@ namespace App\Livewire\Proyectos;
 
 use Livewire\Component;
 use App\Models\Proyecto;
+use App\Models\proyecto_estados;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class ProjectTimeline extends Component
 {
@@ -103,16 +106,54 @@ class ProjectTimeline extends Component
             return;
         }
 
-        $proyecto->estado = $this->estadoSeleccionado;
-        $proyecto->save();
+        DB::beginTransaction();
 
-        $this->estadoActual = $proyecto->estado;
+        try {
+            $estadoAnterior = $proyecto->estado;
+            $nuevoEstado = $this->estadoSeleccionado;
+            $ahora = Carbon::now();
 
-        $this->cancelarCambioEstado();
+            // Cerrar último estado abierto del historial
+            $ultimoEstadoAbierto = proyecto_estados::where('proyecto_id', $proyecto->id)
+                ->whereNull('fecha_fin')
+                ->latest('id')
+                ->first();
 
-        session()->flash('message', 'Estado actualizado correctamente.');
+            if ($ultimoEstadoAbierto) {
+                $ultimoEstadoAbierto->update([
+                    'fecha_fin' => $ahora,
+                ]);
+            }
 
-        $this->dispatch('estadoActualizado');
+            // Actualizar estado actual del proyecto
+            $proyecto->estado = $nuevoEstado;
+            $proyecto->save();
+
+            // Crear nuevo registro en historial
+            proyecto_estados::create([
+                'proyecto_id' => $proyecto->id,
+                'estado' => $nuevoEstado,
+                'fecha_inicio' => $ahora,
+                'fecha_fin' => null,
+                'usuario_id' => Auth::id(),
+                'comentario' => 'Cambio de estado manual desde timeline. Estado anterior: ' . $estadoAnterior,
+                'url' => null,
+                'last_uploaded_file_id' => null,
+            ]);
+
+            DB::commit();
+
+            $this->estadoActual = $proyecto->estado;
+            $this->cancelarCambioEstado();
+
+            session()->flash('message', 'Estado actualizado correctamente y registrado en historial.');
+
+            $this->dispatch('estadoActualizado');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            session()->flash('error', 'Ocurrió un error al actualizar el estado.');
+        }
     }
 
     public function render()
