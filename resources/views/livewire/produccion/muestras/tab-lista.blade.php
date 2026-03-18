@@ -75,12 +75,16 @@
 
     {{-- (A) Acciones --}}
     <div class="mb-4 flex flex-wrap space-y-2 sm:space-y-0 sm:space-x-4">
-        <button
-            class="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="selected.length === 0"
-            wire:click="abrirModalEntregarSeleccion">
-            Entregar selección
-        </button>
+
+        @can('tab-lista-marcar-entregada')
+            <button
+                class="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="selected.length === 0"
+                wire:click="abrirModalEntregarSeleccion">
+                Entregar selección
+            </button>
+        @endcan
+
     </div>
 
     {{-- Tabla --}}

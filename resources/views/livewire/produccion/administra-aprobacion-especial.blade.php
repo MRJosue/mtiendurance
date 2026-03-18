@@ -798,8 +798,13 @@
                 </div>
 
                 <div class="flex justify-end gap-2">
-                    <button wire:click="rechazarSolicitud" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Rechazar Solicitud</button>
-                    <button wire:click="aprobarSolicitud" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Aprobar Solicitud</button>
+                    @can('aprobacion-especial-rechazarSolicitud')
+                        <button wire:click="rechazarSolicitud" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Rechazar Solicitud</button>
+                    @endcan
+                    @can('aprobacion-especial-aprobarSolicitud')
+                        <button wire:click="aprobarSolicitud" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Aprobar Solicitud</button>
+                    @endcan
+                    
                     <button wire:click="$set('modalRevisarAprobacion', false)" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cerrar</button>
                 </div>
             </div>

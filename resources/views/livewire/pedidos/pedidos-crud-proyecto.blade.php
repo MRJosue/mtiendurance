@@ -221,7 +221,7 @@
                                 $nombreEstado = $pedido->estadoPedido?->nombre ?? 'SIN ESTADO';
                                 $colorClase   = $pedido->estadoPedido?->color ?? 'bg-gray-400 text-black';
                             @endphp
-
+                            
                             <span class="px-2 py-1 rounded text-xs font-semibold {{ $colorClase }}">
                                 @if ($pedido->flag_solicitud_aprobar_sin_fechas == '1')
                                     APROBACION ESPECIAL
@@ -244,34 +244,43 @@
 
 
                             <x-dropdown>
-                                @if ($pedido->estado == 'POR APROBAR' && $pedido->proyecto?->estado === 'DISEÑO APROBADO' && $pedido->flag_solicitud_aprobar_sin_fechas == '0')
-                                    <x-dropdown.item
-                                        wire:click="confirmarAprobacionEspecial({{ $pedido->id }})"
-                                        class="w-full cursor-pointer"
-                                    >
-                                        <span class="block w-full font-semibold">Aprobacion Especial</span>
-                                    </x-dropdown.item>
-                                @endif
 
-                                @if ($pedido->estado == 'POR APROBAR' && $pedido->proyecto?->estado === 'DISEÑO APROBADO')
-                                    <x-dropdown.item
-                                        separator
-                                        wire:click="confirmarAprobacion({{ $pedido->id }})"
-                                        class="w-full cursor-pointer"
-                                    >
-                                        <span class="block w-full font-semibold">Aprobar</span>
-                                    </x-dropdown.item>
-                                @endif
+                                @can('pedidos-crud-proyecto-btn-aprobacion-especial')
+                                        @if ($pedido->estado == 'POR APROBAR' && $pedido->proyecto?->estado === 'DISEÑO APROBADO' && $pedido->flag_solicitud_aprobar_sin_fechas == '0')
+                                            <x-dropdown.item
+                                                wire:click="confirmarAprobacionEspecial({{ $pedido->id }})"
+                                                class="w-full cursor-pointer"
+                                            >
+                                                <span class="block w-full font-semibold">Aprobacion Especial</span>
+                                            </x-dropdown.item>
+                                        @endif
+                                @endcan
 
-                                @if ((int)($pedido->flag_tallas ?? 0) === 1)
-                                    <x-dropdown.item
-                                        separator
-                                        wire:click="abrirModalTallas({{ $pedido->id }})"
-                                        class="w-full cursor-pointer"
-                                    >
-                                        <span class="block w-full font-semibold">Ver tallas</span>
-                                    </x-dropdown.item>
-                                @endif
+                                @can('pedidos-crud-proyecto-btn-aprobar')
+                                    @if ($pedido->estado == 'POR APROBAR' && $pedido->proyecto?->estado === 'DISEÑO APROBADO')
+                                        <x-dropdown.item
+                                            separator
+                                            wire:click="confirmarAprobacion({{ $pedido->id }})"
+                                            class="w-full cursor-pointer"
+                                        >
+                                            <span class="block w-full font-semibold">Aprobar</span>
+                                        </x-dropdown.item>
+                                    @endif
+                                @endcan
+
+
+                                @can('pedidos-crud-proyecto-btn-ver-tallas')
+                                    @if ((int)($pedido->flag_tallas ?? 0) === 1)
+                                        <x-dropdown.item
+                                            separator
+                                            wire:click="abrirModalTallas({{ $pedido->id }})"
+                                            class="w-full cursor-pointer"
+                                        >
+                                            <span class="block w-full font-semibold">Ver tallas</span>
+                                        </x-dropdown.item>
+                                    @endif
+
+                                @endcan
 
                                 @hasanyrole('admin')
                                     <x-dropdown.item

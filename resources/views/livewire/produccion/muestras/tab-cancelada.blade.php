@@ -80,14 +80,16 @@ class="container mx-auto p-6">
     {{-- Acciones --}}
     <div class="mb-4 flex flex-wrap space-y-2 sm:space-y-0 sm:space-x-4">
 
-
-        <button
-            class="w-full sm:w-auto px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="selected.length === 0"
-            wire:click="restaurarPendiente"
-        >
-            Restaurar a PENDIENTE (seleccionados)
-        </button>
+        @can('tab-cancelada-regresar-pendiente')
+                  <button
+                class="w-full sm:w-auto px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="selected.length === 0"
+                wire:click="restaurarPendiente"
+            >
+                Restaurar a PENDIENTE (seleccionados)
+            </button> 
+        @endcan
+ 
     </div>
 
     {{-- Tabla --}}

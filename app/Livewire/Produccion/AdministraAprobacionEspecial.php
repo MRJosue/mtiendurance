@@ -1,10 +1,8 @@
 <?php
 
-
 namespace App\Livewire\Produccion;
 
 use Livewire\Component;
-
 use Livewire\WithPagination;
 use App\Models\Pedido;
 use App\Models\DireccionEntrega;
@@ -21,17 +19,16 @@ use App\Models\TareaProduccion;
 use App\Models\OrdenProduccion;
 use App\Models\OrdenCorte;
 use App\Models\EstadoPedido;
+use App\Models\Estado;
 use Illuminate\Validation\Rule;
-
-
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-use Spatie\LaravelIgnition\Recorders\LogRecorder\LogMessage;
 
 class AdministraAprobacionEspecial extends Component
 {
     use WithPagination;
+
     public $modal = false;
     public $pedidoId, $total, $estatus, $tipo, $estado;
     public $fecha_produccion, $fecha_embarque, $fecha_entrega;
@@ -46,8 +43,12 @@ class AdministraAprobacionEspecial extends Component
     public $clientes = [], $tipos_envio = [];
     public $direccionesFiscales = [], $direccionesEntrega = [];
     public $productos = [], $categorias = [];
-    protected $listeners = ['abrirModalEdicion' => 'abrirModal',
-                            'guardarOrden' => 'guardarOrden'];
+
+    protected $listeners = [
+        'abrirModalEdicion' => 'abrirModal',
+        'guardarOrden' => 'guardarOrden',
+    ];
+
     public $estado_produccion = 'POR APROBAR';
     public $proyecto_nombre;
     public $producto_nombre;
@@ -65,9 +66,7 @@ class AdministraAprobacionEspecial extends Component
     public $selectAll = false;
     public $modal_aprobar_sin_fechas = false;
 
-
     public $modalRevisarAprobacion = false;
-
 
     public $modalCrearTarea = false;
     public $nuevoTareaPedidoId;
@@ -84,50 +83,46 @@ class AdministraAprobacionEspecial extends Component
     public $ordenCorte_tallas_json = [];
     public $modalOrdenes = false;
     public $pedidoOrdenes = [];
-    
+
     public $modalCrearOrdenProduccion = false;
 
     public $ordenProd_fecha_inicio;
     public $ordenProd_tipo = 'CORTE';
     public $ordenProd_usuario_asignado_id = '';
 
-
     public $modalCrearOrden = false;
-    public $tipo_modal_orden = ''; // 'CORTE', 'SUBLIMADO', etc.
+    public $tipo_modal_orden = '';
 
+    public $estado_id = null;
+    public $filtro_estado_id = '';
+    public $catalogoEstados = [];
 
+    public bool $filtro_inactivos = false;
 
-    public $estado_id = null;           // en el modal
-    public $filtro_estado_id = '';      // filtro por estado
-    public $catalogoEstados = [];       // para selects
-
-     public bool $filtro_inactivos = false;
-
-
-
-    // ids útiles para lógicas internas
     protected $estado_por_aprobar_id = null;
-    protected $estado_rechazado_id   = null;
-
+    protected $estado_rechazado_id = null;
 
     public function mount()
     {
         $this->tipos_envio = TipoEnvio::all();
         $this->clientes = Cliente::all();
-        $this->direccionesFiscales = DireccionFiscal::with('ciudad.estado')->get();
-        $this->direccionesEntrega  = DireccionEntrega::with('ciudad.estado')->get();
+
+        // ✅ Ya no existe relación ciudad
+        $this->direccionesFiscales = DireccionFiscal::with(['estado.pais', 'pais'])->get();
+        $this->direccionesEntrega  = DireccionEntrega::with(['estado.pais', 'pais'])->get();
+
         $this->usuarios = User::query()->role('staff')->get();
         $this->productos_activos = Producto::where('ind_activo', 1)->get();
         $this->categorias_activas = Categoria::where('ind_activo', 1)->get();
 
         $this->catalogoEstados = EstadoPedido::query()
             ->orderByRaw('COALESCE(orden,999999), nombre')
-            ->get(['id','nombre']);
+            ->get(['id', 'nombre']);
 
-        // ids de estados usados en la lógica
-        $this->estado_por_aprobar_id = EstadoPedido::where('nombre','POR APROBAR')->value('id');
-        $this->estado_rechazado_id   = EstadoPedido::where('nombre','RECHAZADO')->value('id');
+        $this->estado_por_aprobar_id = EstadoPedido::where('nombre', 'POR APROBAR')->value('id');
+        $this->estado_rechazado_id   = EstadoPedido::where('nombre', 'RECHAZADO')->value('id');
     }
+
     protected function rules()
     {
         return [
@@ -155,17 +150,16 @@ class AdministraAprobacionEspecial extends Component
     public function abrirModal($pedidoId = null)
     {
         if ($pedidoId) {
-
-          
             $pedido = Pedido::with(['pedidoTallas.talla', 'pedidoTallas.grupoTalla'])->findOrFail($pedidoId);
             $this->cargarInputsDesdePedido($pedido);
+
             $this->fill([
                 'pedidoId' => $pedido->id,
                 'total' => $pedido->total,
                 'estatus' => $pedido->estatus,
                 'tipo' => $pedido->tipo,
-                 'estado_id' => $pedido->estado_id,
-                'estado_produccion'=>  $pedido->estado_produccion,
+                'estado_id' => $pedido->estado_id,
+                'estado_produccion' => $pedido->estado_produccion,
                 'fecha_produccion' => $pedido->fecha_produccion,
                 'fecha_embarque' => $pedido->fecha_embarque,
                 'fecha_entrega' => $pedido->fecha_entrega,
@@ -176,23 +170,18 @@ class AdministraAprobacionEspecial extends Component
                 'producto_id' => $pedido->producto_id,
             ]);
 
-
             $this->proyecto_id_pedido = $pedido->proyecto_id;
             $this->proyecto_nombre = $pedido->proyecto->nombre ?? 'Sin proyecto';
             $this->producto_nombre = $pedido->producto->nombre ?? 'Sin producto';
             $this->categoria_nombre = $pedido->producto->categoria->nombre ?? 'Sin categoría';
 
-
             $this->cargarTiposEnvio();
             $this->cargarTallas($pedido->producto_id);
             $this->cantidades_tallas = [];
 
-
             foreach ($pedido->pedidoTallas as $pt) {
                 $this->cantidades_tallas[$pt->grupo_talla_id][$pt->talla_id] = $pt->cantidad;
             }
-
-            
 
             $this->on_Calcula_Fechas_Entrega();
         } else {
@@ -202,9 +191,10 @@ class AdministraAprobacionEspecial extends Component
                 'direccion_fiscal_id', 'direccion_entrega_id', 'id_tipo_envio',
                 'tallas_disponibles', 'cantidades_tallas', 'producto_id', 'cliente_id'
             ]);
+
             $this->estatus = 'PENDIENTE';
-            $this->tipo    = 'PEDIDO';
-            $this->estado_id = $this->estado_por_aprobar_id;     // <— por defecto
+            $this->tipo = 'PEDIDO';
+            $this->estado_id = $this->estado_por_aprobar_id;
             $this->estado_produccion = 'POR APROBAR';
         }
 
@@ -229,18 +219,29 @@ class AdministraAprobacionEspecial extends Component
             return;
         }
 
-        $direccionEntrega = DireccionEntrega::find($this->direccion_entrega_id);
-        $direccionFiscal = DireccionFiscal::find($this->direccion_fiscal_id);
+        // ✅ Cargar con estado y país, no ciudad como relación
+        $direccionEntrega = DireccionEntrega::with(['estado.pais', 'pais'])->find($this->direccion_entrega_id);
+        $direccionFiscal  = DireccionFiscal::with(['estado.pais', 'pais'])->find($this->direccion_fiscal_id);
 
-        $entrega_txt = $direccionEntrega?->ciudad?->nombre.', '.$direccionEntrega?->ciudad?->estado?->nombre.', '.$direccionEntrega?->ciudad?->estado?->pais?->nombre;
-        $fiscal_txt = $direccionFiscal?->ciudad?->nombre.', '.$direccionFiscal?->ciudad?->estado?->nombre.', '.$direccionFiscal?->ciudad?->estado?->pais?->nombre;
+        // ✅ ciudad ahora es texto plano
+        $entrega_txt = trim(implode(', ', array_filter([
+            $direccionEntrega?->ciudad,
+            $direccionEntrega?->estado?->nombre,
+            $direccionEntrega?->pais?->nombre ?? $direccionEntrega?->estado?->pais?->nombre,
+        ])), ', ');
+
+        $fiscal_txt = trim(implode(', ', array_filter([
+            $direccionFiscal?->ciudad,
+            $direccionFiscal?->estado?->nombre,
+            $direccionFiscal?->pais?->nombre ?? $direccionFiscal?->estado?->pais?->nombre,
+        ])), ', ');
 
         $data = [
             'cliente_id' => $this->cliente_id,
             'total' => $this->total,
             'estatus' => $this->estatus,
             'tipo' => $this->tipo,
-            'estado_id' => $this->estado_id, 
+            'estado_id' => $this->estado_id,
             'estado_produccion' => $this->estado_produccion,
             'fecha_produccion' => $this->fecha_produccion,
             'fecha_embarque' => $this->fecha_embarque,
@@ -284,13 +285,19 @@ class AdministraAprobacionEspecial extends Component
 
         $gruposTallas = ProductoGrupoTalla::where('producto_id', $productoId)->pluck('grupo_talla_id');
 
-        $this->tallas_disponibles = GrupoTalla::whereIn('id', $gruposTallas)->with('tallas')->get()->map(function ($grupo) {
-            return [
-                'id' => $grupo->id,
-                'nombre' => $grupo->nombre,
-                'tallas' => $grupo->tallas->map(fn($t) => ['id' => $t->id, 'nombre' => $t->nombre])->toArray(),
-            ];
-        })->toArray();
+        $this->tallas_disponibles = GrupoTalla::whereIn('id', $gruposTallas)
+            ->with('tallas')
+            ->get()
+            ->map(function ($grupo) {
+                return [
+                    'id' => $grupo->id,
+                    'nombre' => $grupo->nombre,
+                    'tallas' => $grupo->tallas->map(fn($t) => [
+                        'id' => $t->id,
+                        'nombre' => $t->nombre
+                    ])->toArray(),
+                ];
+            })->toArray();
     }
 
     public function updatedCantidadesTallas()
@@ -300,8 +307,23 @@ class AdministraAprobacionEspecial extends Component
 
     public function cargarTiposEnvio()
     {
-        $this->tipos_envio = $this->direccion_entrega_id
-            ? DireccionEntrega::find($this->direccion_entrega_id)?->ciudad?->tipoEnvios ?? collect()
+        $this->tipos_envio = collect();
+
+        if (!$this->direccion_entrega_id) {
+            return;
+        }
+
+        $direccion = DireccionEntrega::find($this->direccion_entrega_id);
+
+        if (!$direccion || !$direccion->estado_id) {
+            return;
+        }
+
+        // ✅ ahora se carga por estado, igual que en CreatePreProject
+        $estado = Estado::find($direccion->estado_id);
+
+        $this->tipos_envio = $estado
+            ? $estado->tipoEnvios()->orderBy('nombre')->get()
             : collect();
     }
 
@@ -329,28 +351,29 @@ class AdministraAprobacionEspecial extends Component
     public function ajustarFechaSinFinesDeSemana($fecha)
     {
         $fecha = Carbon::parse($fecha);
+
         if ($fecha->isSaturday()) return $fecha->addDays(2);
         if ($fecha->isSunday()) return $fecha->addDay();
+
         return $fecha;
     }
 
-
     public function recopilarCantidadesTallas()
     {
-        $this->cantidades_tallas = []; // Limpiar antes
+        $this->cantidades_tallas = [];
 
         foreach ($this->inputsTallas as $clave => $cantidad) {
-            if (!is_numeric($cantidad) || (int)$cantidad <= 0) continue;
+            if (!is_numeric($cantidad) || (int) $cantidad <= 0) continue;
 
             [$grupoId, $tallaId] = explode('_', $clave);
-            $this->cantidades_tallas[$grupoId][$tallaId] = (int)$cantidad;
+            $this->cantidades_tallas[$grupoId][$tallaId] = (int) $cantidad;
         }
     }
 
     protected function cargarInputsDesdePedido($pedido)
     {
         $this->inputsTallas = [];
-    
+
         foreach ($pedido->pedidoTallas as $pedidoTalla) {
             $clave = $pedidoTalla->grupo_talla_id . '_' . $pedidoTalla->talla_id;
             $this->inputsTallas[$clave] = $pedidoTalla->cantidad;
@@ -366,71 +389,71 @@ class AdministraAprobacionEspecial extends Component
             'filtro_total',
             'filtro_estado',
             'filtro_estado_produccion',
-            'filtro_inactivos', // 👈 NUEVO
+            'filtro_inactivos',
         ]);
 
         $this->resetPage();
     }
 
-public function render()
-{
-    $query = Pedido::with([
-        'cliente',
-        'producto.categoria',
-        'tipoEnvio',
-        'proyecto.user',
-        'tareasProduccion.usuario',
-        'pedidoCaracteristicas.caracteristica',
-        'pedidoOpciones.opcion.caracteristicas',
-        'estadoPedido:id,nombre', // <— para mostrar nombre
-    ]);
+    public function render()
+    {
+        $query = Pedido::with([
+            'cliente',
+            'producto.categoria',
+            'tipoEnvio',
+            'proyecto.user',
+            'tareasProduccion.usuario',
+            'pedidoCaracteristicas.caracteristica',
+            'pedidoOpciones.opcion.caracteristicas',
+            'estadoPedido:id,nombre',
+        ]);
 
+        $query
+            ->when($this->filtro_inactivos, function ($q) {
+                $q->where('ind_activo', 0);
+            })
+            ->when(!$this->filtro_inactivos, function ($q) {
+                $q->where('ind_activo', 1);
+            });
 
-    $query
-        ->when($this->filtro_inactivos, function ($q) {
-            // Checkbox marcado → solo inactivos
-            $q->where('ind_activo', 0);
-        })
-        ->when(!$this->filtro_inactivos, function ($q) {
-            // Sin check → solo activos
-            $q->where('ind_activo', 1);
-        });
+        if ($this->filtro_usuario) {
+            $query->whereHas('proyecto.user', fn($q) =>
+                $q->where('name', 'like', '%' . $this->filtro_usuario . '%'));
+        }
 
-    if ($this->filtro_usuario) {
-        $query->whereHas('proyecto.user', fn($q) =>
-            $q->where('name','like','%'.$this->filtro_usuario.'%'));
+        if ($this->filtro_producto) {
+            $query->where('producto_id', $this->filtro_producto);
+        }
+
+        if ($this->filtro_categoria) {
+            $query->whereHas('producto.categoria', fn($q) =>
+                $q->where('id', $this->filtro_categoria));
+        }
+
+        if ($this->filtro_total) {
+            $query->where('total', $this->filtro_total);
+        }
+
+        if ($this->filtro_estado_id !== '' && $this->filtro_estado_id !== null) {
+            $query->where('estado_id', (int) $this->filtro_estado_id);
+        }
+
+        if ($this->estado_por_aprobar_id) {
+            $query->where('estado_id', $this->estado_por_aprobar_id);
+        }
+
+        $query->where('flag_solicitud_aprobar_sin_fechas', '1');
+
+        if ($this->filtro_estado_produccion) {
+            $query->where('estado_produccion', $this->filtro_estado_produccion);
+        }
+
+        $query->where('tipo', 'PEDIDO');
+
+        return view('livewire.produccion.administra-aprobacion-especial', [
+            'pedidos' => $query->orderByDesc('created_at')->paginate(10),
+        ]);
     }
-    if ($this->filtro_producto) {
-        $query->where('producto_id', $this->filtro_producto);
-    }
-    if ($this->filtro_categoria) {
-        $query->whereHas('producto.categoria', fn($q) =>
-            $q->where('id', $this->filtro_categoria));
-    }
-    if ($this->filtro_total) {
-        $query->where('total', $this->filtro_total);
-    }
-    if ($this->filtro_estado_id !== '' && $this->filtro_estado_id !== null) {
-        $query->where('estado_id', (int)$this->filtro_estado_id);
-    }
-
-    // Antes: $query->where('estado', 'POR APROBAR');
-    if ($this->estado_por_aprobar_id) {
-        $query->where('estado_id', $this->estado_por_aprobar_id);
-    }
-
-    $query->where('flag_solicitud_aprobar_sin_fechas', '1');
-
-    if ($this->filtro_estado_produccion) {
-        $query->where('estado_produccion', $this->filtro_estado_produccion);
-    }
-
-    $query->where('tipo', 'PEDIDO');
-
-    return view('livewire.produccion.administra-aprobacion-especial', [
-        'pedidos' => $query->orderByDesc('created_at')->paginate(10),
-    ]);
-}
 
     public function deleteSelected()
     {
@@ -439,10 +462,9 @@ public function render()
         $this->selectAll = false;
         session()->flash('message', 'Pedidos eliminados correctamente.');
     }
-    
+
     public function exportSelected()
     {
-        // Implementa la lógica de exportación aquí
         session()->flash('message', 'Exportación completada.');
     }
 
@@ -451,13 +473,12 @@ public function render()
         $this->pedidoId = $pedidoId;
         $this->modal_aprobar_sin_fechas = true;
     }
-    
+
     public function aprobarSinFechas()
     {
         $pedido = Pedido::findOrFail($this->pedidoId);
-        
-        Log::debug('Mensaje', ['data' => $this->pedidoId]);
 
+        Log::debug('Mensaje', ['data' => $this->pedidoId]);
         Log::debug('Pedido encontrado', ['pedido' => $pedido]);
 
         $pedido->update([
@@ -465,7 +486,7 @@ public function render()
             'estado' => 'POR APROBAR',
             'estado_produccion' => 'POR PROGRAMAR',
         ]);
-        
+
         Log::debug('LOG update');
 
         $this->modal_aprobar_sin_fechas = false;
@@ -478,9 +499,6 @@ public function render()
         $this->resetPage();
     }
 
-
-
-    
     public function abrirModalRevisarAprobacion($pedidoId)
     {
         $pedido = Pedido::findOrFail($pedidoId);
@@ -489,7 +507,7 @@ public function render()
         $this->total = $pedido->total;
         $this->estatus = $pedido->estatus;
         $this->tipo = $pedido->tipo;
-         $this->estado_id = $pedido->estado_id;
+        $this->estado_id = $pedido->estado_id;
         $this->estado_produccion = $pedido->estado_produccion;
         $this->fecha_produccion = $pedido->fecha_produccion;
         $this->fecha_embarque = $pedido->fecha_embarque;
@@ -522,9 +540,11 @@ public function render()
     public function rechazarSolicitud()
     {
         $pedido = Pedido::findOrFail($this->pedidoId);
+
         $pedido->update([
-            'estado_id' => $this->estado_rechazado_id ?: $pedido->estado_id, // <—
+            'estado_id' => $this->estado_rechazado_id ?: $pedido->estado_id,
         ]);
+
         $this->modalRevisarAprobacion = false;
         $this->dispatch('ActualizarTablaPedido');
         session()->flash('message', '⚠️ Solicitud rechazada.');
