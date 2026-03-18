@@ -42,6 +42,13 @@ class TareasDiseno extends Component
 
     public function abrirModal(): void
     {
+        $this->proyecto->refresh();
+
+        if (strtoupper(trim((string) $this->proyecto->estado)) === 'DISEÑO APROBADO') {
+            session()->flash('message', 'No es posible crear tareas porque el proyecto ya está en DISEÑO APROBADO.');
+            return;
+        }
+
         $this->selectedUser = null;
         $this->taskDescription = '';
         $this->taskType = '';
@@ -57,6 +64,14 @@ class TareasDiseno extends Component
 
     public function asignarTarea(): void
     {
+
+        $this->proyecto->refresh();
+
+        if (strtoupper(trim((string) $this->proyecto->estado)) === 'DISEÑO APROBADO') {
+            $this->addError('taskType', 'No es posible crear tareas porque el proyecto ya está en DISEÑO APROBADO.');
+            return;
+        }
+
         $this->validate();
 
         $existe = Tarea::where('proyecto_id', $this->proyecto->id)
