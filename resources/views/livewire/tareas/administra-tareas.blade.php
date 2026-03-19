@@ -6,51 +6,31 @@
             localStorage.setItem('dashboard_admintareasdisenio_abierto', JSON.stringify(this.abierto));
         }
     }"
-    class="p-2 sm:p-3 h-full min-h-0 flex flex-col"
+    class="container mx-auto p-3 sm:p-4"
 >
     <h2
         @click="toggle()"
-        class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
+        class="text-lg sm:text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
     >
         Administración de Tareas
-        <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
+        <span class="text-xs sm:text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
     </h2>
 
-    <div x-show="abierto" x-transition class="min-h-0">
+    <div x-show="abierto" x-transition>
         @if (session()->has('message'))
-            <div class="bg-green-100 text-green-800 p-3 rounded mb-3">
+            <div class="bg-green-100 text-green-800 p-3 rounded-lg mb-3 text-sm">
                 {{ session('message') }}
             </div>
         @endif
 
         @if (session()->has('error'))
-            <div class="bg-red-100 text-red-800 p-3 rounded mb-3">
+            <div class="bg-red-100 text-red-800 p-3 rounded-lg mb-3 text-sm">
                 {{ session('error') }}
             </div>
         @endif
 
-        {{-- Tabs --}}
-        <ul class="flex flex-wrap border-b border-gray-200 mb-4 gap-1">
-            @foreach ($tabs as $tab)
-                <li>
-                    <button
-                        wire:click="setTab('{{ $tab }}')"
-                        @class([
-                            'px-3 sm:px-4 py-2 rounded-t-lg text-xs sm:text-sm whitespace-nowrap transition',
-                            'border-b-2 font-semibold bg-white' => $activeTab === $tab,
-                            'text-gray-600 hover:text-blue-500' => $activeTab !== $tab,
-                            'border-blue-500 text-blue-600'     => $activeTab === $tab,
-                            'border-transparent'                => $activeTab !== $tab,
-                        ])
-                    >
-                        {{ $tab }}
-                    </button>
-                </li>
-            @endforeach
-        </ul>
-
         @php
-            $arrow = function(string $field) use ($sortField, $sortDir) {
+            $arrow = function (string $field) use ($sortField, $sortDir) {
                 if ($sortField !== $field) return '⇵';
                 return $sortDir === 'asc' ? '▲' : '▼';
             };
@@ -64,451 +44,224 @@
             ];
         @endphp
 
-        <div class="w-full px-1 sm:px-2">
-            {{-- Top bar --}}
-            <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+        {{-- Tabs --}}
+        <div class="mb-4">
+            <div class="flex flex-wrap gap-2">
+                @foreach ($tabs as $tab)
                     <button
                         type="button"
-                        wire:click="clearFilters"
-                        class="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 border"
+                        wire:key="tab-{{ md5($tab) }}"
+                        wire:click.prevent="setTab('{{ $tab }}')"
+                        class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition disabled:opacity-50"
+                        @if($activeTab === $tab)
+                            style="background-color:#2563eb;color:white;border-color:#2563eb;"
+                        @else
+                            style="background-color:white;color:#4b5563;border-color:#d1d5db;"
+                        @endif
                     >
-                        Limpiar filtros
+                        {{ $tab }}
                     </button>
+                @endforeach
+            </div>
+        </div>
 
-                    <div class="inline-flex items-center gap-2 text-sm text-gray-600">
-                        <span class="font-medium">Total:</span>
-                        <span class="px-2 py-1 bg-gray-100 rounded-lg">{{ $tasks->total() }}</span>
-                    </div>
-                </div>
+        {{-- Top bar --}}
+        <div class="mb-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+                <button
+                    type="button"
+                    wire:click="clearFilters"
+                    class="w-full sm:w-auto px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 border text-sm"
+                >
+                    Limpiar filtros
+                </button>
 
-                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                    <label class="text-sm font-medium text-gray-700 whitespace-nowrap">
-                        Registros por página
-                    </label>
-
-                    <select
-                        wire:model.live="perPage"
-                        class="w-full sm:w-32 rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                    >
-                        @foreach($perPageOptions as $option)
-                            <option value="{{ $option }}">{{ $option }}</option>
-                        @endforeach
-                    </select>
+                <div class="inline-flex items-center gap-2 text-sm text-gray-600">
+                    <span class="font-medium">Total:</span>
+                    <span class="px-2 py-1 bg-gray-100 rounded-lg">{{ $tasks->total() }}</span>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow min-h-64 pb-4">
-                <table class="w-full table-fixed border-collapse border border-gray-200 text-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                <label class="text-sm font-medium text-gray-700 whitespace-nowrap">
+                    Registros por página
+                </label>
+
+                <select
+                    wire:model.live="perPage"
+                    class="w-full sm:w-28 rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                >
+                    @foreach($perPageOptions as $option)
+                        <option value="{{ $option }}">{{ $option }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full border-collapse text-xs sm:text-sm">
                     <thead class="bg-gray-100">
-                        <tr>
+                        <tr class="text-gray-600">
                             {{-- ID --}}
-                            <th class="w-[4.5rem] px-2 py-2 text-left font-medium text-gray-600 align-top">
-                                <div class="flex items-center justify-between gap-1">
-                                    <button
-                                        class="inline-flex items-center gap-1 hover:text-blue-600"
-                                        wire:click="sortBy('id')"
-                                        title="Ordenar por ID"
-                                    >
-                                        <span>ID</span>
-                                        <span class="text-[10px]">{!! $arrow('id') !!}</span>
-                                    </button>
-
-                                    <div x-data="dropdownTeleport()" class="relative shrink-0">
-                                        <button
-                                            x-ref="btn"
-                                            @click="toggle"
-                                            class="p-1 rounded hover:bg-gray-200"
-                                            title="Filtros de ID"
-                                        >
-                                            ⋮
-                                        </button>
-
-                                        <template x-teleport="body">
-                                            <div
-                                                x-show="open"
-                                                x-transition
-                                                @click.outside="close"
-                                                :style="style"
-                                                class="fixed z-50 w-64 rounded-lg border bg-white shadow p-3 space-y-3"
-                                            >
-                                                <div>
-                                                    <label class="block text-xs text-gray-600 mb-1">ID tarea</label>
-                                                    <input
-                                                        type="text"
-                                                        class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                                        placeholder="Ej. 1 o 1,2,3"
-                                                        wire:model.live.debounce.400ms="filters.id"
-                                                    />
-                                                </div>
-
-                                                <div class="pt-1 flex justify-end gap-2">
-                                                    <button
-                                                        type="button"
-                                                        class="px-2 py-1 text-xs rounded border"
-                                                        @click="$wire.set('filters.id','')"
-                                                    >
-                                                        Limpiar
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        class="px-2 py-1 text-xs rounded border"
-                                                        @click="close"
-                                                    >
-                                                        Cerrar
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
+                            <th class="w-[58px] px-2 py-2 text-left font-semibold whitespace-nowrap">
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center gap-1 hover:text-blue-600"
+                                    wire:click="sortBy('id')"
+                                >
+                                    <span>ID</span>
+                                    <span class="text-[10px]">{!! $arrow('id') !!}</span>
+                                </button>
                             </th>
 
-                            {{-- ID Proyecto --}}
-                            <th class="w-[6.5rem] px-2 py-2 text-left font-medium text-gray-600 align-top">
-                                <div class="flex items-center justify-between gap-1">
-                                    <button
-                                        class="inline-flex items-center gap-1 hover:text-blue-600"
-                                        wire:click="sortBy('proyecto_id')"
-                                        title="Ordenar por ID proyecto"
-                                    >
-                                        <span>ID Proy.</span>
-                                        <span class="text-[10px]">{!! $arrow('proyecto_id') !!}</span>
-                                    </button>
-
-                                    <div x-data="{ open:false }" class="relative shrink-0">
-                                        <button
-                                            @click="open = !open"
-                                            class="p-1 rounded hover:bg-gray-200"
-                                            title="Filtrar ID proyecto"
-                                        >
-                                            ⋮
-                                        </button>
-                                        <div
-                                            x-cloak
-                                            x-show="open"
-                                            @click.away="open=false"
-                                            x-transition
-                                            class="absolute right-0 z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
-                                        >
-                                            <label class="block text-xs text-gray-600 mb-1">ID proyecto</label>
-                                            <input
-                                                type="text"
-                                                class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                                placeholder="Ej. 10 o 10,11"
-                                                wire:model.live.debounce.400ms="filters.proyecto_id"
-                                            />
-                                            <div class="mt-2 flex justify-end gap-2">
-                                                <button
-                                                    type="button"
-                                                    class="px-2 py-1 text-xs rounded border"
-                                                    @click="$wire.set('filters.proyecto_id','')"
-                                                >
-                                                    Limpiar
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    class="px-2 py-1 text-xs rounded border"
-                                                    @click="open=false"
-                                                >
-                                                    Cerrar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            {{-- Proyecto ID --}}
+                            <th class="w-[72px] px-2 py-2 text-left font-semibold whitespace-nowrap">
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center gap-1 hover:text-blue-600"
+                                    wire:click="sortBy('proyecto_id')"
+                                >
+                                    <span>Proy.</span>
+                                    <span class="text-[10px]">{!! $arrow('proyecto_id') !!}</span>
+                                </button>
                             </th>
 
                             {{-- Proyecto --}}
-                            <th class="w-[11rem] px-2 py-2 text-left font-medium text-gray-600 align-top">
-                                <div class="flex items-center justify-between gap-1">
-                                    <button
-                                        class="inline-flex items-center gap-1 hover:text-blue-600"
-                                        wire:click="sortBy('proyecto_nombre')"
-                                        title="Ordenar por proyecto"
-                                    >
-                                        <span>Proyecto</span>
-                                        <span class="text-[10px]">{!! $arrow('proyecto_nombre') !!}</span>
-                                    </button>
-
-                                    <div x-data="{ open:false }" class="relative shrink-0">
-                                        <button
-                                            @click="open = !open"
-                                            class="p-1 rounded hover:bg-gray-200"
-                                            title="Filtrar proyecto"
-                                        >
-                                            ⋮
-                                        </button>
-                                        <div
-                                            x-cloak
-                                            x-show="open"
-                                            @click.away="open=false"
-                                            x-transition
-                                            class="absolute right-0 z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
-                                        >
-                                            <label class="block text-xs text-gray-600 mb-1">Nombre del proyecto</label>
-                                            <input
-                                                type="text"
-                                                class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                                placeholder="Buscar proyecto..."
-                                                wire:model.live.debounce.400ms="filters.proyecto"
-                                            />
-                                            <div class="mt-2 flex justify-end gap-2">
-                                                <button
-                                                    type="button"
-                                                    class="px-2 py-1 text-xs rounded border"
-                                                    @click="$wire.set('filters.proyecto','')"
-                                                >
-                                                    Limpiar
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    class="px-2 py-1 text-xs rounded border"
-                                                    @click="open=false"
-                                                >
-                                                    Cerrar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            <th class="min-w-[170px] px-2 py-2 text-left font-semibold">
+                                Proyecto
                             </th>
 
                             {{-- Cliente --}}
                             @if($puedeVerTodasLasTareas)
-                                <th class="w-[10rem] px-2 py-2 text-left font-medium text-gray-600 align-top">
-                                    <div class="flex items-center justify-between gap-1">
-                                        <span>Cliente</span>
-
-                                        <div x-data="{ open:false }" class="relative shrink-0">
-                                            <button
-                                                @click="open = !open"
-                                                class="p-1 rounded hover:bg-gray-200"
-                                                title="Filtrar usuario"
-                                            >
-                                                ⋮
-                                            </button>
-                                            <div
-                                                x-cloak
-                                                x-show="open"
-                                                @click.away="open=false"
-                                                x-transition
-                                                class="absolute right-0 z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
-                                            >
-                                                <label class="block text-xs text-gray-600 mb-1">Nombre o correo</label>
-                                                <input
-                                                    type="text"
-                                                    class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                                    placeholder="Usuario..."
-                                                    wire:model.live.debounce.400ms="filters.usuario"
-                                                />
-                                                <div class="mt-2 flex justify-end gap-2">
-                                                    <button
-                                                        type="button"
-                                                        class="px-2 py-1 text-xs rounded border"
-                                                        @click="$wire.set('filters.usuario','')"
-                                                    >
-                                                        Limpiar
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        class="px-2 py-1 text-xs rounded border"
-                                                        @click="open=false"
-                                                    >
-                                                        Cerrar
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <th class="min-w-[140px] px-2 py-2 text-left font-semibold">
+                                    Cliente
                                 </th>
                             @endif
 
                             {{-- Asignado --}}
-                            <th class="w-[10rem] px-2 py-2 text-left font-medium text-gray-600 align-top">
-                                <div class="flex items-center justify-between gap-1">
-                                    <button
-                                        class="inline-flex items-center gap-1 hover:text-blue-600"
-                                        wire:click="sortBy('asignado')"
-                                        title="Ordenar por asignado"
-                                    >
-                                        <span>Asignado</span>
-                                        <span class="text-[10px]">{!! $arrow('asignado') !!}</span>
-                                    </button>
-
-                                    <div x-data="{ open:false }" class="relative shrink-0">
-                                        <button
-                                            @click="open = !open"
-                                            class="p-1 rounded hover:bg-gray-200"
-                                            title="Filtrar asignado"
-                                        >
-                                            ⋮
-                                        </button>
-                                        <div
-                                            x-cloak
-                                            x-show="open"
-                                            @click.away="open=false"
-                                            x-transition
-                                            class="absolute right-0 z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
-                                        >
-                                            <label class="block text-xs text-gray-600 mb-1">Nombre o correo</label>
-                                            <input
-                                                type="text"
-                                                class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                                placeholder="Asignado a..."
-                                                wire:model.live.debounce.400ms="filters.asignado"
-                                            />
-                                            <div class="mt-2 flex justify-end gap-2">
-                                                <button
-                                                    type="button"
-                                                    class="px-2 py-1 text-xs rounded border"
-                                                    @click="$wire.set('filters.asignado','')"
-                                                >
-                                                    Limpiar
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    class="px-2 py-1 text-xs rounded border"
-                                                    @click="open=false"
-                                                >
-                                                    Cerrar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            <th class="min-w-[140px] px-2 py-2 text-left font-semibold">
+                                Asignado
                             </th>
 
                             {{-- Tipo --}}
-                            <th class="w-[7rem] px-2 py-2 text-left font-medium text-gray-600 align-top">
-                                <div class="flex items-center justify-between gap-1">
-                                    <button
-                                        class="inline-flex items-center gap-1 hover:text-blue-600"
-                                        wire:click="sortBy('tipo')"
-                                        title="Ordenar por tipo"
-                                    >
-                                        <span>Tipo</span>
-                                        <span class="text-[10px]">{!! $arrow('tipo') !!}</span>
-                                    </button>
-
-                                    <div x-data="{ open:false }" class="relative shrink-0">
-                                        <button
-                                            @click="open = !open"
-                                            class="p-1 rounded hover:bg-gray-200"
-                                            title="Filtrar tipo"
-                                        >
-                                            ⋮
-                                        </button>
-                                        <div
-                                            x-cloak
-                                            x-show="open"
-                                            @click.away="open=false"
-                                            x-transition
-                                            class="absolute right-0 z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
-                                        >
-                                            <label class="block text-xs text-gray-600 mb-1">Tipo</label>
-                                            <input
-                                                type="text"
-                                                class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                                placeholder="Tipo..."
-                                                wire:model.live.debounce.400ms="filters.tipo"
-                                            />
-                                            <div class="mt-2 flex justify-end gap-2">
-                                                <button
-                                                    type="button"
-                                                    class="px-2 py-1 text-xs rounded border"
-                                                    @click="$wire.set('filters.tipo','')"
-                                                >
-                                                    Limpiar
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    class="px-2 py-1 text-xs rounded border"
-                                                    @click="open=false"
-                                                >
-                                                    Cerrar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            <th class="w-[110px] px-2 py-2 text-left font-semibold whitespace-nowrap">
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center gap-1 hover:text-blue-600"
+                                    wire:click="sortBy('tipo')"
+                                >
+                                    <span>Tipo</span>
+                                    <span class="text-[10px]">{!! $arrow('tipo') !!}</span>
+                                </button>
                             </th>
 
                             {{-- Descripción --}}
-                            <th class="w-[14rem] px-2 py-2 text-left font-medium text-gray-600 align-top">
-                                <div class="flex items-center justify-between gap-1">
-                                    <button
-                                        class="inline-flex items-center gap-1 hover:text-blue-600"
-                                        wire:click="sortBy('descripcion')"
-                                        title="Ordenar por descripción"
-                                    >
-                                        <span>Descripción</span>
-                                        <span class="text-[10px]">{!! $arrow('descripcion') !!}</span>
-                                    </button>
-                                </div>
+                            <th class="min-w-[220px] px-2 py-2 text-left font-semibold">
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center gap-1 hover:text-blue-600"
+                                    wire:click="sortBy('descripcion')"
+                                >
+                                    <span>Descripción</span>
+                                    <span class="text-[10px]">{!! $arrow('descripcion') !!}</span>
+                                </button>
                             </th>
 
                             {{-- Estado --}}
-                            <th class="w-[9rem] px-2 py-2 text-left font-medium text-gray-600 align-top">
-                                <div class="flex items-center justify-between gap-1">
-                                    <button
-                                        class="inline-flex items-center gap-1 hover:text-blue-600"
-                                        wire:click="sortBy('estado')"
-                                        title="Ordenar por estado"
-                                    >
-                                        <span>Estado</span>
-                                        <span class="text-[10px]">{!! $arrow('estado') !!}</span>
-                                    </button>
-
-                                    <div x-data="{ open:false }" class="relative shrink-0">
-                                        <button
-                                            @click="open = !open"
-                                            class="p-1 rounded hover:bg-gray-200"
-                                            title="Filtrar estado"
-                                        >
-                                            ⋮
-                                        </button>
-                                        <div
-                                            x-cloak
-                                            x-show="open"
-                                            @click.away="open=false"
-                                            x-transition
-                                            class="absolute right-0 z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
-                                        >
-                                            <label class="block text-xs text-gray-600 mb-1">Estado</label>
-                                            <select
-                                                class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                                wire:model.live.debounce.400ms="filters.estado"
-                                            >
-                                                <option value="">Todos</option>
-                                                @foreach($statuses as $status)
-                                                    <option value="{{ $status }}">{{ $status }}</option>
-                                                @endforeach
-                                            </select>
-                                            <div class="mt-2 flex justify-end gap-2">
-                                                <button
-                                                    type="button"
-                                                    class="px-2 py-1 text-xs rounded border"
-                                                    @click="$wire.set('filters.estado','')"
-                                                >
-                                                    Limpiar
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    class="px-2 py-1 text-xs rounded border"
-                                                    @click="open=false"
-                                                >
-                                                    Cerrar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            <th class="w-[120px] px-2 py-2 text-left font-semibold whitespace-nowrap">
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center gap-1 hover:text-blue-600"
+                                    wire:click="sortBy('estado')"
+                                >
+                                    <span>Estado</span>
+                                    <span class="text-[10px]">{!! $arrow('estado') !!}</span>
+                                </button>
                             </th>
 
                             {{-- Acciones --}}
-                            <th class="w-[5.5rem] px-2 py-2 text-left font-medium text-gray-600">
+                            <th class="w-[78px] px-2 py-2 text-left font-semibold whitespace-nowrap">
                                 Acciones
+                            </th>
+                        </tr>
+
+                        {{-- Filtros compactos --}}
+                        <tr class="bg-white border-t border-gray-200">
+                            <th class="px-2 py-2">
+                                <input
+                                    type="text"
+                                    wire:model.live.debounce.400ms="filters.id"
+                                    placeholder="ID"
+                                    class="w-full rounded-lg border-gray-300 text-[11px] px-2 py-1"
+                                />
+                            </th>
+
+                            <th class="px-2 py-2">
+                                <input
+                                    type="text"
+                                    wire:model.live.debounce.400ms="filters.proyecto_id"
+                                    placeholder="ID"
+                                    class="w-full rounded-lg border-gray-300 text-[11px] px-2 py-1"
+                                />
+                            </th>
+
+                            <th class="px-2 py-2">
+                                <input
+                                    type="text"
+                                    wire:model.live.debounce.400ms="filters.proyecto"
+                                    placeholder="Proyecto..."
+                                    class="w-full rounded-lg border-gray-300 text-[11px] px-2 py-1"
+                                />
+                            </th>
+
+                            @if($puedeVerTodasLasTareas)
+                                <th class="px-2 py-2">
+                                    <input
+                                        type="text"
+                                        wire:model.live.debounce.400ms="filters.usuario"
+                                        placeholder="Cliente..."
+                                        class="w-full rounded-lg border-gray-300 text-[11px] px-2 py-1"
+                                    />
+                                </th>
+                            @endif
+
+                            <th class="px-2 py-2">
+                                <input
+                                    type="text"
+                                    wire:model.live.debounce.400ms="filters.asignado"
+                                    placeholder="Asignado..."
+                                    class="w-full rounded-lg border-gray-300 text-[11px] px-2 py-1"
+                                />
+                            </th>
+
+                            <th class="px-2 py-2">
+                                <input
+                                    type="text"
+                                    wire:model.live.debounce.400ms="filters.tipo"
+                                    placeholder="Tipo..."
+                                    class="w-full rounded-lg border-gray-300 text-[11px] px-2 py-1"
+                                />
+                            </th>
+
+                            <th class="px-2 py-2">
+                                <div class="text-[11px] text-gray-400 px-1">—</div>
+                            </th>
+
+                            <th class="px-2 py-2">
+                                <select
+                                    wire:model.live.debounce.400ms="filters.estado"
+                                    class="w-full rounded-lg border-gray-300 text-[11px] px-2 py-1"
+                                >
+                                    <option value="">Todos</option>
+                                    @foreach($statuses as $status)
+                                        <option value="{{ $status }}">{{ $status }}</option>
+                                    @endforeach
+                                </select>
+                            </th>
+
+                            <th class="px-2 py-2">
+                                <div class="text-[11px] text-gray-400 px-1">—</div>
                             </th>
                         </tr>
                     </thead>
@@ -520,12 +273,12 @@
                                 $badge = $coloresEstadoTarea[$estado] ?? 'bg-gray-300 text-gray-700';
                             @endphp
 
-                            <tr class="hover:bg-gray-50 align-top">
-                                <td class="px-2 py-2 text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
+                            <tr class="border-t border-gray-100 hover:bg-gray-50 align-top">
+                                <td class="px-2 py-2 font-semibold text-gray-700 whitespace-nowrap">
                                     {{ $task->id }}
                                 </td>
 
-                                <td class="px-2 py-2 text-xs sm:text-sm text-gray-700 whitespace-nowrap">
+                                <td class="px-2 py-2 text-gray-700 whitespace-nowrap">
                                     @if($task->proyecto)
                                         <a
                                             href="{{ route('proyecto.show', $task->proyecto->id) }}"
@@ -534,47 +287,47 @@
                                             {{ $task->proyecto->id }}
                                         </a>
                                     @else
-                                        <span class="text-gray-500">S/P</span>
+                                        <span class="text-gray-400">S/P</span>
                                     @endif
                                 </td>
 
-                                <td class="px-2 py-2 text-xs sm:text-sm text-gray-700">
-                                    <div class="truncate" title="{{ $task->proyecto->nombre ?? 'Sin proyecto' }}">
+                                <td class="px-2 py-2 text-gray-700">
+                                    <div class="truncate max-w-[220px]" title="{{ $task->proyecto->nombre ?? 'Sin proyecto' }}">
                                         {{ $task->proyecto->nombre ?? 'Sin proyecto' }}
                                     </div>
                                 </td>
 
                                 @if($puedeVerTodasLasTareas)
-                                    <td class="px-2 py-2 text-xs sm:text-sm text-gray-700">
-                                        <div class="truncate" title="{{ $task->proyecto->user->name ?? 'Sin usuario' }}">
+                                    <td class="px-2 py-2 text-gray-700">
+                                        <div class="truncate max-w-[180px]" title="{{ $task->proyecto->user->name ?? 'Sin usuario' }}">
                                             {{ $task->proyecto->user->name ?? 'Sin usuario' }}
                                         </div>
                                     </td>
                                 @endif
 
-                                <td class="px-2 py-2 text-xs sm:text-sm text-gray-700">
-                                    <div class="truncate" title="{{ $task->staff->name ?? 'No asignado' }}">
+                                <td class="px-2 py-2 text-gray-700">
+                                    <div class="truncate max-w-[180px]" title="{{ $task->staff->name ?? 'No asignado' }}">
                                         {{ $task->staff->name ?? 'No asignado' }}
                                     </div>
                                 </td>
 
-                                <td class="px-2 py-2 text-xs sm:text-sm text-gray-700 whitespace-nowrap">
+                                <td class="px-2 py-2 text-gray-700 whitespace-nowrap">
                                     {{ $task->tipo ?? 'Sin tipo' }}
                                 </td>
 
-                                <td class="px-2 py-2 text-xs sm:text-sm text-gray-700">
-                                    <div class="line-clamp-3 break-words" title="{{ $task->descripcion ?: 'Sin descripción' }}">
+                                <td class="px-2 py-2 text-gray-700">
+                                    <div class="line-clamp-2 break-words max-w-[260px]" title="{{ $task->descripcion ?: 'Sin descripción' }}">
                                         {{ $task->descripcion ?: 'Sin descripción' }}
                                     </div>
                                 </td>
 
-                                <td class="px-2 py-2 text-xs sm:text-sm">
-                                    <span class="inline-flex items-center justify-center w-full px-2 py-1 rounded-full text-[11px] font-semibold {{ $badge }}">
+                                <td class="px-2 py-2">
+                                    <span class="inline-flex items-center justify-center px-2 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold whitespace-nowrap {{ $badge }}">
                                         {{ $estado }}
                                     </span>
                                 </td>
 
-                                <td class="px-2 py-2 text-xs sm:text-sm">
+                                <td class="px-2 py-2">
                                     <x-dropdown>
                                         @can('ir-detalles-tarea')
                                             @if($task->proyecto)
@@ -608,10 +361,10 @@
                     </tbody>
                 </table>
             </div>
+        </div>
 
-            <div class="mt-4">
-                {{ $tasks->links() }}
-            </div>
+        <div class="mt-4">
+            {{ $tasks->links() }}
         </div>
 
         @if($modalOpen)
@@ -627,7 +380,7 @@
                     </select>
 
                     @error('newStatus')
-                        <div class="bg-red-100 text-red-800 p-3 rounded mb-3">
+                        <div class="bg-red-100 text-red-800 p-3 rounded mb-3 text-sm">
                             {{ $message }}
                         </div>
                     @enderror
@@ -693,37 +446,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            window.dropdownTeleport = () => ({
-                open: false,
-                style: '',
-                toggle() {
-                    this.open = !this.open;
-                    if (this.open) this.reposition();
-                },
-                close() {
-                    this.open = false;
-                },
-                reposition() {
-                    const btn = this.$refs.btn;
-                    if (!btn) return;
-
-                    const r = btn.getBoundingClientRect();
-                    const panelW = 256;
-                    const gap = 6;
-
-                    let left = r.right - panelW;
-                    const top = r.bottom + gap;
-
-                    const vw = window.innerWidth;
-                    const margin = 8;
-
-                    if (left < margin) left = margin;
-                    if (left + panelW > vw - margin) left = vw - margin - panelW;
-
-                    this.style = `top:${top}px;left:${left}px`;
-                }
-            });
-
             window.addEventListener('abrir-modal-estado', e => {
                 const id = e.detail?.id;
                 if (id && window.Livewire) {
