@@ -202,7 +202,7 @@ class AdministraTareas extends Component
     protected function buildTasksQuery()
     {
         $user = auth()->user();
-        $puedeVerTodasLasTareas = $user->hasRole('admin') || $user->can('tareas-disenio-ver-todas');
+        $puedeVerTodasLasTareas =  $user->can('tareas-disenio-ver-todas');
 
         $query = Tarea::query()->with([
             'proyecto',
@@ -273,7 +273,7 @@ class AdministraTareas extends Component
     public function render()
     {
         $user = auth()->user();
-        $puedeVerTodasLasTareas = $user->hasRole('admin') || $user->can('tareas-disenio-ver-todas');
+        $puedeVerTodasLasTareas =  $user->can('tareas-disenio-ver-todas');
 
         $tasks = $this->buildTasksQuery()->paginate($this->perPage);
 
