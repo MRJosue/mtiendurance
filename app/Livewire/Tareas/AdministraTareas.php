@@ -196,16 +196,31 @@ class AdministraTareas extends Component
         $this->newStatus = null;
     }
 
-    public function verificarProceso($proyectoId)
+    public function verificarProceso($taskId)
     {
-        $tarea = Tarea::where('proyecto_id', $proyectoId)->first();
+        $tarea = Tarea::with('proyecto')->find($taskId);
 
-        if ($tarea && $tarea->disenio_flag_first_proceso == 0) {
+        if (!$tarea || !$tarea->proyecto) {
+            session()->flash('error', 'La tarea o el proyecto no fueron encontrados.');
+            return;
+        }
+
+        $usuarioAutenticadoId = Auth::id();
+
+        // Si la tarea NO pertenece al usuario autenticado,
+        // se envía directo a los detalles del proyecto.
+        if ((int) $tarea->staff_id !== (int) $usuarioAutenticadoId) {
+            return redirect()->route('proyecto.show', $tarea->proyecto->id);
+        }
+
+        // Si la tarea sí le pertenece, sigue el flujo normal.
+        if ((int) $tarea->disenio_flag_first_proceso === 0) {
             $this->mostrarModalConfirmacion = true;
             $this->proyectoPendienteConfirmacion = $tarea->proyecto;
-        } else {
-            return redirect()->route('proyecto.show', $proyectoId);
+            return;
         }
+
+        return redirect()->route('proyecto.show', $tarea->proyecto->id);
     }
 
     public function confirmarInicioProceso()
@@ -318,6 +333,8 @@ class AdministraTareas extends Component
 
         return $query;
     }
+
+    
 
     public function render()
     {

@@ -579,7 +579,7 @@
                                         @can('ir-detalles-tarea')
                                             @if($task->proyecto)
                                                 <x-dropdown.item
-                                                    wire:click="verificarProceso({{ $task->proyecto->id }})"
+                                                    wire:click="verificarProceso({{ $task->id }})"
                                                     label="Ver detalles"
                                                 />
                                             @endif
