@@ -12,8 +12,8 @@ class AdministraTareas extends Component
 {
     use WithPagination;
 
-    public $selectedTask;
-    public $newStatus;
+    public $selectedTask = null;
+    public $newStatus = null;
     public $statuses = ['PENDIENTE', 'EN PROCESO', 'COMPLETADA', 'RECHAZADO', 'CANCELADO'];
     public $modalOpen = false;
     public $mostrarModalConfirmacion = false;
@@ -33,16 +33,17 @@ class AdministraTareas extends Component
         'descripcion',
     ];
 
-    public string $activeTab = 'TODAS';
-
+    /* ---------- Tabs UI ---------- */
     public array $tabs = [
-        'TODAS',
         'PENDIENTE',
         'EN PROCESO',
         'COMPLETADA',
         'RECHAZADO',
         'CANCELADO',
+        'TODAS',
     ];
+
+    public string $activeTab = 'PENDIENTE';
 
     public array $filters = [
         'id' => null,
@@ -56,8 +57,13 @@ class AdministraTareas extends Component
 
     public function mount(): void
     {
-        $this->activeTab = 'TODAS';
-        $this->perPage = 10;
+        if (!in_array($this->activeTab, $this->tabs, true)) {
+            $this->activeTab = $this->tabs[0];
+        }
+
+        if (!in_array($this->perPage, $this->perPageOptions, true)) {
+            $this->perPage = 10;
+        }
     }
 
     public function updating($field): void
@@ -207,13 +213,10 @@ class AdministraTareas extends Component
 
         $usuarioAutenticadoId = Auth::id();
 
-        // Si la tarea NO pertenece al usuario autenticado,
-        // se envía directo a los detalles del proyecto.
         if ((int) $tarea->staff_id !== (int) $usuarioAutenticadoId) {
             return redirect()->route('proyecto.show', $tarea->proyecto->id);
         }
 
-        // Si la tarea sí le pertenece, sigue el flujo normal.
         if ((int) $tarea->disenio_flag_first_proceso === 0) {
             $this->mostrarModalConfirmacion = true;
             $this->proyectoPendienteConfirmacion = $tarea->proyecto;
@@ -308,14 +311,18 @@ class AdministraTareas extends Component
             )
             ->when($this->filters['usuario'] && $puedeVerTodasLasTareas, fn ($q, $v) =>
                 $q->whereHas('proyecto.user', fn ($sub) =>
-                    $sub->where('name', 'like', '%' . trim($v) . '%')
-                        ->orWhere('email', 'like', '%' . trim($v) . '%')
+                    $sub->where(function ($qq) use ($v) {
+                        $qq->where('name', 'like', '%' . trim($v) . '%')
+                           ->orWhere('email', 'like', '%' . trim($v) . '%');
+                    })
                 )
             )
             ->when($this->filters['asignado'], fn ($q, $v) =>
                 $q->whereHas('staff', fn ($sub) =>
-                    $sub->where('name', 'like', '%' . trim($v) . '%')
-                        ->orWhere('email', 'like', '%' . trim($v) . '%')
+                    $sub->where(function ($qq) use ($v) {
+                        $qq->where('name', 'like', '%' . trim($v) . '%')
+                           ->orWhere('email', 'like', '%' . trim($v) . '%');
+                    })
                 )
             )
             ->when($this->filters['tipo'], fn ($q, $v) =>
@@ -333,8 +340,6 @@ class AdministraTareas extends Component
 
         return $query;
     }
-
-    
 
     public function render()
     {
