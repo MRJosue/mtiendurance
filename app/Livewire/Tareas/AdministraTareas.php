@@ -26,6 +26,19 @@ class AdministraTareas extends Component
     public string $sortDir = 'desc';
     protected array $sortable = ['id', 'proyecto_id', 'tipo', 'estado', 'descripcion'];
 
+   public string $activeTab = 'TODAS';
+
+
+    public array $tabs = [
+        'TODAS',
+        'PENDIENTE',
+        'EN PROCESO',
+        'COMPLETADA',
+        'RECHAZADO',
+        'CANCELADO',
+    ];
+
+
     public array $filters = [
         'id' => null,
         'proyecto_id' => null,
@@ -35,6 +48,11 @@ class AdministraTareas extends Component
         'tipo' => null,
         'estado' => null,
     ];
+
+    public function mount(): void
+    {
+        $this->activeTab = 'TODAS';
+    }
 
     public function updating($field)
     {
@@ -57,6 +75,27 @@ class AdministraTareas extends Component
 
     public function updatedFilters(): void
     {
+        $this->resetPage();
+    }
+
+    public function setTab(string $tab): void
+    {
+        if (!in_array($tab, $this->tabs, true)) {
+            return;
+        }
+
+        $this->activeTab = $tab;
+        $this->resetPage();
+    }
+
+    public function filtroEstado(string $estado): void
+    {
+        if (($this->filters['estado'] ?? '') === $estado) {
+            $this->filters['estado'] = '';
+        } else {
+            $this->filters['estado'] = $estado;
+        }
+
         $this->resetPage();
     }
 
@@ -202,7 +241,7 @@ class AdministraTareas extends Component
     protected function buildTasksQuery()
     {
         $user = auth()->user();
-        $puedeVerTodasLasTareas =  $user->can('tareas-disenio-ver-todas');
+        $puedeVerTodasLasTareas = $user->hasRole('admin') || $user->can('tareas-disenio-ver-todas');
 
         $query = Tarea::query()->with([
             'proyecto',
@@ -210,9 +249,17 @@ class AdministraTareas extends Component
             'staff',
         ]);
 
+        // Restricción por permisos
         if (!$puedeVerTodasLasTareas) {
             $query->where('staff_id', $user->id);
         }
+
+        // Tab por estado
+        if ($this->activeTab !== 'TODAS') {
+            $query->where('estado', $this->activeTab);
+        }
+
+     
 
         $query
             ->when($this->filters['id'], function ($q, $v) {
@@ -273,7 +320,7 @@ class AdministraTareas extends Component
     public function render()
     {
         $user = auth()->user();
-        $puedeVerTodasLasTareas =  $user->can('tareas-disenio-ver-todas');
+        $puedeVerTodasLasTareas = $user->hasRole('admin') || $user->can('tareas-disenio-ver-todas');
 
         $tasks = $this->buildTasksQuery()->paginate($this->perPage);
 

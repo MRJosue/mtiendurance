@@ -8,33 +8,44 @@
 
     <!-- Sección de Tareas -->
     <div>
+
+
         @if ($proyecto->tareas->isEmpty())
             <div class="flex flex-wrap gap-2 mb-4">
-                <button
+
+            @can('Boton-asignar-tarea') 
+                 <button
                     wire:click="abrirModal"
                     class="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded"
                 >
                     Asignar tarea
                 </button>
 
-                @if($proyecto->flag_requiere_proveedor)
-                    <button
-                        wire:click="abrirModalProveedor"
-                        class="w-full sm:w-auto bg-purple-500 hover:bg-purple-600 text-white font-semibold px-4 py-2 rounded"
-                    >
-                        {{ $proyecto->proveedor?->name ? 'Cambiar / Chat proveedor' : 'Asignar proveedor' }}
-                    </button>
-                @endif
+            @endcan
+            @can('Boton-asignar-proveedor')
+                    @if($proyecto->flag_requiere_proveedor)
+                        <button
+                            wire:click="abrirModalProveedor"
+                            class="w-full sm:w-auto bg-purple-500 hover:bg-purple-600 text-white font-semibold px-4 py-2 rounded"
+                        >
+                            {{ $proyecto->proveedor?->name ? 'Cambiar / Chat proveedor' : 'Asignar proveedor' }}
+                        </button>
+                    @endif
+            @endcan
+
             </div>
         @else
             <div class="flex flex-wrap gap-2 mb-4">
+
+                @can('Boton-asignar-tarea') 
                 <button
                     wire:click="abrirModal"
                     class="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded"
                 >
                     Asignar tarea
                 </button>
-
+                @endcan
+                @can('Boton-asignar-proveedor')
                 @if($proyecto->flag_requiere_proveedor)
                     <button
                         wire:click="abrirModalProveedor"
@@ -43,58 +54,64 @@
                         {{ $proyecto->proveedor?->name ? 'Cambiar / Chat proveedor' : 'Asignar proveedor' }}
                     </button>
                 @endif
+                @endcan
             </div>
-
-            <div class="overflow-x-auto bg-white rounded-lg shadow border">
-                <table class="min-w-full text-sm text-left table-auto border-collapse">
-                    <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
-                        <tr>
-                            <th class="px-4 py-3 border">Staff</th>
-                            <th class="px-4 py-3 border">Tipo</th>
-                            <th class="px-4 py-3 border">Descripción</th>
-                            <th class="px-4 py-3 border">Estado</th>
-                            <th class="px-4 py-3 border">Creado</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-700">
-                        @foreach ($proyecto->tareas as $tarea)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-2 border">{{ $tarea->staff->name ?? '—' }}</td>
-                                <td class="px-4 py-2 border">{{ $tarea->tipo ?? '—' }}</td>
-                                <td class="px-4 py-2 border">{{ $tarea->descripcion }}</td>
-                                <td class="px-4 py-2 border">{{ $tarea->estado }}</td>
-                                <td class="px-4 py-2 border">{{ $tarea->created_at->format('d-m-Y H:i') }}</td>
+             @can('Ver-historial-tareas')
+                <div class="overflow-x-auto bg-white rounded-lg shadow border">
+                    <table class="min-w-full text-sm text-left table-auto border-collapse">
+                        <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+                            <tr>
+                                <th class="px-4 py-3 border">Staff</th>
+                                <th class="px-4 py-3 border">Tipo</th>
+                                <th class="px-4 py-3 border">Descripción</th>
+                                <th class="px-4 py-3 border">Estado</th>
+                                <th class="px-4 py-3 border">Creado</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody class="text-gray-700">
+                            @foreach ($proyecto->tareas as $tarea)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-2 border">{{ $tarea->staff->name ?? '—' }}</td>
+                                    <td class="px-4 py-2 border">{{ $tarea->tipo ?? '—' }}</td>
+                                    <td class="px-4 py-2 border">{{ $tarea->descripcion }}</td>
+                                    <td class="px-4 py-2 border">{{ $tarea->estado }}</td>
+                                    <td class="px-4 py-2 border">{{ $tarea->created_at->format('d-m-Y H:i') }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endcan
         @endif
     </div>
 
     <!-- Sección de Historial -->
-    <div class="mt-6">
-        <h3 class="text-lg font-semibold mb-2">Historial de Estados</h3>
 
-        @if($proyecto->estados->isNotEmpty())
-            <ul class="list-disc list-inside space-y-1 text-sm text-gray-700">
-                @foreach($proyecto->estados->sortByDesc('id')->take(2) as $estado)
-                    <li>
-                        <strong>{{ $estado->estado }}</strong>
-                        ({{ \Carbon\Carbon::parse($estado->fecha_inicio)->format('d-m-Y H:i') }}) por {{ $estado->usuario->name ?? 'Desconocido' }}
-                    </li>
-                @endforeach
-            </ul>
+    @can('Ver-historial-tareas')
+            <div class="mt-6">
+                <h3 class="text-lg font-semibold mb-2">Historial de Estados</h3>
 
-            @if($proyecto->estados->count() > 2)
-                <button wire:click="verMas" class="text-blue-500 hover:underline text-sm mt-1">
-                    Ver más
-                </button>
-            @endif
-        @else
-            <p class="text-gray-500 text-sm">Sin historial</p>
-        @endif
-    </div>
+                @if($proyecto->estados->isNotEmpty())
+                    <ul class="list-disc list-inside space-y-1 text-sm text-gray-700">
+                        @foreach($proyecto->estados->sortByDesc('id')->take(2) as $estado)
+                            <li>
+                                <strong>{{ $estado->estado }}</strong>
+                                ({{ \Carbon\Carbon::parse($estado->fecha_inicio)->format('d-m-Y H:i') }}) por {{ $estado->usuario->name ?? 'Desconocido' }}
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    @if($proyecto->estados->count() > 2)
+                        <button wire:click="verMas" class="text-blue-500 hover:underline text-sm mt-1">
+                            Ver más
+                        </button>
+                    @endif
+                @else
+                    <p class="text-gray-500 text-sm">Sin historial</p>
+                @endif
+            </div>
+    @endcan
+
 
     <!-- Modal de Asignación -->
     @if ($modalOpen)
