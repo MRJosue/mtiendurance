@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use App\Models\Tarea;
 use App\Models\proyecto_estados;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AdministraTareas extends Component
 {
@@ -92,7 +93,9 @@ class AdministraTareas extends Component
 
     public function setTab(string $tab): void
     {
+        Log::debug('setTab', ['tab' => $tab]);
         if (!in_array($tab, $this->tabs, true)) {
+            Log::warning('Tab no válida', ['tab' => $tab]);
             return;
         }
 
