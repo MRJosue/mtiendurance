@@ -36,7 +36,7 @@
                     <button
                         wire:click="setTab('{{ $tab }}')"
                         @class([
-                            'px-4 py-2 rounded-t-lg text-sm whitespace-nowrap transition',
+                            'px-3 sm:px-4 py-2 rounded-t-lg text-xs sm:text-sm whitespace-nowrap transition',
                             'border-b-2 font-semibold bg-white' => $activeTab === $tab,
                             'text-gray-600 hover:text-blue-500' => $activeTab !== $tab,
                             'border-blue-500 text-blue-600'     => $activeTab === $tab,
@@ -48,9 +48,6 @@
                 </li>
             @endforeach
         </ul>
-
-        {{-- top bar --}}
-
 
         @php
             $arrow = function(string $field) use ($sortField, $sortDir) {
@@ -67,21 +64,54 @@
             ];
         @endphp
 
-        <div class="w-full px-2 sm:px-3">
-            <div class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8">
-                <table class="w-full table-auto border-collapse border border-gray-200">
+        <div class="w-full px-1 sm:px-2">
+            {{-- Top bar --}}
+            <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+                    <button
+                        type="button"
+                        wire:click="clearFilters"
+                        class="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 border"
+                    >
+                        Limpiar filtros
+                    </button>
+
+                    <div class="inline-flex items-center gap-2 text-sm text-gray-600">
+                        <span class="font-medium">Total:</span>
+                        <span class="px-2 py-1 bg-gray-100 rounded-lg">{{ $tasks->total() }}</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                    <label class="text-sm font-medium text-gray-700 whitespace-nowrap">
+                        Registros por página
+                    </label>
+
+                    <select
+                        wire:model.live="perPage"
+                        class="w-full sm:w-32 rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                    >
+                        @foreach($perPageOptions as $option)
+                            <option value="{{ $option }}">{{ $option }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow min-h-64 pb-4">
+                <table class="w-full table-fixed border-collapse border border-gray-200 text-sm">
                     <thead class="bg-gray-100">
                         <tr>
                             {{-- ID --}}
-                            <th class="w-[5.5rem] min-w-[5.5rem] max-w-[5.5rem] px-2 py-2 text-left text-sm font-medium text-gray-600 align-top">
-                                <div class="flex items-center justify-between gap-1 w-full">
+                            <th class="w-[4.5rem] px-2 py-2 text-left font-medium text-gray-600 align-top">
+                                <div class="flex items-center justify-between gap-1">
                                     <button
                                         class="inline-flex items-center gap-1 hover:text-blue-600"
                                         wire:click="sortBy('id')"
                                         title="Ordenar por ID"
                                     >
                                         <span>ID</span>
-                                        <span class="text-xs">{!! $arrow('id') !!}</span>
+                                        <span class="text-[10px]">{!! $arrow('id') !!}</span>
                                     </button>
 
                                     <div x-data="dropdownTeleport()" class="relative shrink-0">
@@ -135,15 +165,15 @@
                             </th>
 
                             {{-- ID Proyecto --}}
-                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
-                                <div class="flex items-center justify-between gap-2 min-w-[10rem]">
+                            <th class="w-[6.5rem] px-2 py-2 text-left font-medium text-gray-600 align-top">
+                                <div class="flex items-center justify-between gap-1">
                                     <button
                                         class="inline-flex items-center gap-1 hover:text-blue-600"
                                         wire:click="sortBy('proyecto_id')"
                                         title="Ordenar por ID proyecto"
                                     >
-                                        <span>ID proyecto</span>
-                                        <span class="text-xs">{!! $arrow('proyecto_id') !!}</span>
+                                        <span>ID Proy.</span>
+                                        <span class="text-[10px]">{!! $arrow('proyecto_id') !!}</span>
                                     </button>
 
                                     <div x-data="{ open:false }" class="relative shrink-0">
@@ -190,15 +220,15 @@
                             </th>
 
                             {{-- Proyecto --}}
-                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
-                                <div class="flex items-center justify-between gap-2 min-w-[14rem]">
+                            <th class="w-[11rem] px-2 py-2 text-left font-medium text-gray-600 align-top">
+                                <div class="flex items-center justify-between gap-1">
                                     <button
                                         class="inline-flex items-center gap-1 hover:text-blue-600"
                                         wire:click="sortBy('proyecto_nombre')"
                                         title="Ordenar por proyecto"
                                     >
                                         <span>Proyecto</span>
-                                        <span class="text-xs">{!! $arrow('proyecto_nombre') !!}</span>
+                                        <span class="text-[10px]">{!! $arrow('proyecto_nombre') !!}</span>
                                     </button>
 
                                     <div x-data="{ open:false }" class="relative shrink-0">
@@ -244,10 +274,10 @@
                                 </div>
                             </th>
 
-                            {{-- Usuario --}}
+                            {{-- Cliente --}}
                             @if($puedeVerTodasLasTareas)
-                                <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
-                                    <div class="flex items-center justify-between gap-2 min-w-[12rem]">
+                                <th class="w-[10rem] px-2 py-2 text-left font-medium text-gray-600 align-top">
+                                    <div class="flex items-center justify-between gap-1">
                                         <span>Cliente</span>
 
                                         <div x-data="{ open:false }" class="relative shrink-0">
@@ -295,15 +325,15 @@
                             @endif
 
                             {{-- Asignado --}}
-                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
-                                <div class="flex items-center justify-between gap-2 min-w-[12rem]">
+                            <th class="w-[10rem] px-2 py-2 text-left font-medium text-gray-600 align-top">
+                                <div class="flex items-center justify-between gap-1">
                                     <button
                                         class="inline-flex items-center gap-1 hover:text-blue-600"
                                         wire:click="sortBy('asignado')"
                                         title="Ordenar por asignado"
                                     >
-                                        <span>Asignado a</span>
-                                        <span class="text-xs">{!! $arrow('asignado') !!}</span>
+                                        <span>Asignado</span>
+                                        <span class="text-[10px]">{!! $arrow('asignado') !!}</span>
                                     </button>
 
                                     <div x-data="{ open:false }" class="relative shrink-0">
@@ -350,15 +380,15 @@
                             </th>
 
                             {{-- Tipo --}}
-                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
-                                <div class="flex items-center justify-between gap-2 min-w-[10rem]">
+                            <th class="w-[7rem] px-2 py-2 text-left font-medium text-gray-600 align-top">
+                                <div class="flex items-center justify-between gap-1">
                                     <button
                                         class="inline-flex items-center gap-1 hover:text-blue-600"
                                         wire:click="sortBy('tipo')"
                                         title="Ordenar por tipo"
                                     >
                                         <span>Tipo</span>
-                                        <span class="text-xs">{!! $arrow('tipo') !!}</span>
+                                        <span class="text-[10px]">{!! $arrow('tipo') !!}</span>
                                     </button>
 
                                     <div x-data="{ open:false }" class="relative shrink-0">
@@ -405,29 +435,29 @@
                             </th>
 
                             {{-- Descripción --}}
-                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
-                                <div class="flex items-center justify-between gap-2 min-w-[16rem]">
+                            <th class="w-[14rem] px-2 py-2 text-left font-medium text-gray-600 align-top">
+                                <div class="flex items-center justify-between gap-1">
                                     <button
                                         class="inline-flex items-center gap-1 hover:text-blue-600"
                                         wire:click="sortBy('descripcion')"
                                         title="Ordenar por descripción"
                                     >
-                                        <span>Descripción de tarea</span>
-                                        <span class="text-xs">{!! $arrow('descripcion') !!}</span>
+                                        <span>Descripción</span>
+                                        <span class="text-[10px]">{!! $arrow('descripcion') !!}</span>
                                     </button>
                                 </div>
                             </th>
 
                             {{-- Estado --}}
-                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
-                                <div class="flex items-center justify-between gap-2 min-w-[11rem]">
+                            <th class="w-[9rem] px-2 py-2 text-left font-medium text-gray-600 align-top">
+                                <div class="flex items-center justify-between gap-1">
                                     <button
                                         class="inline-flex items-center gap-1 hover:text-blue-600"
                                         wire:click="sortBy('estado')"
                                         title="Ordenar por estado"
                                     >
-                                        <span>Estado de ka tarea</span>
-                                        <span class="text-xs">{!! $arrow('estado') !!}</span>
+                                        <span>Estado</span>
+                                        <span class="text-[10px]">{!! $arrow('estado') !!}</span>
                                     </button>
 
                                     <div x-data="{ open:false }" class="relative shrink-0">
@@ -477,7 +507,7 @@
                             </th>
 
                             {{-- Acciones --}}
-                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
+                            <th class="w-[5.5rem] px-2 py-2 text-left font-medium text-gray-600">
                                 Acciones
                             </th>
                         </tr>
@@ -490,12 +520,12 @@
                                 $badge = $coloresEstadoTarea[$estado] ?? 'bg-gray-300 text-gray-700';
                             @endphp
 
-                            <tr class="hover:bg-gray-50">
-                                <td class="w-[5.5rem] min-w-[5.5rem] max-w-[5.5rem] px-2 py-2 text-sm font-semibold text-gray-700 whitespace-nowrap">
+                            <tr class="hover:bg-gray-50 align-top">
+                                <td class="px-2 py-2 text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">
                                     {{ $task->id }}
                                 </td>
 
-                                <td class="px-3 py-2 text-sm text-gray-700">
+                                <td class="px-2 py-2 text-xs sm:text-sm text-gray-700 whitespace-nowrap">
                                     @if($task->proyecto)
                                         <a
                                             href="{{ route('proyecto.show', $task->proyecto->id) }}"
@@ -504,41 +534,47 @@
                                             {{ $task->proyecto->id }}
                                         </a>
                                     @else
-                                        <span class="text-gray-500">Sin proyecto</span>
+                                        <span class="text-gray-500">S/P</span>
                                     @endif
                                 </td>
 
-                                <td class="px-3 py-2 text-sm text-gray-700">
-                                    {{ $task->proyecto->nombre ?? 'Sin proyecto' }}
+                                <td class="px-2 py-2 text-xs sm:text-sm text-gray-700">
+                                    <div class="truncate" title="{{ $task->proyecto->nombre ?? 'Sin proyecto' }}">
+                                        {{ $task->proyecto->nombre ?? 'Sin proyecto' }}
+                                    </div>
                                 </td>
 
                                 @if($puedeVerTodasLasTareas)
-                                    <td class="px-3 py-2 text-sm text-gray-700">
-                                        {{ $task->proyecto->user->name ?? 'Sin usuario' }}
+                                    <td class="px-2 py-2 text-xs sm:text-sm text-gray-700">
+                                        <div class="truncate" title="{{ $task->proyecto->user->name ?? 'Sin usuario' }}">
+                                            {{ $task->proyecto->user->name ?? 'Sin usuario' }}
+                                        </div>
                                     </td>
                                 @endif
 
-                                <td class="px-3 py-2 text-sm text-gray-700">
-                                    {{ $task->staff->name ?? 'No asignado' }}
+                                <td class="px-2 py-2 text-xs sm:text-sm text-gray-700">
+                                    <div class="truncate" title="{{ $task->staff->name ?? 'No asignado' }}">
+                                        {{ $task->staff->name ?? 'No asignado' }}
+                                    </div>
                                 </td>
 
-                                <td class="px-3 py-2 text-sm text-gray-700 whitespace-nowrap">
+                                <td class="px-2 py-2 text-xs sm:text-sm text-gray-700 whitespace-nowrap">
                                     {{ $task->tipo ?? 'Sin tipo' }}
                                 </td>
 
-                                <td class="px-3 py-2 text-sm text-gray-700 max-w-[24rem]">
-                                    <div class="break-words whitespace-normal">
+                                <td class="px-2 py-2 text-xs sm:text-sm text-gray-700">
+                                    <div class="line-clamp-3 break-words" title="{{ $task->descripcion ?: 'Sin descripción' }}">
                                         {{ $task->descripcion ?: 'Sin descripción' }}
                                     </div>
                                 </td>
 
-                                <td class="px-3 py-2 text-sm whitespace-nowrap min-w-[10rem]">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[10rem] justify-center {{ $badge }}">
+                                <td class="px-2 py-2 text-xs sm:text-sm">
+                                    <span class="inline-flex items-center justify-center w-full px-2 py-1 rounded-full text-[11px] font-semibold {{ $badge }}">
                                         {{ $estado }}
                                     </span>
                                 </td>
 
-                                <td class="px-3 py-2 text-sm">
+                                <td class="px-2 py-2 text-xs sm:text-sm">
                                     <x-dropdown>
                                         @can('ir-detalles-tarea')
                                             @if($task->proyecto)

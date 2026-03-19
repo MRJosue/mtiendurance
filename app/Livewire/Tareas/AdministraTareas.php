@@ -24,10 +24,16 @@ class AdministraTareas extends Component
 
     public string $sortField = 'id';
     public string $sortDir = 'desc';
-    protected array $sortable = ['id', 'proyecto_id', 'tipo', 'estado', 'descripcion'];
 
-   public string $activeTab = 'TODAS';
+    protected array $sortable = [
+        'id',
+        'proyecto_id',
+        'tipo',
+        'estado',
+        'descripcion',
+    ];
 
+    public string $activeTab = 'TODAS';
 
     public array $tabs = [
         'TODAS',
@@ -37,7 +43,6 @@ class AdministraTareas extends Component
         'RECHAZADO',
         'CANCELADO',
     ];
-
 
     public array $filters = [
         'id' => null,
@@ -52,9 +57,10 @@ class AdministraTareas extends Component
     public function mount(): void
     {
         $this->activeTab = 'TODAS';
+        $this->perPage = 10;
     }
 
-    public function updating($field)
+    public function updating($field): void
     {
         if ($field === 'perPage') {
             $this->resetPage();
@@ -131,7 +137,7 @@ class AdministraTareas extends Component
         $this->resetPage();
     }
 
-    public function abrirModal($taskId)
+    public function abrirModal($taskId): void
     {
         $this->selectedTask = Tarea::find($taskId);
 
@@ -144,7 +150,7 @@ class AdministraTareas extends Component
         $this->modalOpen = true;
     }
 
-    public function actualizarEstado()
+    public function actualizarEstado(): void
     {
         if (!$this->selectedTask) {
             session()->flash('error', 'No hay tarea seleccionada.');
@@ -183,7 +189,7 @@ class AdministraTareas extends Component
         $this->cerrarModal();
     }
 
-    public function cerrarModal()
+    public function cerrarModal(): void
     {
         $this->modalOpen = false;
         $this->selectedTask = null;
@@ -232,7 +238,7 @@ class AdministraTareas extends Component
         return redirect()->route('proyecto.show', $proyecto->id);
     }
 
-    public function cancelarConfirmacion()
+    public function cancelarConfirmacion(): void
     {
         $this->mostrarModalConfirmacion = false;
         $this->proyectoPendienteConfirmacion = null;
@@ -249,17 +255,13 @@ class AdministraTareas extends Component
             'staff',
         ]);
 
-        // Restricción por permisos
         if (!$puedeVerTodasLasTareas) {
             $query->where('staff_id', $user->id);
         }
 
-        // Tab por estado
         if ($this->activeTab !== 'TODAS') {
             $query->where('estado', $this->activeTab);
         }
-
-     
 
         $query
             ->when($this->filters['id'], function ($q, $v) {
