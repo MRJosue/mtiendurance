@@ -23,9 +23,9 @@ class DisenioController extends Controller
 
     public function admin_tarea(){
 
-        if (!auth()->user()->can('asidediseniodesplegableTareas')) {
-            return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
-        }
+        // if (!auth()->user()->can('asidediseniodesplegableTareas')) {
+        //     return redirect()->route('dashboard')->with('error', 'No tienes acceso a esta sección.');
+        // }
 
          return view('disenio.admin_tarea');
     }
