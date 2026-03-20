@@ -1,4 +1,4 @@
-<div x-data="{ selectedPedidos: @entangle('selectedPedidos') }" class="container mx-auto p-6">
+<div x-data="{ selectedPedidos: @entangle('selectedPedidos') }" class="p-2 sm:p-3 h-full min-h-0 flex flex-col">
 
     <h2 class="text-2xl font-bold mb-4">Todos los Pedidos</h2>
 

@@ -6,7 +6,7 @@
             localStorage.setItem('dashboard_admintareasdisenio_abierto', JSON.stringify(this.abierto));
         }
     }"
-    class="container mx-auto p-3 sm:p-4"
+    class="p-2 sm:p-3 h-full min-h-0 flex flex-col"
 >
     <h2
         @click="toggle()"
