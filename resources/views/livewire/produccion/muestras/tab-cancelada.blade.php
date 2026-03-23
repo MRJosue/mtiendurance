@@ -223,12 +223,14 @@ class="container mx-auto p-6">
                                     wire:target="marcarSolicitada">Marcar como Etregada</b>
                                 </x-dropdown.item> --}}
                             
+                                @can('tab-cancelada-regresar-pendiente')
                                 <x-dropdown.item separator>
                                     <b   
                                         wire:click.stop='restaurarPendiente([{{ $pedido->id }}])'
                                         wire:loading.attr="disabled"
                                         wire:target="cancelarMuestra">Restaurar</b>
                                 </x-dropdown.item>
+                                @endcan
                             
                                 <x-dropdown.item separator>
                                     <b 

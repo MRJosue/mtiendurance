@@ -214,15 +214,16 @@ class="container mx-auto p-6">
                         <td class="border-b px-4 py-2 " >
 
                                 <x-dropdown  >
-                                <x-dropdown.item>
-                                    <b 
-                                     
-                                    aria-label="Marcar como SOLICITADA"
-                                    wire:click.stop='marcarSolicitada([{{ $pedido->id }}])'
-                                    wire:loading.attr="disabled"
-                                    wire:target="marcarSolicitada">Marcar como Lista</b>
-                                </x-dropdown.item>
-                            
+                                       @can('tab-solicitada-marcar-lista')
+                                        <x-dropdown.item>
+                                            <b 
+                                            
+                                            aria-label="Marcar como SOLICITADA"
+                                            wire:click.stop='marcarSolicitada([{{ $pedido->id }}])'
+                                            wire:loading.attr="disabled"
+                                            wire:target="marcarSolicitada">Marcar como Lista</b>
+                                        </x-dropdown.item>
+                                        @endcan
                                 {{-- <x-dropdown.item separator>
                                     <b   
                                         wire:click.stop='cancelarMuestra([{{ $pedido->id }}])'

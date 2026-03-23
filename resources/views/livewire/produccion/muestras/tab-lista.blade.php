@@ -200,6 +200,8 @@
                         <td class="border-b px-4 py-2">
 
                             <x-dropdown  >
+
+                                @can('tab-lista-marcar-entregada')
                                 <x-dropdown.item>
                                     <b 
                                      
@@ -208,6 +210,7 @@
                                     wire:loading.attr="disabled"
                                     wire:target="marcarSolicitada">Marcar como Etregada</b>
                                 </x-dropdown.item>
+                                @endcan
                             
                                 {{-- <x-dropdown.item separator>
                                     <b   

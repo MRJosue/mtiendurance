@@ -225,6 +225,8 @@
                             
 
                             <x-dropdown>
+
+                                @can('tab-pendiente-marcar-solicitada')
                                 <x-dropdown.item>
                                     <b 
                                      
@@ -233,13 +235,16 @@
                                     wire:loading.attr="disabled"
                                     wire:target="marcarSolicitada">Marcar SOLICITADA</b>
                                 </x-dropdown.item>
-                            
+                                @endcan
+                                
+                                @can('tab-pendiente-marcar-cancelado')
                                 <x-dropdown.item separator>
                                     <b   
                                         wire:click.stop='cancelarMuestra([{{ $pedido->id }}])'
                                         wire:loading.attr="disabled"
                                         wire:target="cancelarMuestra">Cancelar muestra</b>
                                 </x-dropdown.item>
+                                @endcan
                             
                                 <x-dropdown.item separator>
                                     <b 
