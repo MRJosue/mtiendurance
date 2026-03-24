@@ -24,7 +24,8 @@
                             <livewire:proyectos.subir-diseno :proyecto-id="$proyecto->id" />
 
 
-                            <livewire:proyectos.resume-estado :proyecto-id="$proyecto->id" />
+                            {{-- <livewire:proyectos.resume-estado :proyecto-id="$proyecto->id" /> --}}
+                            <livewire:proveedor.proyectos.resume-estado :proyecto-id="$proyecto->id" />
                                 
 
 
