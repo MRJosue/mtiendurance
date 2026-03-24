@@ -18,7 +18,10 @@
                         <!-- Lado izquierdo: Último archivo y Subir Diseño centrados -->
                         <div class="flex flex-col items-center justify-center p-1 space-y-4">
                             <!-- Componente que muestra el último archivo -->
-                            <livewire:proyectos.ultimo-archivo :proyecto-id="$proyecto->id" />
+                            {{-- <livewire:proyectos.ultimo-archivo :proyecto-id="$proyecto->id" /> --}}
+                            <livewire:proveedor.proyectos.ultimo-archivo-proveedor :proyecto-id="$proyecto->id" />
+
+
                             <!-- Componente para subir diseño -->
                             
                             <livewire:proyectos.subir-diseno :proyecto-id="$proyecto->id" />

@@ -1,0 +1,43 @@
+<?php
+
+namespace App\Livewire\Proveedor\Proyectos;
+
+use Livewire\Component;
+use App\Models\ArchivoProyecto;
+use Illuminate\Support\Facades\Log;
+
+class UltimoArchivoProveedor extends Component
+{
+    public $proyectoId;
+    public $ultimoArchivo;
+
+    //listener para actualizar el componente 
+    protected $listeners = ['archivoSubido' => 'cargarUltimoArchivo'];
+
+
+
+    
+    public function mount($proyectoId)
+    {
+        $this->proyectoId = $proyectoId;
+        $this->cargarUltimoArchivo();
+    }
+    
+
+    public function cargarUltimoArchivo()
+    {
+        $this->ultimoArchivo = ArchivoProyecto::where('proyecto_id', $this->proyectoId)
+            ->latest('id')
+            ->where('tipo_carga', 1)
+            ->first();
+
+        if (!$this->ultimoArchivo) {
+            Log::warning("No se encontró ningún archivo para el proyecto", ['proyectoId' => $this->proyectoId]);
+        }
+    }
+
+    public function render()
+    {
+        return view('livewire.proveedor.proyectos.ultimo-archivo-proveedor');
+    }
+}
