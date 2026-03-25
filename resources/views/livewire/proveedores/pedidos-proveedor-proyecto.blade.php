@@ -121,11 +121,15 @@
 
                         <td class="p-2 text-center">
                             <x-dropdown>
-                                <x-dropdown.item>
-                                    <b wire:click="abrirModalProveedor({{ $pedido->id }})">
-                                        Actualizar estatus proveedor
-                                    </b>
-                                </x-dropdown.item>
+
+                                @can('actualiza-estatus-proveedor')
+                                    <x-dropdown.item>
+                                        <b wire:click="abrirModalProveedor({{ $pedido->id }})">
+                                            Actualizar estatus proveedor
+                                        </b>
+                                    </x-dropdown.item>
+                                @endcan
+
                             </x-dropdown>
                         </td>
                     </tr>

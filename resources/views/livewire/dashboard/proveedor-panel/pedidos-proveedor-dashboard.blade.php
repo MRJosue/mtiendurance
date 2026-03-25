@@ -84,13 +84,13 @@
                             placeholder="Nombre del proyecto…">
                     </div>
 
-                    <div class="flex flex-col gap-1">
+                    {{-- <div class="flex flex-col gap-1">
                         <label class="text-sm text-gray-700 font-medium">Cliente</label>
                         <input type="text"
                             wire:model.live.debounce.400ms="filters.cliente"
                             class="w-full rounded-lg border-gray-300 text-sm"
                             placeholder="Nombre o correo…">
-                    </div>
+                    </div> --}}
 
                     <div class="flex flex-col gap-1">
                         <label class="text-sm text-gray-700 font-medium">Registros</label>
@@ -158,12 +158,18 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($pedidos as $pedido)
                         <tr class="hover:bg-gray-50">
-                            <td
-                                class="p-2 px-4 py-2 font-semibold min-w-[4rem] cursor-help whitespace-nowrap"
-                                title="{{ $pedido->tooltip_clave ?? '' }}"
-                            >
-                                {{ $pedido->clave ?? $pedido->id }}
-                            </td>
+                                <td
+                                    class="p-2 px-4 py-2 font-semibold min-w-[4rem] whitespace-nowrap"
+                                    title="{{ $pedido->tooltip_clave ?? '' }}"
+                                >
+                                    <a
+                                        href="{{ route('proyecto.proveedor.show', $pedido->proyecto_id) }}"
+                                        class="text-blue-500 hover:text-blue-700 hover:underline"
+                                        title="Ver proyecto #{{ $pedido->proyecto_id }}"
+                                    >
+                                        {{ $pedido->clave ?? $pedido->id }}
+                                    </a>
+                                </td>
 
                             <td class="p-2 whitespace-nowrap">
                                 {{ $pedido->proyecto->nombre ?? '—' }}
@@ -219,14 +225,18 @@
 
                             <td class="p-2 text-center whitespace-nowrap">
                                 <x-dropdown>
-                                    <x-dropdown.item>
-                                        <b
-                                            class="cursor-pointer"
-                                            wire:click="abrirModalProveedor({{ $pedido->id }})"
-                                        >
-                                            Actualizar estatus proveedor
-                                        </b>
-                                    </x-dropdown.item>
+
+                                    @can('actualiza-estatus-proveedor')
+                                        <x-dropdown.item>
+                                            <b
+                                                class="cursor-pointer"
+                                                wire:click="abrirModalProveedor({{ $pedido->id }})"
+                                            >
+                                                Actualizar estatus proveedor
+                                            </b>
+                                        </x-dropdown.item>
+                                    @endcan
+
 
                                     <x-dropdown.item separator
                                         :href="route('proyecto.proveedor.show', $pedido->proyecto_id)"

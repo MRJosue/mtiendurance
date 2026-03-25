@@ -284,11 +284,14 @@
                     @forelse($projects as $project)
                         <tr class="hover:bg-gray-50">
                             {{-- ID con link --}}
-                            <td
-                                class="px-3 py-2 text-sm font-semibold min-w-[6rem]"
-                                title="{{ $project->nombre ?? 'Proyecto #'.$project->id }}"
-                            >
-                                {{ $project->id }}
+                            <td class="px-3 py-2 text-sm font-semibold min-w-[6rem]">
+                                <a
+                                    href="{{ route('proyecto.proveedor.show', $project->id) }}"
+                                    class="text-blue-500 hover:text-blue-700 hover:underline"
+                                    title="Ver proyecto #{{ $project->id }}"
+                                >
+                                    {{ $project->id }}
+                                </a>
                             </td>
 
                             {{-- Nombre --}}

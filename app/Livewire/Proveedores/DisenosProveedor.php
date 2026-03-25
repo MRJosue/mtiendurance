@@ -16,18 +16,21 @@ class DisenosProveedor extends Component
 
     // Tabs de estado de diseño
     public array $tabs = [
-        'TODOS',
+        'DISEÑO APROBADO',
         'PENDIENTE',
         'ASIGNADO',
         'EN PROCESO',
         'REVISION',
         'DISEÑO RECHAZADO',
-        'DISEÑO APROBADO',
-        'CANCELADO',
-        'REPROGRAMAR',
+        
+        'TODOS',
     ];
 
-    public string $activeTab = 'TODOS';
+
+
+        // 'CANCELADO',
+        // 'REPROGRAMAR',
+    public string $activeTab = 'DISEÑO APROBADO';
 
     // Ordenamiento
     public string $sortField = 'id';
