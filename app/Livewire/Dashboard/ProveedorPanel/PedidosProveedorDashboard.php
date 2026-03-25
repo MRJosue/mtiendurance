@@ -13,8 +13,10 @@ class PedidosProveedorDashboard extends Component
 {
     use WithPagination;
 
-    public array  $tabs      = ['PEDIDOS', 'MUESTRAS'];
-    public string $activeTab = 'PEDIDOS';
+    protected $paginationTheme = 'tailwind';
+
+    public array $tabsEstadoProveedor = ['PENDIENTE', 'VISTO', 'EN_PROCESO', 'LISTO'];
+    public string $activeEstadoTab = 'PENDIENTE';
 
     public int $perPage = 20;
     public array $perPageOptions = [10, 20, 30, 50, 100];
@@ -46,14 +48,16 @@ class PedidosProveedorDashboard extends Component
     public ?string $estatus_proveedor = null;
     public ?string $nota_proveedor = null;
 
-    public array $estatusProveedorOptions = ['PENDIENTE','EN PROCESO','LISTO','BLOQUEADO'];
+    public array $estatusProveedorOptions = ['PENDIENTE', 'VISTO', 'EN_PROCESO', 'LISTO'];
 
-    public function setTab(string $tab): void
+    public function setEstadoTab(string $tab): void
     {
-        if ($this->activeTab !== $tab) {
-            $this->activeTab = $tab;
-            $this->resetPage();
-        }
+        if (! in_array($tab, $this->tabsEstadoProveedor, true)) return;
+
+        if ($this->activeEstadoTab === $tab) return;
+
+        $this->activeEstadoTab = $tab;
+        $this->resetPage();
     }
 
     public function updatedPerPage($value): void
@@ -141,10 +145,17 @@ class PedidosProveedorDashboard extends Component
             ->where('id', $pedidoId)
             ->firstOrFail();
 
-        $pedido->update([
+        $payload = [
             'proveedor_visto_at'  => now(),
             'proveedor_visto_por' => Auth::id(),
-        ]);
+        ];
+
+        if (blank($pedido->estatus_proveedor) || $pedido->estatus_proveedor === 'PENDIENTE') {
+            $payload['estatus_proveedor'] = 'VISTO';
+            $pedido->estatus_proveedor = 'VISTO';
+        }
+
+        $pedido->update($payload);
 
         $this->estatus_proveedor = $pedido->estatus_proveedor ?? 'PENDIENTE';
         $this->nota_proveedor    = $pedido->nota_proveedor;
@@ -187,7 +198,17 @@ class PedidosProveedorDashboard extends Component
                 'usuario.sucursal:id,nombre,empresa_id',
                 'usuario.sucursal.empresa:id,nombre',
             ])
-            ->where('tipo', $this->activeTab === 'MUESTRAS' ? 'MUESTRA' : 'PEDIDO');
+            ->where('tipo', 'PEDIDO');
+
+        if ($this->activeEstadoTab === 'PENDIENTE') {
+            $query->where(function ($q) {
+                $q->where('estatus_proveedor', 'PENDIENTE')
+                    ->orWhereNull('estatus_proveedor')
+                    ->orWhere('estatus_proveedor', '');
+            });
+        } else {
+            $query->where('estatus_proveedor', $this->activeEstadoTab);
+        }
 
         // activos / inactivos
         $query->where('ind_activo', $this->filters['inactivos'] ? 0 : 1);

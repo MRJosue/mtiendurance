@@ -24,25 +24,34 @@
             </div>
         @endif
 
-        {{-- Tabs PEDIDOS | MUESTRAS --}}
-        <ul class="flex flex-wrap border-b border-gray-200 mb-4 gap-1">
-            @foreach ($tabs as $tab)
-                <li>
-                    <button
-                        wire:click="setTab('{{ $tab }}')"
-                        @class([
-                            'px-2 py-1 rounded-t-lg text-sm whitespace-nowrap',
-                            'border-b-2 font-semibold bg-white' => $activeTab === $tab,
-                            'text-gray-600 hover:text-blue-500' => $activeTab !== $tab,
-                            'border-blue-500 text-blue-600'     => $activeTab === $tab,
-                            'border-transparent'                => $activeTab !== $tab,
-                        ])
-                    >
-                        {{ $tab }}
-                    </button>
-                </li>
-            @endforeach
-        </ul>
+        <div class="mb-4">
+            <div class="overflow-x-auto">
+                <ul class="flex flex-nowrap sm:flex-wrap border-b border-gray-200 gap-1 min-w-max sm:min-w-0">
+                    @foreach ($tabsEstadoProveedor as $tab)
+                        <li>
+                            <button
+                                type="button"
+                                wire:click="setEstadoTab('{{ $tab }}')"
+                                @class([
+                                    'px-3 py-2 rounded-t-lg text-sm whitespace-nowrap transition',
+                                    'border-b-2 font-semibold bg-white border-blue-500 text-blue-600' => $activeEstadoTab === $tab,
+                                    'text-gray-600 hover:text-blue-500 border-b-2 border-transparent' => $activeEstadoTab !== $tab,
+                                ])
+                            >
+                                {{ str_replace('_', ' ', $tab) }}
+                            </button>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+
+            <div class="mt-3 flex items-center justify-between">
+                <div class="text-sm text-gray-600">
+                    Mostrando:
+                    <span class="font-semibold text-blue-600">{{ str_replace('_', ' ', $activeEstadoTab) }}</span>
+                </div>
+            </div>
+        </div>
 
         {{-- Filtros (colapsable) --}}
         <div class="mb-4">
@@ -118,7 +127,7 @@
                         <select wire:model.live="filters.estatus_proveedor" class="w-full rounded-lg border-gray-300 text-sm">
                             <option value="">Todos</option>
                             @foreach($estatusProveedorOptions as $opt)
-                                <option value="{{ $opt }}">{{ $opt }}</option>
+                                <option value="{{ $opt }}">{{ str_replace('_', ' ', $opt) }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -196,14 +205,14 @@
                                     $e = strtoupper($pedido->estatus_proveedor ?? 'PENDIENTE');
                                     $badge = match($e) {
                                         'PENDIENTE'  => 'bg-gray-200 text-gray-800',
-                                        'EN PROCESO' => 'bg-yellow-200 text-yellow-900',
+                                        'VISTO'      => 'bg-blue-200 text-blue-900',
+                                        'EN_PROCESO' => 'bg-yellow-200 text-yellow-900',
                                         'LISTO'      => 'bg-emerald-200 text-emerald-900',
-                                        'BLOQUEADO'  => 'bg-red-200 text-red-900',
                                         default      => 'bg-gray-200 text-gray-800',
                                     };
                                 @endphp
                                 <span class="px-2 py-1 rounded text-xs font-semibold {{ $badge }}">
-                                    {{ $e }}
+                                    {{ str_replace('_', ' ', $e) }}
                                 </span>
                             </td>
 
@@ -264,7 +273,7 @@
                             <label class="block text-sm font-medium text-gray-700">Estatus proveedor</label>
                             <select wire:model="estatus_proveedor" class="w-full rounded-lg border-gray-300 p-2">
                                 @foreach($estatusProveedorOptions as $opt)
-                                    <option value="{{ $opt }}">{{ $opt }}</option>
+                                    <option value="{{ $opt }}">{{ str_replace('_', ' ', $opt) }}</option>
                                 @endforeach
                             </select>
                         </div>
