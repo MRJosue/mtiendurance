@@ -15,7 +15,7 @@ class HojaFiltroProduccion extends Model
     protected $fillable = [
         'nombre','slug','descripcion','role_id',
         'estados_permitidos','estados_diseno_permitidos',
-          'estado_produccion_permitidos',
+          'estado_produccion_permitidos','estado_proveedor_permitidos',
         'base_columnas','menu_config','acciones_config', 
         'visible','orden',
     ];
@@ -24,6 +24,7 @@ class HojaFiltroProduccion extends Model
         'estados_permitidos' => 'array',
         'estados_diseno_permitidos' => 'array',
         'estado_produccion_permitidos' => 'array',
+        'estado_proveedor_permitidos' => 'array',
         'base_columnas' => 'array',
         'menu_config' => 'array',
         'acciones_config' => 'array', 
@@ -75,6 +76,7 @@ class HojaFiltroProduccion extends Model
                 ['key' => 'estado',   'label' => 'Estado',    'visible' => true,  'fixed' => false, 'orden' => 6],
                 ['key' => 'estado_disenio', 'label' => 'Estado Diseño', 'visible' => true, 'fixed' => false, 'orden' => 7],
                 ['key' => 'estado_produccion', 'label' => 'Estado Producción', 'visible' => true, 'fixed' => false, 'orden' => 8],
+                ['key' => 'estado_proveedor', 'label' => 'Estado Proveedor', 'visible' => true, 'fixed' => false, 'orden' => 9],
             ];
 
 
@@ -121,6 +123,7 @@ class HojaFiltroProduccion extends Model
         $ensure('estado',           'Estado');
         $ensure('estado_disenio',   'Estado Diseño'); 
         $ensure('estado_produccion', 'Estado Producción');
+        $ensure('estado_proveedor', 'Estado Proveedor');
         $ensure('fecha_produccion', 'F. Producción');
         $ensure('fecha_embarque',   'F. Embarque');
         $ensure('fecha_entrega',    'F. Entrega');

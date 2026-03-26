@@ -25,6 +25,13 @@
                 'RECHAZADO'     => 'bg-red-700 text-white',
             ];
 
+            $coloresEstadoProveedor = [
+                'PENDIENTE'  => 'bg-yellow-400 text-black',
+                'VISTO'      => 'bg-blue-500 text-white',
+                'EN_PROCESO' => 'bg-orange-500 text-white',
+                'LISTO'      => 'bg-emerald-600 text-white',
+            ];
+
         @endphp
         {{-- Header con búsqueda --}}
     <div     x-data="{
@@ -178,6 +185,9 @@
             <span class="px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border">
                 Estados Produccion: {{ !empty($chipEstadosProduccion) ? implode(', ', $chipEstadosProduccion) : 'Todos' }}
             </span>
+            <span class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border">
+                Estados Proveedor: {{ !empty($chipEstadosProveedor) ? implode(', ', $chipEstadosProveedor) : 'Todos' }}
+            </span>
             <span class="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border">
                 Rol: {{ $this->hoja->rol->name ?? '—' }}
             </span>
@@ -241,6 +251,7 @@
                                         'estado'         => 'estado',
                                         'estado_disenio' => 'estado_disenio',
                                         'estado_produccion' => 'estado_produccion',
+                                        'estado_proveedor' => 'estado_proveedor',
                                         'total'          => 'total',
                                         'fecha_produccion','fecha_embarque','fecha_entrega' => $bc['key'],
                                         default => null,
@@ -346,6 +357,9 @@
                                 @case('estado_produccion')
                                     <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600" x-show="$wire.get('filters.estado_produccion')?.length"></span>
                                     @break
+                                @case('estado_proveedor')
+                                    <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600" x-show="$wire.get('filters.estado_proveedor')?.length"></span>
+                                    @break
                                 @case('total')
                                     <span x-cloak class="ml-1 w-2 h-2 rounded-full bg-blue-600" x-show="$wire.get('filters.total')?.length"></span>
                                     @break
@@ -428,6 +442,19 @@
                                         </select>
                                     @break
 
+                                    @case('estado_proveedor')
+                                        <label class="block text-xs text-gray-600 mb-1">Estado Proveedor</label>
+
+                                        <select
+                                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                            wire:model.live.debounce.400ms="filters.estado_proveedor"
+                                        >
+                                            <option value="">Todos</option>
+                                            @foreach($this->estadosProveedor as $s)
+                                                <option value="{{ $s }}">{{ $s }}</option>
+                                            @endforeach
+                                        </select>
+                                    @break
 
                                     @case('total')
                                     <label class="block text-xs text-gray-600 mb-1">Total</label>
@@ -511,6 +538,9 @@
                                     @case('estado_produccion')
                                         <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.estado_produccion','')">Limpiar</button>
                                     @break
+                                    @case('estado_proveedor')
+                                        <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.estado_proveedor','')">Limpiar</button>
+                                        @break
                                     @case('total')
                                         <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.total','')">Limpiar</button>
                                         @break
@@ -713,8 +743,56 @@
                                                             {{ $estadoLabel }}
                                                         </span>
                                                     @endif
-                                                @break     
+                                                @break
 
+                                                @case('estado_proveedor')
+                                                    @php
+                                                        $estadoProveedor = trim((string)($pedido->estatus_proveedor ?? ''));
+                                                        $estadoProveedorLabel = $estadoProveedor !== '' ? $estadoProveedor : '—';
+                                                        $claseProveedor = $coloresEstadoProveedor[$estadoProveedor] ?? 'bg-gray-200 text-gray-700';
+                                                    @endphp
+
+                                                    @if($acciones['bulk_edit_estado_proveedor'])
+                                                        <div
+                                                            x-data="{ edit:false, value:@js($estadoProveedorLabel === '—' ? 'PENDIENTE' : $estadoProveedorLabel) }"
+                                                            wire:key="cell-estado-proveedor-{{ $pedido->id }}"
+                                                            class="inline-flex items-center gap-2"
+                                                        >
+                                                            <span
+                                                                x-cloak
+                                                                x-show="!edit"
+                                                                @dblclick="edit=true"
+                                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[11rem] justify-center {{ $claseProveedor }} cursor-pointer"
+                                                                title="Doble click para editar"
+                                                            >
+                                                                {{ $estadoProveedorLabel }}
+                                                            </span>
+
+                                                            <select
+                                                                x-cloak
+                                                                x-show="edit"
+                                                                x-model="value"
+                                                                @change="$wire.updateField({{ $pedido->id }}, 'estatus_proveedor', value); edit=false;"
+                                                                class="w-44 rounded-lg border-gray-300 focus:ring-blue-500 text-xs"
+                                                            >
+                                                                @foreach($this->estadosProveedor as $s)
+                                                                    <option value="{{ $s }}">{{ $s }}</option>
+                                                                @endforeach
+                                                            </select>
+
+                                                            <button
+                                                                type="button"
+                                                                class="text-xs text-blue-600 hover:underline"
+                                                                @click="edit = !edit"
+                                                                x-text="edit ? 'Cancelar' : 'Editar'"
+                                                            ></button>
+                                                        </div>
+                                                    @else
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[11rem] justify-center {{ $claseProveedor }}">
+                                                            {{ $estadoProveedorLabel }}
+                                                        </span>
+                                                    @endif
+                                                @break
                                                 @case('total')
                                                     @php
                                                         // Ajusta el flag real si tu campo se llama distinto
@@ -1664,4 +1742,5 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="mt-4">{{ $pedidos->links() }}</div>
     @endif
 </div>
+
 

@@ -93,7 +93,7 @@ class ConfigInicial extends Component
                         $u->save();
                     }
 
-                    $this->redirectRoute('dashboard', navigate: true);
+                    $this->redirect(route('dashboard'), navigate: false);
                     return;
                 }
 
@@ -445,7 +445,7 @@ class ConfigInicial extends Component
                 $u->flag_perfil_configurado = 1;
                 $u->save();
             }
-            $this->redirectRoute('dashboard', navigate: true);
+            $this->redirect(route('dashboard'), navigate: false);
             return;
         }
 
@@ -494,8 +494,8 @@ class ConfigInicial extends Component
         ]);
 
 
-        // Redirige a donde tú quieras
-        $this->redirect(route('dashboard'), navigate: true);
+        // Fuerza una navegación completa para reconstruir el layout y el aside.
+        $this->redirect(route('dashboard'), navigate: false);
     }
 
     private function recalcularFaltantesDirecciones(): void

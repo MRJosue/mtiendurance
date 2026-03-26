@@ -12,11 +12,11 @@
         @click="toggle()"
         class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
     >
-        Solicitudes de Proyectos
-        <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
+        {{ __('preprojects.title') }}
+        <span class="text-sm text-gray-500 ml-2" x-text="abierto ? @js(__('preprojects.hide')) : @js(__('preprojects.show'))"></span>
     {{-- </h2>
         Mis preproyectos
-        <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
+        <span class="text-sm text-gray-500 ml-2" x-text="abierto ? @js(__('preprojects.hide')) : @js(__('preprojects.show'))"></span>
     </h2> --}}
     </h2>
     <!-- Contenido del panel -->
@@ -25,7 +25,7 @@
         @can('boton-crear-preproyecto')
         <div class="p-6 text-gray-900 dark:text-gray-100">
             <a class="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed" 
-                    href="{{ route('preproyectos.create') }}">Crear Nueva Solicitud</a>
+                    href="{{ route('preproyectos.create') }}">{{ __('preprojects.create_new') }}</a>
         </div>
         @endcan
 
@@ -61,12 +61,12 @@
                                 />
                             </th> --}}
                             <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">ID</th>
-                            <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Nombre del Proyecto</th>
+                            <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">{{ __('preprojects.project_name') }}</th>
                             @can('tablaPreproyectos-ver-todos-los-preproyectos')
-                            <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Usuario</th>
+                            <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">{{ __('preprojects.user') }}</th>
                             @endcan
-                            <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Estado</th>
-                            <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
+                            <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">{{ __('preprojects.status') }}</th>
+                            <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">{{ __('preprojects.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -83,13 +83,13 @@
                                 <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->nombre }}</td>
                                 
                                 @can('tablaPreproyectos-ver-todos-los-preproyectos')
-                                <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->user->name ?? 'Sin usuario' }}</td>
+                                <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->user->name ?? __('preprojects.no_user') }}</td>
                                 @endcan
                             
                                 <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->estado }}</td>
                                 <td class="border-b px-4 py-2 text-gray-700 text-sm">
                                     <a href="{{ route('preproyectos.show', $project->id) }}" class="text-blue-500 hover:underline">
-                                        Ver detalles
+                                        {{ __('preprojects.view_details') }}
                                     </a>
                                 </td>
                             </tr>

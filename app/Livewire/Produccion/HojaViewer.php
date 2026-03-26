@@ -10,6 +10,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Proyecto;
+use App\Services\Produccion\HojaViewerQuery;
 use Illuminate\Support\Arr;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -46,6 +47,7 @@ class HojaViewer extends Component
         'estado_id'        => null,
         'estado_disenio'   => '',
         'estado_produccion'=> '',
+        'estado_proveedor' => '',
         'total'            => '',
         'fecha_produccion_from' => null,
         'fecha_produccion_to'   => null,
@@ -86,6 +88,7 @@ class HojaViewer extends Component
             'entregar_pedido' => false,
             'rechazar_diseno' => false,
             'bulk_edit_estado_produccion' => false,
+            'bulk_edit_estado_proveedor' => false,
             'bulk_edit_estado' => false,
             'programar_pedido' => false,
             'seleccion_multiple' => true,
@@ -107,6 +110,8 @@ class HojaViewer extends Component
     public array $chipEstadosDiseno = []; // para el chip informativo
 
     public array $chipEstadosProduccion = [];
+
+    public array $chipEstadosProveedor = [];
 
     /** Ordenamiento */
     public ?string $sortColumn = null;   // ej. 'id','proyecto','producto','cliente','estado','estado_disenio','total','fecha_*'
@@ -250,6 +255,21 @@ class HojaViewer extends Component
         return array_values(array_intersect($permitidos, $todos));
     }
 
+    public function getEstadosProveedorProperty(): array
+    {
+        $todos = ['PENDIENTE', 'VISTO', 'EN_PROCESO', 'LISTO'];
+
+        $permitidos = is_array($this->hoja->estado_proveedor_permitidos ?? null)
+            ? array_values(array_filter($this->hoja->estado_proveedor_permitidos))
+            : [];
+
+        if (empty($permitidos)) {
+            return $todos;
+        }
+
+        return array_values(array_intersect($permitidos, $todos));
+    }
+
 
     public function getAccionesAttribute(): array
     {
@@ -330,6 +350,10 @@ class HojaViewer extends Component
             $hoja->estado_produccion_permitidos = json_decode($hoja->estado_produccion_permitidos, true) ?: [];
         }
 
+        if (is_string($hoja->estado_proveedor_permitidos ?? null)) {
+            $hoja->estado_proveedor_permitidos = json_decode($hoja->estado_proveedor_permitidos, true) ?: [];
+        }
+
         return $hoja;
     }
 
@@ -365,6 +389,10 @@ class HojaViewer extends Component
 
         $this->chipEstadosProduccion = is_array($this->hoja->estado_produccion_permitidos) && !empty($this->hoja->estado_produccion_permitidos)
             ? array_values($this->hoja->estado_produccion_permitidos)
+            : [];
+
+        $this->chipEstadosProveedor = is_array($this->hoja->estado_proveedor_permitidos) && !empty($this->hoja->estado_proveedor_permitidos)
+            ? array_values($this->hoja->estado_proveedor_permitidos)
             : [];
     }
 
@@ -437,248 +465,16 @@ class HojaViewer extends Component
             $productoIds = $filtro?->productoIds() ?? collect();
         }
 
-    $user = auth()->user();
-
-    $q = Pedido::query()
-    ->from('pedido')
-    // JOINs tempranos y reutilizables para filtros/orden
-    ->leftJoin('proyectos as pr', 'pr.id', '=', 'pedido.proyecto_id')
-    ->leftJoin('productos as pd', 'pd.id', '=', 'pedido.producto_id')
-    ->leftJoin('users as us', 'us.id', '=', 'pr.usuario_id')
-    ->leftJoin('estados_pedido as ep', 'ep.id', '=', 'pedido.estado_id')
-    ->select('pedido.*')
-    ->with([
-        'producto:id,nombre',
-        'proyecto:id,nombre,estado',
-        'estadoPedido:id,nombre,color',
-        'usuario:id,name',
-    ])
-
-
-    ->soloPedidos()
-        // ---------- Restricción por rol ----------
-        ->when($user, function ($qq) use ($user) {
-            if ($user->hasRole('admin') || $user->can('tablaPedidos-ver-todos-los-pedidos')) {
-                // ve todo
-                return;
-            }
-
-            if ($user->hasRole('cliente_principal')) {
-                $idsUsuarios = collect($user->subordinados ?? [])
-                    ->map(fn ($id) => (int) $id)
-                    ->filter(fn ($id) => $id > 0)
-                    ->prepend((int) $user->id)
-                    ->unique()
-                    ->values()
-                    ->all();
-
-                $qq->whereIn('pr.usuario_id', $idsUsuarios);
-                return;
-            }
-
-            if ($user->hasAnyRole(['cliente_subordinado', 'estaf'])) {
-                $qq->where('pr.usuario_id', (int) $user->id);
-                return;
-            }
-
-            $qq->where('pr.usuario_id', (int) $user->id);
-        })
-
-    // filtros por hoja/filtro
-    ->when($productoIds->isNotEmpty(), fn($qq) => $qq->whereIn('pedido.producto_id', $productoIds))
-    ->when(!empty($hoja->estados_permitidos), fn($qq) => $qq->whereIn('pedido.estado_id', $hoja->estados_permitidos))
-    ->when(!empty($hoja->estados_diseno_permitidos), function ($qq) use ($hoja) {
-        $permitidos = array_map(fn ($s) => $s === 'RECHAZADO' ? 'DISEÑO RECHAZADO' : $s, $hoja->estados_diseno_permitidos);
-        $qq->whereIn('pr.estado', $permitidos);
-    })
-    ->when(!empty($hoja->estado_produccion_permitidos), function ($qq) use ($hoja) {
-        $permitidos = array_values(array_filter($hoja->estado_produccion_permitidos));
-
-        if (!empty($permitidos)) {
-            // incluye variantes canonical + legacy sin acento (IMPRESIÓN/IMPRESION)
-            $permitidosSQL = [];
-            foreach ($permitidos as $p) {
-                $permitidosSQL = array_merge($permitidosSQL, $this->estadoProduccionVariants($p));
-            }
-            $permitidosSQL = array_values(array_unique(array_filter($permitidosSQL)));
-
-            $qq->whereIn('pedido.estado_produccion', $permitidosSQL);
-        }
-    })
-    // búsqueda global (prefijo indexable en columnas unidas)
-    ->when(($term = trim((string)$this->search)) !== '', function ($qq) use ($term) {
-        $prefix   = $term.'%';      // empieza con
-        $contains = '%'.$term.'%';  // contiene
-
-        $qq->where(function ($s) use ($prefix, $contains, $term) {
-
-            // 1) Texto en columnas de los JOINs (case-insensitive en MySQL por defecto)
-            $s->where('pr.nombre', 'like', $prefix)   // Proyecto
-            ->orWhere('pd.nombre', 'like', $prefix) // Producto
-            ->orWhere('us.name',   'like', $prefix) // Cliente/Usuario
-            ->orWhere('ep.nombre', 'like', $prefix);// Estado (nombre del catálogo)
-
-            // 2) Si escriben "12-345", busca proyecto_id=12 y pedido.id=345
-            if (preg_match('/^\s*(\d+)\s*-\s*(\d+)\s*$/', $term, $m)) {
-                $proyectoId = (int)$m[1];
-                $pedidoId   = (int)$m[2];
-                $s->orWhere(function ($w) use ($proyectoId, $pedidoId) {
-                    $w->where('pedido.proyecto_id', $proyectoId)
-                    ->where('pedido.id', $pedidoId);
-                });
-            }
-
-            // 3) Si el término es numérico, permite buscar por id del pedido o del proyecto
-            if (ctype_digit($term)) {
-                $n = (int)$term;
-                $s->orWhere('pedido.id', $n)
-                ->orWhere('pedido.proyecto_id', $n);
-            }
-        });
-    })  
-        
-
-    // filtros base
-    ->when(($idRaw = trim((string) Arr::get($this->filters, 'id', ''))) !== '', function ($qq) use ($idRaw) {
-        // Formato "proyecto-pedido" (e.g. "12-345")
-        if (preg_match('/^\s*(\d+)\s*-\s*(\d+)\s*$/', $idRaw, $m)) {
-            $proyectoId = (int) $m[1];
-            $pedidoId   = (int) $m[2];
-            $qq->where('pedido.proyecto_id', $proyectoId)
-            ->where('pedido.id', $pedidoId);
-            return;
-        }
-
-        // Solo dígitos: buscar por pedido.id O por pedido.proyecto_id
-        if (ctype_digit($idRaw)) {
-            $n = (int) $idRaw;
-            $qq->where(function ($w) use ($n) {
-                $w->where('pedido.id', $n)
-                ->orWhere('pedido.proyecto_id', $n);
-            });
-        }
-    })
-    ->when(($p = trim((string)Arr::get($this->filters, 'proyecto', ''))) !== '',
-        fn($qq) => $qq->where('pr.nombre', 'like', $p.'%'))
-
-    ->when(($p = trim((string)Arr::get($this->filters, 'producto', ''))) !== '',
-        fn($qq) => $qq->where('pd.nombre', 'like', $p.'%'))
-
-    ->when(($c = trim((string)Arr::get($this->filters, 'cliente', ''))) !== '',
-        fn($qq) => $qq->where('us.name', 'like', $c.'%'))
-
-    ->when(Arr::get($this->filters, 'estado_id'),
-        fn($qq, $eid) => $qq->where('pedido.estado_id', (int)$eid))
-
-    ->when(($ed = trim((string)Arr::get($this->filters, 'estado_disenio', ''))) !== '',
-        fn($qq) => $qq->where('pr.estado', $ed))
-
-    ->when(($sp = trim((string)Arr::get($this->filters, 'estado_produccion', ''))) !== '', function ($qq) use ($sp) {
-        $variants = $this->estadoProduccionVariants($sp);
-        if (empty($variants)) return;
-
-        $qq->whereIn('pedido.estado_produccion', $variants);
-    })
-
-    ->when(($t = trim((string)Arr::get($this->filters, 'total', ''))) !== '',
-        fn($qq) => $qq->where('pedido.total', $t))
-
-    // fecha_produccion
-    ->when(($fpFrom = Arr::get($this->filters, 'fecha_produccion_from')),
-        fn($qq) => $qq->where('pedido.fecha_produccion', '>=', $fpFrom.' 00:00:00'))
-    ->when(($fpTo = Arr::get($this->filters, 'fecha_produccion_to')),
-        fn($qq) => $qq->where('pedido.fecha_produccion', '<=', $fpTo.' 23:59:59'))
-
-    // fecha_embarque (¡ojo! variables propias)
-    ->when(($feFrom = Arr::get($this->filters, 'fecha_embarque_from')),
-        fn($qq) => $qq->where('pedido.fecha_embarque', '>=', $feFrom.' 00:00:00'))
-    ->when(($feTo = Arr::get($this->filters, 'fecha_embarque_to')),
-        fn($qq) => $qq->where('pedido.fecha_embarque', '<=', $feTo.' 23:59:59'))
-
-    // fecha_entrega (¡ojo! variables propias)
-    ->when(($fentFrom = Arr::get($this->filters, 'fecha_entrega_from')),
-        fn($qq) => $qq->where('pedido.fecha_entrega', '>=', $fentFrom.' 00:00:00'))
-    ->when(($fentTo = Arr::get($this->filters, 'fecha_entrega_to')),
-        fn($qq) => $qq->where('pedido.fecha_entrega', '<=', $fentTo.' 23:59:59'));
-
-        // Filtros por características
-        if (!empty($this->filtersCar)) {
-            foreach ($this->filtersCar as $carId => $val) {
-                $val = trim((string)$val);
-                if ($val !== '') {
-                    $like = '%'.$val.'%';
-                    $q->whereExists(function ($sub) use ($carId, $like) {
-                        $sub->from('pedido_opciones as po')
-                            ->join('caracteristica_opcion as co', 'co.opcion_id', '=', 'po.opcion_id')
-                            ->join('opciones as o', 'o.id', '=', 'po.opcion_id')
-                            ->whereColumn('po.pedido_id', 'pedido.id')
-                            ->where('co.caracteristica_id', (int)$carId)
-                            ->where('o.nombre', 'like', $like);
-                    });
-                }
-            }
-        }
-
-        
-
-        // ---------- ORDENAMIENTO ----------
-        $dir = $this->sortDirection === 'desc' ? 'desc' : 'asc';
-
-        if ($this->sortColumn) {
-            switch ($this->sortColumn) {
-                case 'id':
-                    $q->orderBy('pedido.id', $dir);
-                    break;
-                case 'proyecto':
-                        $q->orderBy('pedido.proyecto_id', $dir)
-                        ->orderBy('pedido.id', 'desc'); 
-                    break;
-                case 'producto':
-                    $q->orderBy('pd.nombre', $dir)->orderBy('pedido.id', 'desc');
-            
-                    // $q->leftJoin('productos as pd', 'pd.id', '=', 'pedido.producto_id')
-                    //   ->orderBy('pd.nombre', $dir)
-                    //   ->select('pedido.*');
-                    break;
-                case 'cliente':
-                    $q->orderBy('us.name', $dir)->orderBy('pedido.id', 'desc');
-            
-                    // $q->leftJoin('users as us', 'us.id', '=', 'pedido.user_id')
-                    //   ->orderBy('us.name', $dir)
-                    //   ->select('pedido.*');
-                    break;
-                case 'estado':
-                                // Usa el alias ya unido 'ep'
-                        $q->orderBy('ep.nombre', $dir)->orderBy('pedido.id', 'desc');
-                  
-                        // $q->leftJoin('estados_pedido as ep', 'ep.id', '=', 'pedido.estado_id')
-                        //   ->orderBy('ep.nombre', $dir)
-                        //   ->select('pedido.*');
-                    break;
-                case 'estado_disenio':
-                    $q->orderBy('pr.estado', $dir)->orderBy('pedido.id', 'desc');
-                break;
-                
-                case 'estado_produccion':
-                    $q->orderBy('pedido.estado_produccion', $dir)->orderBy('pedido.id', 'desc');
-                    break;
-
-                case 'total':
-                    $q->orderBy('pedido.total', $dir);
-                    break;
-                case 'fecha_produccion':
-                case 'fecha_embarque':
-                case 'fecha_entrega':
-                    $q->orderBy('pedido.'.$this->sortColumn, $dir);
-                    break;
-                default:
-                    // fallback: por id desc si la columna no es reconocida
-                    $q->orderBy('pedido.id', 'desc');
-            }
-        } else {
-            // default
-            $q->orderBy('pedido.id', 'desc');
-        }
+        $q = app(HojaViewerQuery::class)->build([
+            'user' => auth()->user(),
+            'hoja' => $hoja,
+            'producto_ids' => $productoIds,
+            'search' => $this->search,
+            'filters' => $this->filters,
+            'filters_car' => $this->filtersCar,
+            'sort_column' => $this->sortColumn,
+            'sort_direction' => $this->sortDirection,
+        ]);
 
         // Asegura que perPage sea válido al paginar
         $perPage = in_array($this->perPage, $this->perPageOptions, true) ? $this->perPage : 15;
@@ -729,7 +525,7 @@ class HojaViewer extends Component
 
         public function updateField(int $pedidoId, string $field, $value): void
     {
-        $permitidos = ['total','fecha_produccion','fecha_embarque','fecha_entrega','estado_id','estado_produccion'];
+        $permitidos = ['total','fecha_produccion','fecha_embarque','fecha_entrega','estado_id','estado_produccion','estatus_proveedor'];
         if (!in_array($field, $permitidos, true)) return;
         
         // Reglas por campo según permisos
@@ -737,6 +533,7 @@ class HojaViewer extends Component
             || ($field === 'total'             && $this->can('bulk_edit_total'))
             || ($field === 'estado_id'         && $this->can('bulk_edit_estado'))
             || ($field === 'estado_produccion' && $this->can('bulk_edit_estado_produccion'))
+            || ($field === 'estatus_proveedor' && $this->can('bulk_edit_estado_proveedor'))
             || ($field === 'fecha_produccion'  && $this->can('bulk_edit_fecha_produccion'))
             || ($field === 'fecha_embarque'    && $this->can('bulk_edit_fecha_embarque'))
             || ($field === 'fecha_entrega'     && $this->can('bulk_edit_fecha_entrega'));
@@ -775,6 +572,14 @@ class HojaViewer extends Component
                 // valida contra catálogo permitido (tu select ya sale de estadosProduccion)
                 if (!in_array($value, $this->estadosProduccion, true)) {
                     $this->dispatch('toast', message: 'Estado de producción inválido', type: 'error');
+                    return;
+                }
+            break;
+            case 'estatus_proveedor':
+                $value = trim((string) $value);
+
+                if (!in_array($value, $this->estadosProveedor, true)) {
+                    $this->dispatch('toast', message: 'Estado de proveedor inválido', type: 'error');
                     return;
                 }
             break;
@@ -1213,6 +1018,10 @@ class HojaViewer extends Component
 
                 $this->chipEstadosProduccion = is_array($hoja->estado_produccion_permitidos ?? null)
                     ? array_values(array_filter($hoja->estado_produccion_permitidos))
+                    : [];
+
+                $this->chipEstadosProveedor = is_array($hoja->estado_proveedor_permitidos ?? null)
+                    ? array_values(array_filter($hoja->estado_proveedor_permitidos))
                     : [];
             }
 

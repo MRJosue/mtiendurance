@@ -89,8 +89,8 @@ class ConfiguracionInicial extends Component
         // Marcar perfil configurado
         $u->update(['flag_perfil_configurado' => true]);
 
-        // Redirigir a dashboard
-        redirect()->route('dashboard')->send();
+        // Redirigir a dashboard forzando una recarga completa una sola vez.
+        redirect()->route('dashboard', ['full_reload' => 1])->send();
     }
 
     public function render()

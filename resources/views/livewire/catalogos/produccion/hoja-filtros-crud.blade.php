@@ -377,6 +377,35 @@
                                 Si no seleccionas ninguno, se mostrarán <em>todos</em> los estados de producción.
                             </p>
                         </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mt-4">Estados de Proveedor Permitidos</label>
+
+                            <div class="mt-1 rounded-lg border p-2 max-h-40 overflow-y-auto">
+                                @foreach($this->estadosProveedor as $statusProveedor)
+                                    <label class="inline-flex items-center gap-2 mr-3 mb-2">
+                                        <input
+                                            type="checkbox"
+                                            class="rounded border-gray-300"
+                                            value="{{ $statusProveedor }}"
+                                            @checked(in_array($statusProveedor, $form['estado_proveedor_permitidos'] ?? []))
+                                            @change="$event.target.checked
+                                                ? @this.form.estado_proveedor_permitidos.push('{{ $statusProveedor }}')
+                                                : @this.form.estado_proveedor_permitidos =
+                                                    @this.form.estado_proveedor_permitidos.filter(x => x !== '{{ $statusProveedor }}')"
+                                        >
+                                        <span class="text-sm text-gray-700">{{ $statusProveedor }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+
+                            @error('form.estado_proveedor_permitidos') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            @error('form.estado_proveedor_permitidos.*') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+
+                            <p class="text-xs text-gray-500 mt-1">
+                                Si no seleccionas ninguno, se mostrarán <em>todos</em> los estados del proveedor.
+                            </p>
+                        </div>
                     </div>
 
                 </div>
@@ -672,6 +701,10 @@
                         <label class="flex items-center justify-between py-1">
                             <span class="text-sm text-gray-700">Estado de Producción</span>
                             <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.bulk_edit_estado_produccion">
+                        </label>
+                        <label class="flex items-center justify-between py-1">
+                            <span class="text-sm text-gray-700">Estado de Proveedor</span>
+                            <input type="checkbox" class="rounded border-gray-300" wire:model.live="form.acciones.bulk_edit_estado_proveedor">
                         </label>
 
                         <label class="flex items-center justify-between py-1">
@@ -1053,4 +1086,3 @@ document.addEventListener('DOMContentLoaded', () => {
     
 });
 </script>
-

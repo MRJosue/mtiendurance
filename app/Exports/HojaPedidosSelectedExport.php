@@ -5,9 +5,9 @@ namespace App\Exports;
 use App\Models\Pedido;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
 class HojaPedidosSelectedExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize
 {
@@ -33,8 +33,7 @@ class HojaPedidosSelectedExport implements FromCollection, WithHeadings, WithMap
             ])
             ->get();
 
-        // Precarga de valores dinámicos (opciones por caracteristica) para columnasFiltro
-        $carIds = collect($this->columnasFiltro)->pluck('id')->filter()->map(fn($v)=>(int)$v)->values()->all();
+        $carIds = collect($this->columnasFiltro)->pluck('id')->filter()->map(fn($v) => (int) $v)->values()->all();
 
         if (!empty($carIds) && $this->pedidos->isNotEmpty()) {
             $rows = \DB::table('pedido_opciones as po')
@@ -56,14 +55,12 @@ class HojaPedidosSelectedExport implements FromCollection, WithHeadings, WithMap
     {
         $heads = ['ID'];
 
-        // Base cols visibles
         foreach ($this->baseCols as $c) {
             $heads[] = $c['label'] ?? ucfirst((string)($c['key'] ?? ''));
         }
 
-        // Dinámicas
         foreach ($this->columnasFiltro as $col) {
-            $heads[] = $col['label'] ?? $col['nombre'] ?? ('CAR_'.$col['id']);
+            $heads[] = $col['label'] ?? $col['nombre'] ?? ('CAR_' . $col['id']);
         }
 
         return $heads;
@@ -74,31 +71,28 @@ class HojaPedidosSelectedExport implements FromCollection, WithHeadings, WithMap
         $row = [];
         $row[] = $pedido->id;
 
-        // Base cols
         foreach ($this->baseCols as $c) {
             $key = (string)($c['key'] ?? '');
 
             $row[] = match ($key) {
-                'proyecto'          => $pedido->proyecto->nombre ?? '—',
-                'producto'          => $pedido->producto->nombre ?? '—',
-                'cliente'           => $pedido->usuario->name ?? '—',
-                'estado'            => $pedido->estadoPedido->nombre ?? ($pedido->estado ?? '—'),
-                'estado_disenio'    => $pedido->proyecto->estado ?? '—',
+                'proyecto' => $pedido->proyecto->nombre ?? '—',
+                'producto' => $pedido->producto->nombre ?? '—',
+                'cliente' => $pedido->usuario->name ?? '—',
+                'estado' => $pedido->estadoPedido->nombre ?? ($pedido->estado ?? '—'),
+                'estado_disenio' => $pedido->proyecto->estado ?? '—',
                 'estado_produccion' => $pedido->estado_produccion ?? '—',
-                'total'             => (float)($pedido->total ?? 0),
-
-                'fecha_produccion'  => optional($pedido->fecha_produccion)->format('Y-m-d') ?? '',
-                'fecha_embarque'    => optional($pedido->fecha_embarque)->format('Y-m-d') ?? '',
-                'fecha_entrega'     => optional($pedido->fecha_entrega)->format('Y-m-d') ?? '',
-
+                'estado_proveedor' => $pedido->estatus_proveedor ?? '—',
+                'total' => (float)($pedido->total ?? 0),
+                'fecha_produccion' => optional($pedido->fecha_produccion)->format('Y-m-d') ?? '',
+                'fecha_embarque' => optional($pedido->fecha_embarque)->format('Y-m-d') ?? '',
+                'fecha_entrega' => optional($pedido->fecha_entrega)->format('Y-m-d') ?? '',
                 default => data_get($pedido, $key, '—'),
             };
         }
 
-        // Dinámicas (características del filtro)
         foreach ($this->columnasFiltro as $col) {
             $carId = (int)($col['id'] ?? 0);
-            $vals  = $this->valoresPorPedidoYCar[$pedido->id][$carId] ?? [];
+            $vals = $this->valoresPorPedidoYCar[$pedido->id][$carId] ?? [];
             $row[] = !empty($vals) ? collect($vals)->unique()->implode(', ') : ($col['fallback'] ?? '—');
         }
 

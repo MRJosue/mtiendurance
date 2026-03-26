@@ -134,9 +134,26 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const url = new URL(window.location.href);
+            const reloadFlag = url.searchParams.get('full_reload');
+            const reloadKey = 'dashboard_full_reload_done';
+
+            if (reloadFlag === '1') {
+                if (!sessionStorage.getItem(reloadKey)) {
+                    sessionStorage.setItem(reloadKey, '1');
+                    window.location.reload();
+                    return;
+                }
+
+                sessionStorage.removeItem(reloadKey);
+                url.searchParams.delete('full_reload');
+                const cleanUrl = `${url.pathname}${url.search ? `?${url.searchParams.toString()}` : ''}${url.hash}`;
+                window.history.replaceState({}, document.title, cleanUrl);
+            }
+
             Echo.private('test-channel')
             .listen('SomeEvent', (e) => {
-                console.log('Recibido:', e);
+                console.log('Received:', e);
             });
 
         });

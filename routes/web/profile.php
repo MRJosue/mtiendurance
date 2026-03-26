@@ -31,7 +31,7 @@ Route::middleware(['auth'])->group(function () {
 
         $user->update(['flag_perfil_configurado' => true]);
 
-        return redirect()->route('dashboard');
+        return redirect()->route('dashboard', ['full_reload' => 1]);
     })->name('perfil.inicial.finalizar');
 });
 

@@ -30,17 +30,24 @@ class HojaFiltrosCrud extends Component
     public ?int $editId = null;
 
     public array $estadosProduccion = [
-    'POR APROBAR',
-    'POR PROGRAMAR',
-    'PROGRAMADO',
-    'IMPRESIÓN',
-    'CORTE',
-    'COSTURA',
-    'ENTREGA',
-    'FACTURACIÓN',
-    'COMPLETADO',
-    'RECHAZADO',
-];
+        'POR APROBAR',
+        'POR PROGRAMAR',
+        'PROGRAMADO',
+        'IMPRESIÓN',
+        'CORTE',
+        'COSTURA',
+        'ENTREGA',
+        'FACTURACIÓN',
+        'COMPLETADO',
+        'RECHAZADO',
+    ];
+
+    public array $estadosProveedor = [
+        'PENDIENTE',
+        'VISTO',
+        'EN_PROCESO',
+        'LISTO',
+    ];
 
     public array $menusDisponibles = [
     // key => label (puedes agregar más o renombrar)
@@ -67,6 +74,7 @@ public array $form = [
     'estados_permitidos' => [],
     'estados_diseno_permitidos' => [],
     'estado_produccion_permitidos' => [], 
+    'estado_proveedor_permitidos' => [],
     'base_columnas' => [],
     'menu_config' => [ // 👇 estructura por defecto
         'ubicaciones' => [],   // array de keys del catálogo $menusDisponibles
@@ -181,6 +189,7 @@ public array $form = [
             'bulk_edit_total'   => true,
             'bulk_edit_estado'  => true,
             'bulk_edit_estado_produccion'  => true,
+            'bulk_edit_estado_proveedor'  => true,
             'bulk_edit_fecha_produccion'  => true,
             'bulk_edit_fecha_embarque'  => true,
             'bulk_edit_fecha_entrega'  => true,
@@ -203,6 +212,9 @@ public array $form = [
 
             'form.estado_produccion_permitidos'   => ['array'],
             'form.estado_produccion_permitidos.*' => [Rule::in($this->estadosProduccion)],
+
+            'form.estado_proveedor_permitidos'   => ['array'],
+            'form.estado_proveedor_permitidos.*' => [Rule::in($this->estadosProveedor)],
 
             'form.estados_diseno_permitidos'   => ['array'],
             'form.estados_diseno_permitidos.*' => [Rule::in($this->estadosDiseno)],
@@ -259,6 +271,7 @@ public array $form = [
 
         $this->ensureEstadoBaseCol();
         $this->ensureEstadoProduccionBaseCol(); // ✅
+        $this->ensureEstadoProveedorBaseCol();
         $this->ensureEstadoDisenioBaseCol();    // (también te faltaba aquí)
         $this->ensureFechasBaseCols();
         $this->ensureClienteBaseCol();
@@ -306,6 +319,7 @@ public array $form = [
             'estados_permitidos'=>[],
             'estados_diseno_permitidos'=>[],
             'estado_produccion_permitidos'=>[],
+            'estado_proveedor_permitidos'=>[],
             'base_columnas'=>HojaFiltroProduccion::defaultBaseColumnas(),
             'menu_config' => [
                 'ubicaciones' => [],
@@ -320,6 +334,7 @@ public array $form = [
         $this->ensureEstadoBaseCol();
         $this->ensureFechasBaseCols();
         $this->ensureClienteBaseCol();
+        $this->ensureEstadoProveedorBaseCol();
         $this->normalizeBaseCols();
         $this->filtro_ids = [];
         $this->modalOpen = true;
@@ -340,6 +355,7 @@ public array $form = [
             'estados_permitidos'=>$hoja->estados_permitidos ?? [],
             'estados_diseno_permitidos'=>$hoja->estados_diseno_permitidos ?? [],
             'estado_produccion_permitidos' => $hoja->estado_produccion_permitidos ?? [],
+            'estado_proveedor_permitidos' => $hoja->estado_proveedor_permitidos ?? [],
             'base_columnas'=>$hoja->base_columnas ?: HojaFiltroProduccion::defaultBaseColumnas(),
             'menu_config' => array_merge([
                 'ubicaciones' => [],
@@ -354,6 +370,7 @@ public array $form = [
 
         $this->ensureEstadoBaseCol();
         $this->ensureEstadoProduccionBaseCol();
+        $this->ensureEstadoProveedorBaseCol();
         $this->ensureEstadoDisenioBaseCol();
         $this->ensureFechasBaseCols();
         $this->ensureClienteBaseCol();
@@ -382,6 +399,14 @@ public array $form = [
             array_values(array_filter(
                 $this->form['estado_produccion_permitidos'] ?? [],
                 fn($v) => in_array($v, $validProd, true)
+            ))
+        ));
+
+        $validProv = $this->estadosProveedor;
+        $this->form['estado_proveedor_permitidos'] = array_values(array_unique(
+            array_values(array_filter(
+                $this->form['estado_proveedor_permitidos'] ?? [],
+                fn($v) => in_array($v, $validProv, true)
             ))
         ));
 
@@ -414,6 +439,7 @@ public array $form = [
                 'estados_permitidos'=>$this->form['estados_permitidos'] ?: [],
                 'estados_diseno_permitidos'=>$this->form['estados_diseno_permitidos'] ?: [],
                 'estado_produccion_permitidos' => $this->form['estado_produccion_permitidos'] ?: [],
+                'estado_proveedor_permitidos' => $this->form['estado_proveedor_permitidos'] ?: [],
                 'base_columnas'=>$this->form['base_columnas'] ?: HojaFiltroProduccion::defaultBaseColumnas(),
                 'menu_config' => $this->form['menu_config'] ?: ['ubicaciones'=>[],'etiqueta'=>null,'icono'=>null,'orden'=>null,'activo'=>true],
                 'visible'=>(bool)$this->form['visible'],
@@ -943,6 +969,34 @@ public array $form = [
             foreach ($cols as &$c) {
                 if (($c['key'] ?? null) === 'estado_produccion') {
                     $c['label']   = $c['label'] ?? 'Estado Producción';
+                    $c['visible'] = $c['visible'] ?? true;
+                    $c['fixed']   = (bool)($c['fixed'] ?? false);
+                }
+            }
+            unset($c);
+        }
+
+        $this->form['base_columnas'] = array_values($cols);
+    }
+
+    private function ensureEstadoProveedorBaseCol(): void
+    {
+        $cols = $this->form['base_columnas'] ?? [];
+        $has = collect($cols)->contains(fn($c) => ($c['key'] ?? null) === 'estado_proveedor');
+
+        if (!$has) {
+            $orden = (int) (collect($cols)->max('orden') ?? 0) + 1;
+            $cols[] = [
+                'key'     => 'estado_proveedor',
+                'label'   => 'Estado Proveedor',
+                'visible' => true,
+                'fixed'   => false,
+                'orden'   => $orden,
+            ];
+        } else {
+            foreach ($cols as &$c) {
+                if (($c['key'] ?? null) === 'estado_proveedor') {
+                    $c['label']   = $c['label'] ?? 'Estado Proveedor';
                     $c['visible'] = $c['visible'] ?? true;
                     $c['fixed']   = (bool)($c['fixed'] ?? false);
                 }

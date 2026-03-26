@@ -13,16 +13,14 @@
             'CANCELADA'     => ['classes' => 'bg-gray-100 text-gray-800',     'perm' => 'asideAdministraciónMuestrasTabCancelada'],
         ];
 
-        // ¿El usuario tiene permiso para la pestaña actual?
-        $currentPerm = $tabs[$tab]['perm'] ?? null;
-        $hasCurrentPerm = $currentPerm ? auth()->user()?->can($currentPerm) : false;
+        $visibleTabs = $this->getVisibleTabs();
     @endphp
 
     {{-- Tabs --}}
     <div class="w-full overflow-x-auto">
         <div class="inline-flex space-x-2 bg-white rounded-lg p-1 shadow">
             @foreach($tabs as $name => $cfg)
-                @can($cfg['perm'])
+                @if(in_array($name, $visibleTabs, true))
                     <button
                         wire:click="setTab('{{ $name }}')"
                         class="px-3 py-2 rounded-md text-sm font-semibold transition
@@ -33,14 +31,14 @@
                             {{ $counts[$name] ?? 0 }}
                         </span>
                     </button>
-                @endcan
+                @endif
             @endforeach
         </div>
     </div>
 
     {{-- Contenido por pestaña (con verificación de permisos) --}}
     <div class="mt-4">
-        @if($hasCurrentPerm)
+        @if(in_array($tab, $visibleTabs, true))
             @switch($tab)
                 @case('PENDIENTE')
                     @can('asideAdministraciónMuestrasTabPendiente')
