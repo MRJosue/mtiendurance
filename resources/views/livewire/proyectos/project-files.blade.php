@@ -1,37 +1,37 @@
 <div>
     <!-- Activador -->
-    <p class="text-blue-600" >
+    <p class="text-blue-600 dark:text-blue-400" >
        <x-link label=" Versiones anteriores y archivos de cliente" wire:click="$set('modalVerArchivosProyecto', true)" />
     </p>
  
     <!-- Modal -->
     @if($modalVerArchivosProyecto)
-        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div class="bg-white p-6 rounded shadow-lg w-full max-w-5xl max-h-[90vh] overflow-y-auto relative">
+        <div class="dashboard-modal-backdrop">
+            <div class="dashboard-modal-panel max-w-5xl">
 
                 <!-- Título y botón cerrar -->
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold">Archivos del Proyecto</h2>
-                    <button wire:click="$set('modalVerArchivosProyecto', false)" class="text-gray-600 hover:text-gray-900 text-2xl font-bold">&times;</button>
+                    <h2 class="dashboard-modal-title mb-0">Archivos del Proyecto</h2>
+                    <button wire:click="$set('modalVerArchivosProyecto', false)" class="dashboard-modal-close static font-bold">&times;</button>
                 </div>
 
                 <!-- Mensaje de éxito -->
                 @if (session()->has('message'))
-                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
+                    <div class="project-alert-success" role="alert">
                         {{ session('message') }}
                     </div>
                 @endif
 
                 <!-- Pestañas -->
-                <div class="flex border-b mb-4 space-x-4">
+                <div class="project-tab-list space-x-4">
                     <button wire:click="$set('tab', 'disenos')"
-                        class="px-4 py-2 font-medium border-b-4 transition duration-200"
-                        :class="{ 'border-blue-600 text-blue-600': @js($tab) === 'disenos', 'border-transparent text-gray-500 hover:text-blue-600': @js($tab) !== 'disenos' }">
+                        class="project-tab-button"
+                        :class="{ 'project-tab-button--active': @js($tab) === 'disenos', 'project-tab-button--inactive': @js($tab) !== 'disenos' }">
                         Diseños
                     </button>
                     <button wire:click="$set('tab', 'iniciales')"
-                        class="px-4 py-2 font-medium border-b-4 transition duration-200"
-                        :class="{ 'border-blue-600 text-blue-600': @js($tab) === 'iniciales', 'border-transparent text-gray-500 hover:text-blue-600': @js($tab) !== 'iniciales' }">
+                        class="project-tab-button"
+                        :class="{ 'project-tab-button--active': @js($tab) === 'iniciales', 'project-tab-button--inactive': @js($tab) !== 'iniciales' }">
                         Archivos Iniciales
                     </button>
                 </div>
@@ -47,14 +47,14 @@
                             x-on:livewire-upload-error="uploading = false"
                             x-on:livewire-upload-progress="progress = $event.detail.progress">
 
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                                 {{ $tab === 'iniciales' ? 'Archivo inicial' : 'Archivo de diseño' }}
                             </label>
 
                             <input 
                                 type="file"
                                 wire:model="archivo"
-                                class="block w-full border rounded px-4 py-2"
+                                class="dashboard-input block w-full px-4 py-2"
                                 accept=".jpg,.jpeg,.png,.webp,.svg,.ai,.psd,.pdf,.zip"
                             />
 
@@ -68,28 +68,28 @@
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                                 </svg>
-                                <span class="text-sm text-gray-600">Subiendo archivo…</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-300">Subiendo archivo…</span>
                             </div>
 
                             {{-- Barra de progreso (cliente) --}}
                             <div x-show="uploading" class="mt-2">
-                                <div class="h-2 bg-gray-200 rounded">
+                                <div class="h-2 rounded bg-gray-200 dark:bg-gray-700">
                                     <div class="h-2 bg-blue-600 rounded" :style="`width: ${progress}%;`"></div>
                                 </div>
-                                <p class="text-xs text-gray-500 mt-1" x-text="`${progress}%`"></p>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400" x-text="`${progress}%`"></p>
                             </div>
 
                             {{-- Vista previa si es imagen --}}
                             @if($archivo && str_starts_with($archivo->getMimeType(), 'image/'))
                                 <div class="mt-3">
                                     <img src="{{ $archivo->temporaryUrl() }}" alt="Vista previa"
-                                        class="h-32 rounded object-cover ring-1 ring-gray-200">
+                                        class="h-32 rounded object-cover ring-1 ring-gray-200 dark:ring-gray-700">
                                 </div>
                             @endif
 
                             {{-- Nombre final que se usará al guardar --}}
                             @if($archivoNombreFinal)
-                                <p class="mt-2 text-xs text-gray-600">
+                                <p class="mt-2 text-xs text-gray-600 dark:text-gray-300">
                                     Se guardará como: <span class="font-mono">{{ $archivoNombreFinal }}</span>
                                 </p>
                             @endif
@@ -121,38 +121,38 @@
                         type="text"
                         wire:model.debounce.500ms="search"
                         placeholder="Buscar por nombre de archivo..."
-                        class="w-full border px-4 py-2 rounded"
+                        class="dashboard-input px-4 py-2"
                     />
                 </div>
 
                <!-- Tabla -->
                 <div class="overflow-x-auto">
-                    <table class="table-auto w-full border-collapse border border-gray-300">
+                    <table class="dashboard-table table-auto w-full border-collapse border border-gray-300 dark:border-gray-700">
                         <thead>
-                            <tr class="bg-gray-100">
-                                <th class="px-4 py-2 border">Nombre del Archivo</th>
-                                <th class="px-4 py-2 border">Cargado Por</th>
-                                <th class="px-4 py-2 border">Hora de Subida</th>
+                            <tr class="dashboard-table-head">
+                                <th class="dashboard-table-th border border-gray-300 dark:border-gray-700">Nombre del Archivo</th>
+                                <th class="dashboard-table-th border border-gray-300 dark:border-gray-700">Cargado Por</th>
+                                <th class="dashboard-table-th border border-gray-300 dark:border-gray-700">Hora de Subida</th>
                                 @if($tab === 'disenos')
-                                    <th class="px-4 py-2 border">Versión</th>
+                                    <th class="dashboard-table-th border border-gray-300 dark:border-gray-700">Versión</th>
                                 @endif
-                                <th class="px-4 py-2 border">Acciones</th>
+                                <th class="dashboard-table-th border border-gray-300 dark:border-gray-700">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse ($archivos as $archivo)
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-4 py-2 border">{{ $archivo->nombre_archivo }}</td>
-                                    <td class="px-4 py-2 border">{{ $archivo->usuario->name ?? 'Desconocido' }}</td>
-                                    <td class="px-4 py-2 border text-sm text-gray-500">
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                                    <td class="px-4 py-2 border border-gray-300 dark:border-gray-700">{{ $archivo->nombre_archivo }}</td>
+                                    <td class="px-4 py-2 border border-gray-300 dark:border-gray-700">{{ $archivo->usuario->name ?? 'Desconocido' }}</td>
+                                    <td class="px-4 py-2 border border-gray-300 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
                                         {{ $archivo->created_at->format('d/m/Y H:i') }}
                                     </td>
                                     @if($tab === 'disenos')
-                                        <td class="px-4 py-2 border text-center text-sm">
+                                        <td class="px-4 py-2 border border-gray-300 text-center text-sm dark:border-gray-700">
                                             {{ $archivo->version }}
                                         </td>
                                     @endif
-                                    <td class="px-4 py-2 border flex flex-col md:flex-row gap-2">
+                                    <td class="px-4 py-2 border border-gray-300 dark:border-gray-700 flex flex-col md:flex-row gap-2">
                                         <button
                                             wire:click="downloadFile({{ $archivo->id }})"
                                             class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-center"
@@ -174,7 +174,7 @@
                             @empty
                                 <tr>
                                     {{-- Ajustamos el colspan según pestaña --}}
-                                    <td colspan="{{ $tab === 'disenos' ? 5 : 4 }}" class="px-4 py-2 text-center text-gray-500">
+                                    <td colspan="{{ $tab === 'disenos' ? 5 : 4 }}" class="px-4 py-2 text-center text-gray-500 dark:text-gray-400">
                                         No hay archivos Cargados.
                                     </td>
                                 </tr>

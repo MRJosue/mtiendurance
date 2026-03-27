@@ -1,4 +1,4 @@
-<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+<div class="project-card w-full">
   <!-- Encabezado: flex-col en móvil, flex-row en desktop -->
   <div class="flex flex-col sm:flex-row items-center justify-between mb-6">
     <h2 class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4 sm:mb-0 flex items-center gap-2">
@@ -19,16 +19,16 @@
     <div class="relative group transition-all duration-300 ease-in-out w-full max-w-xs sm:max-w-md md:max-w-lg">
         <img id="archivoImagen"
             src="{{ $rutaArchivo }}"
-            class="w-full h-auto max-h-[70vh] rounded-lg shadow-lg cursor-pointer object-contain"
+            class="w-full h-auto max-h-[70vh] rounded-xl border border-gray-200/80 shadow-lg cursor-pointer object-contain dark:border-gray-700"
             alt="{{ $ultimoArchivo->nombre_archivo }}"
             onclick="expandirImagen()">
         <!-- Descripción y metadatos -->
         <div class="mt-4 text-center w-full px-2">
-            <p class="mt-2 text-gray-600 text-sm sm:text-base">
+            <p class="mt-2 text-gray-600 dark:text-gray-300 text-sm sm:text-base">
                 <span class="font-semibold">Nombre:</span> {{ $ultimoArchivo->nombre_archivo }}
                 <span class="ml-4 font-semibold">Versión:</span> {{ $ultimoArchivo->version }}
             </p>
-            <p class="text-gray-700 text-base sm:text-lg">
+            <p class="text-gray-700 dark:text-gray-200 text-base sm:text-lg">
                 Comentario: {{ $ultimoArchivo->descripcion }}
             </p>
         </div>
@@ -54,7 +54,7 @@
         <div class="relative w-full max-w-full">
 
           <!-- Controles en esquina superior derecha -->
-          <div class="absolute top-4 right-4 flex space-x-2 bg-white/80 rounded-md p-3 shadow-lg z-[120]">
+          <div class="absolute top-4 right-4 flex space-x-2 rounded-md bg-white/80 p-3 shadow-lg z-[120] dark:bg-gray-900/80">
               <button @click="close()" 
                   class="w-10 h-10 flex items-center justify-center text-2xl font-bold rounded-full bg-red-500 text-white hover:bg-red-600"
                   title="Cerrar">
@@ -83,7 +83,7 @@
                  @wheel.prevent="onWheel($event)"
                  @mousedown.prevent="onMouseDown($event)">
             <!-- Controles: flex-col en móvil, flex-row en desktop -->
-            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 bg-white bg-opacity-80 rounded-md p-2 shadow">
+            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 rounded-md bg-white/80 p-2 shadow dark:bg-gray-900/80">
               <button @click="close()" class="w-8 h-8 flex items-center justify-center text-xl font-bold rounded-full bg-red-500 text-white hover:bg-red-600" title="Cerrar">&times;</button>
               <button @click="zoomIn()" class="px-3 py-1 text-lg font-bold">＋</button>
               <button @click="zoomOut()" class="px-3 py-1 text-lg font-bold">－</button>
@@ -93,7 +93,7 @@
         </div>
       </div>
     @else
-      <p class="text-gray-500">No se encontraron archivos para este proyecto.</p>
+      <p class="dashboard-empty-state">No se encontraron archivos para este proyecto.</p>
     @endif
   </div>
 

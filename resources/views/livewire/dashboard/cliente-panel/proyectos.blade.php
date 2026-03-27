@@ -6,14 +6,14 @@
             localStorage.setItem('dashboard_preproyecto_abierto', JSON.stringify(this.abierto));
         }
     }"
-    class="container mx-auto p-6"
+    class="dashboard-data-widget container mx-auto p-6"
 >
     <h2 
         @click="toggle()"
-        class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
+        class="dashboard-data-widget__title cursor-pointer"
     >
         Diseños
-    <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
+    <span class="dashboard-data-widget__subtitle" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
     </h2>   
 
     <!-- Contenido del panel -->
@@ -22,9 +22,9 @@
 
 
         <!-- Tabla -->
-        <div class="overflow-x-auto bg-white rounded-lg shadow">
-            <table class="min-w-full border-collapse border border-gray-200 rounded-lg">
-                <thead class="bg-gray-100">
+        <div class="dashboard-table-shell">
+            <table class="dashboard-table min-w-full">
+                <thead class="dashboard-table-head">
                     <tr>
                         {{-- <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">
                             <input
@@ -33,18 +33,18 @@
                                 @change="selectedProjects = $event.target.checked ? @js($projects->pluck('id')) : []"
                             />
                         </th> --}}
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">ID</th>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Nombre del Proyecto</th>
+                        <th class="dashboard-table-th border-b border-gray-200 dark:border-gray-700">ID</th>
+                        <th class="dashboard-table-th border-b border-gray-200 dark:border-gray-700">Nombre del Proyecto</th>
                         {{-- <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Usuario</th> --}}
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Producto</th>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Fecha de creacion</th>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Estado</th>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
+                        <th class="dashboard-table-th border-b border-gray-200 dark:border-gray-700">Producto</th>
+                        <th class="dashboard-table-th border-b border-gray-200 dark:border-gray-700">Fecha de creacion</th>
+                        <th class="dashboard-table-th border-b border-gray-200 dark:border-gray-700">Estado</th>
+                        <th class="dashboard-table-th border-b border-gray-200 dark:border-gray-700">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($projects as $project)
-                        <tr class="hover:bg-gray-50">
+                        <tr>
                             {{-- <td class="border-b px-4 py-2 text-gray-700 text-sm">
                                 <input
                                     type="checkbox"
@@ -52,16 +52,16 @@
                                     value="{{ $project->id }}"
                                 />
                             </td> --}}
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->id }}</td>
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->nombre }}</td>
+                            <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">{{ $project->id }}</td>
+                            <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">{{ $project->nombre }}</td>
                             {{-- <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->user->name ?? 'Sin usuario' }}</td> --}}
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">
+                            <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">
                                 {{ collect(json_decode($project->producto_sel, true))->get('nombre', '-') }}
                             </td>
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">  {{ $project->created_at->format('Y-m-d H:i:s') }} UTC</td>
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $project->estado ?? 'Sin estado' }}</td>
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">
-                                <a href="{{ route('proyecto.show', $project->id) }}" class="text-blue-500 hover:underline">
+                            <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">  {{ $project->created_at->format('Y-m-d H:i:s') }} UTC</td>
+                            <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">{{ $project->estado ?? 'Sin estado' }}</td>
+                            <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">
+                                <a href="{{ route('proyecto.show', $project->id) }}" class="dashboard-text-link">
                                     Ver detalles
                                 </a>
                             </td>

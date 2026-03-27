@@ -1,12 +1,12 @@
-<div class="w-full py-6 overflow-x-auto">
+<div class="project-card w-full overflow-x-auto py-4">
     @if (session()->has('message'))
-        <div class="mb-4 rounded-lg bg-green-100 text-green-800 p-3">
+        <div class="project-alert-success">
             {{ session('message') }}
         </div>
     @endif
 
     @if (session()->has('error'))
-        <div class="mb-4 rounded-lg bg-red-100 text-red-800 p-3">
+        <div class="project-alert-error">
             {{ session('error') }}
         </div>
     @endif
@@ -30,14 +30,14 @@
                     class="flex flex-col items-center transition-all duration-300 {{ $puedeClick ? 'cursor-pointer hover:scale-105' : 'cursor-default' }}"
                 >
                     <!-- Icono o Indicador -->
-                    <div class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full shadow-lg transition-all duration-300
-                        {{ $esActual ? 'bg-blue-600 text-white scale-110 md:scale-100 font-bold' : ($esCompletado ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700') }}">
+                    <div class="flex h-8 w-8 items-center justify-center rounded-full shadow-lg transition-all duration-300 md:h-10 md:w-10
+                        {{ $esActual ? 'bg-blue-600 text-white scale-110 md:scale-100 font-bold' : ($esCompletado ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700 dark:bg-gray-700 dark:text-gray-200') }}">
                         {{ $loop->iteration }}
                     </div>
 
                     <!-- Nombre del Estado -->
                     <span class="mt-2 md:mt-4 text-xs md:text-sm text-center transition-all duration-300
-                        {{ $esActual ? 'text-blue-600 font-semibold' : 'text-gray-600' }}">
+                        {{ $esActual ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-600 dark:text-gray-300' }}">
                         {{ $estado }}
                     </span>
                 </button>
@@ -45,21 +45,21 @@
 
             @if (!$loop->last)
                 <!-- Línea de progreso -->
-                <div class="flex-1 h-0.5 md:h-1 rounded-full mx-2 md:mx-0 transition-all duration-300
-                    {{ $loop->index < array_search($estadoActual, $estados) ? 'bg-green-500' : 'bg-gray-300' }}">
+                <div class="mx-2 h-0.5 flex-1 rounded-full transition-all duration-300 md:mx-0 md:h-1
+                    {{ $loop->index < array_search($estadoActual, $estados) ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-700' }}">
                 </div>
             @endif
         @endforeach
     </div>
 
     @if ($mostrarModalConfirmacion)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-            <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-                <h2 class="text-lg font-bold text-gray-800">
+        <div class="dashboard-modal-backdrop">
+            <div class="dashboard-modal-panel max-w-md">
+                <h2 class="text-lg font-bold text-gray-800 dark:text-gray-100">
                     Confirmar cambio de estado
                 </h2>
 
-                <p class="mt-3 text-sm text-gray-600">
+                <p class="mt-3 text-sm text-gray-600 dark:text-gray-300">
                     ¿Deseas cambiar el estado del proyecto de
                     <span class="font-semibold text-blue-600">{{ $estadoActual }}</span>
                     a
@@ -70,7 +70,7 @@
                     <button
                         type="button"
                         wire:click="cancelarCambioEstado"
-                        class="w-full sm:w-auto px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
+                        class="project-button-secondary w-full sm:w-auto"
                     >
                         Cancelar
                     </button>
@@ -78,7 +78,7 @@
                     <button
                         type="button"
                         wire:click="confirmarCambioEstado"
-                        class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        class="project-button-primary w-full sm:w-auto"
                     >
                         Confirmar
                     </button>

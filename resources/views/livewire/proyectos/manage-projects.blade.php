@@ -8,31 +8,29 @@
             localStorage.setItem('dashboard_preproyecto_abierto', JSON.stringify(this.abierto));
         }
     }"
-     class="p-2 sm:p-3 h-full min-h-0 flex flex-col"
+     class="dashboard-data-widget flex h-full min-h-0 flex-col p-2 sm:p-3"
 >
 
 
             <h2 
                 @click="toggle()"
-                class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
+                class="dashboard-data-widget__title cursor-pointer"
             >
                 {{ __('projects.title') }}
-                <span class="text-sm text-gray-500 ml-2" x-text="abierto ? @js(__('projects.hide')) : @js(__('projects.show'))"></span>
+                <span class="dashboard-data-widget__subtitle" x-text="abierto ? @js(__('projects.hide')) : @js(__('projects.show'))"></span>
             </h2>   
 
             <!-- Contenido del panel -->
             <div x-show="abierto" x-transition>
-                <ul class="flex flex-wrap border-b border-gray-200 mb-4 gap-1">
+                <ul class="dashboard-tab-list mb-4">
                     @foreach ($this->tabs as $tab)
                         <li>
                             <button
                                 wire:click="setTab('{{ $tab }}')"
                                 @class([
-                                    'px-4 py-2 rounded-t-lg text-sm whitespace-nowrap',
-                                    'border-b-2 font-semibold bg-white'           => $activeTab === $tab,
-                                    'text-gray-600 hover:text-blue-500'           => $activeTab !== $tab,
-                                    'border-blue-500 text-blue-600'               => $activeTab === $tab,
-                                    'border-transparent'                          => $activeTab !== $tab,
+                                    'dashboard-tab-button',
+                                    'dashboard-tab-button--active'   => $activeTab === $tab,
+                                    'dashboard-tab-button--inactive' => $activeTab !== $tab,
                                 ])
                             >
                                 {{ match ($tab) {
@@ -72,10 +70,10 @@
 
                         <!-- Lado derecho: PerPage -->
                         <div class="flex items-center gap-2">
-                            <label for="per-page" class="text-sm text-gray-600">{{ __('projects.records_per_page') }}</label>
+                            <label for="per-page" class="dashboard-summary">{{ __('projects.records_per_page') }}</label>
                             <select
                                 id="per-page"
-                                class="w-28 rounded-lg border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                                class="dashboard-input w-28"
                                 wire:model.live="perPage"
                             >
                                 @foreach($perPageOptions as $n)
@@ -125,10 +123,10 @@
                     selected: @entangle('selectedProjects').live,
                     idsPagina: @entangle('idsPagina').live
                 }"
-               class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8"
+               class="dashboard-table-shell"
             >
-                <table class="w-full table-auto border-collapse border border-gray-200">
-                <thead class="bg-gray-100">
+                <table class="dashboard-table">
+                <thead class="dashboard-table-head">
                     <tr>
                         {{-- Checkbox maestro (solo para roles permitidos) --}}
                         @hasanyrole('admin|estaf')

@@ -1,15 +1,15 @@
 <div>
-    <div class="flex flex-wrap gap-2 mb-4">
+    <div class="mb-4 flex flex-wrap gap-2">
                     <button wire:click="$set('modalReconfigurar', true)"
-                        class="px-4 py-2 rounded-md bg-amber-300 text-amber-900 hover:bg-amber-400 transition font-semibold shadow-sm">
+                        class="rounded-md bg-amber-300 px-4 py-2 font-semibold text-amber-900 shadow-sm transition hover:bg-amber-400 dark:bg-amber-500/20 dark:text-amber-200 dark:hover:bg-amber-500/30">
                         Reconfigurar proyecto
                     </button>
     </div>
 
 
     @if($modalReconfigurar)
-        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
+        <div class="dashboard-modal-backdrop">
+            <div class="dashboard-modal-panel max-w-md">
                 <h2 class="text-xl font-bold mb-4">Subir Archivo de Diseño</h2>
 
                 <div x-data="{ uploading: false, progress: 0 }"
@@ -18,10 +18,10 @@
                     x-on:livewire-upload-error="uploading = false"
                     x-on:livewire-upload-progress="progress = $event.detail.progress">
 
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Arte (1 archivo)</label>
+                    <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Arte (1 archivo)</label>
                     <input
                         type="file"
-                        class="w-full border rounded px-3 py-2"
+                        class="dashboard-input px-3 py-2"
                         wire:model="archivo"
                         accept=".jpg,.jpeg,.png,.webp,.svg,.ai,.psd,.pdf,.zip"
                     />
@@ -32,20 +32,20 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                         </svg>
-                        <span class="text-sm text-gray-600">Subiendo archivo…</span>
+                        <span class="text-sm text-gray-600 dark:text-gray-300">Subiendo archivo…</span>
                     </div>
 
                     <div x-show="uploading" class="mt-2">
-                        <div class="h-2 bg-gray-200 rounded">
+                        <div class="h-2 rounded bg-gray-200 dark:bg-gray-700">
                             <div class="h-2 bg-blue-600 rounded" :style="`width: ${progress}%;`"></div>
                         </div>
-                        <p class="text-xs text-gray-500 mt-1" x-text="`${progress}%`"></p>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400" x-text="`${progress}%`"></p>
                     </div>
 
                     @if($archivo && str_starts_with($archivo->getMimeType(), 'image/'))
                         <div class="mt-3">
                             <img src="{{ $archivo->temporaryUrl() }}" alt="Vista previa"
-                                class="h-32 rounded object-cover ring-1 ring-gray-200">
+                                class="h-32 rounded object-cover ring-1 ring-gray-200 dark:ring-gray-700">
                         </div>
                     @endif
 
@@ -65,17 +65,17 @@
                     @endif
                 </div>
 
-                <textarea wire:model="comentario" placeholder="Comentario (opcional)" class="w-full border rounded p-2 mb-3"></textarea>
+                <textarea wire:model="comentario" placeholder="Comentario (opcional)" class="dashboard-input mb-3 min-h-[96px] p-2"></textarea>
                 @error('comentario') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
 
                 <div class="flex justify-end space-x-2">
                     <button wire:click="$set('modalSubirArchivoDiseno', false)"
-                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded">
+                            class="project-button-secondary">
                         Cancelar
                     </button>
                     <button
                         wire:click="subirArchivoDiseno"
-                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="project-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
                         wire:loading.attr="disabled"
                         wire:target="archivo,subirArchivoDiseno"
                         @disabled($archivoDuplicado)
@@ -89,4 +89,3 @@
     @endif
 
 </div>
-

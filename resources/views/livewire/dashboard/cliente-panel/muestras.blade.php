@@ -6,14 +6,14 @@
             localStorage.setItem('dashboard_pedidos_abierto', JSON.stringify(this.abierto));
         }
     }"
-    class="p-2 sm:p-3 h-full min-h-0 flex flex-col"
+    class="dashboard-data-widget flex h-full min-h-0 flex-col p-2 sm:p-3"
 >
     <h2 
         @click="toggle()"
-        class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
+        class="dashboard-data-widget__title cursor-pointer"
     >
         Muestras de Proyecto
-    <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
+    <span class="dashboard-data-widget__subtitle" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
     </h2>
 
     <!-- Contenido colapsable -->
@@ -28,18 +28,18 @@
 
                             
 <template x-if="abierto">
-    <div class="w-full bg-white border border-gray-200 shadow-md rounded-lg">
+    <div class="dashboard-filter-panel">
         {{-- Header --}}
         <div class="p-4 border-b">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div class="flex items-center justify-between sm:justify-start gap-3">
-                    <h2 class="text-lg font-bold text-gray-700">Filtros</h2>
+                    <h2 class="text-lg font-bold text-gray-700 dark:text-gray-100">Filtros</h2>
 
                     {{-- Cerrar (compacto) --}}
                     <button
                         type="button"
                         @click="abierto = false"
-                        class="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                        class="sm:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100"
                         title="Cerrar"
                     >
                         ✕
@@ -51,7 +51,7 @@
                     <button
                         type="button"
                         wire:click="buscarPorFiltros"
-                        class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 text-sm"
+                        class="dashboard-button-secondary w-full sm:w-auto"
                     >
                         Filtrar
                     </button>
@@ -59,7 +59,7 @@
                     <button
                         type="button"
                         wire:click="clearFilters"
-                        class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 text-sm"
+                        class="dashboard-button-secondary w-full sm:w-auto"
                     >
                         Limpiar
                     </button>
@@ -81,7 +81,7 @@
                     <button
                         type="button"
                         @click="abierto = false"
-                        class="hidden sm:inline-flex items-center justify-center px-3 py-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 text-sm"
+                        class="hidden sm:inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100"
                         title="Cerrar"
                     >
                         Cerrar ✕
@@ -90,7 +90,7 @@
             </div>
 
             {{-- Hint --}}
-            <p class="mt-2 text-xs text-gray-500">
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
                 La exportación solo se habilita cuando hay al menos un filtro aplicado.
             </p>
         </div>
@@ -99,7 +99,7 @@
         <div class="p-4">
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {{-- No aprobados --}}
-                <div class="rounded-lg border border-gray-200 p-3">
+                <div class="dashboard-filter-card">
                     <label class="flex items-start gap-2 cursor-pointer">
                         <input
                             type="checkbox"
@@ -107,21 +107,21 @@
                             wire:model.defer="mostrarSoloNoAprobados"
                             class="mt-1 rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                         />
-                        <span class="text-sm text-gray-700">
+                        <span class="text-sm text-gray-700 dark:text-gray-200">
                             Mostrar pedidos de diseños <span class="font-semibold">No aprobados</span>
                         </span>
                     </label>
                 </div>
 
                 {{-- PerPage --}}
-                <div class="rounded-lg border border-gray-200 p-3">
-                    <label for="perPage" class="block text-sm text-gray-700 font-medium mb-1">
+                <div class="dashboard-filter-card">
+                    <label for="perPage" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
                         Registros por página
                     </label>
                     <select
                         id="perPage"
                         wire:model.live="perPage"
-                        class="w-full rounded-lg border-gray-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-sm"
+                        class="dashboard-input"
                     >
                         <option value="10">10</option>
                         <option value="20">20</option>
@@ -132,7 +132,7 @@
                 </div>
 
                 {{-- Inactivos --}}
-                <div class="rounded-lg border border-gray-200 p-3">
+                <div class="dashboard-filter-card">
                     <label class="flex items-start gap-2 cursor-pointer">
                         <input
                             type="checkbox"
@@ -140,7 +140,7 @@
                             wire:model.live="filters.inactivos"
                             class="mt-1 rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                         />
-                        <span class="text-sm text-gray-700">
+                        <span class="text-sm text-gray-700 dark:text-gray-200">
                             Mostrar solo pedidos <span class="font-semibold">inactivos</span>
                         </span>
                     </label>
@@ -151,7 +151,7 @@
 </template>
                                 <template x-if="!abierto">
                                     <div class="mb-4">
-                                        <button @click="abierto = true" class="text-sm text-blue-600 hover:underline">
+                                        <button @click="abierto = true" class="dashboard-text-link">
                                             Mostrar Filtros
                                         </button>
                                     </div>
@@ -159,7 +159,7 @@
                             </div>
                         @else
                             <div class="mb-4">
-                                <button wire:click="$set('mostrarFiltros', true)" class="text-sm text-blue-600 hover:underline">
+                                <button wire:click="$set('mostrarFiltros', true)" class="dashboard-text-link">
                                     Mostrar Filtros
                                 </button>
                             </div>
@@ -189,16 +189,16 @@
 <!-- PESTAÑAS POR ESTADO DE LA MUESTRA -->
 <div class="mb-4">
     <div class="overflow-x-auto">
-        <ul class="flex flex-nowrap sm:flex-wrap border-b border-gray-200 gap-1 min-w-max sm:min-w-0">
+        <ul class="dashboard-tab-list">
             @foreach ($this->tabsEstadoVisibles as $tab)
                 <li>
                     <button
                         type="button"
                         wire:click="setEstadoTab('{{ $tab }}')"
                         @class([
-                            'px-3 py-2 rounded-t-lg text-sm whitespace-nowrap transition',
-                            'border-b-2 font-semibold bg-white border-blue-500 text-blue-600' => $activeEstadoTab === $tab,
-                            'text-gray-600 hover:text-blue-500 border-b-2 border-transparent' => $activeEstadoTab !== $tab,
+                            'dashboard-tab-button',
+                            'dashboard-tab-button--active' => $activeEstadoTab === $tab,
+                            'dashboard-tab-button--inactive' => $activeEstadoTab !== $tab,
                         ])
                     >
                         {{ $tab }}
@@ -224,10 +224,10 @@
                 selected: [],
                 idsPagina: @json($pedidos->pluck("id")->map(fn ($id) => (int) $id)->values()->all()),
             }'
-            class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8"
+            class="dashboard-table-shell"
         >
-        <table class="w-full table-auto border-collapse border border-gray-200">
-            <thead class="bg-gray-100">
+        <table class="dashboard-table">
+            <thead class="dashboard-table-head">
                 <tr>
                     {{-- Checkbox maestro por página --}}
                     <th class="px-3 py-2 w-10">
@@ -246,7 +246,7 @@
                     </th>
 
                     {{-- ID pedido/proyecto --}}
-                    <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
+                    <th class="dashboard-table-th">
                         <button
                             class="inline-flex items-center gap-1 hover:text-blue-600"
                             wire:click="sortBy('id')"
@@ -263,7 +263,7 @@
                         </button>
                     </th>
 
-                    <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
+                    <th class="dashboard-table-th">
                         <button class="inline-flex items-center gap-1 hover:text-blue-600" wire:click="sortBy('proyecto_nombre')">
                             <span>Nombre del proyecto</span>
                             <span class="text-xs">
@@ -276,7 +276,7 @@
                         </button>
                     </th>
 
-                    <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
+                    <th class="dashboard-table-th">
                         <button class="inline-flex items-center gap-1 hover:text-blue-600" wire:click="sortBy('cliente_nombre')">
                             <span>Cliente</span>
                             <span class="text-xs">
@@ -289,9 +289,9 @@
                         </button>
                     </th>
 
-                    <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Producto / Categoría</th>
+                    <th class="dashboard-table-th">Producto / Categoría</th>
 
-                    <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
+                    <th class="dashboard-table-th">
                         <button class="inline-flex items-center gap-1 hover:text-blue-600" wire:click="sortBy('total')">
                             <span>Total</span>
                             <span class="text-xs">
@@ -304,12 +304,12 @@
                         </button>
                     </th>
 
-                    <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
+                    <th class="dashboard-table-th">
                         Estado de la Muestra
                     </th>
 
 
-                    <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
+                    <th class="dashboard-table-th">
                         <button class="inline-flex items-center gap-1 hover:text-blue-600" wire:click="sortBy('fecha_produccion')">
                             <span>Producción</span>
                             <span class="text-xs">
@@ -335,11 +335,11 @@
                         </button>
                     </th>
 
-                    <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
+                    <th class="dashboard-table-th">Acciones</th>
                 </tr>
 
                 {{-- Filtros por columna (dropdown compacto tipo HojaViewer) --}}
-                <tr class="border-t border-gray-200">
+                <tr class="dashboard-table-filter-row">
                     <th class="px-3 py-2"></th>
 
                     {{-- Filtro ID --}}
@@ -699,44 +699,44 @@
     </div>
 
 
-    @if($modalVerInfo && $infoProyecto)
-    <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div class="bg-white p-6 rounded shadow-lg w-full max-w-2xl relative overflow-y-auto max-h-[90vh]">
-            <h2 class="text-xl font-bold mb-4">Detalles del Proyecto</h2>
+@if($modalVerInfo && $infoProyecto)
+    <div class="dashboard-modal-backdrop">
+        <div class="dashboard-modal-panel">
+            <h2 class="dashboard-modal-title">Detalles del Proyecto</h2>
             <button 
                 wire:click="$set('modalVerInfo', false)" 
-                class="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-2xl leading-none"
+                class="dashboard-modal-close"
                 title="Cerrar"
             >&times;</button>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                    <p class="text-lg"><span class="font-semibold">Cliente:</span> {{ $infoProyecto->user->name ?? 'Sin usuario' }}</p>
+                    <p class="text-lg dashboard-detail-text"><span class="font-semibold">Cliente:</span> {{ $infoProyecto->user->name ?? 'Sin usuario' }}</p>
                 </div>
                 <div>
-                    <p class="text-lg"><span class="font-semibold">Proyecto:</span> {{ $infoProyecto->nombre }} <span class="text-sm font-bold">ID:{{ $infoProyecto->id }}</span></p>
+                    <p class="text-lg dashboard-detail-text"><span class="font-semibold">Proyecto:</span> {{ $infoProyecto->nombre }} <span class="dashboard-detail-muted">ID:{{ $infoProyecto->id }}</span></p>
                 </div>
                 <div class="sm:col-span-2">
-                    <p class="text-lg"><span class="font-semibold">Descripción:</span> {{ $infoProyecto->descripcion }}</p>
+                    <p class="text-lg dashboard-detail-text"><span class="font-semibold">Descripción:</span> {{ $infoProyecto->descripcion }}</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                    <p class="text-lg font-semibold">Categoría:</p>
-                    <p>{{ $infoProyecto->categoria_sel['nombre'] ?? $infoProyecto->categoria->nombre ?? 'Sin categoría' }}</p>
+                    <p class="text-lg font-semibold text-gray-800 dark:text-gray-100">Categoría:</p>
+                    <p class="dashboard-detail-text">{{ $infoProyecto->categoria_sel['nombre'] ?? $infoProyecto->categoria->nombre ?? 'Sin categoría' }}</p>
                 </div>
                 <div>
-                    <p class="text-lg font-semibold">Producto:</p>
-                    <p>{{ $infoProyecto->producto_sel['id'] ?? $infoProyecto->producto->id ?? '' }} {{ $infoProyecto->producto_sel['nombre'] ?? $infoProyecto->producto->nombre ?? 'Sin producto' }}</p>
+                    <p class="text-lg font-semibold text-gray-800 dark:text-gray-100">Producto:</p>
+                    <p class="dashboard-detail-text">{{ $infoProyecto->producto_sel['id'] ?? $infoProyecto->producto->id ?? '' }} {{ $infoProyecto->producto_sel['nombre'] ?? $infoProyecto->producto->nombre ?? 'Sin producto' }}</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
                 @foreach($infoProyecto->caracteristicas_sel ?? [] as $caracteristica)
-                    <div class="p-4 border rounded-lg shadow bg-gray-50">
-                        <h3 class="text-lg font-semibold">{{ $caracteristica['nombre'] }}</h3>
-                        <ul class="mt-2 list-disc list-inside">
+                    <div class="dashboard-detail-card">
+                        <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ $caracteristica['nombre'] }}</h3>
+                        <ul class="mt-2 list-disc list-inside dashboard-detail-text">
                             @foreach($caracteristica['opciones'] ?? [] as $opcion)
                                 <li><span class="font-medium">{{ $opcion['nombre'] }}</span></li>
                             @endforeach
@@ -749,19 +749,19 @@
 @endif
 
 @if($modalTallas)
-    <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl relative overflow-y-auto max-h-[90vh]">
-            <h2 class="text-xl font-bold mb-4">
+    <div class="dashboard-modal-backdrop">
+        <div class="dashboard-modal-panel">
+            <h2 class="dashboard-modal-title">
                 Distribución de tallas
                 @if($tallasPedidoId)
-                    <span class="text-sm text-gray-500 font-semibold">Pedido #{{ $tallasPedidoId }}</span>
+                    <span class="dashboard-detail-muted">Pedido #{{ $tallasPedidoId }}</span>
                 @endif
             </h2>
 
             <button
                 type="button"
                 wire:click="cerrarModalTallas"
-                class="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-2xl leading-none"
+                class="dashboard-modal-close"
                 title="Cerrar"
             >&times;</button>
 
@@ -769,12 +769,12 @@
 
                 <div class="space-y-4">
                     @foreach($tallasDistribucionPorGrupo as $grupo)
-                        <div class="border border-gray-200 rounded-lg overflow-hidden">
-                            <div class="px-4 py-2 bg-gray-100 flex items-center justify-between">
-                                <div class="font-semibold text-gray-700">
+                        <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between bg-gray-100 px-4 py-2 dark:bg-gray-800">
+                                <div class="font-semibold text-gray-700 dark:text-gray-100">
                                     {{ $grupo['grupo'] }}
                                 </div>
-                                <div class="text-sm font-bold text-gray-700">
+                                <div class="text-sm font-bold text-gray-700 dark:text-gray-200">
                                     Subtotal: {{ number_format((int)$grupo['subtotal']) }}
                                 </div>
                             </div>
@@ -782,9 +782,9 @@
                             <div class="p-4">
                                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                                     @foreach($grupo['items'] as $it)
-                                        <div class="border rounded-lg p-2 flex items-center justify-between">
-                                            <span class="font-semibold text-gray-700">{{ $it['talla'] }}</span>
-                                            <span class="text-gray-900">{{ number_format((int)$it['cantidad']) }}</span>
+                                        <div class="flex items-center justify-between rounded-lg border border-gray-200 px-2 py-2 dark:border-gray-700">
+                                            <span class="font-semibold text-gray-700 dark:text-gray-100">{{ $it['talla'] }}</span>
+                                            <span class="text-gray-900 dark:text-gray-100">{{ number_format((int)$it['cantidad']) }}</span>
                                         </div>
                                     @endforeach
                                 </div>
@@ -794,13 +794,13 @@
                 </div>
 
                 <div class="mt-4 flex justify-end">
-                    <div class="px-4 py-2 rounded-lg bg-gray-50 border font-bold text-gray-800">
+                    <div class="dashboard-total-card">
                         Total: {{ number_format((int)$tallasTotal) }} piezas
                     </div>
                 </div>
 
             @else
-                <p class="text-sm text-gray-500">No hay tallas registradas para este pedido.</p>
+                <p class="dashboard-empty-state">No hay tallas registradas para este pedido.</p>
             @endif
         </div>
     </div>

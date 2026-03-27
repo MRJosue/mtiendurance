@@ -10,9 +10,9 @@
         </div>
     </x-slot>
     <div class="py-6">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg h-full min-h-0">
-                <div class="p-6 text-gray-900 dark:text-gray-100 h-full min-h-0">
+        <div class="project-detail-shell">
+            <div class="project-detail-panel h-full min-h-0">
+                <div class="project-detail-body h-full min-h-0">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-full min-h-0">
                         
                         <!-- Lado izquierdo: Último archivo y Subir Diseño centrados -->
@@ -32,11 +32,10 @@
                         <!-- Lado derecho: pestañas Detalles / Chat -->
                         <div x-data="{ tab: 'detalles' }" class="text-gray-900 dark:text-gray-100">
                             <!-- Tabs -->
-                            <div class="flex overflow-x-auto border-b border-gray-300 dark:border-gray-600 mb-4 space-x-4">
+                            <div class="project-tab-list space-x-4">
                                 <button 
                                     @click="tab = 'detalles'" 
-                                    :class="tab === 'detalles' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'" 
-                                    class="py-2 px-4 font-medium whitespace-nowrap focus:outline-none"
+                                    :class="tab === 'detalles' ? 'project-tab-button project-tab-button--active' : 'project-tab-button project-tab-button--inactive'" 
                                 >
                                     Detalles del Proyecto
                                 </button>
@@ -45,8 +44,7 @@
 
                                 <button 
                                     @click="tab = 'chat'" 
-                                    :class="tab === 'chat' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'" 
-                                    class="py-2 px-4 font-medium whitespace-nowrap focus:outline-none"
+                                    :class="tab === 'chat' ? 'project-tab-button project-tab-button--active' : 'project-tab-button project-tab-button--inactive'" 
                                 >
                                     Chat del Proyecto
                                 </button>
@@ -54,8 +52,7 @@
                                 @can('proyectodiseñopestañachatProveedor')
                                     <button 
                                         @click="tab = 'chatProveedor'" 
-                                        :class="tab === 'chatProveedor' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'" 
-                                        class="py-2 px-4 font-medium whitespace-nowrap focus:outline-none"
+                                        :class="tab === 'chatProveedor' ? 'project-tab-button project-tab-button--active' : 'project-tab-button project-tab-button--inactive'" 
                                     >
                                         Chat del Proveedor
                                     </button>
@@ -65,8 +62,7 @@
                                 @can('proyectodiseñopestañaTareasDelProyecto')
                                     <button 
                                         @click="tab = 'tareas'" 
-                                        :class="tab === 'tareas' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'" 
-                                        class="py-2 px-4 font-medium whitespace-nowrap focus:outline-none"
+                                        :class="tab === 'tareas' ? 'project-tab-button project-tab-button--active' : 'project-tab-button project-tab-button--inactive'" 
                                     >
                                         Tareas del Diseño
                                     </button>
@@ -74,8 +70,7 @@
 
                                     <button 
                                         @click="tab = 'transferencia'" 
-                                        :class="tab === 'transferencia' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-600'" 
-                                        class="py-2 px-4 font-medium whitespace-nowrap focus:outline-none"
+                                        :class="tab === 'transferencia' ? 'project-tab-button project-tab-button--active' : 'project-tab-button project-tab-button--inactive'" 
                                     >
                                         transferencia
                                     </button>
@@ -87,24 +82,24 @@
 
 
                                     
-                                            <h2 class="text-2xl font-bold mb-4">Detalles del Proyecto</h2>
+                                            <h2 class="project-section-title">Detalles del Proyecto</h2>
                                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3">
-                                                <div>
-                                                    <div class="text-lg">
-                                                        <span class="font-semibold">ID:</span>{{ $proyecto->id }} 
+                                                <div class="project-card">
+                                                    <div class="project-meta-text">
+                                                        <span class="project-meta-label">ID:</span>{{ $proyecto->id }} 
                                                     </div>
-                                                    <div class="text-lg">
-                                                        <span class="font-semibold">Nombre de Proyecto:</span> {{ $proyecto->nombre }} 
+                                                    <div class="project-meta-text">
+                                                        <span class="project-meta-label">Nombre de Proyecto:</span> {{ $proyecto->nombre }} 
                                                     </div>
 
                                                 </div>
-                                                <div>
-                                                    <p class="text-lg">
-                                                        <span class="font-semibold">Cliente  : </span> {{ $proyecto->user->name }}
+                                                <div class="project-card">
+                                                    <p class="project-meta-text">
+                                                        <span class="project-meta-label">Cliente  : </span> {{ $proyecto->user->name }}
                                                     </p>
 
-                                                    <p class="text-lg">
-                                                        <span class="font-semibold">Empresa:</span>
+                                                    <p class="project-meta-text">
+                                                        <span class="project-meta-label">Empresa:</span>
                                                         <span
                                                             class="inline-flex items-center gap-1 align-middle"
                                                             title="{{ $proyecto->user->tooltip_sucursal_empresa }}"
@@ -121,9 +116,9 @@
                                                     </p>
                                                 </div>
 
-                                                <div class="sm:col-span-2">
-                                                    <p class="text-lg">
-                                                        <span class="font-semibold">Descripción:</span> {{ $proyecto->descripcion }}
+                                                <div class="project-card sm:col-span-2">
+                                                    <p class="project-meta-text">
+                                                        <span class="project-meta-label">Descripción:</span> {{ $proyecto->descripcion }}
                                                     </p>
                                                 </div>
 
@@ -141,13 +136,13 @@
                                                     : json_decode($proyecto->caracteristicas_sel, true);
                                             @endphp
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3">
-                                                    <div>
-                                                        <p class="text-lg font-semibold">Categoría:</p>
-                                                        <p>{{ $categoria['nombre'] ?? 'Sin categoría' }}</p>
+                                                    <div class="project-card">
+                                                        <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">Categoría:</p>
+                                                        <p class="project-meta-text">{{ $categoria['nombre'] ?? 'Sin categoría' }}</p>
                                                     </div>
-                                                    <div>
-                                                        <p class="text-lg font-semibold">Producto:</p>
-                                                        <p>{{ $producto['nombre'] ?? 'Sin producto' }}</p>
+                                                    <div class="project-card">
+                                                        <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">Producto:</p>
+                                                        <p class="project-meta-text">{{ $producto['nombre'] ?? 'Sin producto' }}</p>
                                                     </div>
                                                 </div>
 
@@ -161,8 +156,8 @@
                                                                 $opciones = (array) $opciones;
                                                             }
                                                         @endphp
-                                                        <div class="p-4 border rounded-lg shadow bg-gray-50 dark:bg-gray-700">
-                                                            <h3 class="text-lg font-semibold">{{ $caracteristica['nombre'] ?? 'Sin nombre' }}</h3>
+                                                        <div class="project-muted-card">
+                                                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ $caracteristica['nombre'] ?? 'Sin nombre' }}</h3>
 
                                                             @if(!empty($opciones))
                                                                 <ul class="mt-2 list-disc list-inside">
@@ -176,7 +171,7 @@
                                                             @endif
                                                         </div>
                                                     @empty
-                                                        <div class="sm:col-span-2 lg:col-span-3">
+                                                        <div class="sm:col-span-2 lg:col-span-3 project-card">
                                                             <p class="text-sm text-gray-600 dark:text-gray-300">Sin características seleccionadas.</p>
                                                         </div>
                                                     @endforelse
@@ -186,16 +181,16 @@
                             </div>
                             <!-- Contenido Chat -->
                             <div x-show="tab === 'chat'" x-cloak class="flex flex-col flex-1 min-h-0 p-5">
-                                <h2 class="text-2xl font-bold mb-4">Chat del Proyecto</h2>
-                                <div wire:poll.2s class="flex-1 min-h-0 flex flex-col overflow-y-auto bg-white dark:bg-gray-700 rounded-lg shadow-md p-4">
+                                <h2 class="project-section-title">Chat del Proyecto</h2>
+                                <div wire:poll.2s class="project-chat-shell">
                                     <livewire:chat-component :proyecto-id="$proyecto->id" />
                                 </div>
                             </div>
 
                             <!-- Contenido Chat -->
                             <div x-show="tab === 'chatProveedor'" x-cloak class="flex flex-col flex-1 min-h-0 p-5">
-                                <h2 class="text-2xl font-bold mb-4">Chat del Proyecto</h2>
-                                <div wire:poll.2s class="flex-1 min-h-0 flex flex-col overflow-y-auto bg-white dark:bg-gray-700 rounded-lg shadow-md p-4">
+                                <h2 class="project-section-title">Chat del Proyecto</h2>
+                                <div wire:poll.2s class="project-chat-shell">
                                     <livewire:chat-proveedor-component :proyecto-id="$proyecto->id" />
                                 </div>
                             </div>
@@ -203,15 +198,15 @@
                             <!-- Contenido Tareas -->
                             @can('proyectodiseñopestañaTareasDelProyecto')
                                 <div x-show="tab === 'tareas'" x-cloak class="flex flex-col flex-1 min-h-0 overflow-y-auto p-5">
-                                    <h2 class="text-2xl font-bold mb-4">Tareas del Diseño</h2>
+                                    <h2 class="project-section-title">Tareas del Diseño</h2>
                                     <livewire:proyectos.tareas-diseno :proyecto-id="$proyecto->id" />
                                 </div>
                             @endcan
 
 
                             <div x-show="tab === 'transferencia'" x-cloak class="flex flex-col flex-1 min-h-0 p-5">
-                                    <h2 class="text-2xl font-bold mb-4">Transferencias</h2>
-                                    <div wire:poll.2s class="flex-1 min-h-0 flex flex-col overflow-y-auto bg-white dark:bg-gray-700 rounded-lg shadow-md p-4">
+                                    <h2 class="project-section-title">Transferencias</h2>
+                                    <div wire:poll.2s class="project-chat-shell">
                                   
                                  <livewire:proyectos.transferencia-proyecto :proyecto="$proyecto" wire:key="transfer-{{ $proyecto->id }}" />
 
@@ -225,22 +220,20 @@
 
 
                 @can('vistaproyectoSeccionPedidos')
-                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mt-6">
-                        <div class="p-6 text-gray-900 dark:text-gray-100">
+                    <div class="project-detail-panel mt-6">
+                        <div class="project-detail-body">
                             <div x-data="{ tab: 'pedidos' }">
                                 <!-- Pestañas -->
-                                <div class="flex space-x-4 border-b border-gray-300 dark:border-gray-600">
+                                <div class="project-tab-list space-x-4">
                                     <button 
                                         @click="tab = 'pedidos'" 
-                                        :class="tab === 'pedidos' ? 'border-blue-500 text-blue-500' : 'text-gray-500 dark:text-gray-300'" 
-                                        class="py-2 px-4 font-semibold border-b-2 focus:outline-none"
+                                        :class="tab === 'pedidos' ? 'project-tab-button project-tab-button--active' : 'project-tab-button project-tab-button--inactive'" 
                                     >
                                         Pedidos
                                     </button>
                                     <button 
                                         @click="tab = 'muestras'" 
-                                        :class="tab === 'muestras' ? 'border-blue-500 text-blue-500' : 'text-gray-500 dark:text-gray-300'" 
-                                        class="py-2 px-4 font-semibold border-b-2 focus:outline-none"
+                                        :class="tab === 'muestras' ? 'project-tab-button project-tab-button--active' : 'project-tab-button project-tab-button--inactive'" 
                                     >
                                         Muestras
                                     </button>

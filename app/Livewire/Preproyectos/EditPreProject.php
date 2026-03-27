@@ -18,6 +18,7 @@ use App\Models\Producto;
 use App\Models\Caracteristica;
 use App\Models\Talla;
 use App\Models\Opcion;
+use App\Services\Preproyectos\PreProjectApprovalService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
@@ -116,11 +117,18 @@ class EditPreProject extends Component
 
     public $isUploading = false;
 
+    protected PreProjectApprovalService $preProjectApprovalService;
+
     protected $listeners = [
         'livewire-upload-start' => 'uploadStarted',
         'livewire-upload-finish' => 'uploadFinished',
         'livewire-upload-error' => 'uploadFinished',
     ];
+
+    public function boot(PreProjectApprovalService $preProjectApprovalService): void
+    {
+        $this->preProjectApprovalService = $preProjectApprovalService;
+    }
 
 
 
@@ -328,7 +336,13 @@ class EditPreProject extends Component
         }
 
         // Actualizar el preproyecto
-        $preProyecto = PreProyecto::findOrFail($this->preProyectoId);
+        $preProyecto = PreProyecto::find($this->preProyectoId);
+        if (!$preProyecto) {
+            $mensaje = 'El preproyecto ya no esta disponible. Es posible que otro usuario ya lo haya procesado.';
+            $this->addError($from == 2 ? 'archivosPendientes' : 'nombre', $mensaje);
+            return null;
+        }
+
         $preProyecto->update([
             'nombre' => $this->nombre,
             'descripcion' => $this->descripcion,
@@ -373,25 +387,34 @@ class EditPreProject extends Component
             ]);
         }
 
-        if($from == 2 ){
+        if ($from == 2) {
+            try {
+                $proyecto = $this->preProjectApprovalService->approve($this->preProyectoId, (int) Auth::id());
 
-            // logica de la aprbacion se coloco de este lado para hacer validas las validaciones implementadas 
-            $preProyecto = PreProyecto::findOrFail($this->preProyectoId);
+                Log::info('Preproyecto preaprobado correctamente.', [
+                    'pre_proyecto_id' => $this->preProyectoId,
+                    'proyecto_id' => $proyecto->id,
+                    'usuario_id' => Auth::id(),
+                ]);
 
-                Log::debug('preProyecto', ['data' => $preProyecto]);
-            
-                // Transferir el preproyecto a proyecto
-                $proyecto = $preProyecto->transferirAProyecto();
-
-                // Mensaje de éxito y redirección
                 session()->flash('message', 'El proyecto ha sido aprobado y transferido correctamente.');
 
-              return redirect()->route('preproyectos.index');
-        }else{
-             session()->flash('message', 'Preproyecto actualizado exitosamente.');
+                return redirect()->route('preproyectos.index');
+            } catch (\Throwable $e) {
+                Log::warning('No fue posible preaprobar el preproyecto.', [
+                    'pre_proyecto_id' => $this->preProyectoId,
+                    'usuario_id' => Auth::id(),
+                    'error' => $e->getMessage(),
+                ]);
 
-             return redirect()->route('preproyectos.index');
+                $this->addError('archivosPendientes', $e->getMessage());
+                return null;
+            }
         }
+
+        session()->flash('message', 'Preproyecto actualizado exitosamente.');
+
+        return redirect()->route('preproyectos.index');
 
 
     }
