@@ -236,7 +236,13 @@
 
     
 
-        <div class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8">
+        <div
+            x-data='{
+                selected: [],
+                idsPagina: @json($pedidos->pluck("id")->map(fn ($id) => (int) $id)->values()->all()),
+            }'
+            class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8"
+        >
         <table class="w-full table-auto border-collapse border border-gray-200">
             <thead class="bg-gray-100">
                 <tr>

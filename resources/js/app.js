@@ -1,16 +1,12 @@
 import '../css/app.css';
 import './bootstrap';
 
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
 import Dropzone from 'dropzone';
 import 'dropzone/dist/dropzone.css';
 
 import imageZoom from './components/image-zoom';
 
 window.imageZoom = imageZoom;
-window.Echo = Echo;
-window.Pusher = Pusher;
 window.Dropzone = Dropzone;
 
 const THEME_STORAGE_KEY = 'theme';
