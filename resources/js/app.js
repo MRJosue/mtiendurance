@@ -1,38 +1,86 @@
 import '../css/app.css';
-
 import './bootstrap';
 
-
-import Echo from "laravel-echo";
-import Pusher from "pusher-js";
-
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
 import Dropzone from 'dropzone';
 import 'dropzone/dist/dropzone.css';
 
- 
 import imageZoom from './components/image-zoom';
 
 window.imageZoom = imageZoom;
-console.log('Hola soy app js');
+window.Echo = Echo;
+window.Pusher = Pusher;
+window.Dropzone = Dropzone;
 
-// resources/js/app.js
-import '../css/app.css'
+const THEME_STORAGE_KEY = 'theme';
+const DARK_CLASS = 'dark';
 
-// Si ya tienes bootstrap.js u otras importaciones, déjalas:
-import './bootstrap'  // si existe
+const getPreferredTheme = () => {
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
 
-// import Alpine from 'alpinejs'
-// window.Alpine = Alpine
+  if (savedTheme === 'light' || savedTheme === 'dark') {
+    return savedTheme;
+  }
 
-// Crea el store UI cuando Alpine se inicialice
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+};
+
+const applyTheme = (theme) => {
+  const isDark = theme === 'dark';
+
+  document.documentElement.classList.toggle(DARK_CLASS, isDark);
+  document.documentElement.setAttribute('data-theme', theme);
+};
+
+window.themeManager = {
+  init() {
+    applyTheme(getPreferredTheme());
+  },
+  set(theme) {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+    applyTheme(theme);
+  },
+  toggle() {
+    const currentTheme = document.documentElement.classList.contains(DARK_CLASS) ? 'dark' : 'light';
+    const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+    this.set(nextTheme);
+
+    return nextTheme;
+  },
+  current() {
+    return document.documentElement.classList.contains(DARK_CLASS) ? 'dark' : 'light';
+  }
+};
+
+window.themeManager.init();
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+  if (localStorage.getItem(THEME_STORAGE_KEY)) {
+    return;
+  }
+
+  applyTheme(event.matches ? 'dark' : 'light');
+});
+
 document.addEventListener('alpine:init', () => {
-  // Evita recrear el store si haces HMR
+  Alpine.store('theme', {
+    current: window.themeManager.current(),
+    toggle() {
+      this.current = window.themeManager.toggle();
+    },
+    set(theme) {
+      window.themeManager.set(theme);
+      this.current = theme;
+    }
+  });
+
   if (!Alpine.store('ui')) {
     Alpine.store('ui', {
-      sidebarOpen: window.innerWidth >= 1024,   // abierto en desktop
-      sidebarForced: false,                     // si el usuario lo cerró manualmente en móvil
+      sidebarOpen: window.innerWidth >= 1024,
+      sidebarForced: false,
       openSections: JSON.parse(localStorage.getItem('openSections') || '{}'),
-      // Si quieres tener la ruta actual disponible en JS puro:
       selectedRoute: document.body.dataset.routeName || '',
 
       toggleSection(name) {
@@ -44,7 +92,6 @@ document.addEventListener('alpine:init', () => {
       }
     });
 
-    // ÚNICO listener de resize
     window.addEventListener('resize', () => {
       if (window.innerWidth >= 1024) {
         Alpine.store('ui').sidebarOpen = true;
@@ -54,29 +101,3 @@ document.addEventListener('alpine:init', () => {
     });
   }
 });
-
-console.log('Hola soy  FIN de app js');
-// ¡Arranca Alpine!
-// Alpine.start()
-
-// window.Pusher = Pusher;
-// window.Echo = new Echo({
-//     broadcaster: "pusher",
-//     key: "c2b1b3f693c74aa5f2ccfa3ed043b8a1",
-//     wsHost: window.location.hostname,
-//     wsPort: 6001,
-//     encrypted:false,
-//     disableStats: true,
-//     cluster: "mt1",
-// });
-
-
-
-// // quitamos forceTLS: false,
-// // y usamos encrypted:false
-
-// window.Echo.channel("chat").listen("MessageSent", (e) => {
-//     console.log("Message received: ", e.message);
-// });
-
-

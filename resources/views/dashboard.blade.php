@@ -5,15 +5,16 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-10">
+        <div class="dashboard-shell">
 
         
         @can('dashboardclientepreproyectos')
         <div class="w-full mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
+            <div class="dashboard-panel">
+                <div class="dashboard-panel__body">
                            
-                    <hr/>
+                    <hr class="dashboard-divider"/>
                     @livewire('preproyectos.manage-preprojects')
 
                 </div>
@@ -23,9 +24,9 @@
 
         @canany('dashboardclienteproyectos')
         <div class="w-full mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">       
-                    <hr/>
+            <div class="dashboard-panel">
+                <div class="dashboard-panel__body">       
+                    <hr class="dashboard-divider"/>
                     @livewire('proyectos.manage-projects')
                 </div>
             </div>
@@ -35,9 +36,9 @@
 
         @can('dashboardclientepedidos')
         <div class="w-full mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">       
-                    <hr/>
+            <div class="dashboard-panel">
+                <div class="dashboard-panel__body">       
+                    <hr class="dashboard-divider"/>
                     @livewire('dashboard.cliente-panel.pedidos')
                 </div>
             </div>
@@ -47,9 +48,9 @@
 
         @can('dashboardmuestras')
         <div class="w-full mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">       
-                    <hr/>
+            <div class="dashboard-panel">
+                <div class="dashboard-panel__body">       
+                    <hr class="dashboard-divider"/>
                     @livewire('dashboard.cliente-panel.muestras')
                 </div>
             </div>
@@ -63,10 +64,10 @@
         {{-- @hasanyrole('admin|diseñador') --}}
         @can('dashboardtareasdisenio')
             <div class="w-full mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
-                        
-                        <hr/>
+                <div class="dashboard-panel">
+                    <div class="dashboard-panel__body">
+                         
+                        <hr class="dashboard-divider"/>
                         {{-- @livewire('dashboard.disenio-panel.tareasdisenio') --}}
                         @livewire('tareas.administra-tareas')
 
@@ -85,10 +86,10 @@
         {{-- @hasanyrole('admin|proveedor') --}}
         @can('dashboarddiseniosproveedor')
             <div class="w-full mx-auto sm:px-6 lg:px-8">    
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
-                                <hr/>
+                <div class="dashboard-panel">
+                     
+                    <div class="dashboard-panel__body">
+                                <hr class="dashboard-divider"/>
                                     @livewire('proveedores.disenos-proveedor')
                     </div>
                 </div>
@@ -98,9 +99,9 @@
 
         @can('dashboardpedidosproveedor')
             <div class="w-full mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">   
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <hr/>
+                <div class="dashboard-panel">   
+                    <div class="dashboard-panel__body">
+                    <hr class="dashboard-divider"/>
                         @livewire('dashboard.proveedor-panel.pedidos-proveedor-dashboard')
                     </div>
                 </div>
@@ -114,10 +115,10 @@
 
         @can('dashboardnotificacion')        
             <div class="w-full mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                <div class="dashboard-panel">
+                    <div class="dashboard-panel__body">
                         {{-- <h1 class="text-2xl font-bold mb-4">{{ $hoja->nombre }} ({{ $hoja->slug }})</h1> --}}
-                        <hr/>
+                        <hr class="dashboard-divider"/>
                             <livewire:dashboard.notificaciones.notificaciones-lista />
                     </div>                     
                 </div>
@@ -125,7 +126,7 @@
         @endcan
 
 
-
+        </div>
     </div>
 
 

@@ -5,7 +5,7 @@
     <button
         x-show="!sidebarOpen"
         @click="open()"
-        class="fixed top-3 left-3 z-50 p-2 rounded-md bg-gray-900 text-white shadow"
+        class="sidebar-icon-button fixed left-3 top-3 z-50"
         aria-label="{{ __('menu.open_menu') }}"
     >
         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -24,13 +24,13 @@
         x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="translate-x-0 opacity-100"
         x-transition:leave-end="-translate-x-full opacity-0"
-        class="fixed inset-y-0 left-0 z-40 w-64 bg-gray-900 text-white h-screen overflow-y-auto"
+        class="sidebar-shell fixed inset-y-0 left-0 z-40 h-screen w-64 overflow-y-auto"
     >
         {{-- Botón Cerrar --}}
         <div class="absolute top-2 right-2 z-50 flex items-center space-x-1">
             <button
                 @click="close()"
-                class="p-1 rounded-md text-white bg-gray-800 hover:bg-gray-700"
+                class="sidebar-icon-button p-1"
                 aria-label="{{ __('menu.close_menu') }}"
             >
                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,8 +41,8 @@
         </div>
 
         {{-- Logo --}}
-        <div class="h-16 flex items-center justify-center border-b border-gray-700">
-            <a href="{{ route('dashboard') }}" class="text-lg font-bold block px-4 py-2 rounded hover:bg-gray-800">
+        <div class="flex h-16 items-center justify-center border-b border-gray-200/80 dark:border-gray-800">
+            <a href="{{ route('dashboard') }}" class="sidebar-brand block">
                 {{ __('menu.brand') }}
             </a>
         </div>
@@ -52,20 +52,20 @@
 
 
 {{-- Perfil --}}
-<div class="mb-3 border-b border-gray-700 pb-3">
+<div class="sidebar-section mb-3">
     <div class="flex items-start justify-between gap-2">
         <div class="min-w-0">
-            <div class="truncate text-sm font-semibold text-white">
+            <div class="truncate text-sm font-semibold text-gray-900 dark:text-white">
                 {{ Auth::user()->name }}
             </div>
-            <div class="truncate text-[11px] text-gray-400">
+            <div class="truncate text-[11px] text-gray-500 dark:text-gray-400">
                 {{ Auth::user()->email }}
             </div>
         </div>
 
         <a
             href="{{ route('usuarios.edit', Auth::id()) }}"
-            class="relative group flex-shrink-0 rounded-md p-1 text-gray-400 hover:bg-gray-800 hover:text-blue-400 transition"
+            class="relative group flex-shrink-0 rounded-lg p-1 text-gray-500 transition hover:bg-gray-100 hover:text-blue-500 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-blue-400"
             aria-label="Editar perfil"
         >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -78,7 +78,7 @@
                 <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
             </svg>
 
-            <span class="absolute right-full top-1/2 mr-2 -translate-y-1/2 whitespace-nowrap rounded bg-black px-2 py-1 text-[11px] text-white opacity-0 shadow group-hover:opacity-100 transition pointer-events-none">
+            <span class="pointer-events-none absolute right-full top-1/2 mr-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-gray-950 px-2 py-1 text-[11px] text-white opacity-0 shadow transition group-hover:opacity-100 dark:bg-gray-100 dark:text-gray-900">
                 Editar perfil
             </span>
         </a>
@@ -87,13 +87,13 @@
             
 
             @can('asidedashboard')
-            <a href="{{ route('dashboard') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+            <a href="{{ route('dashboard') }}" class="sidebar-link">
                 {{ __('menu.dashboard') }}
             </a>
             @endcan
 
             @can('asidepreproyectos')
-            <a href="{{ route('preproyectos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+            <a href="{{ route('preproyectos.index') }}" class="sidebar-link">
                 {{ __('menu.requests') }}
             </a>
             @endcan
@@ -104,7 +104,7 @@
                 <button
                     @click="toggleSection('disenio')"
                     :class="openSections.disenio ? 'underline text-blue-400' : ''"
-                    class="w-full flex justify-between items-center px-4 py-2 rounded hover:bg-gray-800 focus:outline-none"
+                    class="sidebar-toggle"
                 >
                     <span>{{ __('menu.design') }}</span>
                     <svg :class="openSections.disenio ? 'rotate-90 transform text-blue-300' : 'text-gray-400'"
@@ -120,7 +120,7 @@
 
 
                     @can('asideverdisenios')
-                        <a href="{{ route('proyectos.index') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                        <a href="{{ route('proyectos.index') }}" class="sidebar-link">
                             {{ __('menu.designs') }}
                         </a>
                     @endcan
@@ -132,33 +132,33 @@
                     @endcan --}}
 
                     @can('asidedisenioTareas')
-                        <a href="{{ route('disenio.admin_tarea') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                        <a href="{{ route('disenio.admin_tarea') }}" class="sidebar-link">
                             {{ __('menu.design_tasks') }}
                         </a>
                     @endcan
 
                     @can('asideAdministraciónMuestras')
-                        <a href="{{ route('produccion.adminmuestras') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                        <a href="{{ route('produccion.adminmuestras') }}" class="sidebar-link">
                             {{ __('menu.samples_admin') }}
                         </a>
                     @endcan
 
                     @can('asideAdministraciónReconfiguracion')
-                        <a href="{{ route('proyectos.reprogramar') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                        <a href="{{ route('proyectos.reprogramar') }}" class="sidebar-link">
                             {{ __('menu.solicitudes_reconfiguracion') }}
                         </a>
                     @endcan
 
 
                     @can('asideSolicitudreasignacion')
-                        <a href="{{ route('proyectos.transferencias') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                        <a href="{{ route('proyectos.transferencias') }}" class="sidebar-link">
                             Solicitud de reasignacion
                         </a>  
                     @endcan
 
 
                     @can('asidediseñosproveedor')
-                        <a href="{{ route('diseños.vistaproveedor') }}" class="block px-2 py-1 rounded hover:bg-gray-800">
+                        <a href="{{ route('diseños.vistaproveedor') }}" class="sidebar-link">
                             Diseños Proveedor
                         </a>
                     @endcan
