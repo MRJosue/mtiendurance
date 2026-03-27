@@ -4,30 +4,26 @@ namespace App\Livewire\Preproyectos;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Livewire\TemporaryUploadedFile; 
-use App\Models\user;
+use Livewire\TemporaryUploadedFile;
 use App\Models\PreProyecto;
 use App\Models\DireccionEntrega;
 use App\Models\DireccionFiscal;
 use App\Models\Pais;
 use App\Models\Estado;
-use App\Models\TipoEnvio;
 use App\Models\Cliente;
+use App\Services\Preproyectos\DeliveryDatePlanner;
+use App\Services\Preproyectos\PreProjectCreator;
+use App\Services\Preproyectos\ProductConfigurationBuilder;
 
-use App\Models\ArchivoProyecto;
 use App\Models\Categoria;
 use App\Models\Producto;
-use App\Models\Caracteristica;
 use App\Models\Talla;
 use App\Models\Opcion;
-use App\Models\Chat;
 
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
-
-use Livewire\Attributes\On;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Collection;
 
 
 use Illuminate\Database\Eloquent\Builder;
@@ -38,7 +34,7 @@ class CreatePreProject extends Component
 {
     use WithFileUploads;
 
-    public $UsuarioSeleccionado;
+    public ?int $selectedUserId = null;
 
     public $nombre;
     public $descripcion;
@@ -72,7 +68,7 @@ class CreatePreProject extends Component
 
     public $id_tipo_envio;
     public $direccion_entrega_id;
-    public $tipos_envio = [];
+    public $shippingOptions = [];
 
     public $mensaje_produccion;
 
@@ -94,8 +90,9 @@ class CreatePreProject extends Component
 
     // en la cabecera de la clase
     public string $usuarioQuery = '';
-    public ?int $usuario_id_nuevo = null;
+    public ?int $selectedUserLookupId = null;
     public array $usuariosSugeridos = [];
+    public array $caracteristicaOpcionesDisponibles = [];
 
 
     public bool $puedeBuscarUsuarios = false;
@@ -135,203 +132,45 @@ class CreatePreProject extends Component
 
     public $isUploading = false;
 
+    protected PreProjectCreator $preProjectCreator;
+    protected DeliveryDatePlanner $deliveryDatePlanner;
+    protected ProductConfigurationBuilder $productConfigurationBuilder;
+
     protected $listeners = [
         'livewire-upload-start' => 'uploadStarted',
         'livewire-upload-finish' => 'uploadFinished',
         'livewire-upload-error' => 'uploadFinished',
     ];
 
+    public function boot(
+        PreProjectCreator $preProjectCreator,
+        DeliveryDatePlanner $deliveryDatePlanner,
+        ProductConfigurationBuilder $productConfigurationBuilder
+    ): void {
+        $this->preProjectCreator = $preProjectCreator;
+        $this->deliveryDatePlanner = $deliveryDatePlanner;
+        $this->productConfigurationBuilder = $productConfigurationBuilder;
+    }
+
 
 
 
     public function create()
     {
-
-        Log::debug('Pre Pruebas');
-
-
-        $this->validate([
-            'nombre' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
-            'fecha_produccion' => 'nullable|date',
-            'fecha_embarque' => 'nullable|date',
-            'fecha_entrega' => 'nullable|date',
-            'categoria_id' => 'required|exists:categorias,id',
-            'producto_id' => 'required|exists:productos,id',
-            // 'direccion_fiscal_id'  => 'required|exists:direcciones_fiscales,id', // <-- corrección
-            // 'direccion_entrega_id' => 'required|exists:direcciones_entrega,id',
-            'id_tipo_envio'=> 'required',
-
-            'total_piezas' => $this->mostrarFormularioTallas ? 'required|integer|min:1' : 'required|integer|min:1',
-            'tallasSeleccionadas' => $this->mostrarFormularioTallas ? 'required|array|min:1' : 'nullable',
-            'files.*' => 'nullable|file|max:10240',
-        ]);
-
-        
-        if (count($this->files) > 4) {
-            $this->addError('files', 'Solo puedes subir hasta 4 archivos.');
+        $this->validate($this->creationRules());
+        if (!$this->validateBusinessRules()) {
             return;
         }
 
-
-        if ($this->mostrar_selector_armado) {
-            $rules['seleccion_armado'] = 'required|in:0,1';
-        }
-    
-        Log::debug('PRE error mostrarFormularioTallas');
-        // **Si hay tallas, la suma de tallas debe ser igual a total_piezas**
-        if ($this->mostrarFormularioTallas) {
-            // Filtrar solo los grupos que realmente contienen tallas
-            $gruposValidos = array_filter($this->tallasSeleccionadas, 'is_array');
-        
-            // Sumar todas las cantidades de tallas correctamente
-            $sumaTallas = collect($gruposValidos)->flatMap(function ($grupo) {
-                return array_values($grupo);
-            })->sum();
-        
-            Log::debug('Suma calculada de tallas', ['data' => $sumaTallas]);
-            Log::debug('Total de piezas ingresado', ['data' => $this->total_piezas]);
-        
-            if ($sumaTallas != $this->total_piezas) {
-                $this->addError('total_piezas', 'La suma de las cantidades de tallas debe ser igual al total de piezas.');
-                return;
-            }
+        $this->ensureSelectedClientUser();
+        if (!$this->selectedUserId || !$this->userEsCliente((int) $this->selectedUserId)) {
+            $this->addError('selectedUserId', 'Debes seleccionar un usuario CLIENTE para crear el preproyecto.');
+            return;
         }
 
-
-
-        Log::debug('No error mostrarFormularioTallas');
-
-        // 🚨 Validación: Cada característica debe tener al menos una opción en `opciones`
-        foreach ($this->caracteristicas_sel as $caracteristica) {
-            if (empty($caracteristica['opciones']) || count($caracteristica['opciones']) == 0) {
-                $this->addError('caracteristicas_sel', "Debe seleccionar al menos una opción para '{$caracteristica['nombre']}'.");
-                return;
-            }
-        }
-
-
-        // $cliente_id = $this->cliente_id ?? null;
-
-        // if (!$cliente_id) {
-        //     session()->flash('error', 'El usuario autenticado no tiene un cliente asociado.');
-        //     return;
-        // }
-
-
-        Log::debug('No error caracteristica');
-
-        $totalPiezasFinal = $this->mostrarFormularioTallas ? array_sum($this->tallasSeleccionadas) : $this->total_piezas;
-
-        //antes de crear asignamos fechas
         $this->on_Calcula_Fechas_Entrega();
-
-        // Asignamos copnjunto direccion entrega
-
-
-        // Obtener los nombres de país, estado y ciudad para la dirección de entrega
-        $direccionEntrega = DireccionEntrega::with(['estado.pais','pais'])->find($this->direccion_entrega_id);
-        $pais_name   = $direccionEntrega?->pais?->nombre ?? '';
-        $estado_name = $direccionEntrega?->estado?->nombre ?? '';
-        $ciudad_name = $direccionEntrega?->ciudad ?? '';
-
-
-        // Obtener los nombres de país, estado y ciudad para la dirección fiscal
-        $direccionFiscal  = DireccionFiscal::with(['estado.pais','pais'])->find($this->direccion_fiscal_id);
-        $fiscal_pais_name   = $direccionFiscal?->pais?->nombre ?? '';
-        $fiscal_estado_name = $direccionFiscal?->estado?->nombre ?? '';
-        $fiscal_ciudad_name = $direccionFiscal?->ciudad ?? '';
-
-        // Construcción de dirección como texto
-        $Auxiliar_direccion_entrega = trim("{$ciudad_name}, {$estado_name}, {$pais_name}", " ,");
-        $Auxiliar_direccion_fiscal  = trim("{$fiscal_ciudad_name}, {$fiscal_estado_name}, {$fiscal_pais_name}", " ,");
-
-
-        // Filtrar solo grupos que tienen tallas con cantidad > 0
-        $tallasEstructuradas = collect($this->tallasSeleccionadas)
-            ->map(function ($tallas) {
-                return collect($tallas)->map(fn($cantidad) => intval($cantidad))->toArray();
-            })
-            ->toArray();
-
-
-            if ($this->seleccion_armado === null || $this->seleccion_armado === '') {
-                $this->seleccion_armado = 1;
-            }
-
-
-            if (!$this->UsuarioSeleccionado) {
-                // si no hay seleccionado, intenta usar auth SOLO si es cliente
-                if ($this->userEsCliente((int) Auth::id())) {
-                    $this->UsuarioSeleccionado = Auth::id();
-                }
-            }
-
-            if (!$this->UsuarioSeleccionado || !$this->userEsCliente((int) $this->UsuarioSeleccionado)) {
-                $this->addError('UsuarioSeleccionado', 'Debes seleccionar un usuario CLIENTE para crear el preproyecto.');
-                return;
-            }
-
-
-        $preProyecto = PreProyecto::create([
-            'usuario_id' => $this->UsuarioSeleccionado,
-            'nombre' => $this->nombre,
-            'descripcion' => $this->descripcion,
-            'tipo' => 'PROYECTO',
-            'numero_muestras' => 0,
-            'estado' => 'PENDIENTE',
-            'fecha_produccion' => $this->fecha_produccion,
-            'fecha_embarque' => $this->fecha_embarque,
-            'fecha_entrega' => $this->fecha_entrega,
-            'flag_armado'=> $this->seleccion_armado,
-            'flag_requiere_proveedor'=> $this->flag_requiere_proveedor,// Este valor vinene del producto seleccionado
-            'categoria_sel' => json_encode(['id' => $this->categoria_id, 'nombre' => Categoria::find($this->categoria_id)->nombre]),
-            'producto_sel' => json_encode(['id' => $this->producto_id, 'nombre' => Producto::find($this->producto_id)->nombre]),
-            'caracteristicas_sel' => json_encode($this->caracteristicas_sel),
-            'opciones_sel' => json_encode($this->opciones_sel),
-            'direccion_entrega_id'=>$this->direccion_entrega_id,
-            'direccion_entrega'=> $Auxiliar_direccion_entrega,
-            'direccion_fiscal_id'=>$this->direccion_fiscal_id,
-            'direccion_fiscal'=> $Auxiliar_direccion_fiscal,
-            'id_tipo_envio' => $this->id_tipo_envio,
-            'total_piezas_sel' => json_encode([
-                'total' => intval($this->total_piezas), 
-                'detalle_tallas' => $this->mostrarFormularioTallas ?  $tallasEstructuradas : null
-            ]),
-            'cliente_id'=> null
-
-        ]);
-
-
-
-
-        // Guardar archivos
-        foreach ($this->files as $index => $file) {
-            $path = $file->store('archivos_proyectos', 'public');
-
-
-        
-
-            ArchivoProyecto::create([
-                'pre_proyecto_id' => $preProyecto->id,
-                'usuario_id' => Auth::id(),
-                'nombre_archivo' => $file->getClientOriginalName(),
-                'ruta_archivo' => $path,
-                'tipo_archivo' => $file->getClientMimeType(),
-                'descripcion' => $this->fileDescriptions[$index] ?? '',
-                'tipo_carga' => 2,
-                'log' => [
-                    "0" => [
-                        "ip"                    => request()->ip(),
-                        "fecha"                 => now()->format('Y-m-d H:i:s'),
-                        "accion"                => "Cargado",
-                        "usuario_id"            => Auth::id(),
-                        "flag_descarga_antes"   => 0,
-                        "flag_descarga_despues" => 0,
-                    ]
-                ],
-            ]);
-        }
+        $preProyecto = $this->storePreProject();
+        $this->storeUploadedFiles($preProyecto);
 
         session()->flash('message', 'Preproyecto creado exitosamente.');
         return redirect()->route('preproyectos.index');
@@ -351,7 +190,8 @@ class CreatePreProject extends Component
 
 
 
-    $this->UsuarioSeleccionado = $puedeSeleccionar ? null : $user->id;
+    $this->selectedUserId = $puedeSeleccionar ? null : $user->id;
+    $this->selectedUserLookupId = $this->selectedUserId;
     $this->direccionesFiscales = collect();
     $this->direccionesEntrega = collect();
 
@@ -384,7 +224,7 @@ class CreatePreProject extends Component
             return view('livewire.preproyectos.create-pre-project', [
                 'categorias' => Categoria::where('ind_activo', 1)->get(),
                 'productos' => $this->productos,
-                'tiposEnvio' => $this->tipos_envio,
+                'tiposEnvio' => $this->shippingOptions,
                 'mostrarFormularioTallas'=> $this->mostrarFormularioTallas,
                 'direccionesFiscales' => $this->direccionesFiscales,
                 'direccionesEntrega' => $this->direccionesEntrega,
@@ -409,6 +249,7 @@ class CreatePreProject extends Component
             $this->mostrarFormularioTallas = 0;
             $this->caracteristicas_sel = [];
             $this->opciones_sel = [];
+            $this->caracteristicaOpcionesDisponibles = [];
 
         $this->flag_requiere_proveedor = 0;
     }
@@ -440,112 +281,30 @@ class CreatePreProject extends Component
 
 
     public function onProductoChange()
-            {
+    {
+        $producto = Producto::find($this->producto_id);
 
-                $producto = Producto::find($this->producto_id);
+        $this->flag_requiere_proveedor = (int) ($producto?->flag_requiere_proveedor ?? 0);
+        $this->mostrar_selector_armado = (bool) ($producto?->flag_armado ?? false);
+        $this->seleccion_armado = null;
 
-                if ($producto) {
-                    $this->flag_requiere_proveedor = (int) ($producto->flag_requiere_proveedor ?? 0);
-                } else {
-                    $this->flag_requiere_proveedor = 0;
-                }
+        if (!$this->mostrar_selector_armado) {
+            $this->despligaformopciones();
+        }
+    }
 
-                if ($producto && $producto->flag_armado == 1) {
-                    $this->mostrar_selector_armado = true;
-                } else {
-                    $this->mostrar_selector_armado = false;
+    public function despligaformopciones()
+    {
+        $this->despliega_form_tallas();
 
-                    $this->despligaformopciones();
-                }
-            
-                $this->seleccion_armado = null;
-            
-
+        if (!$this->producto_id) {
+            $this->resetProductConfigurationState();
+            return;
         }
 
-    public function despligaformopciones(){
-
-            $this->despliega_form_tallas(); // Obtiene las tallas según el nuevo producto
-
-            // Asegurar que el producto ha sido seleccionado
-            if (!$this->producto_id) {
-                $this->tallas = collect(); // Vaciar las tallas si no hay producto seleccionado
-                return;
-            }
-
-            // Obtener todas las tallas asociadas al producto a través de los grupos de tallas
-            $this->tallas = Talla::with('gruposTallas')
-                ->whereHas('gruposTallas.productos', function ($query) {
-                    $query->where('producto_id', $this->producto_id);
-                })
-                ->get();
-
-        
-
-            // Reiniciar la selección de tallas
-            $this->tallasSeleccionadas = [];
-
-            foreach ($this->tallas as $talla) {
-                foreach ($talla->gruposTallas as $grupo) {
-                    $this->tallasSeleccionadas[$grupo->id][$talla->id] = 0;
-                }
-            }
-
-            Log::debug('Estructura de tallas seleccionadas después de reset:', ['data' => $this->tallasSeleccionadas]);
-
-            // Limpiar opciones previas de características
-            $this->caracteristica_id = null;
-
-            $caracteristicasQuery = Caracteristica::where('ind_activo', 1)
-                ->whereHas('productos', function ($query) {
-                    $query->where('producto_id', $this->producto_id);
-                });
-            
-            // Si hay selector de armado, filtrar por flag_armado
-            if ($this->mostrar_selector_armado && $this->seleccion_armado !== null) {
-                $caracteristicasQuery->whereHas('productos', function ($q) {
-                    $q->where('producto_id', $this->producto_id)
-                      ->where('producto_caracteristica.flag_armado', $this->seleccion_armado);
-                });
-            }
-            
-            $this->caracteristicas_sel = $caracteristicasQuery
-                ->get()
-                ->map(function ($caracteristica) {
-                    $opciones = Opcion::where('ind_activo', 1)
-                        ->whereHas('caracteristicas', function ($query) use ($caracteristica) {
-                            $query->where('caracteristica_id', $caracteristica->id);
-                        })
-                        ->get();
-            
-                    $opcionesArray = $opciones->map(function ($opcion) {
-                        return [
-                            'id' => $opcion->id,
-                            'nombre' => $opcion->nombre,
-                            'valoru' => $opcion->valoru,
-                        ];
-                    })->toArray();
-            
-                    return [
-                        'id' => $caracteristica->id,
-                        'nombre' => $caracteristica->nombre,
-                        'flag_seleccion_multiple' => $caracteristica->flag_seleccion_multiple,
-                        'opciones' => count($opcionesArray) === 1 ? $opcionesArray : [],
-                    ];
-                })
-                ->toArray();
-            
-
-            $this->opciones_sel = [];
-
-            foreach ($this->caracteristicas_sel as $caracteristica) {
-                if (isset($caracteristica['opciones']) && count($caracteristica['opciones']) === 1) {
-                    $this->opciones_sel[$caracteristica['id']] = $caracteristica['opciones'][0];
-                }
-            }
-
-            // Calcular fechas de entrega
-            $this->on_Calcula_Fechas_Entrega();
+        $this->hydrateTallasForSelectedProduct();
+        $this->buildCaracteristicasConfiguration();
+        $this->on_Calcula_Fechas_Entrega();
     }
 
     
@@ -595,7 +354,7 @@ class CreatePreProject extends Component
 
     public function cargarTiposEnvio(): void
     {
-        $this->tipos_envio = [];
+        $this->shippingOptions = [];
         $this->id_tipo_envio = null;
 
         if (!$this->direccion_entrega_id) return;
@@ -607,13 +366,13 @@ class CreatePreProject extends Component
         // ✅ Cargar por estado
         $estado = Estado::find($direccion->estado_id);
 
-        $this->tipos_envio = $estado
+        $this->shippingOptions = $estado
             ? $estado->tipoEnvios()->orderBy('nombre')->get()
             : [];
 
         // Opcional: si solo hay 1 tipo, seleccionarlo automático
-        if (count($this->tipos_envio) === 1) {
-            $this->id_tipo_envio = $this->tipos_envio[0]->id;
+        if (count($this->shippingOptions) === 1) {
+            $this->id_tipo_envio = $this->shippingOptions[0]->id;
         }
 
         // recalcula fechas si ya hay fecha_entrega
@@ -623,96 +382,40 @@ class CreatePreProject extends Component
 
     public function updatedFiles()
     {
-        $this->uploadedFiles = [];
-
-        foreach ($this->files as $file) {
-            // Solo procesamos objetos de tipo TemporaryUploadedFile
-            if ($file instanceof TemporaryUploadedFile) {
-                $mimeType   = $file->getMimeType();
-                $canPreview = str_starts_with($mimeType, 'image/');
-                
-                $this->uploadedFiles[] = [
-                    'name'    => $file->getClientOriginalName(),
-                    'preview' => $canPreview 
-                        ? $file->temporaryUrl() 
-                        : null,
-                ];
-            }
-            // Si $file no es un objeto de subida, lo ignoramos
-        }
+        $this->uploadedFiles = $this->buildUploadedFilesPreview(
+            fn (TemporaryUploadedFile $file) => $file->getMimeType()
+        );
     }
 
     public function procesarArchivos()
     {
-        $this->uploadedFiles = [];
-
-        foreach ($this->files as $file) {
-            $mimeType = $file->getClientMimeType();
-            $canPreview = str_starts_with($mimeType, 'image/');
-
-            $this->uploadedFiles[] = [
-                'name'    => $file->getClientOriginalName(),
-                'preview' => $canPreview ? $file->temporaryUrl() : null,
-            ];
-        }
+        $this->uploadedFiles = $this->buildUploadedFilesPreview(
+            fn (TemporaryUploadedFile $file) => $file->getClientMimeType()
+        );
     }
 
 
     public function on_Calcula_Fechas_Entrega(): void
     {
-        if (!$this->fecha_entrega) return;
+        $plan = $this->deliveryDatePlanner->calculate(
+            $this->fecha_entrega,
+            $this->producto_id ? (int) $this->producto_id : null,
+            $this->id_tipo_envio ? (int) $this->id_tipo_envio : null
+        );
 
-        $fecha_entrega = Carbon::parse($this->fecha_entrega)->startOfDay();
-        $ahora = Carbon::now()->startOfDay();
-
-        // defaults
-        $dias_produccion_producto = 6;
-        $dias_envio = 2;
-
-        // 1) Tipo envío
-        if (!empty($this->id_tipo_envio)) {
-            $tipo = TipoEnvio::find($this->id_tipo_envio);
-            if ($tipo) $dias_envio = (int) ($tipo->dias_envio ?? 0);
+        if (!$plan) {
+            return;
         }
 
-        // 2) Producto -> dias_produccion
-        if (!empty($this->producto_id)) {
-            $prod = Producto::find($this->producto_id);
-            if ($prod) $dias_produccion_producto = (int) ($prod->dias_produccion ?? $dias_produccion_producto);
-        }
-
-        // cálculo hacia atrás en días hábiles
-        $fecha_embarque = $this->restarDiasHabiles($fecha_entrega, $dias_envio);
-        $fecha_produccion = $this->restarDiasHabiles($fecha_embarque, $dias_produccion_producto);
-
-        $this->fecha_embarque = $fecha_embarque->format('Y-m-d');
-        $this->fecha_produccion = $fecha_produccion->format('Y-m-d');
-
-        if ($fecha_produccion->lt($ahora)) {
-            $this->mensaje_produccion =
-                "⚠️ La fecha de producción calculada ({$this->fecha_produccion}) ya ha pasado. Se requiere autorización adicional.";
-        } else {
-            $this->mensaje_produccion = null;
-        }
+        $this->fecha_embarque = $plan['fecha_embarque'];
+        $this->fecha_produccion = $plan['fecha_produccion'];
+        $this->mensaje_produccion = $plan['mensaje_produccion'];
     }
 
     public function validarFechaEntrega()
     {
         if ($this->fecha_entrega) {
-            $fecha = Carbon::parse($this->fecha_entrega);
-            $diaSemana = $fecha->dayOfWeek; // 0 = Domingo, 6 = Sábado
-
-            if ($diaSemana === 6) {
-                // Si es sábado, mover al lunes siguiente
-                $fecha->addDays(2);
-            } elseif ($diaSemana === 0) {
-                // Si es domingo, mover al lunes siguiente
-                $fecha->addDay();
-            }
-
-            // Asignar la nueva fecha corregida
-            $this->fecha_entrega = $fecha->format('Y-m-d');
-
+            $this->fecha_entrega = $this->deliveryDatePlanner->adjustToWeekday($this->fecha_entrega);
             $this->on_Calcula_Fechas_Entrega();
         }
     }
@@ -720,34 +423,7 @@ class CreatePreProject extends Component
 
     public function ajustarFechaSinFinesDeSemana($fecha)
     {
-        $fecha = Carbon::parse($fecha);
-        $diaSemana = $fecha->dayOfWeek; // 0 = Domingo, 6 = Sábado
-
-        if ($diaSemana === 6) {
-            // Si es sábado, mover al lunes siguiente
-            $fecha->addDays(2);
-        } elseif ($diaSemana === 0) {
-            // Si es domingo, mover al lunes siguiente
-            $fecha->addDay();
-        }
-
-        return $fecha->format('Y-m-d');
-    }
-
-    public function restarDiasHabiles($fecha, $dias)
-    {
-        $fecha = Carbon::parse($fecha);
-        $contador = 0;
-    
-        while ($contador < $dias) {
-            $fecha->subDay();
-            // Si el día es lunes a viernes
-            if ($fecha->isWeekday()) {
-                $contador++;
-            }
-        }
-    
-        return $fecha;
+        return $this->deliveryDatePlanner->adjustToWeekday($fecha);
     }
 
     public function actualizarTalla($grupoId, $tallaId, $cantidad)
@@ -775,7 +451,7 @@ class CreatePreProject extends Component
     {
     Log::debug('Carga Clientes');
 
-        $this->clientes = Cliente::where('usuario_id', $this->UsuarioSeleccionado)->get();
+        $this->clientes = Cliente::where('usuario_id', $this->selectedUserId)->get();
     }
 
         // Función para guardar un nuevo cliente
@@ -798,7 +474,7 @@ class CreatePreProject extends Component
 
         // Crear el cliente y asociarlo al usuario autenticado
         $cliente = Cliente::create([
-            'usuario_id' => $this->UsuarioSeleccionado,
+            'usuario_id' => $this->selectedUserId,
             'nombre_empresa' => $this->nuevoCliente['nombre_empresa'],
             'contacto_principal' => $this->nuevoCliente['contacto_principal'],
             'telefono' => $this->nuevoCliente['telefono'],
@@ -823,7 +499,15 @@ class CreatePreProject extends Component
 
 public function usuarioSeleccionadoCambio($usuarioId)
 {
-    $this->UsuarioSeleccionado = $usuarioId;
+    $this->selectedUserId = $usuarioId ? (int) $usuarioId : null;
+    $this->selectedUserLookupId = $this->selectedUserId;
+
+    // Reinicia selecciones dependientes para evitar que queden IDs del usuario anterior.
+    $this->direccion_fiscal_id = null;
+    $this->direccion_entrega_id = null;
+    $this->id_tipo_envio = null;
+    $this->shippingOptions = collect();
+
     $this->cargarClientes();
     $this->cargarDirecciones();
 }
@@ -895,20 +579,20 @@ public function usuarioSeleccionadoCambio($usuarioId)
 
         $this->validate($rules);
 
-        if (!$this->UsuarioSeleccionado) {
+        if (!$this->selectedUserId) {
             // En tu flujo, si permites elegir usuario, asegúrate de que esté seteado.
             // Si no, asume el usuario actual:
-            $this->UsuarioSeleccionado = Auth::id();
+            $this->selectedUserId = Auth::id();
         }
 
         if ($this->tipoDireccion === 'fiscal') {
             // Si se marca default, limpia los demás del usuario
             if ($this->formDireccion['flag_default']) {
-                DireccionFiscal::where('usuario_id', $this->UsuarioSeleccionado)->update(['flag_default' => false]);
+                DireccionFiscal::where('usuario_id', $this->selectedUserId)->update(['flag_default' => false]);
             }
 
             $dir = DireccionFiscal::create([
-                'usuario_id'    => $this->UsuarioSeleccionado,
+                'usuario_id'    => $this->selectedUserId,
                 'rfc'           => $this->formDireccion['rfc'],
                 'calle'         => $this->formDireccion['calle'],
                 'pais_id'       => $this->formDireccion['pais_id'],
@@ -923,11 +607,11 @@ public function usuarioSeleccionadoCambio($usuarioId)
 
         } else { // entrega
             if ($this->formDireccion['flag_default']) {
-                DireccionEntrega::where('usuario_id', $this->UsuarioSeleccionado)->update(['flag_default' => false]);
+                DireccionEntrega::where('usuario_id', $this->selectedUserId)->update(['flag_default' => false]);
             }
 
             $dir = DireccionEntrega::create([
-                'usuario_id'     => $this->UsuarioSeleccionado,
+                'usuario_id'     => $this->selectedUserId,
                 'nombre_contacto'=> $this->formDireccion['nombre_contacto'],
                 'nombre_empresa' => $this->formDireccion['nombre_empresa'],
                 'calle'          => $this->formDireccion['calle'],
@@ -983,9 +667,9 @@ public function usuarioSeleccionadoCambio($usuarioId)
     {
         Log::debug('Carga Direcciones');
 
-        if ($this->UsuarioSeleccionado) {
-            $this->direccionesFiscales = DireccionFiscal::where('usuario_id', $this->UsuarioSeleccionado)->get();
-            $this->direccionesEntrega = DireccionEntrega::where('usuario_id', $this->UsuarioSeleccionado)->get();
+        if ($this->selectedUserId) {
+            $this->direccionesFiscales = DireccionFiscal::where('usuario_id', $this->selectedUserId)->get();
+            $this->direccionesEntrega = DireccionEntrega::where('usuario_id', $this->selectedUserId)->get();
 
             // Opcional: asignar automáticamente la primera dirección si no hay una seleccionada
             // if (!$this->direccion_fiscal_id && $this->direccionesFiscales->isNotEmpty()) {
@@ -1041,10 +725,159 @@ public function usuarioSeleccionadoCambio($usuarioId)
         $this->validarFechaEntrega();
     }
 
-  
+    protected function creationRules(): array
+    {
+        $rules = [
+            'nombre' => 'required|string|max:255',
+            'descripcion' => 'nullable|string',
+            'fecha_produccion' => 'nullable|date',
+            'fecha_embarque' => 'nullable|date',
+            'fecha_entrega' => 'nullable|date',
+            'categoria_id' => 'required|exists:categorias,id',
+            'producto_id' => 'required|exists:productos,id',
+            'id_tipo_envio'=> 'required',
+            'total_piezas' => 'required|integer|min:1',
+            'tallasSeleccionadas' => $this->mostrarFormularioTallas ? 'required|array|min:1' : 'nullable',
+            'files.*' => 'nullable|file|max:10240',
+        ];
 
+        if ($this->mostrar_selector_armado) {
+            $rules['seleccion_armado'] = 'required|in:0,1';
+        }
 
-        // métodos nuevos dentro de la clase
+        return $rules;
+    }
+
+    protected function validateBusinessRules(): bool
+    {
+        if (count($this->files) > 4) {
+            $this->addError('files', 'Solo puedes subir hasta 4 archivos.');
+            return false;
+        }
+
+        if ($this->mostrarFormularioTallas && $this->sumSelectedTallas() != $this->total_piezas) {
+            $this->addError('total_piezas', 'La suma de las cantidades de tallas debe ser igual al total de piezas.');
+            return false;
+        }
+
+        foreach ($this->caracteristicas_sel as $caracteristica) {
+            if (empty($caracteristica['opciones'])) {
+                $this->addError('caracteristicas_sel', "Debe seleccionar al menos una opción para '{$caracteristica['nombre']}'.");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    protected function sumSelectedTallas(): int
+    {
+        return (int) collect(array_filter($this->tallasSeleccionadas, 'is_array'))
+            ->flatMap(fn ($grupo) => array_values($grupo))
+            ->sum();
+    }
+
+    protected function ensureSelectedClientUser(): void
+    {
+        if (!$this->selectedUserId && $this->userEsCliente((int) Auth::id())) {
+            $this->selectedUserId = (int) Auth::id();
+        }
+    }
+
+    protected function storePreProject(): PreProyecto
+    {
+        $this->seleccion_armado = $this->seleccion_armado === null || $this->seleccion_armado === ''
+            ? 1
+            : $this->seleccion_armado;
+
+        return $this->preProjectCreator->create([
+            'selected_user_id' => $this->selectedUserId,
+            'nombre' => $this->nombre,
+            'descripcion' => $this->descripcion,
+            'fecha_produccion' => $this->fecha_produccion,
+            'fecha_embarque' => $this->fecha_embarque,
+            'fecha_entrega' => $this->fecha_entrega,
+            'seleccion_armado' => $this->seleccion_armado,
+            'flag_requiere_proveedor' => $this->flag_requiere_proveedor,
+            'categoria_id' => $this->categoria_id,
+            'producto_id' => $this->producto_id,
+            'caracteristicas_sel' => $this->caracteristicas_sel,
+            'opciones_sel' => $this->opciones_sel,
+            'direccion_entrega_id' => $this->direccion_entrega_id,
+            'direccion_fiscal_id' => $this->direccion_fiscal_id,
+            'id_tipo_envio' => $this->id_tipo_envio,
+            'total_piezas' => $this->total_piezas,
+            'detalle_tallas' => $this->mostrarFormularioTallas ? $this->normalizeTallasSelection() : null,
+        ]);
+    }
+
+    protected function storeUploadedFiles(PreProyecto $preProyecto): void
+    {
+        $this->preProjectCreator->storeUploadedFiles($preProyecto, $this->files, $this->fileDescriptions);
+    }
+
+    protected function normalizeTallasSelection(): array
+    {
+        return collect($this->tallasSeleccionadas)
+            ->map(fn ($tallas) => collect($tallas)->map(fn ($cantidad) => (int) $cantidad)->toArray())
+            ->toArray();
+    }
+
+    protected function resetProductConfigurationState(): void
+    {
+        $this->tallas = collect();
+        $this->tallasSeleccionadas = [];
+        $this->caracteristicas_sel = [];
+        $this->opciones_sel = [];
+        $this->caracteristicaOpcionesDisponibles = [];
+    }
+
+    protected function hydrateTallasForSelectedProduct(): void
+    {
+        $configuration = $this->productConfigurationBuilder->build(
+            $this->producto_id,
+            (bool) $this->mostrar_selector_armado,
+            $this->seleccion_armado
+        );
+
+        $this->tallas = $configuration['tallas'];
+        $this->tallasSeleccionadas = $configuration['tallasSeleccionadas'];
+    }
+
+    protected function buildCaracteristicasConfiguration(): void
+    {
+        $this->caracteristica_id = null;
+        $configuration = $this->productConfigurationBuilder->build(
+            $this->producto_id,
+            (bool) $this->mostrar_selector_armado,
+            $this->seleccion_armado
+        );
+
+        $this->caracteristicaOpcionesDisponibles = $configuration['caracteristicaOpcionesDisponibles'];
+        $this->caracteristicas_sel = $configuration['caracteristicas_sel'];
+        $this->opciones_sel = $configuration['opciones_sel'];
+    }
+
+    protected function buildUploadedFilesPreview(callable $mimeResolver): array
+    {
+        $files = [];
+
+        foreach ($this->files as $file) {
+            if (!$file instanceof TemporaryUploadedFile) {
+                continue;
+            }
+
+            $mimeType = $mimeResolver($file);
+            $files[] = [
+                'name' => $file->getClientOriginalName(),
+                'preview' => str_starts_with($mimeType, 'image/') ? $file->temporaryUrl() : null,
+            ];
+        }
+
+        return $files;
+    }
+
+    // métodos nuevos dentro de la clase
     protected function setupUsuarioSelector(): void
     {
         
@@ -1058,11 +891,13 @@ public function usuarioSeleccionadoCambio($usuarioId)
 
         if ($puedeTodos || count($subIds) > 0) {
             // Deja elegir; no fijes usuario por default
-            $this->UsuarioSeleccionado = null;
+            $this->selectedUserId = null;
         } else {
             // Sin permiso y sin subordinados → se fija el autenticado
-            $this->UsuarioSeleccionado = $user->id;
+            $this->selectedUserId = $user->id;
         }
+
+        $this->selectedUserLookupId = $this->selectedUserId;
     }
 
     /**
@@ -1144,14 +979,14 @@ public function usuarioSeleccionadoCambio($usuarioId)
     }
 
     // Livewire v3: cuando Alpine asigna el seleccionado
-    public function updatedUsuarioIdNuevo($value): void
+    public function updatedSelectedUserLookupId($value): void
     {
         $id = (int) $value;
 
         if ($id && !$this->userEsCliente($id)) {
-            $this->addError('UsuarioSeleccionado', 'Solo puedes seleccionar usuarios con rol tipo CLIENTE.');
-            $this->usuario_id_nuevo = null;
-            $this->UsuarioSeleccionado = null;
+            $this->addError('selectedUserId', 'Solo puedes seleccionar usuarios con rol tipo CLIENTE.');
+            $this->selectedUserLookupId = null;
+            $this->selectedUserId = null;
             $this->dispatch('usuario-cambiado', id: null);
             return;
         }

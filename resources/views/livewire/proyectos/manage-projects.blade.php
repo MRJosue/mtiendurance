@@ -16,8 +16,8 @@
                 @click="toggle()"
                 class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
             >
-                Diseños
-                <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
+                {{ __('projects.title') }}
+                <span class="text-sm text-gray-500 ml-2" x-text="abierto ? @js(__('projects.hide')) : @js(__('projects.show'))"></span>
             </h2>   
 
             <!-- Contenido del panel -->
@@ -35,7 +35,19 @@
                                     'border-transparent'                          => $activeTab !== $tab,
                                 ])
                             >
-                                {{ $tab }}
+                                {{ match ($tab) {
+                                    'PENDIENTE' => __('projects.status_pending'),
+                                    'ASIGNADO' => __('projects.status_assigned'),
+                                    'EN PROCESO' => __('projects.status_in_progress'),
+                                    'REVISION' => __('projects.status_review'),
+                                    'DISEÑO APROBADO' => __('projects.status_design_approved'),
+                                    'DISEÑO RECHAZADO' => __('projects.status_design_rejected'),
+                                    'RECHAZADO' => __('projects.status_rejected'),
+                                    'CANCELADO' => __('projects.status_cancelled'),
+                                    'RECONFIGURAR' => __('projects.tab_reconfigure'),
+                                    'TODOS' => __('projects.tab_all'),
+                                    default => $tab,
+                                } }}
                             </button>
                         </li>
                     @endforeach
@@ -60,7 +72,7 @@
 
                         <!-- Lado derecho: PerPage -->
                         <div class="flex items-center gap-2">
-                            <label for="per-page" class="text-sm text-gray-600">Registros por página</label>
+                            <label for="per-page" class="text-sm text-gray-600">{{ __('projects.records_per_page') }}</label>
                             <select
                                 id="per-page"
                                 class="w-28 rounded-lg border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
@@ -80,6 +92,21 @@
                             $arrow = function(string $field) use ($sortField, $sortDir) {
                                 if ($sortField !== $field) return '⇵';
                                 return $sortDir === 'asc' ? '▲' : '▼';
+                            };
+
+                            $statusLabel = function (?string $status) {
+                                return match ($status) {
+                                    'PENDIENTE' => __('projects.status_pending'),
+                                    'ASIGNADO' => __('projects.status_assigned'),
+                                    'EN PROCESO' => __('projects.status_in_progress'),
+                                    'REVISION' => __('projects.status_review'),
+                                    'DISEÑO APROBADO' => __('projects.status_design_approved'),
+                                    'DISEÑO RECHAZADO' => __('projects.status_design_rejected'),
+                                    'RECHAZADO' => __('projects.status_rejected'),
+                                    'CANCELADO' => __('projects.status_cancelled'),
+                                    null, '' => __('projects.no_status'),
+                                    default => $status,
+                                };
                             };
 
                             $coloresEstadoDiseno = [
@@ -146,7 +173,7 @@
                                 <button
                                     class="inline-flex items-center gap-1 hover:text-blue-600"
                                     wire:click="sortBy('id')"
-                                    title="Ordenar por ID"
+                                    title="{{ __('projects.sort_by_id') }}"
                                 >
                                     <span>ID</span>
                                     <span class="text-xs">{!! $arrow('id') !!}</span>
@@ -154,7 +181,7 @@
 
                                 {{-- Filtro ID + Inactivos en dropdown (teleport al body) --}}
                                 <div x-data="dropdownTeleport()" class="relative shrink-0">
-                                    <button x-ref="btn" @click="toggle" class="p-1 rounded hover:bg-gray-200" title="Filtros de ID">⋮</button>
+                                    <button x-ref="btn" @click="toggle" class="p-1 rounded hover:bg-gray-200" title="{{ __('projects.id_filters') }}">⋮</button>
 
                                     <template x-teleport="body">
                                         <div
@@ -167,7 +194,7 @@
                                             {{-- Filtro por ID --}}
                                             <div>
                                                 <label class="block text-xs text-gray-600 mb-1">
-                                                    ID Proyecto (ej. 101 ó 101,102)
+                                                    {{ __('projects.project_id_example') }}
                                                 </label>
                                                 <input
                                                     type="text"
@@ -185,7 +212,7 @@
                                                         class="rounded border-gray-300"
                                                         wire:model.live="filters.inactivos" {{-- 👈 sin value, Livewire lo hace bool --}}
                                                     >
-                                                    <span>Mostrar solo proyectos inactivos</span>
+                                                    <span>{{ __('projects.show_only_inactive') }}</span>
                                                 </label>
                                             </div>
 
@@ -198,14 +225,14 @@
                                                         $wire.set('filters.inactivos', false);
                                                     "
                                                 >
-                                                    Limpiar
+                                                    {{ __('projects.clear') }}
                                                 </button>
                                                 <button
                                                     type="button"
                                                     class="px-2 py-1 text-xs rounded border"
                                                     @click="close"
                                                 >
-                                                    Cerrar
+                                                    {{ __('projects.close') }}
                                                 </button>
                                             </div>
                                         </div>
@@ -223,30 +250,30 @@
                                     <button
                                         class="inline-flex items-center gap-1 hover:text-blue-600"
                                         wire:click="sortBy('nombre')"
-                                        title="Ordenar por Nombre"
+                                        title="{{ __('projects.sort_by_name') }}"
                                     >
-                                        <span>Nombre del Proyecto</span>
+                                        <span>{{ __('projects.project_name') }}</span>
                                         <span class="text-xs">{!! $arrow('nombre') !!}</span>
                                     </button>
 
                                     <div x-data="{ open:false }" class="relative shrink-0">
-                                        <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="Filtrar Nombre">⋮</button>
+                                        <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="{{ __('projects.filter_name') }}">⋮</button>
                                         <div
                                             x-cloak x-show="open" @click.away="open=false" x-transition
                                             class="absolute right-0 z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
                                         >
-                                            <label class="block text-xs text-gray-600 mb-1">Nombre contiene</label>
+                                            <label class="block text-xs text-gray-600 mb-1">{{ __('projects.name_contains') }}</label>
                                             <input
                                                 type="text"
                                                 class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                                placeholder="Buscar…"
+                                                placeholder="{{ __('projects.search') }}"
                                                 wire:model.live.debounce.400ms="filters.nombre"
                                             />
                                             <div class="mt-2 flex justify-end gap-2">
                                                 <button type="button" class="px-2 py-1 text-xs rounded border"
-                                                        @click="$wire.set('filters.nombre','')">Limpiar</button>
+                                                        @click="$wire.set('filters.nombre','')">{{ __('projects.clear') }}</button>
                                                 <button type="button" class="px-2 py-1 text-xs rounded border"
-                                                        @click="open=false">Cerrar</button>
+                                                        @click="open=false">{{ __('projects.close') }}</button>
                                             </div>
                                         </div>
                                     </div>
@@ -258,25 +285,25 @@
                             @can('tablaProyectos-ver-columna-cliente')
                                                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
                                 <div class="flex items-center justify-between gap-2 min-w-[12rem]">
-                                    <span>Cliente</span>
+                                    <span>{{ __('projects.client') }}</span>
                                     <div x-data="{ open:false }" class="relative shrink-0">
-                                        <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="Filtrar Cliente">⋮</button>
+                                        <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="{{ __('projects.filter_client') }}">⋮</button>
                                         <div
                                             x-cloak x-show="open" @click.away="open=false" x-transition
                                             class="absolute right-0 z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
                                         >
-                                            <label class="block text-xs text-gray-600 mb-1">Nombre o correo</label>
+                                            <label class="block text-xs text-gray-600 mb-1">{{ __('projects.name_or_email') }}</label>
                                             <input
                                                 type="text"
                                                 class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                                placeholder="Cliente…"
+                                                placeholder="{{ __('projects.client_placeholder') }}"
                                                 wire:model.live.debounce.400ms="filters.cliente"
                                             />
                                             <div class="mt-2 flex justify-end gap-2">
                                                 <button type="button" class="px-2 py-1 text-xs rounded border"
-                                                        @click="$wire.set('filters.cliente','')">Limpiar</button>
+                                                        @click="$wire.set('filters.cliente','')">{{ __('projects.clear') }}</button>
                                                 <button type="button" class="px-2 py-1 text-xs rounded border"
-                                                        @click="open=false">Cerrar</button>
+                                                        @click="open=false">{{ __('projects.close') }}</button>
                                             </div>
                                         </div>
                                     </div>
@@ -289,18 +316,18 @@
                             {{-- Proveedor (solo si tiene permiso) --}}
                             @can('tablaProyectos-ver-columna-proveedor')
                                 <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
-                                    <span>Proveedor</span>
+                                    <span>{{ __('projects.provider') }}</span>
                                 </th>
                             @endcan
 
                             {{-- Pedidos (solo si aplica permiso) --}}
                             @can('tablaProyectos-ver-columna-pedidos')
-                                <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Pedidos</th>
+                                <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">{{ __('projects.orders') }}</th>
                             @endcan
 
                             {{-- Estado Proyecto (ind_activo) --}}
                             <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
-                                Estado Proyecto
+                                {{ __('projects.project_status') }}
                             </th>
 
                             {{-- Estado Diseño --}}
@@ -309,34 +336,34 @@
                                     <button
                                         class="inline-flex items-center gap-1 hover:text-blue-600"
                                         wire:click="sortBy('estado')"
-                                        title="Ordenar por Estado Diseño"
+                                        title="{{ __('projects.sort_by_design_status') }}"
                                     >
-                                        <span>Estado Diseño</span>
+                                        <span>{{ __('projects.design_status') }}</span>
                                         <span class="text-xs">{!! $arrow('estado') !!}</span>
                                     </button>
 
                                     {{-- Filtro estado en dropdown (opcional) --}}
                                     <div x-data="{ open:false }" class="relative">
-                                        <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="Filtrar Estado">⋮</button>
+                                        <button @click="open = !open" class="p-1 rounded hover:bg-gray-200" title="{{ __('projects.filter_status') }}">⋮</button>
                                         <div
                                             x-cloak x-show="open" @click.away="open=false" x-transition
                                             class="absolute z-50 mt-1 w-60 rounded-lg border bg-white shadow p-3"
                                         >
-                                            <label class="block text-xs text-gray-600 mb-1">Estado Diseño</label>
+                                            <label class="block text-xs text-gray-600 mb-1">{{ __('projects.design_status') }}</label>
                                             <select
                                                 class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
                                                 wire:model.live.debounce.400ms="filters.estado"
                                             >
-                                                <option value="">Todos</option>
+                                                <option value="">{{ __('projects.all') }}</option>
                                                 @foreach(array_keys($coloresEstadoDiseno) as $est)
-                                                    <option value="{{ $est }}">{{ $est }}</option>
+                                                    <option value="{{ $est }}">{{ $statusLabel($est) }}</option>
                                                 @endforeach
                                             </select>
                                             <div class="mt-2 flex justify-end gap-2">
                                                 <button type="button" class="px-2 py-1 text-xs rounded border"
-                                                        @click="$wire.set('filters.estado','')">Limpiar</button>
+                                                        @click="$wire.set('filters.estado','')">{{ __('projects.clear') }}</button>
                                                 <button type="button" class="px-2 py-1 text-xs rounded border"
-                                                        @click="open=false">Cerrar</button>
+                                                        @click="open=false">{{ __('projects.close') }}</button>
                                             </div>
                                         </div>
                                     </div>
@@ -347,17 +374,17 @@
 
                             @can('dashboardDiseñosColumnaTareas')
                                 <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 w-[22rem] min-w-[22rem] max-w-[22rem]">
-                                    Tareas
+                                    {{ __('projects.tasks') }}
                                 </th>
                             @endcan
 
                             @can('dashboardDiseñosColumnaHistorial')
                         
-                                <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Historial</th>
+                                <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">{{ __('projects.history') }}</th>
                             @endcan
 
                             {{-- Acciones --}}
-                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
+                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">{{ __('projects.actions') }}</th>
                         </tr>
                     </thead>
 
@@ -426,7 +453,7 @@
                                                 {{ $project->user->name }}
                                             </span>
                                         @else
-                                            <span class="text-gray-500">Sin Cliente</span>
+                                            <span class="text-gray-500">{{ __('projects.no_client') }}</span>
                                         @endif
                                     </td>
                                 
@@ -438,7 +465,7 @@
                                         @if($project->proveedor)
                                             {{ $project->proveedor->name }}
                                         @else
-                                            <span class="text-gray-500">Sin proveedor</span>
+                                            <span class="text-gray-500">{{ __('projects.no_provider') }}</span>
                                         @endif
                                     </td>
                                 @endcan
@@ -455,9 +482,9 @@
                                         @endphp
                                         @if($ultimoPedido)
                                             <button wire:click="abrirResumenPedidos({{ $project->id }})"
-                                                    class="text-blue-600 hover:underline text-xs">Ver más</button>
+                                                    class="text-blue-600 hover:underline text-xs">{{ __('projects.view_more') }}</button>
                                         @else
-                                            <span class="text-gray-500">Sin pedidos</span>
+                                            <span class="text-gray-500">{{ __('projects.no_orders') }}</span>
                                         @endif
                                     </td>
                                 @endcan
@@ -466,23 +493,23 @@
                                 <td class="px-3 py-2 text-sm">
                                     @if($project->ind_activo)
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
-                                            Activo
+                                            {{ __('projects.active') }}
                                         </span>
                                     @else
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">
-                                            Inactivo
+                                            {{ __('projects.inactive') }}
                                         </span>
                                     @endif
                                 </td>                                
 
                                 {{-- Estado Diseño con badge --}}
                                 @php
-                                    $estado = $project->estado ?? 'Sin estado';
+                                    $estado = $project->estado ?? __('projects.no_status');
                                     $badge  = $coloresEstadoDiseno[$estado] ?? 'bg-gray-300 text-gray-700';
                                 @endphp
                                 <td class="px-3 py-2 text-sm whitespace-nowrap min-w-[10rem]">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[10rem] justify-center {{ $badge }}">
-                                        {{ $estado }}
+                                        {{ $statusLabel($estado) }}
                                     </span>
                                 </td>
 
@@ -496,7 +523,7 @@
                                                 @endforeach
                                             </ul>
                                         @else
-                                            <span class="text-gray-500">Sin tareas</span>
+                                            <span class="text-gray-500">{{ __('projects.no_tasks') }}</span>
                                         @endif
                                     </td>
                                 @endcan
@@ -507,17 +534,17 @@
                                         @if($project->estados->isNotEmpty())
                                             @foreach($project->estados->sortByDesc('id')->take(1) as $e)
                                                 <div class="text-xs text-gray-700">
-                                                    <strong>{{ $e->estado }}</strong>
+                                                    <strong>{{ $statusLabel($e->estado) }}</strong>
                                                     ({{ \Carbon\Carbon::parse($e->fecha_inicio)->format('d-m-Y H:i') }})
-                                                    por {{ $e->usuario->name ?? '—' }}
+                                                    {{ __('projects.by') }} {{ $e->usuario->name ?? '—' }}
                                                 </div>
                                             @endforeach
                                             @if($project->estados->count() > 2)
                                                 <button wire:click="verMas({{ $project->id }})"
-                                                        class="text-blue-600 hover:underline text-xs">Ver más</button>
+                                                        class="text-blue-600 hover:underline text-xs">{{ __('projects.view_more') }}</button>
                                             @endif
                                         @else
-                                            <span class="text-gray-500 text-sm">Sin historial</span>
+                                            <span class="text-gray-500 text-sm">{{ __('projects.no_history') }}</span>
                                         @endif
                                     </td>
                                 @endcan
@@ -527,7 +554,7 @@
                                     <x-dropdown>
                                         <x-dropdown.item
                                             :href="route('proyecto.show', $project->id)"
-                                            label="Ver detalles"
+                                            label="{{ __('projects.view_details') }}"
                                         />
 
                                         @can('dashboardDiseñosBotonAsignarTarea')
@@ -535,7 +562,7 @@
                                                 <x-dropdown.item
                                                     separator
                                                     @click="$wire.dispatch('abrir-modal-asignacion', { id: {{ $project->id }} })"
-                                                    label="Asignar Tarea"
+                                                    label="{{ __('projects.assign_task') }}"
                                                 />
                                             @endif
                                         @endcan
@@ -543,7 +570,7 @@
                                         @can('tablaProyectos-ver-columna-pedidos')
                                             <x-dropdown.item
                                                 @click="$wire.dispatch('abrir-resumen', { id: {{ $project->id }} })"
-                                                label="Resumen de pedidos"
+                                                label="{{ __('projects.orders_summary') }}"
                                             />
                                         @endcan
 
@@ -552,14 +579,14 @@
                                                 <x-dropdown.item
                                                     separator
                                                     wire:click="openDeactivateModal({{ $project->id }})"
-                                                    label="Inactivar proyecto"
+                                                    label="{{ __('projects.deactivate_project') }}"
                                                     class="text-red-600 hover:bg-red-50"
                                                 />
                                             @else
                                                 <x-dropdown.item
                                                     separator
                                                     wire:click="openActivateModal({{ $project->id }})"
-                                                    label="Activar proyecto"
+                                                    label="{{ __('projects.activate_project') }}"
                                                     class="text-emerald-600 hover:bg-emerald-50"
                                                 />
                                             @endif
@@ -581,7 +608,7 @@
                                     if(auth()->user()->hasAnyRole(['admin','estaf']) || (auth()->user()->hasRole('cliente_principal') && ($isClientePrincipalConSub ?? false))) $cols++;
                                 @endphp
                                 <td colspan="{{ $cols }}" class="px-4 py-6 text-center text-sm text-gray-500">
-                                    No hay proyectos para mostrar.
+                                    {{ __('projects.no_projects') }}
                                 </td>
                             </tr>
                         @endforelse
@@ -600,10 +627,10 @@
     @if($modalOpen)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div class="bg-white rounded shadow-lg w-full max-w-md p-6">
-                <h2 class="text-lg font-semibold mb-4">Asignar Tarea</h2>
-                <label class="block text-sm font-medium text-gray-700">Usuario</label>
+                <h2 class="text-lg font-semibold mb-4">{{ __('projects.assign_task') }}</h2>
+                <label class="block text-sm font-medium text-gray-700">{{ __('projects.user') }}</label>
                 <select wire:model="selectedUser" class="w-full p-2 border rounded mb-3">
-                    <option value="">Seleccione un usuario</option>
+                    <option value="">{{ __('projects.select_user') }}</option>
                     @foreach($designers as $designer)
                         <option value="{{ $designer->id }}">{{ $designer->name }}</option>
                     @endforeach
@@ -612,15 +639,15 @@
                 <div class="bg-red-100 text-red-800 p-3 rounded mb-3">{{ $message }}</div>
                 @enderror
 
-                <label class="block text-sm font-medium text-gray-700">Descripción</label>
+                <label class="block text-sm font-medium text-gray-700">{{ __('projects.description') }}</label>
                 <textarea wire:model="taskDescription" class="w-full p-2 border rounded mb-3"></textarea>
                 @error('taskDescription') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 <div class="flex justify-end space-x-2">
                     <button wire:click="cerrarModal" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded">
-                        Cancelar
+                        {{ __('projects.cancel') }}
                     </button>
                     <button wire:click="asignarTarea" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded">
-                        Asignar
+                        {{ __('projects.assign') }}
                     </button>
                 </div>
             </div>
@@ -630,16 +657,16 @@
     @if($modalVerMas && $proyectoSeleccionado)
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl max-h-[80vh] overflow-y-auto">
-            <h3 class="text-xl font-bold mb-4">Historial de Estatus - Proyecto #{{ $proyectoSeleccionado->id }}</h3>
+            <h3 class="text-xl font-bold mb-4">{{ __('projects.status_history_project', ['id' => $proyectoSeleccionado->id]) }}</h3>
             <table class="table-auto w-full text-sm border">
                 <thead>
                     <tr class="bg-gray-100">
-                        <th class="border px-4 py-2">Estatus</th>
-                        <th class="border px-4 py-2">Comentario</th>
-                        <th class="border px-4 py-2">Archivo</th>
-                        <th class="border px-4 py-2">ID Archivo</th>
-                        <th class="border px-4 py-2">Fecha</th>
-                        <th class="border px-4 py-2">Usuario</th>
+                        <th class="border px-4 py-2">{{ __('projects.status') }}</th>
+                        <th class="border px-4 py-2">{{ __('projects.comment') }}</th>
+                        <th class="border px-4 py-2">{{ __('projects.file') }}</th>
+                        <th class="border px-4 py-2">{{ __('projects.file_id') }}</th>
+                        <th class="border px-4 py-2">{{ __('projects.date') }}</th>
+                        <th class="border px-4 py-2">{{ __('projects.user') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -649,21 +676,21 @@
                             <td class="border px-4 py-2">{{ $estado->comentario ?? '-' }}</td>
                             <td class="border px-4 py-2">
                                 @if($estado->url)
-                                    <a href="{{ asset('storage/' . $estado->url) }}" target="_blank" class="text-blue-600 underline">Ver archivo</a>
+                                    <a href="{{ asset('storage/' . $estado->url) }}" target="_blank" class="text-blue-600 underline">{{ __('projects.view_file') }}</a>
                                 @else
-                                    <span class="text-gray-500">No disponible</span>
+                                    <span class="text-gray-500">{{ __('projects.not_available') }}</span>
                                 @endif
                             </td>
                             <td class="border px-4 py-2 text-center">{{ $estado->last_uploaded_file_id ?? '-' }}</td>
                             <td class="border px-4 py-2">{{ \Carbon\Carbon::parse($estado->fecha_inicio)->format('d-m-Y H:i') }}</td>
-                            <td class="border px-4 py-2">{{ $estado->usuario->name ?? 'Desconocido' }}</td>
+                            <td class="border px-4 py-2">{{ $estado->usuario->name ?? __('projects.unknown') }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
             <div class="mt-4 text-right">
                 <button wire:click="cerrarModalVerMas" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
-                    Cerrar
+                    {{ __('projects.close') }}
                 </button>
             </div>
         </div>
@@ -676,46 +703,44 @@
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl mx-4">
             <div class="p-4 border-b flex items-center justify-between">
-                <h3 class="text-lg font-semibold">
-                    Resumen de pedidos · Proyecto #{{ $proyectoResumen?->id ?? $proyectoResumenId }}
-                </h3>
+                <h3 class="text-lg font-semibold">{{ __('projects.orders_summary_project', ['id' => $proyectoResumen?->id ?? $proyectoResumenId]) }}</h3>
                 <button wire:click="cerrarResumenPedidos" class="text-gray-500 hover:text-gray-700 text-xl leading-none">✕</button>
             </div>
 
             <div class="p-4 space-y-4">
                 {{-- Último pedido pendiente --}}
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <h4 class="text-sm font-bold mb-2">Último pedido POR APROBAR</h4>
+                    <h4 class="text-sm font-bold mb-2">{{ __('projects.latest_order_pending_approval') }}</h4>
 
                     @if($ultimoPedidoPendiente)
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                            <div><span class="font-semibold">ID:</span> {{ $ultimoPedidoPendiente->id }}</div>
-                            <div><span class="font-semibold">Fecha:</span> {{ optional($ultimoPedidoPendiente->created_at)->format('Y-m-d H:i') }}</div>
-                            <div><span class="font-semibold">Producto:</span> {{ $ultimoPedidoPendiente->producto->nombre ?? '—' }}</div>
-                            <div><span class="font-semibold">Categoría:</span> {{ $ultimoPedidoPendiente->producto->categoria->nombre ?? '—' }}</div>
-                            <div><span class="font-semibold">Total:</span> {{ $ultimoPedidoPendiente->total }}</div>
-                            <div><span class="font-semibold">Estatus:</span> {{ $ultimoPedidoPendiente->estado }}</div>
+                            <div><span class="font-semibold">{{ __('projects.id_label') }}</span> {{ $ultimoPedidoPendiente->id }}</div>
+                            <div><span class="font-semibold">{{ __('projects.date_label') }}</span> {{ optional($ultimoPedidoPendiente->created_at)->format('Y-m-d H:i') }}</div>
+                            <div><span class="font-semibold">{{ __('projects.product_label') }}</span> {{ $ultimoPedidoPendiente->producto->nombre ?? '—' }}</div>
+                            <div><span class="font-semibold">{{ __('projects.category_label') }}</span> {{ $ultimoPedidoPendiente->producto->categoria->nombre ?? '—' }}</div>
+                            <div><span class="font-semibold">{{ __('projects.total_label') }}</span> {{ $ultimoPedidoPendiente->total }}</div>
+                            <div><span class="font-semibold">{{ __('projects.status_label') }}</span> {{ $ultimoPedidoPendiente->estado }}</div>
                         </div>
                     @else
-                        <p class="text-sm text-gray-600 italic">Sin pedidos pendientes.</p>
+                        <p class="text-sm text-gray-600 italic">{{ __('projects.no_pending_orders') }}</p>
                     @endif
                 </div>
 
                 {{-- Lista compacta (últimos 5 pedidos) --}}
                 <div class="bg-white border rounded-lg">
                     <div class="px-4 py-2 border-b">
-                        <h4 class="text-sm font-bold">Últimos pedidos (5)</h4>
+                        <h4 class="text-sm font-bold">{{ __('projects.latest_orders') }}</h4>
                     </div>
                     <div class="p-2 overflow-x-auto">
                         <table class="min-w-full text-sm">
                             <thead class="bg-gray-100">
                                 <tr>
                                     <th class="px-3 py-2 text-left">ID</th>
-                                    <th class="px-3 py-2 text-left">Producto</th>
-                                    <th class="px-3 py-2 text-left">Categoría</th>
-                                    <th class="px-3 py-2 text-left">Total</th>
-                                    <th class="px-3 py-2 text-left">Estatus</th>
-                                    <th class="px-3 py-2 text-left">Fecha</th>
+                                    <th class="px-3 py-2 text-left">{{ __('projects.product') }}</th>
+                                    <th class="px-3 py-2 text-left">{{ __('projects.category') }}</th>
+                                    <th class="px-3 py-2 text-left">{{ __('projects.total') }}</th>
+                                    <th class="px-3 py-2 text-left">{{ __('projects.status') }}</th>
+                                    <th class="px-3 py-2 text-left">{{ __('projects.date') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -742,7 +767,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="px-3 py-3 text-center text-gray-500">Sin pedidos.</td>
+                                        <td colspan="6" class="px-3 py-3 text-center text-gray-500">{{ __('projects.no_orders') }}</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -755,13 +780,13 @@
                     <a href="{{ route('proyecto.show', $proyectoResumenId) }}"
                     target="_blank" rel="noopener"
                     class="text-blue-600 hover:underline text-sm">
-                        Ver más en la página del proyecto
+                        {{ __('projects.view_more_on_project_page') }}
                     </a>
 
                     <div class="text-right">
                         <button wire:click="cerrarResumenPedidos"
                                 class="px-4 py-2 rounded bg-gray-600 text-white hover:bg-gray-700 text-sm">
-                            Cerrar
+                            {{ __('projects.close') }}
                         </button>
                     </div>
                 </div>
@@ -781,11 +806,11 @@
     >
         <div class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative">
             <h2 class="text-lg sm:text-xl font-bold mb-4 text-red-600">
-                Confirmar inactivación de proyecto
+                {{ __('projects.confirm_project_deactivation') }}
             </h2>
 
             <p class="text-sm text-gray-700 mb-4">
-                Estás a punto de inactivar el proyecto
+                {{ __('projects.you_are_about_to_deactivate_project') }}
                 <span class="font-semibold">
                     #{{ $deactivateStats['id'] ?? '' }} - {{ $deactivateStats['nombre'] ?? '' }}
                 </span>.
@@ -793,19 +818,19 @@
 
             <div class="mb-4 text-sm text-gray-700 space-y-1">
                 <p class="font-semibold">
-                    Se aplicará lo siguiente:
+                    {{ __('projects.the_following_will_apply') }}
                 </p>
                 <ul class="list-disc list-inside space-y-1">
-                    <li>El proyecto quedará marcado como <strong>Inactivo</strong>.</li>
-                    <li>Estado actual de diseño: <strong>{{ $deactivateStats['estado'] ?? 'Sin estado' }}</strong>.</li>
-                    <li>Pedidos activos asociados (tipo PEDIDO, estado_id = 1): 
+                    <li>{{ __('projects.project_will_be_marked_inactive') }}</li>
+                    <li>{{ __('projects.current_design_status') }} <strong>{{ $statusLabel($deactivateStats['estado'] ?? null) }}</strong>.</li>
+                    <li>{{ __('projects.associated_active_orders') }}
                         <span class="font-semibold">{{ $deactivateStats['total_pedidos'] ?? 0 }}</span>
                     </li>
                 </ul>
             </div>
 
             <p class="text-xs text-red-500 mb-4">
-                Esta acción no elimina el proyecto ni sus pedidos, pero dejará de mostrarse en las vistas que solo consideran proyectos activos.
+                {{ __('projects.deactivate_warning') }}
             </p>
 
             <div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
@@ -814,14 +839,14 @@
                     class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
                     @click="showDeactivate = false"
                 >
-                    Cancelar
+                    {{ __('projects.cancel') }}
                 </button>
                 <button
                     type="button"
                     class="w-full sm:w-auto px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
                     wire:click="inactivarProyectoConfirmado"
                 >
-                    Sí, inactivar
+                    {{ __('projects.yes_deactivate') }}
                 </button>
             </div>
         </div>
@@ -836,11 +861,11 @@
     >
         <div class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative">
             <h2 class="text-lg sm:text-xl font-bold mb-4 text-emerald-700">
-                Confirmar activación de proyecto
+                {{ __('projects.confirm_project_activation') }}
             </h2>
 
             <p class="text-sm text-gray-700 mb-4">
-                Vas a activar el proyecto
+                {{ __('projects.you_are_about_to_activate_project') }}
                 <span class="font-semibold">
                     #{{ $activateStats['id'] ?? '' }} - {{ $activateStats['nombre'] ?? '' }}
                 </span>.
@@ -848,12 +873,12 @@
 
             <div class="mb-4 text-sm text-gray-700 space-y-1">
                 <p class="font-semibold">
-                    Se realizará lo siguiente:
+                    {{ __('projects.the_following_will_be_done') }}
                 </p>
                 <ul class="list-disc list-inside space-y-1">
-                    <li>El proyecto quedará marcado como <strong>Activo</strong>.</li>
-                    <li>Estado de diseño: <strong>{{ $activateStats['estado'] ?? 'Sin estado' }}</strong>.</li>
-                    <li>Pedidos activos asociados (tipo PEDIDO, estado_id = 1): 
+                    <li>{{ __('projects.project_will_be_marked_active') }}</li>
+                    <li>{{ __('projects.design_status_label') }} <strong>{{ $statusLabel($activateStats['estado'] ?? null) }}</strong>.</li>
+                    <li>{{ __('projects.associated_active_orders') }}
                         <span class="font-semibold">{{ $activateStats['total_pedidos'] ?? 0 }}</span>
                     </li>
                 </ul>
@@ -865,14 +890,14 @@
                     class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
                     @click="showActivate = false"
                 >
-                    Cancelar
+                    {{ __('projects.cancel') }}
                 </button>
                 <button
                     type="button"
                     class="w-full sm:w-auto px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
                     wire:click="activarProyectoConfirmado"
                 >
-                    Sí, activar
+                    {{ __('projects.yes_activate') }}
                 </button>
             </div>
         </div>

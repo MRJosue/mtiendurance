@@ -12,12 +12,44 @@
         @click="toggle()"
         class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
     >
-        Pedidos de Proyecto
-    <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
+        {{ __('orders.title') }}
+    <span class="text-sm text-gray-500 ml-2" x-text="abierto ? @js(__('orders.hide')) : @js(__('orders.show'))"></span>
     </h2>
 
     <!-- Contenido colapsable -->
     <div x-show="abierto" x-transition>
+        @php
+            $designStatusLabel = function (?string $status) {
+                return match ($status) {
+                    'PENDIENTE' => __('orders.status_pending'),
+                    'ASIGNADO' => __('orders.status_assigned'),
+                    'EN PROCESO' => __('orders.status_in_progress'),
+                    'REVISION' => __('orders.status_review'),
+                    'DISEÑO APROBADO' => __('orders.status_design_approved'),
+                    'DISEÑO RECHAZADO' => __('orders.status_design_rejected'),
+                    'RECHAZADO' => __('orders.status_rejected'),
+                    'CANCELADO' => __('orders.status_cancelled'),
+                    null, '' => __('orders.no_status'),
+                    default => $status,
+                };
+            };
+
+            $orderStatusLabel = function (?string $status) {
+                return match ($status) {
+                    'TODOS' => __('orders.tab_all'),
+                    'PENDIENTE' => __('orders.status_pending'),
+                    'APROBADO' => __('orders.status_approved'),
+                    'POR PROGRAMAR' => __('orders.status_to_schedule'),
+                    'PROGRAMADO' => __('orders.status_scheduled'),
+                    'ENTREGADO' => __('orders.status_delivered'),
+                    'RECHAZADO' => __('orders.status_rejected'),
+                    'CANCELADO' => __('orders.status_cancelled'),
+                    'ARCHIVADO' => __('orders.status_archived'),
+                    null, '' => __('orders.no_status'),
+                    default => $status,
+                };
+            };
+        @endphp
 
                 
                         @if($mostrarFiltros)
@@ -33,14 +65,14 @@
         <div class="p-4 border-b">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div class="flex items-center justify-between sm:justify-start gap-3">
-                    <h2 class="text-lg font-bold text-gray-700">Filtros</h2>
+                    <h2 class="text-lg font-bold text-gray-700">{{ __('orders.filters') }}</h2>
 
                     {{-- Cerrar (compacto) --}}
                     <button
                         type="button"
                         @click="abierto = false"
                         class="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                        title="Cerrar"
+                        title="{{ __('orders.close') }}"
                     >
                         ✕
                     </button>
@@ -53,7 +85,7 @@
                         wire:click="buscarPorFiltros"
                         class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 text-sm"
                     >
-                        Filtrar
+                        {{ __('orders.filter') }}
                     </button>
 
                     <button
@@ -61,7 +93,7 @@
                         wire:click="clearFilters"
                         class="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 text-sm"
                     >
-                        Limpiar
+                        {{ __('orders.clear') }}
                     </button>
 
                     <button
@@ -71,10 +103,10 @@
                         wire:target="exportExcel"
                         class="w-full sm:w-auto bg-emerald-600 text-white px-3 py-2 rounded-lg hover:bg-emerald-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         @disabled(! $this->hasFilters)
-                        title="{{ $this->hasFilters ? 'Exportar Excel' : 'Aplica al menos 1 filtro para exportar' }}"
+                        title="{{ $this->hasFilters ? __('orders.export_excel') : __('orders.apply_at_least_one_filter_to_export') }}"
                     >
-                        <span wire:loading.remove wire:target="exportExcel">Exportar Excel</span>
-                        <span wire:loading wire:target="exportExcel">Exportando...</span>
+                        <span wire:loading.remove wire:target="exportExcel">{{ __('orders.export_excel') }}</span>
+                        <span wire:loading wire:target="exportExcel">{{ __('orders.exporting') }}</span>
                     </button>
 
                     {{-- Cerrar (desktop) --}}
@@ -82,16 +114,16 @@
                         type="button"
                         @click="abierto = false"
                         class="hidden sm:inline-flex items-center justify-center px-3 py-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 text-sm"
-                        title="Cerrar"
+                        title="{{ __('orders.close') }}"
                     >
-                        Cerrar ✕
+                        {{ __('orders.close') }} ✕
                     </button>
                 </div>
             </div>
 
             {{-- Hint --}}
             <p class="mt-2 text-xs text-gray-500">
-                La exportación solo se habilita cuando hay al menos un filtro aplicado.
+                {{ __('orders.export_enabled_only_with_filters') }}
             </p>
         </div>
 
@@ -108,7 +140,7 @@
                             class="mt-1 rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                         />
                         <span class="text-sm text-gray-700">
-                            Mostrar pedidos de diseños <span class="font-semibold">No aprobados</span>
+                            {{ __('orders.show_orders_with_designs') }} <span class="font-semibold">{{ __('orders.not_approved') }}</span>
                         </span>
                     </label>
                 </div>
@@ -116,7 +148,7 @@
                 {{-- PerPage --}}
                 <div class="rounded-lg border border-gray-200 p-3">
                     <label for="perPage" class="block text-sm text-gray-700 font-medium mb-1">
-                        Registros por página
+                        {{ __('orders.records_per_page') }}
                     </label>
                     <select
                         id="perPage"
@@ -141,7 +173,7 @@
                             class="mt-1 rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                         />
                         <span class="text-sm text-gray-700">
-                            Mostrar solo pedidos <span class="font-semibold">inactivos</span>
+                            {{ __('orders.show_only_orders') }} <span class="font-semibold">{{ __('orders.inactive') }}</span>
                         </span>
                     </label>
                 </div>
@@ -152,7 +184,7 @@
                                 <template x-if="!abierto">
                                     <div class="mb-4">
                                         <button @click="abierto = true" class="text-sm text-blue-600 hover:underline">
-                                            Mostrar Filtros
+                                            {{ __('orders.show_filters') }}
                                         </button>
                                     </div>
                                 </template>
@@ -160,7 +192,7 @@
                         @else
                             <div class="mb-4">
                                 <button wire:click="$set('mostrarFiltros', true)" class="text-sm text-blue-600 hover:underline">
-                                    Mostrar Filtros
+                                    {{ __('orders.show_filters') }}
                                 </button>
                             </div>
                         @endif
@@ -178,10 +210,10 @@
                                         @class([
                                             'px-3 py-2 rounded-t-lg text-sm whitespace-nowrap transition',
                                             'border-b-2 font-semibold bg-white border-blue-500 text-blue-600' => $activeEstadoTab === $tab,
-                                            'text-gray-600 hover:text-blue-500 border-b-2 border-transparent' => $activeEstadoTab !== $tab,
+                                    'text-gray-600 hover:text-blue-500 border-b-2 border-transparent' => $activeEstadoTab !== $tab,
                                         ])
                                     >
-                                        {{ $tab }}
+                                        {{ $orderStatusLabel($tab) }}
                                     </button>
                                 </li>
                             @endforeach
@@ -190,8 +222,8 @@
                 </div>
                 <div class="mb-3 flex items-center justify-between">
                     <div class="text-sm text-gray-600">
-                        Mostrando:
-                        <span class="font-semibold text-blue-600">{{ $activeEstadoTab }}</span>
+                        {{ __('orders.showing') }}
+                        <span class="font-semibold text-blue-600">{{ $orderStatusLabel($activeEstadoTab) }}</span>
                     </div>
                 </div>
 
@@ -229,7 +261,7 @@
                         <button
                             class="inline-flex items-center gap-1 hover:text-blue-600"
                             wire:click="sortBy('id')"
-                            title="Ordenar por ID de pedido"
+                            title="{{ __('orders.sort_by_order_id') }}"
                         >
                             <span>ID</span>
                             <span class="text-xs">
@@ -244,7 +276,7 @@
 
                     <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
                         <button class="inline-flex items-center gap-1 hover:text-blue-600" wire:click="sortBy('proyecto_nombre')">
-                            <span>Nombre del proyecto</span>
+                            <span>{{ __('orders.project_name') }}</span>
                             <span class="text-xs">
                                 @if($sortField === 'proyecto_nombre')
                                     {{ $sortDir === 'asc' ? '▲' : '▼' }}
@@ -257,7 +289,7 @@
 
                     <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
                         <button class="inline-flex items-center gap-1 hover:text-blue-600" wire:click="sortBy('cliente_nombre')">
-                            <span>Cliente</span>
+                            <span>{{ __('orders.client') }}</span>
                             <span class="text-xs">
                                 @if($sortField === 'cliente_nombre')
                                     {{ $sortDir === 'asc' ? '▲' : '▼' }}
@@ -268,11 +300,11 @@
                         </button>
                     </th>
 
-                    <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Producto / Categoría</th>
+                    <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">{{ __('orders.product_category') }}</th>
 
                     <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
                         <button class="inline-flex items-center gap-1 hover:text-blue-600" wire:click="sortBy('total')">
-                            <span>Total</span>
+                            <span>{{ __('orders.total') }}</span>
                             <span class="text-xs">
                                 @if($sortField === 'total')
                                     {{ $sortDir === 'asc' ? '▲' : '▼' }}
@@ -285,7 +317,7 @@
 
                     <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
                         <button class="inline-flex items-center gap-1 hover:text-blue-600" wire:click="sortBy('estado_diseno')">
-                            <span>Estado del Diseño</span>
+                            <span>{{ __('orders.design_status') }}</span>
                             <span class="text-xs">
                                 @if($sortField === 'estado_diseno')
                                     {{ $sortDir === 'asc' ? '▲' : '▼' }}
@@ -298,7 +330,7 @@
 
                     <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
                         <button class="inline-flex items-center gap-1 hover:text-blue-600" wire:click="sortBy('estado')">
-                            <span>Estado del Pedido</span>
+                            <span>{{ __('orders.order_status') }}</span>
                             <span class="text-xs">
                                 @if($sortField === 'estado')
                                     {{ $sortDir === 'asc' ? '▲' : '▼' }}
@@ -311,7 +343,7 @@
 
                     <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
                         <button class="inline-flex items-center gap-1 hover:text-blue-600" wire:click="sortBy('fecha_produccion')">
-                            <span>Producción</span>
+                            <span>{{ __('orders.production') }}</span>
                             <span class="text-xs">
                                 @if($sortField === 'fecha_produccion')
                                     {{ $sortDir === 'asc' ? '▲' : '▼' }}
@@ -324,7 +356,7 @@
 
                     <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
                         <button class="inline-flex items-center gap-1 hover:text-blue-600" wire:click="sortBy('fecha_entrega')">
-                            <span>Entrega</span>
+                            <span>{{ __('orders.delivery') }}</span>
                             <span class="text-xs">
                                 @if($sortField === 'fecha_entrega')
                                     {{ $sortDir === 'asc' ? '▲' : '▼' }}
@@ -335,7 +367,7 @@
                         </button>
                     </th>
 
-                    <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
+                    <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">{{ __('orders.actions') }}</th>
                 </tr>
 
                 {{-- Filtros por columna (dropdown compacto tipo HojaViewer) --}}
@@ -345,28 +377,28 @@
                     {{-- Filtro ID --}}
                     <th class="px-3 py-2">
                         <div x-data="{ open:false }" class="relative inline-flex items-center">
-                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="Filtrar ID">⋮</button>
+                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="{{ __('orders.filter_id') }}">⋮</button>
                             <div x-cloak x-show="open" @click.away="open=false" x-transition class="absolute z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3">
-                                <label class="block text-xs text-gray-600 mb-1">ID de Pedido o Proyecto</label>
+                                <label class="block text-xs text-gray-600 mb-1">{{ __('orders.order_or_project_id') }}</label>
                                 <input
                                     type="text"
                                     class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
-                                    placeholder="Ej. 1001 o 1001,1002"
+                                    placeholder="{{ __('orders.id_example') }}"
                                     wire:model.live.debounce.400ms="filters.id"
                                 />
                                 <div class="grid grid-cols-2 gap-2 mt-3">
                                     <div>
-                                        <label class="block text-xs text-gray-600 mb-1">Desde</label>
+                                        <label class="block text-xs text-gray-600 mb-1">{{ __('orders.from') }}</label>
                                         <input type="date" class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" wire:model.live="filters.fecha_desde">
                                     </div>
                                     <div>
-                                        <label class="block text-xs text-gray-600 mb-1">Hasta</label>
+                                        <label class="block text-xs text-gray-600 mb-1">{{ __('orders.to') }}</label>
                                         <input type="date" class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" wire:model.live="filters.fecha_hasta">
                                     </div>
                                 </div>
                                 <div class="mt-2 flex justify-end gap-2">
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" wire:click="clearFilters">Limpiar</button>
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
+                                    <button type="button" class="px-2 py-1 text-xs rounded border" wire:click="clearFilters">{{ __('orders.clear') }}</button>
+                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">{{ __('orders.close') }}</button>
                                 </div>
                             </div>
                         </div>
@@ -375,13 +407,13 @@
                     {{-- Filtro Proyecto --}}
                     <th class="px-3 py-2">
                         <div x-data="{ open:false }" class="relative inline-flex items-center">
-                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="Filtrar Proyecto">⋮</button>
+                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="{{ __('orders.filter_project') }}">⋮</button>
                             <div x-cloak x-show="open" @click.away="open=false" x-transition class="absolute z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3">
-                                <label class="block text-xs text-gray-600 mb-1">Proyecto</label>
-                                <input class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" placeholder="Proyecto…" wire:model.live.debounce.400ms="filters.proyecto">
+                                <label class="block text-xs text-gray-600 mb-1">{{ __('orders.project') }}</label>
+                                <input class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" placeholder="{{ __('orders.project_placeholder') }}" wire:model.live.debounce.400ms="filters.proyecto">
                                 <div class="mt-2 flex justify-end gap-2">
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.proyecto','')">Limpiar</button>
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
+                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.proyecto','')">{{ __('orders.clear') }}</button>
+                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">{{ __('orders.close') }}</button>
                                 </div>
                             </div>
                         </div>
@@ -390,13 +422,13 @@
                     {{-- Filtro Cliente --}}
                     <th class="px-3 py-2">
                         <div x-data="{ open:false }" class="relative inline-flex items-center">
-                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="Filtrar Cliente">⋮</button>
+                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="{{ __('orders.filter_client') }}">⋮</button>
                             <div x-cloak x-show="open" @click.away="open=false" x-transition class="absolute z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3">
-                                <label class="block text-xs text-gray-600 mb-1">Nombre o correo</label>
-                                <input class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" placeholder="Cliente…" wire:model.live.debounce.400ms="filters.cliente">
+                                <label class="block text-xs text-gray-600 mb-1">{{ __('orders.name_or_email') }}</label>
+                                <input class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" placeholder="{{ __('orders.client_placeholder') }}" wire:model.live.debounce.400ms="filters.cliente">
                                 <div class="mt-2 flex justify-end gap-2">
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.cliente','')">Limpiar</button>
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
+                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.cliente','')">{{ __('orders.clear') }}</button>
+                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">{{ __('orders.close') }}</button>
                                 </div>
                             </div>
                         </div>
@@ -408,13 +440,13 @@
                     {{-- Filtro Total --}}
                     <th class="px-3 py-2">
                         <div x-data="{ open:false }" class="relative inline-flex items-center">
-                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="Filtrar Total">⋮</button>
+                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="{{ __('orders.filter_total') }}">⋮</button>
                             <div x-cloak x-show="open" @click.away="open=false" x-transition class="absolute z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3">
-                                <label class="block text-xs text-gray-600 mb-1">Total</label>
-                                <input class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" placeholder="Total…" wire:model.live.debounce.400ms="filters.total">
+                                <label class="block text-xs text-gray-600 mb-1">{{ __('orders.total') }}</label>
+                                <input class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" placeholder="{{ __('orders.total_placeholder') }}" wire:model.live.debounce.400ms="filters.total">
                                 <div class="mt-2 flex justify-end gap-2">
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.total','')">Limpiar</button>
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
+                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.total','')">{{ __('orders.clear') }}</button>
+                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">{{ __('orders.close') }}</button>
                                 </div>
                             </div>
                         </div>
@@ -423,22 +455,22 @@
                     {{-- Filtro Estado Diseño --}}
                     <th class="px-3 py-2">
                         <div x-data="{ open:false }" class="relative inline-flex items-center">
-                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="Filtrar Estado Diseño">⋮</button>
+                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="{{ __('orders.filter_design_status') }}">⋮</button>
                             <div x-cloak x-show="open" @click.away="open=false" x-transition class="absolute z-50 mt-1 w-56 rounded-lg border bg-white shadow p-3">
-                                <label class="block text-xs text-gray-600 mb-1">Estado del Diseño</label>
+                                <label class="block text-xs text-gray-600 mb-1">{{ __('orders.design_status') }}</label>
                                 <select class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" wire:model.live="filters.estado_diseno">
-                                    <option value="">— Cualquiera —</option>
-                                    <option value="PENDIENTE">PENDIENTE</option>
-                                    <option value="ASIGNADO">ASIGNADO</option>
-                                    <option value="EN PROCESO">EN PROCESO</option>
-                                    <option value="REVISION">REVISION</option>
-                                    <option value="DISEÑO APROBADO">DISEÑO APROBADO</option>
-                                    <option value="DISEÑO RECHAZADO">DISEÑO RECHAZADO</option>
-                                    <option value="CANCELADO">CANCELADO</option>
+                                    <option value="">{{ __('orders.any') }}</option>
+                                    <option value="PENDIENTE">{{ __('orders.status_pending') }}</option>
+                                    <option value="ASIGNADO">{{ __('orders.status_assigned') }}</option>
+                                    <option value="EN PROCESO">{{ __('orders.status_in_progress') }}</option>
+                                    <option value="REVISION">{{ __('orders.status_review') }}</option>
+                                    <option value="DISEÑO APROBADO">{{ __('orders.status_design_approved') }}</option>
+                                    <option value="DISEÑO RECHAZADO">{{ __('orders.status_design_rejected') }}</option>
+                                    <option value="CANCELADO">{{ __('orders.status_cancelled') }}</option>
                                 </select>
                                 <div class="mt-2 flex justify-end gap-2">
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.estado_diseno','')">Limpiar</button>
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
+                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.estado_diseno','')">{{ __('orders.clear') }}</button>
+                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">{{ __('orders.close') }}</button>
                                 </div>
                             </div>
                         </div>
@@ -447,23 +479,23 @@
                     {{-- Filtro Estado Pedido --}}
                     <th class="px-3 py-2">
                         <div x-data="{ open:false }" class="relative inline-flex items-center">
-                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="Filtrar Estado Pedido">⋮</button>
+                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="{{ __('orders.filter_order_status') }}">⋮</button>
                             <div x-cloak x-show="open" @click.away="open=false" x-transition class="absolute z-50 mt-1 w-56 rounded-lg border bg-white shadow p-3">
-                                <label class="block text-xs text-gray-600 mb-1">Estado del Pedido</label>
+                                <label class="block text-xs text-gray-600 mb-1">{{ __('orders.order_status') }}</label>
                                 <select class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" wire:model.live="filters.estado_pedido">
-                                    <option value="">— Cualquiera —</option>
-                                    <option value="PENDIENTE">PENDIENTE</option>
-                                    <option value="APROBADO">APROBADO</option>
-                                    <option value="POR PROGRAMAR">POR PROGRAMAR</option>
-                                    <option value="PROGRAMADO">PROGRAMADO</option>
-                                    <option value="ENTREGADO">ENTREGADO</option>
-                                    <option value="RECHAZADO">RECHAZADO</option>
-                                    <option value="CANCELADO">CANCELADO</option>
-                                    <option value="ARCHIVADO">ARCHIVADO</option>
+                                    <option value="">{{ __('orders.any') }}</option>
+                                    <option value="PENDIENTE">{{ __('orders.status_pending') }}</option>
+                                    <option value="APROBADO">{{ __('orders.status_approved') }}</option>
+                                    <option value="POR PROGRAMAR">{{ __('orders.status_to_schedule') }}</option>
+                                    <option value="PROGRAMADO">{{ __('orders.status_scheduled') }}</option>
+                                    <option value="ENTREGADO">{{ __('orders.status_delivered') }}</option>
+                                    <option value="RECHAZADO">{{ __('orders.status_rejected') }}</option>
+                                    <option value="CANCELADO">{{ __('orders.status_cancelled') }}</option>
+                                    <option value="ARCHIVADO">{{ __('orders.status_archived') }}</option>
                                 </select>
                                 <div class="mt-2 flex justify-end gap-2">
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.estado_pedido','')">Limpiar</button>
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
+                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="$wire.set('filters.estado_pedido','')">{{ __('orders.clear') }}</button>
+                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">{{ __('orders.close') }}</button>
                                 </div>
                             </div>
                         </div>
@@ -472,23 +504,23 @@
                     {{-- Fechas --}}
                     <th class="px-3 py-2">
                         <div x-data="{ open:false }" class="relative inline-flex items-center">
-                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="Filtrar Producción">⋮</button>
+                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="{{ __('orders.filter_production') }}">⋮</button>
                             <div x-cloak x-show="open" @click.away="open=false" x-transition class="absolute z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3">
-                                <label class="block text-xs text-gray-600 mb-1">Producción</label>
+                                <label class="block text-xs text-gray-600 mb-1">{{ __('orders.production') }}</label>
                                 <div class="space-y-2">
                                     <div>
-                                        <span class="text-xs text-gray-600">Desde</span>
+                                        <span class="text-xs text-gray-600">{{ __('orders.from') }}</span>
                                         <input type="date" class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" wire:model.live.debounce.400ms="filters.fecha_produccion_from">
                                     </div>
                                     <div>
-                                        <span class="text-xs text-gray-600">Hasta</span>
+                                        <span class="text-xs text-gray-600">{{ __('orders.to') }}</span>
                                         <input type="date" class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" wire:model.live.debounce.400ms="filters.fecha_produccion_to">
                                     </div>
                                 </div>
                                 <div class="mt-2 flex justify-end gap-2">
                                     <button type="button" class="px-2 py-1 text-xs rounded border"
-                                            @click="$wire.set('filters.fecha_produccion_from', null); $wire.set('filters.fecha_produccion_to', null)">Limpiar</button>
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
+                                            @click="$wire.set('filters.fecha_produccion_from', null); $wire.set('filters.fecha_produccion_to', null)">{{ __('orders.clear') }}</button>
+                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">{{ __('orders.close') }}</button>
                                 </div>
                             </div>
                         </div>
@@ -496,23 +528,23 @@
 
                     <th class="px-3 py-2">
                         <div x-data="{ open:false }" class="relative inline-flex items-center">
-                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="Filtrar Entrega">⋮</button>
+                            <button @click="open = !open" class="px-2 py-1 rounded hover:bg-gray-200 text-sm" title="{{ __('orders.filter_delivery') }}">⋮</button>
                             <div x-cloak x-show="open" @click.away="open=false" x-transition class="absolute z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3">
-                                <label class="block text-xs text-gray-600 mb-1">Entrega</label>
+                                <label class="block text-xs text-gray-600 mb-1">{{ __('orders.delivery') }}</label>
                                 <div class="space-y-2">
                                     <div>
-                                        <span class="text-xs text-gray-600">Desde</span>
+                                        <span class="text-xs text-gray-600">{{ __('orders.from') }}</span>
                                         <input type="date" class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" wire:model.live.debounce.400ms="filters.fecha_entrega_from">
                                     </div>
                                     <div>
-                                        <span class="text-xs text-gray-600">Hasta</span>
+                                        <span class="text-xs text-gray-600">{{ __('orders.to') }}</span>
                                         <input type="date" class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm" wire:model.live.debounce.400ms="filters.fecha_entrega_to">
                                     </div>
                                 </div>
                                 <div class="mt-2 flex justify-end gap-2">
                                     <button type="button" class="px-2 py-1 text-xs rounded border"
-                                            @click="$wire.set('filters.fecha_entrega_from', null); $wire.set('filters.fecha_entrega_to', null)">Limpiar</button>
-                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">Cerrar</button>
+                                            @click="$wire.set('filters.fecha_entrega_from', null); $wire.set('filters.fecha_entrega_to', null)">{{ __('orders.clear') }}</button>
+                                    <button type="button" class="px-2 py-1 text-xs rounded border" @click="open=false">{{ __('orders.close') }}</button>
                                 </div>
                             </div>
                         </div>
@@ -557,14 +589,14 @@
                                 title="{{ $pedido->usuario?->tooltip_sucursal_empresa }}"
                                 class="inline-block cursor-help"
                             >
-                                {{ $pedido->usuario->name ?? 'Sin cliente' }}
+                                {{ $pedido->usuario->name ?? __('orders.no_client') }}
                             </span>
                         </td>
 
                         {{-- Producto / Categoría --}}
                         <td class="px-3 py-2">
-                            <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
-                            <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
+                            <div class="font-medium">{{ $pedido->producto->nombre ?? __('orders.no_product') }}</div>
+                            <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? __('orders.no_category') }}</div>
                         </td>
 
                         {{-- Total piezas --}}
@@ -574,12 +606,12 @@
                                     type="button"
                                     wire:click="abrirModalTallas({{ $pedido->id }})"
                                     class="text-blue-600 hover:underline font-semibold"
-                                    title="Ver distribución de tallas"
+                                    title="{{ __('orders.view_size_distribution') }}"
                                 >
-                                    {{ number_format((float)($pedido->total ?? 0), 0) }} piezas
+                                    {{ number_format((float)($pedido->total ?? 0), 0) }} {{ __('orders.pieces') }}
                                 </button>
                             @else
-                                {{ number_format((float)($pedido->total ?? 0), 0) }} piezas
+                                {{ number_format((float)($pedido->total ?? 0), 0) }} {{ __('orders.pieces') }}
                             @endif
                         </td>
 
@@ -599,7 +631,7 @@
                                 $clase = $map[$estadoDiseno] ?? 'bg-gray-200 text-gray-700';
                             @endphp
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[11rem] justify-center {{ $clase }}">
-                                {{ $estadoDiseno }}
+                                {{ $designStatusLabel($estadoDiseno) }}
                             </span>
                         </td>
 
@@ -617,22 +649,22 @@
                                 };
                             @endphp
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap min-w-[9rem] justify-center {{ $color }}">
-                                {{ strtoupper($pedido->estado) }}
+                                {{ $orderStatusLabel(strtoupper($pedido->estado)) }}
                             </span>
                         </td>
 
                         {{-- Producción --}}
-                        <td class="px-3 py-2">{{ $pedido->fecha_produccion?->format('Y-m-d') ?? 'No definida' }}</td>
+                        <td class="px-3 py-2">{{ $pedido->fecha_produccion?->format('Y-m-d') ?? __('orders.not_defined') }}</td>
 
                         {{-- Entrega --}}
-                        <td class="px-3 py-2">{{ $pedido->fecha_entrega?->format('Y-m-d') ?? 'No definida' }}</td>
+                        <td class="px-3 py-2">{{ $pedido->fecha_entrega?->format('Y-m-d') ?? __('orders.not_defined') }}</td>
 
                         {{-- Acciones --}}
                         <td class="px-3 py-2">
                             <x-dropdown>
                                 <x-dropdown.item
                                     :href="route('proyecto.show', $pedido->proyecto_id)"
-                                    label="Ir a Diseño"
+                                    label="{{ __('orders.go_to_design') }}"
                                 />
 
                                 {{-- ✅ FIX: ahora el click es sobre TODO el item --}}
@@ -641,77 +673,77 @@
                                     wire:click="abrirModalVerInfo({{ $pedido->proyecto_id }})"
                                     class="w-full cursor-pointer"
                                 >
-                                    <span class="block w-full font-semibold">Ver información</span>
+                                    <span class="block w-full font-semibold">{{ __('orders.view_information') }}</span>
                                 </x-dropdown.item>
 
                                 @if(($acciones['aprobar_pedido'] ?? false))
                                     <x-dropdown.item
-                                        @click="if (confirm('¿Aprobar este pedido?')) $wire.aprobarPedido({{ $pedido->id }})"
-                                        label="Aprobar pedido"
+                                        @click="if (confirm(@js(__('orders.confirm_approve_order')))) $wire.aprobarPedido({{ $pedido->id }})"
+                                        label="{{ __('orders.approve_order') }}"
                                     />
                                 @endif
 
                                 @if(($acciones['programar_pedido'] ?? false))
                                     <x-dropdown.item
-                                        @click="if (confirm('¿Programar este pedido?')) $wire.programarPedido({{ $pedido->id }})"
-                                        label="Programar pedido"
+                                        @click="if (confirm(@js(__('orders.confirm_schedule_order')))) $wire.programarPedido({{ $pedido->id }})"
+                                        label="{{ __('orders.schedule_order') }}"
                                     />
                                 @endif
 
                                 @if(($acciones['abrir_chat'] ?? false))
                                     <x-dropdown.item
                                         @click="$wire.dispatch('abrir-chat', { proyecto_id: {{ $pedido->proyecto_id }} })"
-                                        label="Abrir chat"
+                                        label="{{ __('orders.open_chat') }}"
                                     />
                                 @endif
 
                                 @if(($acciones['crear_tarea'] ?? false))
                                     <x-dropdown.item
                                         @click="$wire.dispatch('abrir-modal-tarea', { pedido_id: {{ $pedido->id }} })"
-                                        label="Crear tarea"
+                                        label="{{ __('orders.create_task') }}"
                                     />
                                 @endif
 
                                 @if(($acciones['editar_pedido'] ?? false))
                                     <x-dropdown.item
                                         @click="$wire.dispatch('editar-pedido', { id: {{ $pedido->id }} })"
-                                        label="Editar pedido"
+                                        label="{{ __('orders.edit_order') }}"
                                     />
                                 @endif
 
                                 @if(($acciones['duplicar_pedido'] ?? false))
                                     <x-dropdown.item
                                         @click="$wire.dispatch('duplicar-pedido', { id: {{ $pedido->id }} })"
-                                        label="Duplicar pedido"
+                                        label="{{ __('orders.duplicate_order') }}"
                                     />
                                 @endif
 
                                 @if(($acciones['eliminar_pedido'] ?? false))
                                     <x-dropdown.item
                                         separator
-                                        @click="if (confirm('¿Archivar este pedido?')) $wire.dispatch('eliminar-pedido', { id: {{ $pedido->id }} })"
-                                        label="Archivar pedido"
+                                        @click="if (confirm(@js(__('orders.confirm_archive_order')))) $wire.dispatch('eliminar-pedido', { id: {{ $pedido->id }} })"
+                                        label="{{ __('orders.archive_order') }}"
                                     />
                                 @endif
 
                                 @if(($acciones['entregar_pedido'] ?? false))
                                     <x-dropdown.item
                                         @click="$wire.dispatch('abrir-modal-entrega', { id: {{ $pedido->id }} })"
-                                        label="Entregar pedido"
+                                        label="{{ __('orders.deliver_order') }}"
                                     />
                                 @endif
 
                                 @if(($acciones['cancelar_pedido'] ?? false))
                                     <x-dropdown.item
-                                        @click="if (confirm('¿Cancelar este pedido?')) $wire.dispatch('cancelar-pedido', { id: {{ $pedido->id }} })"
-                                        label="Cancelar pedido"
+                                        @click="if (confirm(@js(__('orders.confirm_cancel_order')))) $wire.dispatch('cancelar-pedido', { id: {{ $pedido->id }} })"
+                                        label="{{ __('orders.cancel_order') }}"
                                     />
                                 @endif
 
                                 @if(($acciones['subir_archivos'] ?? false))
                                     <x-dropdown.item
                                         @click="$wire.dispatch('subir-archivos', { id: {{ $pedido->id }} })"
-                                        label="Subir archivos"
+                                        label="{{ __('orders.upload_files') }}"
                                     />
                                 @endif
 
@@ -719,7 +751,7 @@
                                     <x-dropdown.item
                                         separator
                                         @click="$wire.dispatch('exportar-excel-pedido', { id: {{ $pedido->id }} })"
-                                        label="Exportar a Excel"
+                                        label="{{ __('orders.export_to_excel') }}"
                                     />
                                 @endif
                             </x-dropdown>
@@ -728,7 +760,7 @@
                 @empty
                     <tr>
                         <td colspan="11" class="px-4 py-6 text-center text-sm text-gray-500">
-                            No hay pedidos para mostrar.
+                            {{ __('orders.no_orders_to_show') }}
                         </td>
                     </tr>
                 @endforelse
@@ -746,33 +778,33 @@
     @if($modalVerInfo && $infoProyecto)
     <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
         <div class="bg-white p-6 rounded shadow-lg w-full max-w-2xl relative overflow-y-auto max-h-[90vh]">
-            <h2 class="text-xl font-bold mb-4">Detalles del Proyecto</h2>
+            <h2 class="text-xl font-bold mb-4">{{ __('orders.project_details') }}</h2>
             <button 
                 wire:click="$set('modalVerInfo', false)" 
                 class="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-2xl leading-none"
-                title="Cerrar"
+                title="{{ __('orders.close') }}"
             >&times;</button>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                    <p class="text-lg"><span class="font-semibold">Cliente:</span> {{ $infoProyecto->user->name ?? 'Sin usuario' }}</p>
+                    <p class="text-lg"><span class="font-semibold">{{ __('orders.client_label') }}</span> {{ $infoProyecto->user->name ?? __('orders.no_user') }}</p>
                 </div>
                 <div>
-                    <p class="text-lg"><span class="font-semibold">Proyecto:</span> {{ $infoProyecto->nombre }} <span class="text-sm font-bold">ID:{{ $infoProyecto->id }}</span></p>
+                    <p class="text-lg"><span class="font-semibold">{{ __('orders.project_label') }}</span> {{ $infoProyecto->nombre }} <span class="text-sm font-bold">{{ __('orders.id_compact') }}{{ $infoProyecto->id }}</span></p>
                 </div>
                 <div class="sm:col-span-2">
-                    <p class="text-lg"><span class="font-semibold">Descripción:</span> {{ $infoProyecto->descripcion }}</p>
+                    <p class="text-lg"><span class="font-semibold">{{ __('orders.description_label') }}</span> {{ $infoProyecto->descripcion }}</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                    <p class="text-lg font-semibold">Categoría:</p>
-                    <p>{{ $infoProyecto->categoria_sel['nombre'] ?? $infoProyecto->categoria->nombre ?? 'Sin categoría' }}</p>
+                    <p class="text-lg font-semibold">{{ __('orders.category') }}:</p>
+                    <p>{{ $infoProyecto->categoria_sel['nombre'] ?? $infoProyecto->categoria->nombre ?? __('orders.no_category') }}</p>
                 </div>
                 <div>
-                    <p class="text-lg font-semibold">Producto:</p>
-                    <p>{{ $infoProyecto->producto_sel['id'] ?? $infoProyecto->producto->id ?? '' }} {{ $infoProyecto->producto_sel['nombre'] ?? $infoProyecto->producto->nombre ?? 'Sin producto' }}</p>
+                    <p class="text-lg font-semibold">{{ __('orders.product') }}:</p>
+                    <p>{{ $infoProyecto->producto_sel['id'] ?? $infoProyecto->producto->id ?? '' }} {{ $infoProyecto->producto_sel['nombre'] ?? $infoProyecto->producto->nombre ?? __('orders.no_product') }}</p>
                 </div>
             </div>
 
@@ -796,9 +828,9 @@
     <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
         <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl relative overflow-y-auto max-h-[90vh]">
             <h2 class="text-xl font-bold mb-4">
-                Distribución de tallas
+                {{ __('orders.size_distribution') }}
                 @if($tallasPedidoId)
-                    <span class="text-sm text-gray-500 font-semibold">Pedido #{{ $tallasPedidoId }}</span>
+                    <span class="text-sm text-gray-500 font-semibold">{{ __('orders.order_number', ['id' => $tallasPedidoId]) }}</span>
                 @endif
             </h2>
 
@@ -806,7 +838,7 @@
                 type="button"
                 wire:click="cerrarModalTallas"
                 class="absolute top-3 right-4 text-gray-500 hover:text-red-600 text-2xl leading-none"
-                title="Cerrar"
+                title="{{ __('orders.close') }}"
             >&times;</button>
 
             @if(!empty($tallasDistribucionPorGrupo))
@@ -819,7 +851,7 @@
                                     {{ $grupo['grupo'] }}
                                 </div>
                                 <div class="text-sm font-bold text-gray-700">
-                                    Subtotal: {{ number_format((int)$grupo['subtotal']) }}
+                                    {{ __('orders.subtotal') }} {{ number_format((int)$grupo['subtotal']) }}
                                 </div>
                             </div>
 
@@ -839,12 +871,12 @@
 
                 <div class="mt-4 flex justify-end">
                     <div class="px-4 py-2 rounded-lg bg-gray-50 border font-bold text-gray-800">
-                        Total: {{ number_format((int)$tallasTotal) }} piezas
+                        {{ __('orders.total_label') }} {{ number_format((int)$tallasTotal) }} {{ __('orders.pieces') }}
                     </div>
                 </div>
 
             @else
-                <p class="text-sm text-gray-500">No hay tallas registradas para este pedido.</p>
+                <p class="text-sm text-gray-500">{{ __('orders.no_sizes_registered') }}</p>
             @endif
         </div>
     </div>
