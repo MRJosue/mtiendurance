@@ -425,6 +425,10 @@
     @apply container mx-auto px-4 py-6 sm:px-6 lg:px-8;
   }
 
+  .project-show-shell {
+    @apply max-w-screen-2xl px-3 sm:px-5 lg:px-6 2xl:max-w-[1800px];
+  }
+
   .project-detail-panel {
     @apply overflow-hidden rounded-2xl border border-gray-200/80 bg-white/95 shadow-sm dark:border-gray-700 dark:bg-gray-800/90;
   }
@@ -471,6 +475,34 @@
 
   .project-chat-shell {
     @apply flex min-h-0 flex-1 flex-col overflow-y-auto rounded-2xl border border-gray-200/80 bg-white/95 p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800/90;
+  }
+
+  .project-show-main-grid {
+    @apply grid h-full min-h-0 grid-cols-1 gap-5 xl:grid-cols-[minmax(360px,0.92fr)_minmax(0,1.55fr)] 2xl:gap-6;
+  }
+
+  .project-show-sidebar {
+    @apply flex flex-col items-center justify-start gap-4 p-1 xl:sticky xl:top-6 xl:self-start;
+  }
+
+  .project-show-content {
+    @apply min-w-0;
+  }
+
+  .project-show-tab-list {
+    @apply gap-2 pr-1 pb-1;
+  }
+
+  .project-show-tab-panel {
+    @apply min-h-[620px] p-4 sm:p-5 lg:p-6;
+  }
+
+  .project-show-info-grid {
+    @apply grid grid-cols-1 gap-4 p-3 lg:grid-cols-2 lg:gap-5;
+  }
+
+  .project-show-feature-grid {
+    @apply grid grid-cols-1 gap-4 p-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4;
   }
 
   .project-button-primary {

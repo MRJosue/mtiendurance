@@ -1,13 +1,13 @@
 <div x-data class="container mx-auto p-6">
-    <h2 class="text-2xl font-bold mb-4">Gestión de Muestras</h2>
+    <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Gestión de Muestras</h2>
 
     {{-- Sección de Filtros (minimizable) --}}
     @if($mostrarFiltros)
         <div x-data="{ abierto: @entangle('mostrarFiltros') }" class="mb-6">
             <template x-if="abierto">
-                <div class="w-full bg-white border border-gray-200 shadow-md rounded-lg">
-                    <div class="flex justify-between items-center p-4 border-b">
-                        <h2 class="text-lg font-bold text-gray-700">Filtros</h2>
+                <div class="w-full bg-white border border-gray-200 shadow-md rounded-lg dark:bg-gray-900 dark:border-gray-700">
+                    <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+                        <h2 class="text-lg font-bold text-gray-700 dark:text-gray-100">Filtros</h2>
                         <div class="flex items-center gap-2">
                             {{-- <button 
                                 wire:click="buscarPorFiltros"
@@ -17,7 +17,7 @@
                             </button> --}}
                             <button 
                                 @click="abierto = false" 
-                                class="text-gray-500 hover:text-gray-700 text-xl leading-none"
+                                class="text-gray-500 hover:text-gray-700 text-xl leading-none dark:text-gray-400 dark:hover:text-gray-200"
                                 title="Cerrar filtros"
                             >
                                 ✕
@@ -27,7 +27,7 @@
 
                     {{-- GRID de filtros --}}
                     <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                        <input type="text" class="w-full border rounded px-3 py-2"
+                        <input type="text" class="w-full border border-gray-300 rounded px-3 py-2 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                             placeholder="Buscar ID (proyecto-id)"
                             wire:model.live.debounce.500ms="f_id" />
 
@@ -39,7 +39,7 @@
                             placeholder="Cliente"
                             wire:model.live.debounce.500ms="f_cliente" /> --}}
 
-                        <input type="text" class="w-full border rounded px-3 py-2"
+                        <input type="text" class="w-full border border-gray-300 rounded px-3 py-2 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                             placeholder="Archivo / Versión"
                             wire:model.live.debounce.500ms="f_archivo" />
 
@@ -55,7 +55,7 @@
                             placeholder="Motivos / Instrucciones"
                             wire:model.live.debounce.500ms="f_instrucciones" /> --}}
 
-                        <select class="w-full border rounded px-3 py-2"
+                        <select class="w-full border border-gray-300 rounded px-3 py-2 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                                 wire:model.live="f_estatus">
                             <option value="">Estatus (todos)</option>
                             <option value="PENDIENTE">PENDIENTE</option>
@@ -73,7 +73,7 @@
                                     wire:model.live="filters.inactivos"
                                     class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                                 />
-                                <label for="solo-inactivas" class="text-sm text-gray-700">
+                                <label for="solo-inactivas" class="text-sm text-gray-700 dark:text-gray-300">
                                     Mostrar solo muestras inactivas
                                 </label>
                             </div>
@@ -83,7 +83,7 @@
 
             <template x-if="!abierto">
                 <div class="mb-4">
-                    <button @click="abierto = true" class="text-sm text-blue-600 hover:underline">
+                    <button @click="abierto = true" class="text-sm text-blue-600 hover:underline dark:text-blue-400">
                         Mostrar Filtros
                     </button>
                 </div>
@@ -91,15 +91,15 @@
         </div>
     @else
         <div class="mb-4">
-            <button wire:click="$set('mostrarFiltros', true)" class="text-sm text-blue-600 hover:underline">
+            <button wire:click="$set('mostrarFiltros', true)" class="text-sm text-blue-600 hover:underline dark:text-blue-400">
                 Mostrar Filtros
             </button>
         </div>
     @endif
 
-    <div class="overflow-x-auto bg-white rounded-lg shadow">
-        <table class="min-w-full table-auto divide-y divide-gray-200 text-sm">
-            <thead class="bg-gray-100 text-gray-700">
+    <div class="overflow-x-auto bg-white rounded-lg shadow dark:bg-gray-900 dark:border dark:border-gray-700">
+        <table class="min-w-full table-auto divide-y divide-gray-200 text-sm dark:divide-gray-700">
+            <thead class="bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                 <tr>
                     <th class="border px-4 py-2">ID</th>
                     <th class="border px-4 py-2">Producto</th>
@@ -116,7 +116,7 @@
                     <th class="border px-4 py-2">Acciones</th>
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
+            <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-800">
                 @foreach($pedidos as $pedido)
                     @php
                         $estatusMuestra = strtoupper($pedido->estatus_muestra ?? '');
@@ -128,7 +128,7 @@
                             'CANCELADA'      => 'bg-gray-500 text-white',
                         ])->get($estatusMuestra, 'bg-gray-300 text-gray-800');
                     @endphp
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/70">
                         <td
                             class="p-2 px-4 py-2 font-semibold min-w-[4rem]"
                             title="{{ $pedido->tooltip_clave }}"
@@ -138,38 +138,38 @@
 
                         
 
-                        <td class="p-2">
+                        <td class="p-2 text-gray-800 dark:text-gray-100">
                             <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
-                            <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
                         </td>
 
-                        <td class="p-2 px-4 py-2 font-semibold min-w-[4rem]">
+                        <td class="p-2 px-4 py-2 font-semibold min-w-[4rem] text-gray-800 dark:text-gray-100">
                             {{  $pedido->usuario->name ?? $pedido->cliente->razon_social ?? 'Cliente' }}
                         </td>
 
-                        <td class="p-2 px-4 py-2 font-semibold min-w-[10rem]">
+                        <td class="p-2 px-4 py-2 font-semibold min-w-[10rem] text-gray-800 dark:text-gray-100">
                             @if($pedido->archivo)
                                 <a href="{{ Storage::url($pedido->archivo->ruta_archivo) }}"
                                    class="text-blue-600 underline"
                                    target="_blank" rel="noopener">
                                     {{ $pedido->archivo->nombre_archivo }}
                                 </a>
-                                <p class="text-xs text-gray-500">Versión: {{ $pedido->archivo->version }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Versión: {{ $pedido->archivo->version }}</p>
                             @else
-                                <span class="text-gray-500">Sin archivo</span>
+                                <span class="text-gray-500 dark:text-gray-400">Sin archivo</span>
                             @endif
                         </td>
 
-                        <td class="p-2 px-4 py-2 font-semibold min-w-[4rem]">
+                        <td class="p-2 px-4 py-2 font-semibold min-w-[4rem] text-gray-800 dark:text-gray-100">
                             {{ $pedido->total ?? 'N/A' }}
                         </td>
 
-                        <td class="p-2 px-4 py-2 font-semibold min-w-[8rem]">
+                        <td class="p-2 px-4 py-2 font-semibold min-w-[8rem] text-gray-800 dark:text-gray-100">
                             {{ $pedido->usuario->name ?? 'Sin usuario' }}
                         </td>
 
                         <td class="p-2 px-4 py-2 min-w-[12rem]">
-                            <span class="block text-gray-700">
+                            <span class="block text-gray-700 dark:text-gray-300">
                                 {{ $pedido->instrucciones_muestra ?? 'N/A' }}
                             </span>
                         </td>
@@ -216,7 +216,7 @@
 
     
                             @else
-                                <span class="text-gray-500">Sin evidencia</span>
+                                <span class="text-gray-500 dark:text-gray-400">Sin evidencia</span>
 
 
 

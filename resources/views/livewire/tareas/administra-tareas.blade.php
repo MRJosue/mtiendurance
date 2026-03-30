@@ -10,21 +10,21 @@
 >
     <h2
         @click="toggle()"
-        class="text-lg sm:text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
+        class="text-lg sm:text-xl font-bold mb-4 border-b border-gray-300 pb-2 text-gray-900 cursor-pointer hover:text-blue-600 transition dark:border-gray-700 dark:text-gray-100 dark:hover:text-blue-400"
     >
         Administración de Tareas
-        <span class="text-xs sm:text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
+        <span class="text-xs sm:text-sm text-gray-500 ml-2 dark:text-gray-400" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
     </h2>
 
     <div x-show="abierto" x-transition>
         @if (session()->has('message'))
-            <div class="bg-green-100 text-green-800 p-3 rounded-lg mb-3 text-sm">
+            <div class="bg-green-100 text-green-800 p-3 rounded-lg mb-3 text-sm dark:bg-green-900/40 dark:text-green-300">
                 {{ session('message') }}
             </div>
         @endif
 
         @if (session()->has('error'))
-            <div class="bg-red-100 text-red-800 p-3 rounded-lg mb-3 text-sm">
+            <div class="bg-red-100 text-red-800 p-3 rounded-lg mb-3 text-sm dark:bg-red-900/40 dark:text-red-300">
                 {{ session('error') }}
             </div>
         @endif
@@ -52,12 +52,11 @@
                         type="button"
                         wire:key="tab-{{ md5($tab) }}"
                         wire:click.prevent="setTab('{{ $tab }}')"
-                        class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition disabled:opacity-50"
-                        @if($activeTab === $tab)
-                            style="background-color:#2563eb;color:white;border-color:#2563eb;"
-                        @else
-                            style="background-color:white;color:#4b5563;border-color:#d1d5db;"
-                        @endif
+                        @class([
+                            'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition disabled:opacity-50',
+                            'bg-blue-600 text-white border-blue-600 dark:bg-blue-500 dark:border-blue-500' => $activeTab === $tab,
+                            'bg-white text-gray-600 border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700' => $activeTab !== $tab,
+                        ])
                     >
                         {{ $tab }}
                     </button>
@@ -71,25 +70,25 @@
                 <button
                     type="button"
                     wire:click="clearFilters"
-                    class="w-full sm:w-auto px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 border text-sm"
+                    class="w-full sm:w-auto px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 border border-gray-200 text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700"
                 >
                     Limpiar filtros
                 </button>
 
-                <div class="inline-flex items-center gap-2 text-sm text-gray-600">
+                <div class="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                     <span class="font-medium">Total:</span>
-                    <span class="px-2 py-1 bg-gray-100 rounded-lg">{{ $tasks->total() }}</span>
+                    <span class="px-2 py-1 bg-gray-100 rounded-lg dark:bg-gray-800 dark:text-gray-100">{{ $tasks->total() }}</span>
                 </div>
             </div>
 
             <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                <label class="text-sm font-medium text-gray-700 whitespace-nowrap">
+                <label class="text-sm font-medium text-gray-700 whitespace-nowrap dark:text-gray-300">
                     Registros por página
                 </label>
 
                 <select
                     wire:model.live="perPage"
-                    class="w-full sm:w-28 rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                    class="w-full sm:w-28 rounded-lg border-gray-300 bg-white text-sm text-gray-700 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                 >
                     @foreach($perPageOptions as $option)
                         <option value="{{ $option }}">{{ $option }}</option>
@@ -98,11 +97,11 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+        <div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden dark:bg-gray-900 dark:border-gray-700">
             <div class="overflow-x-auto">
                 <table class="min-w-full border-collapse text-xs sm:text-sm">
-                    <thead class="bg-gray-100">
-                        <tr class="text-gray-600">
+                    <thead class="bg-gray-100 dark:bg-gray-800">
+                        <tr class="text-gray-600 dark:text-gray-300">
                             {{-- ID --}}
                             <th class="w-[58px] px-2 py-2 text-left font-semibold whitespace-nowrap">
                                 <button
@@ -187,13 +186,13 @@
                         </tr>
 
                         {{-- Filtros compactos --}}
-                        <tr class="bg-white border-t border-gray-200">
+                        <tr class="bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
                             <th class="px-2 py-2">
                                 <input
                                     type="text"
                                     wire:model.live.debounce.400ms="filters.id"
                                     placeholder="ID"
-                                    class="w-full rounded-lg border-gray-300 text-[11px] px-2 py-1"
+                                    class="w-full rounded-lg border-gray-300 bg-white text-[11px] px-2 py-1 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                                 />
                             </th>
 
@@ -202,7 +201,7 @@
                                     type="text"
                                     wire:model.live.debounce.400ms="filters.proyecto_id"
                                     placeholder="ID"
-                                    class="w-full rounded-lg border-gray-300 text-[11px] px-2 py-1"
+                                    class="w-full rounded-lg border-gray-300 bg-white text-[11px] px-2 py-1 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                                 />
                             </th>
 
@@ -211,7 +210,7 @@
                                     type="text"
                                     wire:model.live.debounce.400ms="filters.proyecto"
                                     placeholder="Proyecto..."
-                                    class="w-full rounded-lg border-gray-300 text-[11px] px-2 py-1"
+                                    class="w-full rounded-lg border-gray-300 bg-white text-[11px] px-2 py-1 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                                 />
                             </th>
 
@@ -221,7 +220,7 @@
                                         type="text"
                                         wire:model.live.debounce.400ms="filters.usuario"
                                         placeholder="Cliente..."
-                                        class="w-full rounded-lg border-gray-300 text-[11px] px-2 py-1"
+                                        class="w-full rounded-lg border-gray-300 bg-white text-[11px] px-2 py-1 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                                     />
                                 </th>
                             @endif
@@ -231,7 +230,7 @@
                                     type="text"
                                     wire:model.live.debounce.400ms="filters.asignado"
                                     placeholder="Asignado..."
-                                    class="w-full rounded-lg border-gray-300 text-[11px] px-2 py-1"
+                                    class="w-full rounded-lg border-gray-300 bg-white text-[11px] px-2 py-1 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                                 />
                             </th>
 
@@ -240,18 +239,18 @@
                                     type="text"
                                     wire:model.live.debounce.400ms="filters.tipo"
                                     placeholder="Tipo..."
-                                    class="w-full rounded-lg border-gray-300 text-[11px] px-2 py-1"
+                                    class="w-full rounded-lg border-gray-300 bg-white text-[11px] px-2 py-1 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                                 />
                             </th>
 
                             <th class="px-2 py-2">
-                                <div class="text-[11px] text-gray-400 px-1">—</div>
+                                <div class="text-[11px] text-gray-400 px-1 dark:text-gray-500">—</div>
                             </th>
 
                             <th class="px-2 py-2">
                                 <select
                                     wire:model.live.debounce.400ms="filters.estado"
-                                    class="w-full rounded-lg border-gray-300 text-[11px] px-2 py-1"
+                                    class="w-full rounded-lg border-gray-300 bg-white text-[11px] px-2 py-1 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                                 >
                                     <option value="">Todos</option>
                                     @foreach($statuses as $status)
@@ -261,7 +260,7 @@
                             </th>
 
                             <th class="px-2 py-2">
-                                <div class="text-[11px] text-gray-400 px-1">—</div>
+                                <div class="text-[11px] text-gray-400 px-1 dark:text-gray-500">—</div>
                             </th>
                         </tr>
                     </thead>
@@ -273,12 +272,12 @@
                                 $badge = $coloresEstadoTarea[$estado] ?? 'bg-gray-300 text-gray-700';
                             @endphp
 
-                            <tr class="border-t border-gray-100 hover:bg-gray-50 align-top">
-                                <td class="px-2 py-2 font-semibold text-gray-700 whitespace-nowrap">
+                            <tr class="border-t border-gray-100 hover:bg-gray-50 align-top dark:border-gray-800 dark:hover:bg-gray-800/70">
+                                <td class="px-2 py-2 font-semibold text-gray-700 whitespace-nowrap dark:text-gray-200">
                                     {{ $task->id }}
                                 </td>
 
-                                <td class="px-2 py-2 text-gray-700 whitespace-nowrap">
+                                <td class="px-2 py-2 text-gray-700 whitespace-nowrap dark:text-gray-200">
                                     @if($task->proyecto)
                                         <a
                                             href="{{ route('proyecto.show', $task->proyecto->id) }}"
@@ -287,35 +286,35 @@
                                             {{ $task->proyecto->id }}
                                         </a>
                                     @else
-                                        <span class="text-gray-400">S/P</span>
+                                        <span class="text-gray-400 dark:text-gray-500">S/P</span>
                                     @endif
                                 </td>
 
-                                <td class="px-2 py-2 text-gray-700">
+                                <td class="px-2 py-2 text-gray-700 dark:text-gray-200">
                                     <div class="truncate max-w-[220px]" title="{{ $task->proyecto->nombre ?? 'Sin proyecto' }}">
                                         {{ $task->proyecto->nombre ?? 'Sin proyecto' }}
                                     </div>
                                 </td>
 
                                 @if($puedeVerTodasLasTareas)
-                                    <td class="px-2 py-2 text-gray-700">
+                                    <td class="px-2 py-2 text-gray-700 dark:text-gray-200">
                                         <div class="truncate max-w-[180px]" title="{{ $task->proyecto->user->name ?? 'Sin usuario' }}">
                                             {{ $task->proyecto->user->name ?? 'Sin usuario' }}
                                         </div>
                                     </td>
                                 @endif
 
-                                <td class="px-2 py-2 text-gray-700">
+                                <td class="px-2 py-2 text-gray-700 dark:text-gray-200">
                                     <div class="truncate max-w-[180px]" title="{{ $task->staff->name ?? 'No asignado' }}">
                                         {{ $task->staff->name ?? 'No asignado' }}
                                     </div>
                                 </td>
 
-                                <td class="px-2 py-2 text-gray-700 whitespace-nowrap">
+                                <td class="px-2 py-2 text-gray-700 whitespace-nowrap dark:text-gray-200">
                                     {{ $task->tipo ?? 'Sin tipo' }}
                                 </td>
 
-                                <td class="px-2 py-2 text-gray-700">
+                                <td class="px-2 py-2 text-gray-700 dark:text-gray-200">
                                     <div class="line-clamp-2 break-words max-w-[260px]" title="{{ $task->descripcion ?: 'Sin descripción' }}">
                                         {{ $task->descripcion ?: 'Sin descripción' }}
                                     </div>
@@ -352,7 +351,7 @@
                             <tr>
                                 <td
                                     colspan="{{ $puedeVerTodasLasTareas ? 9 : 8 }}"
-                                    class="px-4 py-6 text-center text-sm text-gray-500"
+                                    class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400"
                                 >
                                     No hay tareas disponibles.
                                 </td>
@@ -369,18 +368,18 @@
 
         @if($modalOpen)
             <div class="fixed inset-0 flex items-center justify-center bg-black/50 z-50 px-4">
-                <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-                    <h2 class="text-lg font-semibold mb-4">Actualizar Estado</h2>
+                <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 dark:bg-gray-900 dark:border dark:border-gray-700">
+                    <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Actualizar Estado</h2>
 
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nuevo Estado</label>
-                    <select wire:model.live="newStatus" class="w-full p-2 border rounded-lg mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300">Nuevo Estado</label>
+                    <select wire:model.live="newStatus" class="w-full p-2 border border-gray-300 rounded-lg mb-3 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
                         @foreach($statuses as $status)
                             <option value="{{ $status }}">{{ $status }}</option>
                         @endforeach
                     </select>
 
                     @error('newStatus')
-                        <div class="bg-red-100 text-red-800 p-3 rounded mb-3 text-sm">
+                        <div class="bg-red-100 text-red-800 p-3 rounded mb-3 text-sm dark:bg-red-900/40 dark:text-red-300">
                             {{ $message }}
                         </div>
                     @enderror
@@ -388,7 +387,7 @@
                     <div class="flex flex-col sm:flex-row justify-end gap-2">
                         <button
                             wire:click="cerrarModal"
-                            class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg"
+                            class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg dark:bg-gray-700 dark:hover:bg-gray-600"
                         >
                             Cancelar
                         </button>
@@ -405,30 +404,30 @@
 
         @if($mostrarModalConfirmacion)
             <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-                <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg">
-                    <h2 class="text-lg font-semibold mb-2">
+                <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg dark:bg-gray-900 dark:border dark:border-gray-700">
+                    <h2 class="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">
                         Confirmar inicio de proceso
                     </h2>
 
-                    <p class="text-sm text-gray-700">
+                    <p class="text-sm text-gray-700 dark:text-gray-300">
                         Esta acción marcará el proyecto como <b>EN PROCESO</b> y notificará a los responsables.
                     </p>
 
-                    <div class="mt-4 rounded-lg border bg-gray-50 p-3 text-sm">
+                    <div class="mt-4 rounded-lg border bg-gray-50 p-3 text-sm dark:border-gray-700 dark:bg-gray-800">
                         <div>
-                            <span class="text-gray-500">Proyecto:</span>
-                            <b>{{ $proyectoPendienteConfirmacion->nombre ?? '—' }}</b>
+                            <span class="text-gray-500 dark:text-gray-400">Proyecto:</span>
+                            <b class="text-gray-900 dark:text-gray-100">{{ $proyectoPendienteConfirmacion->nombre ?? '—' }}</b>
                         </div>
                         <div>
-                            <span class="text-gray-500">ID:</span>
-                            <b>{{ $proyectoPendienteConfirmacion->id ?? '—' }}</b>
+                            <span class="text-gray-500 dark:text-gray-400">ID:</span>
+                            <b class="text-gray-900 dark:text-gray-100">{{ $proyectoPendienteConfirmacion->id ?? '—' }}</b>
                         </div>
                     </div>
 
                     <div class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
                         <button
                             wire:click="cancelarConfirmacion"
-                            class="w-full sm:w-auto rounded-lg bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
+                            class="w-full sm:w-auto rounded-lg bg-gray-500 px-4 py-2 text-white hover:bg-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600"
                         >
                             Cancelar
                         </button>

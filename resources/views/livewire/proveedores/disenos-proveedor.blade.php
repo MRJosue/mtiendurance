@@ -10,25 +10,23 @@
 >
     <h2
         @click="toggle()"
-        class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
+        class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 text-gray-900 cursor-pointer hover:text-blue-600 transition dark:border-gray-700 dark:text-gray-100 dark:hover:text-blue-400"
     >
         Diseños asignados
-        <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
+        <span class="text-sm text-gray-500 ml-2 dark:text-gray-400" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
     </h2>
 
     <div x-show="abierto" x-transition>
         {{-- Tabs de estado --}}
-        <ul class="flex flex-wrap border-b border-gray-200 mb-4 gap-1">
+        <ul class="flex flex-wrap border-b border-gray-200 mb-4 gap-1 dark:border-gray-700">
             @foreach ($this->tabs as $tab)
                 <li>
                     <button
                         wire:click="setTab('{{ $tab }}')"
                         @class([
                             'px-4 py-2 rounded-t-lg text-sm whitespace-nowrap',
-                            'border-b-2 font-semibold bg-white'     => $activeTab === $tab,
-                            'text-gray-600 hover:text-blue-500'     => $activeTab !== $tab,
-                            'border-blue-500 text-blue-600'         => $activeTab === $tab,
-                            'border-transparent'                    => $activeTab !== $tab,
+                            'border-b-2 font-semibold bg-white border-blue-500 text-blue-600 dark:bg-gray-800 dark:text-blue-400' => $activeTab === $tab,
+                            'text-gray-600 hover:text-blue-500 border-transparent dark:text-gray-300 dark:hover:text-blue-400' => $activeTab !== $tab,
                         ])
                     >
                         {{ $tab }}
@@ -44,10 +42,10 @@
             </div>
 
             <div class="flex items-center gap-2">
-                <label for="per-page" class="text-sm text-gray-600">Registros por página</label>
+                <label for="per-page" class="text-sm text-gray-600 dark:text-gray-300">Registros por página</label>
                 <select
                     id="per-page"
-                    class="w-28 rounded-lg border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    class="w-28 rounded-lg border-gray-300 bg-white text-sm text-gray-700 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                     wire:model.live="perPage"
                 >
                     @foreach($perPageOptions as $n)
@@ -74,12 +72,12 @@
             ];
         @endphp
 
-        <div class="overflow-x-auto bg-white rounded-lg shadow">
-            <table class="w-full table-auto border-collapse border border-gray-200">
-                <thead class="bg-gray-100">
+        <div class="overflow-x-auto bg-white rounded-lg shadow dark:bg-gray-900 dark:border dark:border-gray-700">
+            <table class="w-full table-auto border-collapse border border-gray-200 dark:border-gray-700">
+                <thead class="bg-gray-100 dark:bg-gray-800">
                     <tr>
                         {{-- ID --}}
-                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
+                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top dark:text-gray-300">
                             <div class="flex items-center justify-between gap-2 min-w-[10rem]">
                                 <button
                                     class="inline-flex items-center gap-1 hover:text-blue-600"
@@ -95,7 +93,7 @@
                                     <button
                                         x-ref="btn"
                                         @click="toggle"
-                                        class="p-1 rounded hover:bg-gray-200"
+                                        class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 dark:text-gray-300"
                                         title="Filtros de ID"
                                     >
                                         ⋮
@@ -107,15 +105,15 @@
                                             x-transition
                                             @click.outside="close"
                                             :style="style"
-                                            class="fixed z-50 w-64 rounded-lg border bg-white shadow p-3 space-y-3"
+                                            class="fixed z-50 w-64 rounded-lg border bg-white shadow p-3 space-y-3 dark:border-gray-700 dark:bg-gray-800"
                                         >
                                         <div>
-                                                <label class="block text-xs text-gray-600 mb-1">
+                                                <label class="block text-xs text-gray-600 mb-1 dark:text-gray-300">
                                                     ID Proyecto (ej. 101 ó 101,102)
                                                 </label>
                                                 <input
                                                     type="text"
-                                                    class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                                    class="w-full rounded-lg border-gray-300 bg-white text-sm text-gray-700 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200"
                                                     placeholder="ID…"
                                                     wire:model.live.debounce.400ms="filters.id"
                                                 />
@@ -124,14 +122,14 @@
                                             <div class="pt-1 flex justify-end gap-2">
                                                 <button
                                                     type="button"
-                                                    class="px-2 py-1 text-xs rounded border"
+                                                    class="px-2 py-1 text-xs rounded border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-200"
                                                     @click="$wire.clearFilters()"
                                                 >
                                                     Limpiar
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    class="px-2 py-1 text-xs rounded border"
+                                                    class="px-2 py-1 text-xs rounded border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-200"
                                                     @click="close"
                                                 >
                                                     Cerrar
@@ -144,7 +142,7 @@
                         </th>
 
                         {{-- Nombre --}}
-                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
+                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top dark:text-gray-300">
                             <div class="flex items-center justify-between gap-2 min-w-[14rem]">
                                 <button
                                     class="inline-flex items-center gap-1 hover:text-blue-600"
@@ -158,7 +156,7 @@
                                 <div x-data="{ open:false }" class="relative shrink-0">
                                     <button
                                         @click="open = !open"
-                                        class="p-1 rounded hover:bg-gray-200"
+                                        class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 dark:text-gray-300"
                                         title="Filtrar Nombre"
                                     >
                                         ⋮
@@ -168,26 +166,26 @@
                                         x-show="open"
                                         @click.away="open=false"
                                         x-transition
-                                        class="absolute right-0 z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3"
+                                        class="absolute right-0 z-50 mt-1 w-64 rounded-lg border bg-white shadow p-3 dark:border-gray-700 dark:bg-gray-800"
                                     >
-                                        <label class="block text-xs text-gray-600 mb-1">Nombre contiene</label>
+                                        <label class="block text-xs text-gray-600 mb-1 dark:text-gray-300">Nombre contiene</label>
                                         <input
                                             type="text"
-                                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                            class="w-full rounded-lg border-gray-300 bg-white text-sm text-gray-700 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200"
                                             placeholder="Buscar…"
                                             wire:model.live.debounce.400ms="filters.nombre"
                                         />
                                         <div class="mt-2 flex justify-end gap-2">
                                             <button
                                                 type="button"
-                                                class="px-2 py-1 text-xs rounded border"
+                                                class="px-2 py-1 text-xs rounded border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-200"
                                                 @click="$wire.set('filters.nombre','')"
                                             >
                                                 Limpiar
                                             </button>
                                             <button
                                                 type="button"
-                                                class="px-2 py-1 text-xs rounded border"
+                                                class="px-2 py-1 text-xs rounded border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-200"
                                                 @click="open=false"
                                             >
                                                 Cerrar
@@ -205,18 +203,18 @@
 
                         @can('proveedor.ver-todos-disenos')
                             {{-- Proveedor asignado --}}
-                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
+                            <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top dark:text-gray-300">
                                 <span class="min-w-[12rem] inline-block">Proveedor asignado</span>
                             </th>
                         @endcan
 
                         {{-- Estado Proyecto --}}
-                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
+                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
                             Estado Proyecto
                         </th>
 
                         {{-- Estado Diseño --}}
-                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top">
+                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 align-top dark:text-gray-300">
                             <div class="flex items-center gap-2 min-w-[12rem]">
                                 <button
                                     class="inline-flex items-center gap-1 hover:text-blue-600"
@@ -230,7 +228,7 @@
                                 <div x-data="{ open:false }" class="relative">
                                     <button
                                         @click="open = !open"
-                                        class="p-1 rounded hover:bg-gray-200"
+                                        class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 dark:text-gray-300"
                                         title="Filtrar Estado"
                                     >
                                         ⋮
@@ -240,11 +238,11 @@
                                         x-show="open"
                                         @click.away="open=false"
                                         x-transition
-                                        class="absolute z-50 mt-1 w-60 rounded-lg border bg-white shadow p-3"
+                                        class="absolute z-50 mt-1 w-60 rounded-lg border bg-white shadow p-3 dark:border-gray-700 dark:bg-gray-800"
                                     >
-                                        <label class="block text-xs text-gray-600 mb-1">Estado Diseño</label>
+                                        <label class="block text-xs text-gray-600 mb-1 dark:text-gray-300">Estado Diseño</label>
                                         <select
-                                            class="w-full rounded-lg border-gray-300 focus:ring-blue-500 text-sm"
+                                            class="w-full rounded-lg border-gray-300 bg-white text-sm text-gray-700 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200"
                                             wire:model.live.debounce.400ms="filters.estado"
                                         >
                                             <option value="">Todos</option>
@@ -255,14 +253,14 @@
                                         <div class="mt-2 flex justify-end gap-2">
                                             <button
                                                 type="button"
-                                                class="px-2 py-1 text-xs rounded border"
+                                                class="px-2 py-1 text-xs rounded border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-200"
                                                 @click="$wire.set('filters.estado','')"
                                             >
                                                 Limpiar
                                             </button>
                                             <button
                                                 type="button"
-                                                class="px-2 py-1 text-xs rounded border"
+                                                class="px-2 py-1 text-xs rounded border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-200"
                                                 @click="open=false"
                                             >
                                                 Cerrar
@@ -274,7 +272,7 @@
                         </th>
 
                         {{-- Acciones --}}
-                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600">
+                        <th class="px-3 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-300">
                             Acciones
                         </th>
                     </tr>
@@ -282,7 +280,7 @@
 
                 <tbody>
                     @forelse($projects as $project)
-                        <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/70">
                             {{-- ID con link --}}
                             <td class="px-3 py-2 text-sm font-semibold min-w-[6rem]">
                                 <a
@@ -295,7 +293,7 @@
                             </td>
 
                             {{-- Nombre --}}
-                            <td class="px-3 py-2 text-sm text-gray-700">
+                            <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-200">
                                 {{ $project->nombre }}
                             </td>
 
@@ -312,13 +310,13 @@
 
                             @can('proveedor.ver-todos-disenos')
                                 {{-- Proveedor asignado --}}
-                                <td class="px-3 py-2 text-sm text-gray-700">
+                                <td class="px-3 py-2 text-sm text-gray-700 dark:text-gray-200">
                                     @if($project->proveedor)
                                         <span class="inline-block">
                                             {{ $project->proveedor->name }}
                                         </span>
                                     @else
-                                        <span class="text-gray-500">Sin proveedor</span>
+                                        <span class="text-gray-500 dark:text-gray-400">Sin proveedor</span>
                                     @endif
                                 </td>
                             @endcan
@@ -330,7 +328,7 @@
                                         Activo
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
                                         Inactivo
                                     </span>
                                 @endif
@@ -361,7 +359,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500">
+                            <td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
                                 No hay proyectos asignados para mostrar.
                             </td>
                         </tr>

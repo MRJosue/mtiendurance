@@ -10,23 +10,23 @@
 >
     <h2
         @click="toggle()"
-        class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
+        class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 text-gray-900 cursor-pointer hover:text-blue-600 transition dark:border-gray-700 dark:text-gray-100 dark:hover:text-blue-400"
     >
         Pedidos asignados (Proveedor)
-        <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
+        <span class="text-sm text-gray-500 ml-2 dark:text-gray-400" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
     </h2>
 
     <div x-show="abierto" x-transition>
 
         @if (session()->has('message'))
-            <div class="mb-3 p-3 rounded-lg bg-emerald-100 text-emerald-800">
+            <div class="mb-3 p-3 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
                 {{ session('message') }}
             </div>
         @endif
 
         <div class="mb-4">
             <div class="overflow-x-auto">
-                <ul class="flex flex-nowrap sm:flex-wrap border-b border-gray-200 gap-1 min-w-max sm:min-w-0">
+                <ul class="flex flex-nowrap sm:flex-wrap border-b border-gray-200 gap-1 min-w-max sm:min-w-0 dark:border-gray-700">
                     @foreach ($tabsEstadoProveedor as $tab)
                         <li>
                             <button
@@ -34,8 +34,8 @@
                                 wire:click="setEstadoTab('{{ $tab }}')"
                                 @class([
                                     'px-3 py-2 rounded-t-lg text-sm whitespace-nowrap transition',
-                                    'border-b-2 font-semibold bg-white border-blue-500 text-blue-600' => $activeEstadoTab === $tab,
-                                    'text-gray-600 hover:text-blue-500 border-b-2 border-transparent' => $activeEstadoTab !== $tab,
+                                    'border-b-2 font-semibold bg-white border-blue-500 text-blue-600 dark:bg-gray-800 dark:text-blue-400' => $activeEstadoTab === $tab,
+                                    'text-gray-600 hover:text-blue-500 border-b-2 border-transparent dark:text-gray-300 dark:hover:text-blue-400' => $activeEstadoTab !== $tab,
                                 ])
                             >
                                 {{ str_replace('_', ' ', $tab) }}
@@ -46,7 +46,7 @@
             </div>
 
             <div class="mt-3 flex items-center justify-between">
-                <div class="text-sm text-gray-600">
+                <div class="text-sm text-gray-600 dark:text-gray-300">
                     Mostrando:
                     <span class="font-semibold text-blue-600">{{ str_replace('_', ' ', $activeEstadoTab) }}</span>
                 </div>
@@ -55,22 +55,22 @@
 
         {{-- Filtros (colapsable) --}}
         <div class="mb-4">
-            <button wire:click="$toggle('mostrarFiltros')" class="text-sm text-blue-600 hover:underline">
+            <button wire:click="$toggle('mostrarFiltros')" class="text-sm text-blue-600 hover:underline dark:text-blue-400">
                 {{ $mostrarFiltros ? 'Ocultar filtros' : 'Mostrar filtros' }}
             </button>
         </div>
 
         @if($mostrarFiltros)
-            <div class="w-full bg-white border border-gray-200 shadow-md rounded-lg mb-6">
-                <div class="flex justify-between items-center p-4 border-b">
-                    <h2 class="text-lg font-bold text-gray-700">Filtros</h2>
+            <div class="w-full bg-white border border-gray-200 shadow-md rounded-lg mb-6 dark:bg-gray-900 dark:border-gray-700">
+                <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-bold text-gray-700 dark:text-gray-100">Filtros</h2>
                     <div class="flex items-center gap-2">
                         <button wire:click="buscarPorFiltros"
-                            class="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-100 text-sm">
+                            class="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-100 text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
                             Filtrar
                         </button>
                         <button wire:click="clearFilters"
-                            class="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-100 text-sm">
+                            class="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-100 text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
                             Limpiar
                         </button>
                     </div>
@@ -78,18 +78,18 @@
 
                 <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="flex flex-col gap-1">
-                        <label class="text-sm text-gray-700 font-medium">ID pedido/proyecto</label>
+                        <label class="text-sm text-gray-700 font-medium dark:text-gray-300">ID pedido/proyecto</label>
                         <input type="text"
                             wire:model.live.debounce.400ms="filters.id"
-                            class="w-full rounded-lg border-gray-300 text-sm"
+                            class="w-full rounded-lg border-gray-300 bg-white text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                             placeholder="Ej. 1001 o 1001,1002">
                     </div>
 
                     <div class="flex flex-col gap-1">
-                        <label class="text-sm text-gray-700 font-medium">Proyecto</label>
+                        <label class="text-sm text-gray-700 font-medium dark:text-gray-300">Proyecto</label>
                         <input type="text"
                             wire:model.live.debounce.400ms="filters.proyecto"
-                            class="w-full rounded-lg border-gray-300 text-sm"
+                            class="w-full rounded-lg border-gray-300 bg-white text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                             placeholder="Nombre del proyecto…">
                     </div>
 
@@ -102,8 +102,8 @@
                     </div> --}}
 
                     <div class="flex flex-col gap-1">
-                        <label class="text-sm text-gray-700 font-medium">Registros</label>
-                        <select wire:model.live="perPage" class="w-full rounded-lg border-gray-300 text-sm">
+                        <label class="text-sm text-gray-700 font-medium dark:text-gray-300">Registros</label>
+                        <select wire:model.live="perPage" class="w-full rounded-lg border-gray-300 bg-white text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
                             @foreach($perPageOptions as $n)
                                 <option value="{{ $n }}">{{ $n }}</option>
                             @endforeach
@@ -113,18 +113,18 @@
                     <div class="flex items-center gap-2">
                         <input type="checkbox" wire:model.live="filters.inactivos"
                             class="rounded border-gray-300 text-blue-600">
-                        <label class="text-sm text-gray-700">Solo inactivos</label>
+                        <label class="text-sm text-gray-700 dark:text-gray-300">Solo inactivos</label>
                     </div>
 
                     <div class="flex items-center gap-2">
                         <input type="checkbox" wire:model.live="filters.solo_no_vistos"
                             class="rounded border-gray-300 text-blue-600">
-                        <label class="text-sm text-gray-700">Solo no vistos</label>
+                        <label class="text-sm text-gray-700 dark:text-gray-300">Solo no vistos</label>
                     </div>
 
                     <div class="flex flex-col gap-1">
-                        <label class="text-sm text-gray-700 font-medium">Estatus proveedor</label>
-                        <select wire:model.live="filters.estatus_proveedor" class="w-full rounded-lg border-gray-300 text-sm">
+                        <label class="text-sm text-gray-700 font-medium dark:text-gray-300">Estatus proveedor</label>
+                        <select wire:model.live="filters.estatus_proveedor" class="w-full rounded-lg border-gray-300 bg-white text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
                             <option value="">Todos</option>
                             @foreach($estatusProveedorOptions as $opt)
                                 <option value="{{ $opt }}">{{ str_replace('_', ' ', $opt) }}</option>
@@ -134,12 +134,12 @@
 
                     <div class="grid grid-cols-2 gap-2">
                         <div class="flex flex-col gap-1">
-                            <label class="text-sm text-gray-700 font-medium">Desde</label>
-                            <input type="date" wire:model.live="filters.fecha_desde" class="w-full rounded-lg border-gray-300 text-sm">
+                            <label class="text-sm text-gray-700 font-medium dark:text-gray-300">Desde</label>
+                            <input type="date" wire:model.live="filters.fecha_desde" class="w-full rounded-lg border-gray-300 bg-white text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
                         </div>
                         <div class="flex flex-col gap-1">
-                            <label class="text-sm text-gray-700 font-medium">Hasta</label>
-                            <input type="date" wire:model.live="filters.fecha_hasta" class="w-full rounded-lg border-gray-300 text-sm">
+                            <label class="text-sm text-gray-700 font-medium dark:text-gray-300">Hasta</label>
+                            <input type="date" wire:model.live="filters.fecha_hasta" class="w-full rounded-lg border-gray-300 bg-white text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
                         </div>
                     </div>
                 </div>
@@ -147,9 +147,9 @@
         @endif
 
         {{-- Tabla --}}
-        <div class="overflow-x-auto bg-white rounded shadow min-h-64 pb-8">
-            <table class="min-w-full table-auto divide-y divide-gray-200 text-sm">
-                <thead class="bg-gray-100 text-gray-700">
+        <div class="overflow-x-auto bg-white rounded shadow min-h-64 pb-8 dark:bg-gray-900 dark:border dark:border-gray-700">
+            <table class="min-w-full table-auto divide-y divide-gray-200 text-sm dark:divide-gray-700">
+                <thead class="bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                     <tr>
                         <th class="p-2 text-left">ID</th>
                         <th class="p-2 text-left">Proyecto</th>
@@ -164,9 +164,9 @@
                     </tr>
                 </thead>
 
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-800">
                     @forelse($pedidos as $pedido)
-                        <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/70">
                                 <td
                                     class="p-2 px-4 py-2 font-semibold min-w-[4rem] whitespace-nowrap"
                                     title="{{ $pedido->tooltip_clave ?? '' }}"
@@ -180,29 +180,29 @@
                                     </a>
                                 </td>
 
-                            <td class="p-2 whitespace-nowrap">
+                            <td class="p-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
                                 {{ $pedido->proyecto->nombre ?? '—' }}
-                                <div class="text-xs text-gray-500">#{{ $pedido->proyecto_id }}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">#{{ $pedido->proyecto_id }}</div>
                             </td>
 
-                            <td class="p-2 min-w-[14rem]">
+                            <td class="p-2 min-w-[14rem] text-gray-800 dark:text-gray-100">
                                 <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
-                                <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
                             </td>
 
-                            <td class="p-2 whitespace-nowrap">
+                            <td class="p-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
                                 {{ number_format((float)($pedido->total ?? 0), 0) }} piezas
                             </td>
 
-                            <td class="p-2 whitespace-nowrap">
+                            <td class="p-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
                                 {{ $pedido->fecha_produccion?->format('Y-m-d') ?? '—' }}
                             </td>
 
-                            <td class="p-2 whitespace-nowrap">
+                            <td class="p-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
                                 {{ $pedido->fecha_embarque?->format('Y-m-d') ?? '—' }}
                             </td>
 
-                            <td class="p-2 whitespace-nowrap">
+                            <td class="p-2 whitespace-nowrap text-gray-800 dark:text-gray-100">
                                 {{ $pedido->fecha_entrega?->format('Y-m-d') ?? '—' }}
                             </td>
 
@@ -224,11 +224,11 @@
 
                             <td class="p-2 text-center whitespace-nowrap">
                                 @if($pedido->proveedor_visto_at)
-                                    <span class="text-xs text-gray-600">
+                                    <span class="text-xs text-gray-600 dark:text-gray-300">
                                         {{ $pedido->proveedor_visto_at->format('Y-m-d H:i') }}
                                     </span>
                                 @else
-                                    <span class="text-xs text-gray-400">No</span>
+                                    <span class="text-xs text-gray-400 dark:text-gray-500">No</span>
                                 @endif
                             </td>
 
@@ -256,7 +256,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="px-4 py-6 text-center text-sm text-gray-500">
+                            <td colspan="10" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
                                 No hay pedidos para mostrar.
                             </td>
                         </tr>
@@ -272,16 +272,16 @@
         {{-- Modal --}}
         @if($modalProveedor)
             <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                <div class="bg-white rounded-xl shadow-lg w-full max-w-lg mx-3 sm:mx-0 flex flex-col">
-                    <div class="flex items-center justify-between border-b border-gray-200 p-4">
-                        <h5 class="text-xl font-bold">Actualizar estatus de proveedor</h5>
-                        <button class="text-gray-500 hover:text-gray-700" wire:click="$set('modalProveedor', false)">&times;</button>
+                <div class="bg-white rounded-xl shadow-lg w-full max-w-lg mx-3 sm:mx-0 flex flex-col dark:bg-gray-900 dark:border dark:border-gray-700">
+                    <div class="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
+                        <h5 class="text-xl font-bold text-gray-900 dark:text-gray-100">Actualizar estatus de proveedor</h5>
+                        <button class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" wire:click="$set('modalProveedor', false)">&times;</button>
                     </div>
 
                     <div class="p-4 space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Estatus proveedor</label>
-                            <select wire:model="estatus_proveedor" class="w-full rounded-lg border-gray-300 p-2">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Estatus proveedor</label>
+                            <select wire:model="estatus_proveedor" class="w-full rounded-lg border-gray-300 p-2 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
                                 @foreach($estatusProveedorOptions as $opt)
                                     <option value="{{ $opt }}">{{ str_replace('_', ' ', $opt) }}</option>
                                 @endforeach
@@ -289,15 +289,15 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Nota (opcional)</label>
-                            <textarea wire:model.defer="nota_proveedor" rows="4" class="w-full rounded-lg border-gray-300 p-2"
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nota (opcional)</label>
+                            <textarea wire:model.defer="nota_proveedor" rows="4" class="w-full rounded-lg border-gray-300 p-2 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                                 placeholder="Ej: Falta material / esperando confirmación / listo para entregar..."></textarea>
                         </div>
                     </div>
 
-                    <div class="border-t border-gray-200 p-4 flex justify-end gap-2">
+                    <div class="border-t border-gray-200 p-4 flex justify-end gap-2 dark:border-gray-700">
                         <button wire:click="$set('modalProveedor', false)"
-                            class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded-lg">
+                            class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded-lg dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600">
                             Cancelar
                         </button>
                         <button wire:click="guardarProveedor"

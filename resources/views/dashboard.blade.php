@@ -58,9 +58,6 @@
             
         @endcan
 
-
-
-      
         {{-- @hasanyrole('admin|diseñador') --}}
         @can('dashboardtareasdisenio')
             <div class="w-full mx-auto sm:px-6 lg:px-8">
@@ -79,7 +76,6 @@
 
         {{-- @endhasanyrole --}}
       
-
         {{-- @hasanyrole('admin|operador')
         @endhasanyrole --}}
         
@@ -90,7 +86,7 @@
                      
                     <div class="dashboard-panel__body">
                                 <hr class="dashboard-divider"/>
-                                    @livewire('proveedores.disenos-proveedor')
+                                @livewire('proveedores.disenos-proveedor')
                     </div>
                 </div>
             </div> 
@@ -106,7 +102,6 @@
                     </div>
                 </div>
             </div>
-
         @endcan           
 
 

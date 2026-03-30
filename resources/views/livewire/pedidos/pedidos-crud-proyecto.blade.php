@@ -1,8 +1,8 @@
 <div class="container mx-auto p-6">
-    <h2 class="text-2xl font-bold mb-4">Gestión de Pedidos</h2>
+    <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Gestión de Pedidos</h2>
 
     @if (session()->has('message'))
-        <div class="bg-green-100 text-green-800 p-3 rounded mb-3">
+        <div class="bg-green-100 text-green-800 p-3 rounded mb-3 dark:bg-green-900/40 dark:text-green-300">
             {{ session('message') }}
         </div>
     @endif
@@ -21,19 +21,19 @@
     @if($mostrarFiltros)
         <div x-data="{ abierto: @entangle('mostrarFiltros') }" class="mb-6">
             <template x-if="abierto">
-                <div class="w-full bg-white border border-gray-200 shadow-md rounded-lg">
-                    <div class="flex justify-between items-center p-4 border-b">
-                        <h2 class="text-lg font-bold text-gray-700">Filtros</h2>
+                <div class="w-full bg-white border border-gray-200 shadow-md rounded-lg dark:bg-gray-900 dark:border-gray-700">
+                    <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+                        <h2 class="text-lg font-bold text-gray-700 dark:text-gray-100">Filtros</h2>
                         <div class="flex items-center gap-2">
                             <button 
                                 wire:click="buscarPorFiltros"
-                                class="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-100 text-sm"
+                                class="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-100 text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
                             >
                                 Filtrar
                             </button>
                             <button 
                                 @click="abierto = false" 
-                                class="text-gray-500 hover:text-gray-700 text-xl leading-none"
+                                class="text-gray-500 hover:text-gray-700 text-xl leading-none dark:text-gray-400 dark:hover:text-gray-200"
                             >
                                 ✕
                             </button>
@@ -47,7 +47,7 @@
                                 wire:model.defer="mostrarSoloNoAprobados"
                                 class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                             />
-                            <label for="no-aprobados" class="text-sm text-gray-700">
+                            <label for="no-aprobados" class="text-sm text-gray-700 dark:text-gray-300">
                                 Mostrar pedidos de diseños No aprobados
                             </label>
                         </div>
@@ -59,7 +59,7 @@
                                 wire:model.live="filters.inactivos"
                                 class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                             />
-                            <label for="solo-inactivos" class="text-sm text-gray-700">
+                            <label for="solo-inactivos" class="text-sm text-gray-700 dark:text-gray-300">
                                 Mostrar solo pedidos inactivos
                             </label>
                         </div>
@@ -70,7 +70,7 @@
             </template>
             <template x-if="!abierto">
                 <div class="mb-4">
-                    <button @click="abierto = true" class="text-sm text-blue-600 hover:underline">
+                    <button @click="abierto = true" class="text-sm text-blue-600 hover:underline dark:text-blue-400">
                         Mostrar Filtros
                     </button>
                 </div>
@@ -78,7 +78,7 @@
         </div>
     @else
         <div class="mb-4">
-            <button wire:click="$set('mostrarFiltros', true)" class="text-sm text-blue-600 hover:underline">
+            <button wire:click="$set('mostrarFiltros', true)" class="text-sm text-blue-600 hover:underline dark:text-blue-400">
                 Mostrar Filtros
             </button>
         </div>
@@ -87,7 +87,7 @@
     {{-- VISTA MÓVIL: Tarjetas --}}
     <div class="block sm:hidden space-y-4">
         @foreach($pedidos as $pedido)
-            <div class="bg-white rounded-lg shadow p-4">
+            <div class="bg-white rounded-lg shadow p-4 dark:bg-gray-900 dark:border dark:border-gray-700">
                 <div class="flex justify-between items-center mb-2">
                     <span class="font-semibold">#{{ $pedido->proyecto_id }}-{{ $pedido->id }}</span>
                     <span
@@ -104,7 +104,7 @@
                         {{ strtoupper($pedido->estado) }}
                     </span>
                 </div>
-                <div class="text-sm text-gray-700 space-y-1">
+                <div class="text-sm text-gray-700 space-y-1 dark:text-gray-300">
                     <p><strong>Proyecto:</strong> {{ $pedido->proyecto->nombre }}</p>
                     <p><strong>Producto:</strong> {{ $pedido->producto->nombre ?? 'Sin producto' }} / {{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</p>
                     <p><strong>Características:</strong> 
@@ -141,9 +141,9 @@
     </div>
 
     {{-- VISTA DESKTOP: Tabla --}}
-    <div class="hidden sm:block overflow-x-auto bg-white rounded shadow min-h-64 pb-8">
-        <table class="min-w-full table-auto divide-y divide-gray-200 text-sm">
-            <thead class="bg-gray-100 text-gray-700">
+    <div class="hidden sm:block overflow-x-auto bg-white rounded shadow min-h-64 pb-8 dark:bg-gray-900 dark:border dark:border-gray-700">
+        <table class="min-w-full table-auto divide-y divide-gray-200 text-sm dark:divide-gray-700">
+            <thead class="bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                 <tr>
                     <th class="p-2 text-left">ID</th>
                     <th class="p-2 text-left">Proyecto</th>
@@ -168,9 +168,9 @@
                     <th class="p-2 text-center">Acciones</th>
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
+            <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-800">
                 @foreach($pedidos as $pedido)
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/70">
                         <td
                             class="p-2 px-4 py-2 font-semibold min-w-[4rem]"
                             title="{{ $pedido->tooltip_clave }}"
@@ -178,10 +178,10 @@
                             {!! $pedido->clave_link !!}
                         </td>
 
-                        <td class="p-2">{{ $pedido->proyecto->nombre }}</td>
-                        <td class="p-2">
+                        <td class="p-2 text-gray-800 dark:text-gray-100">{{ $pedido->proyecto->nombre }}</td>
+                        <td class="p-2 text-gray-800 dark:text-gray-100">
                             <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
-                            <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
                         </td>
                         {{-- <td class="p-2 align-top text-xs text-gray-700">
                             @if($pedido->pedidoCaracteristicas->isNotEmpty())
@@ -195,10 +195,10 @@
                             @endif
                         </td> --}}
                         @can('ViststaclientePedidosProyecto')
-                           <td class="p-2">{{ $pedido->usuario->name ?? 'Sin usuario' }}</td> 
+                           <td class="p-2 text-gray-800 dark:text-gray-100">{{ $pedido->usuario->name ?? 'Sin usuario' }}</td> 
                         @endcan
                         
-                        <td class="p-2">{{ $pedido->total }} piezas</td>
+                        <td class="p-2 text-gray-800 dark:text-gray-100">{{ $pedido->total }} piezas</td>
                         <td class="p-2">
                             @php
                                 $colorProyecto = collect([
@@ -231,13 +231,13 @@
                             </span>
                         </td>
                             @can('proyectopedidoscolumnafechaproduccion')
-                                <td class="p-2">{{ $pedido->fecha_produccion?->format('Y-m-d') ?? 'No definida' }}</td>
+                                <td class="p-2 text-gray-800 dark:text-gray-100">{{ $pedido->fecha_produccion?->format('Y-m-d') ?? 'No definida' }}</td>
                             @endcan
                             @can('proyectopedidoscolumnafechaenbarque')
-                                <td class="p-2">{{ $pedido->fecha_embarque?->format('Y-m-d') ?? 'No definida' }}</td>
+                                <td class="p-2 text-gray-800 dark:text-gray-100">{{ $pedido->fecha_embarque?->format('Y-m-d') ?? 'No definida' }}</td>
                             @endcan
                             @can('proyectopedidoscolumnafechaEntrega')
-                                <td class="p-2">{{ $pedido->fecha_entrega?->format('Y-m-d') ?? 'No definida' }}</td>
+                                <td class="p-2 text-gray-800 dark:text-gray-100">{{ $pedido->fecha_entrega?->format('Y-m-d') ?? 'No definida' }}</td>
                             @endcan
                         <td class="border-b px-4 py-2">
 
@@ -309,29 +309,29 @@
     </div>
     @if($modal)
     <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-        <div class="bg-white rounded shadow-lg w-full max-w-lg flex flex-col">
+        <div class="bg-white rounded shadow-lg w-full max-w-lg flex flex-col dark:bg-gray-900 dark:border dark:border-gray-700">
             <!-- Encabezado -->
-            <div class="flex items-center justify-between border-b border-gray-200 p-4">
-                <h5 class="text-xl font-bold">{{ $pedidoId ? 'Editar Pedido' : 'Nuevo Pedido' }}</h5>
-                <button class="text-gray-500 hover:text-gray-700" wire:click="$set('modal', false)">&times;</button>
+            <div class="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
+                <h5 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ $pedidoId ? 'Editar Pedido' : 'Nuevo Pedido' }}</h5>
+                <button class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" wire:click="$set('modal', false)">&times;</button>
             </div>
 
             <!-- Contenedor con scroll -->
             <div class="overflow-y-auto max-h-[60vh] p-4">
                 <!-- SECCIÓN: Cantidades por Tallas -->
                 @if(!empty($tallas_disponibles))
-                    <h6 class="text-lg font-semibold mt-4">Cantidades por Tallas</h6>
+                    <h6 class="text-lg font-semibold mt-4 text-gray-900 dark:text-gray-100">Cantidades por Tallas</h6>
                     @foreach ($tallas_disponibles as $grupoTalla)
-                        <p class="font-semibold text-gray-700 border-b pb-2 mt-2">{{ $grupoTalla['nombre'] }}</p>
+                        <p class="font-semibold text-gray-700 border-b pb-2 mt-2 dark:text-gray-200 dark:border-gray-700">{{ $grupoTalla['nombre'] }}</p>
                         <div class="grid grid-cols-3 gap-4 mb-4">
                             @foreach ($grupoTalla['tallas'] as $talla)
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700">{{ $talla['nombre'] }}</label>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ $talla['nombre'] }}</label>
                                     {{-- <input type="number" class="w-full border border-gray-300 rounded p-2"
                                         wire:model.lazy="cantidades_tallas.{{ $grupoTalla['id'] }}.{{ $talla['id'] }}" min="0"> --}}
                                         <input type="number" min="0"
                                         wire:model.defer="inputsTallas.{{ $grupoTalla['id'] }}_{{ $talla['id'] }}"
-                                        class="w-full border border-gray-300 rounded p-2"
+                                        class="w-full border border-gray-300 rounded p-2 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                                         placeholder="0">
 
                                 </div>
@@ -344,12 +344,12 @@
                 <!-- Campo Total -->
                 {{-- @if($mostrar_total) --}}
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700">Total</label>
-                        <input type="number" step="0.01" class="w-full border border-gray-300 rounded p-2"
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Total</label>
+                        <input type="number" step="0.01" class="w-full border border-gray-300 rounded p-2 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                             wire:model="total">
                                    <!-- Mensaje de error si el total de tallas no coincide -->
                         @if($error_total)
-                            <div class="bg-red-100 text-red-800 p-3 rounded mb-3 mx-4">
+                            <div class="bg-red-100 text-red-800 p-3 rounded mb-3 mx-4 dark:bg-red-900/40 dark:text-red-300">
                                 {{ $error_total }}
                             </div>
                         @endif
@@ -361,8 +361,8 @@
                      @can('proyectopedidosEditarinputTipo')
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Tipo</label>
-                            <select wire:model="tipo" class="w-full border border-gray-300 rounded p-2">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo</label>
+                            <select wire:model="tipo" class="w-full border border-gray-300 rounded p-2 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
                                 <option value="PEDIDO">Pedido</option>
                                 <option value="MUESTRA">Muestra</option>
                             </select>
@@ -371,8 +371,8 @@
                      @endcan
                      @can('proyectopedidosEditarInputEstado')
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Estado</label>
-                                <select wire:model="estado_id" class="w-full border rounded p-2">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Estado</label>
+                                <select wire:model="estado_id" class="w-full border border-gray-300 rounded p-2 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
                                     <option value="">-- Selecciona un estado --</option>
                                     @foreach ($estados as $e)
                                         <option value="{{ $e['id'] }}">{{ $e['nombre'] }}</option>
@@ -384,11 +384,11 @@
                 </div>
 
                 <!-- SECCIÓN: Direcciones -->
-                <h6 class="text-lg font-semibold mb-2">Direcciones</h6>
+                <h6 class="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Direcciones</h6>
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Dirección Fiscal</label>
-                        <select wire:model="direccion_fiscal_id" class="w-full border border-gray-300 rounded p-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Dirección Fiscal</label>
+                        <select wire:model="direccion_fiscal_id" class="w-full border border-gray-300 rounded p-2 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
                             <option value="">Seleccionar Dirección Fiscal</option>
                                 @foreach ($direccionesFiscales as $direccion)
                                 <option value="{{ $direccion->id }}">
@@ -401,8 +401,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Dirección de Entrega</label>
-                        <select wire:change='cargarTiposEnvio' wire:model="direccion_entrega_id" class="w-full border border-gray-300 rounded p-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Dirección de Entrega</label>
+                        <select wire:change='cargarTiposEnvio' wire:model="direccion_entrega_id" class="w-full border border-gray-300 rounded p-2 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
                             <option value="">Selecciona una dirección</option>
                                 @foreach ($direccionesEntrega as $direccion)
                                 <option value="{{ $direccion->id }}">
@@ -416,10 +416,10 @@
                 </div>
 
                 <!-- SECCIÓN: Tipo de Envío -->
-                <h6 class="text-lg font-semibold mb-2">Tipo de Envío</h6>
+                <h6 class="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Tipo de Envío</h6>
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Tipo de Envío</label>
-                    <select wire:change="on_Calcula_Fechas_Entrega" wire:model="id_tipo_envio" class="w-full border border-gray-300 rounded p-2">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de Envío</label>
+                    <select wire:change="on_Calcula_Fechas_Entrega" wire:model="id_tipo_envio" class="w-full border border-gray-300 rounded p-2 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
                         <option value="">Selecciona un tipo de envío</option>
                         @foreach ($tiposEnvio as $tipo)
                             <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
@@ -441,9 +441,9 @@
                 </div> --}}
 
                 <!-- SECCIÓN: Fechas -->
-                <h6 class="text-lg font-semibold mb-2">Fechas</h6>
+                <h6 class="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Fechas</h6>
                 @if($mensaje_produccion)
-                    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-3 rounded mb-4">
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-3 rounded mb-4 dark:bg-yellow-900/30 dark:text-yellow-200">
                         {{ $mensaje_produccion }}
                     </div>
                 @endif
@@ -451,22 +451,22 @@
                 <div class="grid grid-cols-3 gap-4 mb-4">
                      @can('proyectopedidosEditarinputFechaproduccion')
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Producción</label>
-                            <input type="date" class="w-full border border-gray-300 rounded p-2" wire:model="fecha_produccion">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Producción</label>
+                            <input type="date" class="w-full border border-gray-300 rounded p-2 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" wire:model="fecha_produccion">
                         </div>
                     @endcan
 
                     @can('proyectopedidosEditarinputFechaEmbarque')
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Embarque</label>
-                            <input type="date" class="w-full border border-gray-300 rounded p-2" wire:model="fecha_embarque">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Embarque</label>
+                            <input type="date" class="w-full border border-gray-300 rounded p-2 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200" wire:model="fecha_embarque">
                         </div>
                     @endcan
                     @can('proyectopedidosEditarinputFechaEntrega')
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Entrega</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Entrega</label>
                             <input wire:change="validarFechaEntrega" wire:model="fecha_entrega"
-                                type="date" class="w-full mt-1 border rounded-lg p-2"
+                                type="date" class="w-full mt-1 border border-gray-300 rounded-lg p-2 bg-white text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                                 min="{{ date('Y-m-d') }}" id="fechaEntrega">
                         </div>
                     @endcan
@@ -474,7 +474,7 @@
             </div>
 
             <!-- SECCIÓN: Botones de Acción (Siempre visibles) -->
-            <div class="sticky bottom-0 bg-white border-t border-gray-200 p-4 flex justify-end space-x-2">
+            <div class="sticky bottom-0 bg-white border-t border-gray-200 p-4 flex justify-end space-x-2 dark:bg-gray-900 dark:border-gray-700">
                 <button wire:click="$set('modal', false)" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">
                     Cancelar
                 </button>
@@ -487,16 +487,16 @@
     @endif
     @if ($modal_confirmar_aprobacion)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div class="bg-white rounded shadow-lg w-full max-w-md p-6">
-                <h3 class="text-xl font-semibold mb-4">¿Confirmar aprobación del pedido?</h3>
+            <div class="bg-white rounded shadow-lg w-full max-w-md p-6 dark:bg-gray-900 dark:border dark:border-gray-700">
+                <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">¿Confirmar aprobación del pedido?</h3>
                 
-                <p class="text-gray-700 mb-2">ID del Pedido: <strong>{{ $pedidoId }}</strong></p>
+                <p class="text-gray-700 mb-2 dark:text-gray-300">ID del Pedido: <strong>{{ $pedidoId }}</strong></p>
                 @php
                     $pedido = \App\Models\Pedido::find($pedidoId);
                 @endphp
 
                 @if($pedido)
-                    <ul class="text-sm text-gray-600 space-y-1 mb-4">
+                    <ul class="text-sm text-gray-600 space-y-1 mb-4 dark:text-gray-300">
                         {{-- $pedido->cliente->nombre_empresa --}}
                         <li><strong>Cliente:</strong> {{ $pedido->usuario->name ?? 'Sin cliente' }}</li>
                         <li><strong>Total:</strong> {{ $pedido->total }}</li>
@@ -523,18 +523,18 @@
 
     @if ($modal_confirmar_aprobacion_especial)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div class="bg-white rounded shadow-lg w-full max-w-md p-6">
-                <h3 class="text-xl  mb-4">¿Confirmar aprobación <b>Especial</b> del pedido?</h3>
-                <p class="text-xs mb-4">Esta Solicitud permitira aprobar el pedido para pedidos urgentes</p> 
+            <div class="bg-white rounded shadow-lg w-full max-w-md p-6 dark:bg-gray-900 dark:border dark:border-gray-700">
+                <h3 class="text-xl mb-4 text-gray-900 dark:text-gray-100">¿Confirmar aprobación <b>Especial</b> del pedido?</h3>
+                <p class="text-xs mb-4 text-gray-600 dark:text-gray-400">Esta Solicitud permitira aprobar el pedido para pedidos urgentes</p> 
                 
-                <p class="text-gray-700 mb-4">ID del Pedido: <strong>{{ $pedidoId }}</strong></p>
+                <p class="text-gray-700 mb-4 dark:text-gray-300">ID del Pedido: <strong>{{ $pedidoId }}</strong></p>
 
                 @php
                     $pedido = \App\Models\Pedido::find($pedidoId);
                 @endphp
 
                 @if($pedido)
-                    <ul class="text-sm text-gray-600 space-y-1 mb-4">
+                    <ul class="text-sm text-gray-600 space-y-1 mb-4 dark:text-gray-300">
                         {{-- $pedido->cliente->nombre_empresa --}}
                         <li><strong>Cliente:</strong> {{ $pedido->usuario->name ?? 'Sin cliente' }}</li>
                         <li><strong>Total:</strong> {{ $pedido->total }}</li>
@@ -561,11 +561,11 @@
     
     @if ($modal_reconfigurar_proyecto)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div class="bg-white rounded shadow-lg w-full max-w-lg p-6">
+            <div class="bg-white rounded shadow-lg w-full max-w-lg p-6 dark:bg-gray-900 dark:border dark:border-gray-700">
                 <!-- Encabezado -->
                 <div class="mb-4">
                     <h2 class="text-xl font-bold text-red-600">⚠️ Proyecto mal configurado</h2>
-                    <p class="text-gray-700 mt-2">
+                    <p class="text-gray-700 mt-2 dark:text-gray-300">
                         Este proyecto tiene errores de configuración y no puede aprobarse aún. 
                         
                     </p>
@@ -589,36 +589,36 @@
 
     @if ($modal_tallas)
         <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div class="bg-white rounded shadow-lg w-full max-w-2xl flex flex-col">
+            <div class="bg-white rounded shadow-lg w-full max-w-2xl flex flex-col dark:bg-gray-900 dark:border dark:border-gray-700">
                 <!-- Header -->
-                <div class="flex items-center justify-between border-b border-gray-200 p-4">
+                <div class="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
                     <div>
-                        <h5 class="text-xl font-bold">Tallas del pedido #{{ $tallas_pedido_id }}</h5>
-                        <p class="text-sm text-gray-500">Total capturado: <b>{{ $tallas_total }}</b></p>
+                        <h5 class="text-xl font-bold text-gray-900 dark:text-gray-100">Tallas del pedido #{{ $tallas_pedido_id }}</h5>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Total capturado: <b>{{ $tallas_total }}</b></p>
                     </div>
-                    <button class="text-gray-500 hover:text-gray-700" wire:click="cerrarModalTallas">&times;</button>
+                    <button class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" wire:click="cerrarModalTallas">&times;</button>
                 </div>
 
                 <!-- Body -->
                 <div class="overflow-y-auto max-h-[60vh] p-4 space-y-4">
                     @if (empty($tallas_grupos))
-                        <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded">
+                        <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded dark:bg-yellow-900/30 dark:border-yellow-700/50 dark:text-yellow-200">
                             No hay cantidades por tallas registradas para este pedido.
                         </div>
                     @else
                         @foreach ($tallas_grupos as $g)
-                            <div class="border rounded-lg">
-                                <div class="flex items-center justify-between p-3 border-b bg-gray-50">
-                                    <div class="font-semibold text-gray-800">{{ $g['grupo'] }}</div>
-                                    <div class="text-sm text-gray-600">Subtotal: <b>{{ $g['subtotal'] }}</b></div>
+                            <div class="border rounded-lg dark:border-gray-700">
+                                <div class="flex items-center justify-between p-3 border-b bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+                                    <div class="font-semibold text-gray-800 dark:text-gray-100">{{ $g['grupo'] }}</div>
+                                    <div class="text-sm text-gray-600 dark:text-gray-300">Subtotal: <b>{{ $g['subtotal'] }}</b></div>
                                 </div>
 
                                 <div class="p-3">
                                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                                         @foreach ($g['items'] as $it)
-                                            <div class="border rounded p-2">
-                                                <div class="text-xs text-gray-500">{{ $it['talla'] }}</div>
-                                                <div class="text-lg font-bold">{{ $it['cantidad'] }}</div>
+                                            <div class="border rounded p-2 dark:border-gray-700 dark:bg-gray-800/60">
+                                                <div class="text-xs text-gray-500 dark:text-gray-400">{{ $it['talla'] }}</div>
+                                                <div class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ $it['cantidad'] }}</div>
                                             </div>
                                         @endforeach
                                     </div>
@@ -629,7 +629,7 @@
                 </div>
 
                 <!-- Footer -->
-                <div class="border-t border-gray-200 p-4 flex justify-end">
+                <div class="border-t border-gray-200 p-4 flex justify-end dark:border-gray-700">
                     <button wire:click="cerrarModalTallas"
                             class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded">
                         Cerrar

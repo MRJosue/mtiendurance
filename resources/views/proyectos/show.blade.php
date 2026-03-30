@@ -10,13 +10,13 @@
         </div>
     </x-slot>
     <div class="py-6">
-        <div class="project-detail-shell">
+        <div class="project-detail-shell project-show-shell">
             <div class="project-detail-panel h-full min-h-0">
                 <div class="project-detail-body h-full min-h-0">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-full min-h-0">
+                    <div class="project-show-main-grid">
                         
                         <!-- Lado izquierdo: Último archivo y Subir Diseño centrados -->
-                        <div class="flex flex-col items-center justify-center p-1 space-y-4">
+                        <div class="project-show-sidebar">
                             <!-- Componente que muestra el último archivo -->
                             <livewire:proyectos.ultimo-archivo :proyecto-id="$proyecto->id" />
                             <!-- Componente para subir diseño -->
@@ -30,9 +30,9 @@
 
                         </div>
                         <!-- Lado derecho: pestañas Detalles / Chat -->
-                        <div x-data="{ tab: 'detalles' }" class="text-gray-900 dark:text-gray-100">
+                        <div x-data="{ tab: 'detalles' }" class="project-show-content text-gray-900 dark:text-gray-100">
                             <!-- Tabs -->
-                            <div class="project-tab-list space-x-4">
+                            <div class="project-tab-list project-show-tab-list">
                                 <button 
                                     @click="tab = 'detalles'" 
                                     :class="tab === 'detalles' ? 'project-tab-button project-tab-button--active' : 'project-tab-button project-tab-button--inactive'" 
@@ -78,12 +78,12 @@
                             <!-- Contenido Detalles -->
                             <div x-show="tab === 'detalles'" x-cloak
                             x-data="{ sub: 'info' }"
-                            class="flex flex-col h-full min-h-0 overflow-y-auto">
+                            class="project-show-tab-panel flex flex-col h-full min-h-0 overflow-y-auto">
 
 
                                     
                                             <h2 class="project-section-title">Detalles del Proyecto</h2>
-                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3">
+                                            <div class="project-show-info-grid">
                                                 <div class="project-card">
                                                     <div class="project-meta-text">
                                                         <span class="project-meta-label">ID:</span>{{ $proyecto->id }} 
@@ -135,7 +135,7 @@
                                                     ? $proyecto->caracteristicas_sel
                                                     : json_decode($proyecto->caracteristicas_sel, true);
                                             @endphp
-                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3">
+                                                <div class="project-show-info-grid">
                                                     <div class="project-card">
                                                         <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">Categoría:</p>
                                                         <p class="project-meta-text">{{ $categoria['nombre'] ?? 'Sin categoría' }}</p>
@@ -146,7 +146,7 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-3">
+                                                <div class="project-show-feature-grid">
                                                     @forelse(($caracteristicas ?? []) as $caracteristica)
                                                         @php
                                                             // Asegura estructura esperada
@@ -180,7 +180,7 @@
                                                 </div>
                             </div>
                             <!-- Contenido Chat -->
-                            <div x-show="tab === 'chat'" x-cloak class="flex flex-col flex-1 min-h-0 p-5">
+                            <div x-show="tab === 'chat'" x-cloak class="project-show-tab-panel flex flex-col flex-1 min-h-0">
                                 <h2 class="project-section-title">Chat del Proyecto</h2>
                                 <div wire:poll.2s class="project-chat-shell">
                                     <livewire:chat-component :proyecto-id="$proyecto->id" />
@@ -188,7 +188,7 @@
                             </div>
 
                             <!-- Contenido Chat -->
-                            <div x-show="tab === 'chatProveedor'" x-cloak class="flex flex-col flex-1 min-h-0 p-5">
+                            <div x-show="tab === 'chatProveedor'" x-cloak class="project-show-tab-panel flex flex-col flex-1 min-h-0">
                                 <h2 class="project-section-title">Chat del Proyecto</h2>
                                 <div wire:poll.2s class="project-chat-shell">
                                     <livewire:chat-proveedor-component :proyecto-id="$proyecto->id" />
@@ -197,14 +197,14 @@
                             
                             <!-- Contenido Tareas -->
                             @can('proyectodiseñopestañaTareasDelProyecto')
-                                <div x-show="tab === 'tareas'" x-cloak class="flex flex-col flex-1 min-h-0 overflow-y-auto p-5">
+                                <div x-show="tab === 'tareas'" x-cloak class="project-show-tab-panel flex flex-col flex-1 min-h-0 overflow-y-auto">
                                     <h2 class="project-section-title">Tareas del Diseño</h2>
                                     <livewire:proyectos.tareas-diseno :proyecto-id="$proyecto->id" />
                                 </div>
                             @endcan
 
 
-                            <div x-show="tab === 'transferencia'" x-cloak class="flex flex-col flex-1 min-h-0 p-5">
+                            <div x-show="tab === 'transferencia'" x-cloak class="project-show-tab-panel flex flex-col flex-1 min-h-0">
                                     <h2 class="project-section-title">Transferencias</h2>
                                     <div wire:poll.2s class="project-chat-shell">
                                   
