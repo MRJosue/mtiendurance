@@ -1,16 +1,16 @@
 {{-- resources/views/livewire/admin/muestras/admin-muestras-tabs.blade.php --}}
 
-<div x-data class="container mx-auto p-6">
+<div x-data class="container mx-auto p-6 text-gray-900 dark:text-gray-100">
     <h2 class="text-2xl font-bold mb-4">Administración de Muestras</h2>
 
     @php
         // Mapear pestañas a clases y permisos
         $tabs = [
-            'PENDIENTE'     => ['classes' => 'bg-yellow-100 text-yellow-800', 'perm' => 'asideAdministraciónMuestrasTabPendiente'],
-            'SOLICITADA'    => ['classes' => 'bg-blue-100 text-blue-800',     'perm' => 'asideAdministraciónMuestrasTabSoliocitada'],
-            'MUESTRA LISTA' => ['classes' => 'bg-emerald-100 text-emerald-800','perm' => 'asideAdministraciónMuestrasTabMuestraLista'],
-            'ENTREGADA'     => ['classes' => 'bg-green-100 text-green-800',   'perm' => 'asideAdministraciónMuestrasTabEntregada'],
-            'CANCELADA'     => ['classes' => 'bg-gray-100 text-gray-800',     'perm' => 'asideAdministraciónMuestrasTabCancelada'],
+            'PENDIENTE'     => ['classes' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300', 'perm' => 'asideAdministraciónMuestrasTabPendiente'],
+            'SOLICITADA'    => ['classes' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',         'perm' => 'asideAdministraciónMuestrasTabSoliocitada'],
+            'MUESTRA LISTA' => ['classes' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300','perm' => 'asideAdministraciónMuestrasTabMuestraLista'],
+            'ENTREGADA'     => ['classes' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',     'perm' => 'asideAdministraciónMuestrasTabEntregada'],
+            'CANCELADA'     => ['classes' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',            'perm' => 'asideAdministraciónMuestrasTabCancelada'],
         ];
 
         $visibleTabs = $this->getVisibleTabs();
@@ -18,13 +18,13 @@
 
     {{-- Tabs --}}
     <div class="w-full overflow-x-auto">
-        <div class="inline-flex space-x-2 bg-white rounded-lg p-1 shadow">
+        <div class="inline-flex space-x-2 rounded-lg bg-white p-1 shadow dark:bg-gray-800 dark:ring-1 dark:ring-gray-700">
             @foreach($tabs as $name => $cfg)
                 @if(in_array($name, $visibleTabs, true))
                     <button
                         wire:click="setTab('{{ $name }}')"
                         class="px-3 py-2 rounded-md text-sm font-semibold transition
-                               {{ $tab === $name ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}"
+                               {{ $tab === $name ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600' }}"
                     >
                         <span>{{ $name }}</span>
                         <span class="ml-2 inline-flex items-center justify-center text-xs font-bold rounded-full px-2 py-0.5 {{ $cfg['classes'] }}">

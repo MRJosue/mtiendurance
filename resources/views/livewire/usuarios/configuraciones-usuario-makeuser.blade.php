@@ -8,19 +8,19 @@
             localStorage.setItem('configuracionesusuariosucursal', JSON.stringify(this.abierto));
         }
     }"
-    class="container mx-auto p-6"
+    class="container mx-auto p-6 text-gray-900 dark:text-gray-100"
 >
     <h2 
         @click="toggle()"
-        class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
+        class="mb-4 cursor-pointer border-b border-gray-300 pb-2 text-xl font-bold transition hover:text-blue-600 dark:border-gray-700 dark:hover:text-blue-400"
     >
         Mis Sub cuentas
-        <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
+        <span class="ml-2 text-sm text-gray-500 dark:text-gray-400" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
     </h2>   
 
     <div x-show="abierto" x-transition>
 
-        <h2 class="text-xl font-semibold mb-4">Usuarios subordinados de: {{ $jefe->name }}</h2>
+        <h2 class="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">Usuarios subordinados de: {{ $jefe->name }}</h2>
 
         @can('usuarios.configuracion.crear.subordinado')
                     <button
@@ -32,24 +32,24 @@
         @endcan
 
 
-        <div class="overflow-x-auto bg-white rounded-lg shadow">
-            <table class="min-w-full border-collapse border border-gray-200 rounded-lg">
-                <thead class="bg-gray-100">
+        <div class="overflow-x-auto rounded-lg bg-white shadow dark:bg-gray-900/80">
+            <table class="min-w-full rounded-lg border border-collapse border-gray-200 dark:border-gray-700">
+                <thead class="bg-gray-100 dark:bg-gray-800/90">
                     <tr>
-                        <th class="border-b px-4 py-2 text-left">Nombre</th>
-                        <th class="border-b px-4 py-2 text-left">Email</th>
-                        <th class="border-b px-4 py-2 text-left">Estado</th>
-                        <th class="border-b px-4 py-2 text-left">Sucursal</th>
-                        <th class="border-b px-4 py-2 text-left">Acciones</th>
+                        <th class="border-b border-gray-200 px-4 py-2 text-left dark:border-gray-700">Nombre</th>
+                        <th class="border-b border-gray-200 px-4 py-2 text-left dark:border-gray-700">Email</th>
+                        <th class="border-b border-gray-200 px-4 py-2 text-left dark:border-gray-700">Estado</th>
+                        <th class="border-b border-gray-200 px-4 py-2 text-left dark:border-gray-700">Sucursal</th>
+                        <th class="border-b border-gray-200 px-4 py-2 text-left dark:border-gray-700">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($subordinados as $user)
-                        <tr class="hover:bg-gray-50">
-                            <td class="border-b px-4 py-2">{{ $user->name }}</td>
-                            <td class="border-b px-4 py-2">{{ $user->email }}</td>
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/70">
+                            <td class="border-b border-gray-200 px-4 py-2 dark:border-gray-700">{{ $user->name }}</td>
+                            <td class="border-b border-gray-200 px-4 py-2 dark:border-gray-700">{{ $user->email }}</td>
                             
-                            <td class="border-b px-4 py-2">
+                            <td class="border-b border-gray-200 px-4 py-2 dark:border-gray-700">
                                 @if($user->ind_activo)
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
                                         Activo
@@ -60,16 +60,16 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="border-b px-4 py-2">
+                            <td class="border-b border-gray-200 px-4 py-2 dark:border-gray-700">
                                 @if($user->sucursal?->nombre)
                                     <span class="inline-flex items-center px-2 py-1 rounded text-xs bg-indigo-100 text-indigo-700">
                                         {{ $user->sucursal->nombre }}
                                     </span>
                                 @else
-                                    <span class="text-gray-500">—</span>
+                                    <span class="text-gray-500 dark:text-gray-400">—</span>
                                 @endif
                             </td>
-                            <td class="border-b px-4 py-2 space-x-2">
+                            <td class="space-x-2 border-b border-gray-200 px-4 py-2 dark:border-gray-700">
 
                                 @can('usuarios.configuracion.editar.subordinado')
                                     <button
@@ -113,7 +113,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center text-gray-500 py-4">Sin usuarios subordinados.</td>
+                            <td colspan="5" class="py-4 text-center text-gray-500 dark:text-gray-400">Sin usuarios subordinados.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -121,25 +121,25 @@
         </div>
 
         @if($showForm)
-        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-            <div class="bg-white p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-md relative">
-                <h2 class="text-xl font-semibold mb-4">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div class="relative w-full max-w-md rounded-lg bg-white p-6 text-gray-900 shadow-lg sm:p-8 dark:bg-gray-900 dark:text-gray-100">
+                <h2 class="mb-4 text-xl font-semibold">
                     {{ $editingId ? 'Editar usuario subordinado' : 'Nuevo usuario subordinado' }}
                 </h2>
 
                 <form wire:submit.prevent="saveUser" class="space-y-3">
                     {{-- Nombre (bloqueado si no-admin y ya existe) --}}
                     <div>
-                        <label class="block mb-1 font-medium">Nombre </label>
+                        <label class="mb-1 block font-medium">Nombre </label>
                         <input
                             type="text"
                             wire:model.defer="name"
-                            class="w-full border rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:text-gray-500"
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 disabled:bg-gray-100 disabled:text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:disabled:bg-gray-800 dark:disabled:text-gray-400"
                             @disabled($nameLocked)
                             required
                         />
                         @if($nameLocked)
-                            <p class="text-xs text-gray-500 mt-1">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                 El nombre no es editable para usuarios sin rol <span class="font-semibold">admin</span>.
                             </p>
                         @endif
@@ -147,19 +147,19 @@
                     </div>
 
                     <div>
-                        <label class="block mb-1 font-medium">Email *</label>
-                        <input type="email" wire:model.defer="email" class="w-full border rounded-lg px-3 py-2" required />
+                        <label class="mb-1 block font-medium">Email *</label>
+                        <input type="email" wire:model.defer="email" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" required />
                         @error('email') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
                     <div>
-                        <label class="block mb-1 font-medium">
+                        <label class="mb-1 block font-medium">
                             Contraseña {{ $editingId ? '(solo si quieres cambiarla)' : '*' }}
                         </label>
                         <input
                             type="password"
                             wire:model.defer="password"
-                            class="w-full border rounded-lg px-3 py-2"
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                             {{ $editingId ? '' : 'required' }}
                         />
                         @error('password') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
@@ -167,10 +167,10 @@
 
                     {{-- Select de Sucursal --}}
                     <div>
-                        <label class="block mb-1 font-medium">Sucursal (opcional)</label>
+                        <label class="mb-1 block font-medium">Sucursal (opcional)</label>
                         <select
                             wire:model="sucursal_id"
-                            class="w-full border rounded-lg px-3 py-2 disabled:bg-gray-100 disabled:text-gray-500"
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 disabled:bg-gray-100 disabled:text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:disabled:bg-gray-800 dark:disabled:text-gray-400"
                             @disabled($sucursalLocked)
                         >
                             <option value="">Sin sucursal</option>
@@ -181,24 +181,24 @@
                             @endforeach
                         </select>
                         @if($sucursalLocked)
-                            <p class="text-xs text-gray-500 mt-1">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                 La sucursal no es editable para usuarios sin rol <span class="font-semibold">admin</span>.
                             </p>
                         @endif
                         @error('sucursal_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
 
                         @if(!$sucursales->count())
-                            <p class="text-xs text-gray-500 mt-1">No hay sucursales disponibles en la empresa del jefe.</p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">No hay sucursales disponibles en la empresa del jefe.</p>
                         @endif
                     </div>
 
                     <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" wire:click="$set('showForm', false)" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancelar</button>
+                        <button type="button" wire:click="$set('showForm', false)" class="rounded bg-gray-200 px-4 py-2 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600">Cancelar</button>
                         <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Guardar</button>
                     </div>
                 </form>
 
-                <button wire:click="$set('showForm', false)" class="absolute top-2 right-2 text-gray-500 hover:text-gray-800">✕</button>
+                <button wire:click="$set('showForm', false)" class="absolute right-2 top-2 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">✕</button>
             </div>
         </div>
         @endif
@@ -210,17 +210,17 @@
             x-transition
             class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
         >
-            <div class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative">
+            <div class="relative mx-4 w-full max-w-xl rounded-lg bg-white p-6 text-gray-900 shadow-xl dark:bg-gray-900 dark:text-gray-100">
                 <h2 class="text-lg sm:text-xl font-bold mb-4 text-red-600">
                     Confirmar inactivación de usuario
                 </h2>
 
-                <p class="text-sm text-gray-700 mb-4">
+                <p class="mb-4 text-sm text-gray-700 dark:text-gray-300">
                     Estás a punto de inactivar al usuario
                     <span class="font-semibold">{{ $deactivateStats['nombre_usuario'] ?? '' }}</span>.
                 </p>
 
-                <div class="mb-4 text-sm text-gray-700 space-y-1">
+                <div class="mb-4 space-y-1 text-sm text-gray-700 dark:text-gray-300">
                     <p class="font-semibold">
                         Se aplicará lo siguiente:
                     </p>
@@ -235,14 +235,14 @@
                     </ul>
                 </div>
 
-                <p class="text-xs text-red-500 mb-4">
+                <p class="mb-4 text-xs text-red-500 dark:text-red-400">
                     Esta acción no elimina registros, pero puede afectar el acceso del usuario y el uso operativo de proyectos y pedidos.
                 </p>
 
                 <div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                     <button
                         type="button"
-                        class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                        class="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100 sm:w-auto dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
                         @click="showDeactivate = false"
                     >
                         Cancelar
@@ -265,17 +265,17 @@
             x-transition
             class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
         >
-            <div class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative">
+            <div class="relative mx-4 w-full max-w-xl rounded-lg bg-white p-6 text-gray-900 shadow-xl dark:bg-gray-900 dark:text-gray-100">
                 <h2 class="text-lg sm:text-xl font-bold mb-4 text-emerald-700">
                     Confirmar activación de usuario
                 </h2>
 
-                <p class="text-sm text-gray-700 mb-4">
+                <p class="mb-4 text-sm text-gray-700 dark:text-gray-300">
                     Vas a activar la cuenta de
                     <span class="font-semibold">{{ $activateStats['nombre_usuario'] ?? '' }}</span>.
                 </p>
 
-                <div class="mb-4 text-sm text-gray-700 space-y-1">
+                <div class="mb-4 space-y-1 text-sm text-gray-700 dark:text-gray-300">
                     <p class="font-semibold">
                         Se realizará lo siguiente:
                     </p>
@@ -293,7 +293,7 @@
                 <div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                     <button
                         type="button"
-                        class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                        class="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100 sm:w-auto dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
                         @click="showActivate = false"
                     >
                         Cancelar
@@ -321,8 +321,8 @@
             "
             x-show="show"
             x-transition
-            class="fixed bottom-6 right-6 z-50 min-w-[240px] flex items-center p-4 rounded-lg"
-            :class="type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+            class="fixed bottom-6 right-6 z-50 flex min-w-[240px] items-center rounded-lg p-4 shadow-lg"
+            :class="type === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200'"
             style="display: none;"
         >
             <span x-text="message"></span>

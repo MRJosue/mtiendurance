@@ -1,31 +1,31 @@
-<div class="container mx-auto p-6">
-    <h2 class="text-xl font-semibold mb-6">Configuraciones del Usuario #{{ $userId }}</h2>
+<div class="container mx-auto p-6 text-gray-900 dark:text-gray-100">
+    <h2 class="mb-6 text-xl font-semibold text-gray-900 dark:text-gray-100">Configuraciones del Usuario #{{ $userId }}</h2>
 
     <form wire:submit.prevent>
         <div class="grid grid-cols-1 gap-6">
             <!-- Checkbox: Puede ser seleccionado -->
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900/80">
                 <label class="flex items-center space-x-3">
                     <input
                         type="checkbox"
                         wire:model="flag_user_sel_preproyectos"
                         wire:change="guardarFlag('flag-user-sel-preproyectos', $event.target.checked)"
-                        class="rounded border-gray-300"
+                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-blue-400 dark:focus:ring-blue-400"
                     >
-                    <span class="text-sm text-gray-700">Puedo ser seleccionado en preproyectos</span>
+                    <span class="text-sm text-gray-700 dark:text-gray-200">Puedo ser seleccionado en preproyectos</span>
                 </label>
             </div>
 
             <!-- Checkbox: Puede seleccionar usuarios -->
-            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900/80">
                 <label class="flex items-center space-x-3">
                     <input
                         type="checkbox"
                         wire:model="flag_can_user_sel_preproyectos"
                         wire:change="guardarFlag('flag-can-user-sel-preproyectos', $event.target.checked)"
-                        class="rounded border-gray-300"
+                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-blue-400 dark:focus:ring-blue-400"
                     >
-                    <span class="text-sm text-gray-700">Puedo seleccionar usuarios para preproyectos</span>
+                    <span class="text-sm text-gray-700 dark:text-gray-200">Puedo seleccionar usuarios para preproyectos</span>
                 </label>
             </div>
 
@@ -33,7 +33,7 @@
             @if($flag_can_user_sel_preproyectos)
 
                 @if (session()->has('message'))
-                    <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4">
+                    <div class="mb-4 rounded bg-green-100 px-4 py-2 text-green-800 dark:bg-green-900/40 dark:text-green-200">
                         {{ session('message') }}
                     </div>
                 @endif
@@ -51,7 +51,7 @@
                             return false;
                         }
                     }"
-                    class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 space-y-4"
+                    class="space-y-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900/80"
                 >
                     <div class="flex items-center space-x-3">
                         <x-select-multiple-usuarios
@@ -76,7 +76,7 @@
 
                         <button
                             type="button"
-                            class="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                            class="w-full rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 sm:w-auto dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
                             @click="seleccionados = [...inicial]"
                         >
                             Revertir cambios

@@ -8,14 +8,14 @@
             localStorage.setItem('configuracionesusuariosucursal', JSON.stringify(this.abierto));
         }
     }"
-    class="container mx-auto p-6"
+    class="container mx-auto p-6 text-gray-900 dark:text-gray-100"
 >
     <h2 
         @click="toggle()"
-        class="text-xl font-bold mb-4 border-b border-gray-300 pb-2 cursor-pointer hover:text-blue-600 transition"
+        class="mb-4 cursor-pointer border-b border-gray-300 pb-2 text-xl font-bold transition hover:text-blue-600 dark:border-gray-700 dark:hover:text-blue-400"
     >
         Mis Empresas
-        <span class="text-sm text-gray-500 ml-2" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
+        <span class="ml-2 text-sm text-gray-500 dark:text-gray-400" x-text="abierto ? '(Ocultar)' : '(Mostrar)'"></span>
     </h2>   
 
     <!-- Contenido del panel -->
@@ -40,39 +40,39 @@
             <input
                 type="text"
                 wire:model.debounce.500ms="search"
-                class="border px-4 py-2 rounded-lg w-full sm:w-1/3"
+                class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 placeholder:text-gray-400 sm:w-1/3 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
                 placeholder="Buscar Empresa..."
             />
         </div>
 
         <!-- Listado -->
-        <div class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8">
-            <table class="min-w-full border-collapse border border-gray-200 rounded-lg">
-                <thead class="bg-gray-100">
+        <div class="min-h-64 overflow-x-auto rounded-lg bg-white pb-8 shadow dark:bg-gray-900/80">
+            <table class="min-w-full rounded-lg border border-collapse border-gray-200 dark:border-gray-700">
+                <thead class="bg-gray-100 dark:bg-gray-800/90">
                     <tr>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">ID</th>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Empresa</th>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Tipo</th>
-                         <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Estado</th> 
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Teléfono</th>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Dirección</th>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Usuarios Asignados</th>
-                        <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
+                        <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">ID</th>
+                        <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Empresa</th>
+                        <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Tipo</th>
+                         <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Estado</th> 
+                        <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Teléfono</th>
+                        <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Dirección</th>
+                        <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Usuarios Asignados</th>
+                        <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($sucursales as $sucursal)
-                        <tr class="hover:bg-gray-50">
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->id }}</td>
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->nombre }}</td>
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/70">
+                            <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">{{ $sucursal->id }}</td>
+                            <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">{{ $sucursal->nombre }}</td>
+                            <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">
                                 <span class="px-2 py-1 rounded text-xs
                                     {{ $sucursal->tipo == 1 ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
                                     {{ $sucursal->tipo == 1 ? 'Principal' : 'Secundaria' }}
                                 </span>
                             </td>
 
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">
+                            <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">
                                 @if($sucursal->ind_activo)
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
                                         Activa
@@ -84,9 +84,9 @@
                                 @endif
                             </td>
 
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->telefono }}</td>
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $sucursal->direccion }}</td>
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">
+                            <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">{{ $sucursal->telefono }}</td>
+                            <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">{{ $sucursal->direccion }}</td>
+                            <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">
                                 <span class="inline-block bg-blue-100 text-blue-800 rounded px-2 py-1 text-xs">
                                     {{-- Contar por campo sucursal_id --}}
                                     {{ \App\Models\User::where('sucursal_id', $sucursal->id)->count() }}
@@ -110,7 +110,7 @@
                                 </button>
                             </td>
 
-                            <td class="border-b px-4 py-2 text-gray-700 text-sm">
+                            <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">
 
                                 @can('usuarios.configuracion.editar.empresa')
                                     <button
@@ -146,7 +146,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-6 text-gray-500">Sin sucursales</td>
+                            <td colspan="7" class="py-6 text-center text-gray-500 dark:text-gray-400">Sin sucursales</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -162,20 +162,20 @@
             x-data="{ open: @entangle('showSucursalModal') }"
             x-show="open"
             style="display: none"
-            class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
         >
-            <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-3xl mx-auto">
-                <h2 class="text-lg font-bold mb-4 text-gray-700">
+            <div class="mx-auto w-full max-w-3xl rounded-xl bg-white p-6 text-gray-900 shadow-lg dark:bg-gray-900 dark:text-gray-100">
+                <h2 class="mb-4 text-lg font-bold text-gray-700 dark:text-gray-100">
                     {{ $editingId ? 'Editar Empresa' : 'Crear Empresa' }}
                 </h2>
 
                 <form wire:submit.prevent="{{ $editingId ? 'update' : 'store' }}" class="space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <div class="sm:col-span-2">
-                            <label class="block mb-1 text-gray-700">Organización (tabla empresas)</label>
+                            <label class="mb-1 block text-gray-700 dark:text-gray-300">Organización (tabla empresas)</label>
 
                             @if($empresa_id)
-                                <p class="text-xs text-gray-500 mb-1">
+                                <p class="mb-1 text-xs text-gray-500 dark:text-gray-400">
                                     Organización seleccionada:
                                     <span class="font-semibold">
                                         {{ optional($empresas->firstWhere('id', $empresa_id))->nombre ?? 'Sin organización' }}
@@ -187,19 +187,19 @@
                         </div>
 
                         <div class="sm:col-span-2">
-                            <label class="block mb-1 text-gray-700">Tipo</label>
+                            <label class="mb-1 block text-gray-700 dark:text-gray-300">Tipo</label>
 
                             @if($editingId)
                                 {{-- En edición se muestra el select pero siempre bloqueado --}}
                                 <select
                                     wire:model="tipo"
-                                    class="w-full border rounded-lg px-3 py-2 bg-gray-100 text-gray-600"
+                                    class="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-gray-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
                                     disabled
                                 >
                                     <option value="1">Principal</option>
                                     <option value="2">Secundaria</option>
                                 </select>
-                                <p class="mt-1 text-xs text-gray-500">
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                     El tipo de empresa no se puede modificar una vez creada.
                                 </p>
                             @else
@@ -207,7 +207,7 @@
                                 <input
                                     type="text"
                                     value="Secundaria"
-                                    class="w-full border rounded-lg px-3 py-2 bg-gray-100 text-gray-600"
+                                    class="w-full rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-gray-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
                                     disabled
                                 />
                             @endif
@@ -217,17 +217,17 @@
 
 
                         <div class="sm:col-span-2">
-                            <label class="block mb-1 text-gray-700">Nombre</label>
+                            <label class="mb-1 block text-gray-700 dark:text-gray-300">Nombre</label>
 
                             @if($editingId && !auth()->user()->hasRole('admin'))
                                 {{-- No admin + edición => bloqueado --}}
                                 <input
                                     type="text"
                                     wire:model="nombre"
-                                    class="w-full border rounded-lg px-3 py-2 bg-gray-100 text-gray-600 cursor-not-allowed"
+                                    class="w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-gray-600 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
                                     disabled
                                 />
-                                <p class="mt-1 text-xs text-gray-500">
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                     Solo un administrador puede cambiar el nombre de la empresa.
                                 </p>
                             @else
@@ -235,7 +235,7 @@
                                 <input
                                     type="text"
                                     wire:model="nombre"
-                                    class="w-full border rounded-lg px-3 py-2"
+                                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                                 />
                             @endif
 
@@ -245,13 +245,13 @@
                         
 
                         <div class="sm:col-span-2">
-                            <label class="block mb-1 text-gray-700">Teléfono</label>
-                            <input type="text" wire:model="telefono" class="w-full border rounded-lg px-3 py-2" />
+                            <label class="mb-1 block text-gray-700 dark:text-gray-300">Teléfono</label>
+                            <input type="text" wire:model="telefono" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
                         </div>
 
                         <div class="sm:col-span-2">
-                            <label class="block mb-1 text-gray-700">Dirección</label>
-                            <input type="text" wire:model="direccion" class="w-full border rounded-lg px-3 py-2" />
+                            <label class="mb-1 block text-gray-700 dark:text-gray-300">Dirección</label>
+                            <input type="text" wire:model="direccion" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100" />
                         </div>
                     </div>
 
@@ -261,7 +261,7 @@
                             {{ $editingId ? 'Actualizar' : 'Crear' }} Empresa
                         </button>
                         <button type="button" wire:click="closeSucursalModal"
-                            class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400">
+                            class="rounded-lg bg-gray-300 px-4 py-2 text-gray-800 hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600">
                             Cancelar
                         </button>
                     </div>
@@ -274,18 +274,18 @@
             x-data="{ open: @entangle('showUserModal') }"
             x-show="open"
             style="display: none"
-            class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
         >
-            <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl mx-auto">
-                <h2 class="text-lg font-bold mb-4 text-gray-700">Asignar usuarios a la Empresa</h2>
+            <div class="mx-auto w-full max-w-4xl rounded-xl bg-white p-6 text-gray-900 shadow-lg dark:bg-gray-900 dark:text-gray-100">
+                <h2 class="mb-4 text-lg font-bold text-gray-700 dark:text-gray-100">Asignar usuarios a la Empresa</h2>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <!-- Columna: Asignados (por sucursal_id) -->
-                    <div class="border rounded-lg">
-                        <div class="px-4 py-2 border-b bg-gray-50 rounded-t-lg">
-                            <span class="font-semibold text-gray-700">Usuarios asignados</span>
+                    <div class="rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div class="rounded-t-lg border-b border-gray-200 bg-gray-50 px-4 py-2 dark:border-gray-700 dark:bg-gray-800/80">
+                            <span class="font-semibold text-gray-700 dark:text-gray-200">Usuarios asignados</span>
                         </div>
-                        <div class="max-h-80 overflow-y-auto divide-y">
+                        <div class="max-h-80 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700">
                             @php
                                 $asignados = $selectedSucursal
                                     ? \App\Models\User::where('empresa_id', $selectedSucursal->empresa_id)
@@ -298,27 +298,27 @@
                             @forelse($asignados as $u)
                                 <div class="flex items-center justify-between px-4 py-3">
                                     <div>
-                                        <div class="text-sm font-medium text-gray-800">{{ $u->name }}</div>
-                                        <div class="text-xs text-gray-500">{{ $u->email }}</div>
+                                        <div class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ $u->name }}</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">{{ $u->email }}</div>
                                     </div>
                                 </div>
                             @empty
-                                <div class="px-4 py-6 text-sm text-gray-500">Sin usuarios asignados.</div>
+                                <div class="px-4 py-6 text-sm text-gray-500 dark:text-gray-400">Sin usuarios asignados.</div>
                             @endforelse
                         </div>
                     </div>
 
                     <!-- Columna: Disponibles (misma empresa, sucursal_id = null) -->
-                    <div class="border rounded-lg">
-                        <div class="px-4 py-2 border-b bg-gray-50 rounded-t-lg">
-                            <span class="font-semibold text-gray-700">Usuarios disponibles</span>
+                    <div class="rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div class="rounded-t-lg border-b border-gray-200 bg-gray-50 px-4 py-2 dark:border-gray-700 dark:bg-gray-800/80">
+                            <span class="font-semibold text-gray-700 dark:text-gray-200">Usuarios disponibles</span>
                         </div>
-                        <div class="max-h-80 overflow-y-auto divide-y">
+                        <div class="max-h-80 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700">
                             @forelse($usuariosDisponibles as $u)
                                 <div class="flex items-center justify-between px-4 py-3">
                                     <div>
-                                        <div class="text-sm font-medium text-gray-800">{{ $u->name }}</div>
-                                        <div class="text-xs text-gray-500">{{ $u->email }}</div>
+                                        <div class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ $u->name }}</div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">{{ $u->email }}</div>
                                     </div>
                                     <button
                                         wire:click="assignUserToSucursal({{ $u->id }})"
@@ -329,7 +329,7 @@
                                     </button>
                                 </div>
                             @empty
-                                <div class="px-4 py-6 text-sm text-gray-500">No hay usuarios disponibles.</div>
+                                <div class="px-4 py-6 text-sm text-gray-500 dark:text-gray-400">No hay usuarios disponibles.</div>
                             @endforelse
                         </div>
                     </div>
@@ -338,7 +338,7 @@
                 <div class="flex flex-wrap gap-2 mt-6 justify-end">
                     <button
                         wire:click="closeUserModal"
-                        class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
+                        class="rounded-lg bg-gray-300 px-4 py-2 text-gray-800 hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
                     >
                         Cerrar
                     </button>
@@ -353,14 +353,14 @@
         x-data="{ open: @entangle('showAssignedOnlyModal') }"
         x-show="open"
         style="display: none"
-        class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
     >
-        <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-3xl mx-auto">
-            <h2 class="text-lg font-bold mb-4 text-gray-700">
+        <div class="mx-auto w-full max-w-3xl rounded-xl bg-white p-6 text-gray-900 shadow-lg dark:bg-gray-900 dark:text-gray-100">
+            <h2 class="mb-4 text-lg font-bold text-gray-700 dark:text-gray-100">
                 Usuarios asignados a: {{ $selectedSucursal->nombre ?? '' }}
             </h2>
 
-            <div class="max-h-96 overflow-y-auto divide-y rounded border">
+            <div class="max-h-96 overflow-y-auto divide-y divide-gray-200 rounded border border-gray-200 dark:border-gray-700 dark:divide-gray-700">
                 @php
                     $asignadosSolo = $selectedSucursal
                         ? \App\Models\User::where('sucursal_id', $selectedSucursal->id)->orderBy('name')->get()
@@ -370,20 +370,20 @@
                 @forelse($asignadosSolo as $u)
                     <div class="flex items-center justify-between px-4 py-3">
                         <div>
-                            <div class="text-sm font-medium text-gray-800">{{ $u->name }}</div>
-                            <div class="text-xs text-gray-500">{{ $u->email }}</div>
+                            <div class="text-sm font-medium text-gray-800 dark:text-gray-100">{{ $u->name }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ $u->email }}</div>
                         </div>
                         <span class="text-xs px-2 py-1 rounded bg-emerald-100 text-emerald-700">Asignado</span>
                     </div>
                 @empty
-                    <div class="px-4 py-6 text-sm text-gray-500">Sin usuarios asignados.</div>
+                    <div class="px-4 py-6 text-sm text-gray-500 dark:text-gray-400">Sin usuarios asignados.</div>
                 @endforelse
             </div>
 
             <div class="flex justify-end mt-4">
                 <button
                     wire:click="closeAssignedOnlyModal"
-                    class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
+                    class="rounded-lg bg-gray-300 px-4 py-2 text-gray-800 hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
                 >
                     Cerrar
                 </button>
@@ -397,17 +397,17 @@
         x-transition
         class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
     >
-        <div class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative">
+        <div class="relative mx-4 w-full max-w-xl rounded-lg bg-white p-6 text-gray-900 shadow-xl dark:bg-gray-900 dark:text-gray-100">
             <h2 class="text-lg sm:text-xl font-bold mb-4 text-red-600">
                 Confirmar inactivación de Empresa
             </h2>
 
-            <p class="text-sm text-gray-700 mb-4">
+            <p class="mb-4 text-sm text-gray-700 dark:text-gray-300">
                 Estás a punto de inactivar la sucursal
                 <span class="font-semibold">{{ $deactivateStats['nombre_sucursal'] ?? '' }}</span>.
             </p>
 
-            <div class="mb-4 text-sm text-gray-700 space-y-1">
+            <div class="mb-4 space-y-1 text-sm text-gray-700 dark:text-gray-300">
                 <p class="font-semibold">
                     Se aplicará lo siguiente:
                 </p>
@@ -420,14 +420,14 @@
                 </ul>
             </div>
 
-            <p class="text-xs text-red-500 mb-4">
+            <p class="mb-4 text-xs text-red-500 dark:text-red-400">
                 Esta acción no elimina registros, pero puede afectar flujos que filtren por empresas activas.
             </p>
 
             <div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                 <button
                     type="button"
-                    class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                    class="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100 sm:w-auto dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
                     @click="showDeactivate = false"
                 >
                     Cancelar
@@ -450,17 +450,17 @@
         x-transition
         class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
     >
-        <div class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative">
+        <div class="relative mx-4 w-full max-w-xl rounded-lg bg-white p-6 text-gray-900 shadow-xl dark:bg-gray-900 dark:text-gray-100">
             <h2 class="text-lg sm:text-xl font-bold mb-4 text-emerald-700">
                 Confirmar activación de Empresa
             </h2>
 
-            <p class="text-sm text-gray-700 mb-4">
+            <p class="mb-4 text-sm text-gray-700 dark:text-gray-300">
                 Vas a activar la Empresa
                 <span class="font-semibold">{{ $activateStats['nombre_sucursal'] ?? '' }}</span>.
             </p>
 
-            <div class="mb-4 text-sm text-gray-700 space-y-1">
+            <div class="mb-4 space-y-1 text-sm text-gray-700 dark:text-gray-300">
                 <p class="font-semibold">
                     Se realizará lo siguiente:
                 </p>
@@ -475,7 +475,7 @@
             <div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                 <button
                     type="button"
-                    class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                    class="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100 sm:w-auto dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
                     @click="showActivate = false"
                 >
                     Cancelar

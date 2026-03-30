@@ -1,41 +1,41 @@
 <div x-data="{ selected: @entangle('selected') }"
     x-on:dropdown-cerrar.window="document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }))"
- class="container mx-auto p-6">
+ class="container mx-auto p-6 text-gray-900 dark:text-gray-100">
 
     {{-- Filtros minimizables --}}
     @if($mostrarFiltros)
         <div x-data="{ abierto: @entangle('mostrarFiltros') }" class="mb-6">
             <template x-if="abierto">
-                <div class="w-full bg-white border border-gray-200 shadow-md rounded-lg">
-                    <div class="flex justify-between items-center p-4 border-b">
-                        <h2 class="text-lg font-bold text-gray-700">Filtros</h2>
+                <div class="w-full rounded-lg border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
+                    <div class="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
+                        <h2 class="text-lg font-bold text-gray-700 dark:text-gray-100">Filtros</h2>
                         <div class="flex items-center gap-2">
                             <button
                                 wire:click="buscarPorFiltros"
-                                class="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-100 text-sm">
+                                class="rounded border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">
                                 Filtrar
                             </button>
                             <button
                                 @click="abierto = false"
-                                class="text-gray-500 hover:text-gray-700 text-xl leading-none"
+                                class="text-xl leading-none text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                                 title="Cerrar filtros">✕</button>
                         </div>
                     </div>
 
                     <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                        <input class="w-full border rounded px-3 py-2" placeholder="ID o Proyecto-ID"
+                        <input class="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" placeholder="ID o Proyecto-ID"
                             wire:model.live.debounce.500ms="f_id" />
 
-                        <input class="w-full border rounded px-3 py-2" placeholder="Producto / Categoría"
+                        <input class="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" placeholder="Producto / Categoría"
                             wire:model.live.debounce.500ms="f_producto" />
 
-                        <input class="w-full border rounded px-3 py-2" placeholder="Cliente"
+                        <input class="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" placeholder="Cliente"
                             wire:model.live.debounce.500ms="f_cliente" />
 
                         {{-- <input class="w-full border rounded px-3 py-2" placeholder="Archivo / Versión"
                             wire:model.live.debounce.500ms="f_archivo" /> --}}
 
-                        <input class="w-full border rounded px-3 py-2" placeholder="Piezas (>=)"
+                        <input class="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" placeholder="Piezas (>=)"
                             wire:model.live.debounce.500ms="f_total_min" />
 
                         {{-- <input class="w-full border rounded px-3 py-2" placeholder="Solicitado por ({{ $estadoColumna }})"
@@ -59,7 +59,7 @@
 
             <template x-if="!abierto">
                 <div class="mb-4">
-                    <button @click="abierto = true" class="text-sm text-blue-600 hover:underline">
+                    <button @click="abierto = true" class="text-sm text-blue-600 hover:underline dark:text-blue-400">
                         Mostrar Filtros
                     </button>
                 </div>
@@ -67,7 +67,7 @@
         </div>
     @else
         <div class="mb-4">
-            <button wire:click="$set('mostrarFiltros', true)" class="text-sm text-blue-600 hover:underline">
+            <button wire:click="$set('mostrarFiltros', true)" class="text-sm text-blue-600 hover:underline dark:text-blue-400">
                 Mostrar Filtros
             </button>
         </div>
@@ -88,9 +88,9 @@
     </div>
 
     {{-- Tabla --}}
-    <div class="overflow-x-auto bg-white rounded-lg shadow min-h-64 pb-8">
-        <table class="min-w-full border-collapse border border-gray-200 rounded-lg">
-            <thead class="bg-gray-100">
+    <div class="min-h-64 overflow-x-auto rounded-lg bg-white pb-8 shadow dark:bg-gray-800">
+        <table class="min-w-full rounded-lg border border-collapse border-gray-200 dark:border-gray-700">
+            <thead class="bg-gray-100 dark:bg-gray-900/70">
                 <tr>
                     <th class="border-b px-4 py-2">
                         <input type="checkbox"
@@ -99,16 +99,15 @@
                                 selected = checked ? @js($pedidos->pluck('id')) : [];
                             " />
                     </th>
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">ID</th>
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Producto</th>
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Cliente</th>
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Archivo y versión</th>
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Piezas</th>
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Solicitó</th>
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Instrucciones</th>
-
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Estado</th>
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
+                    <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">ID</th>
+                    <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Producto</th>
+                    <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Cliente</th>
+                    <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Archivo y versión</th>
+                    <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Piezas</th>
+                    <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Solicitó</th>
+                    <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Instrucciones</th>
+                    <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Estado</th>
+                    <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -121,11 +120,11 @@
                             'MUESTRA LISTA'  => 'bg-emerald-600 text-white',
                             'ENTREGADA'      => 'bg-green-600 text-white',
                             'CANCELADA'      => 'bg-gray-500 text-white',
-                        ])->get($estatusMuestra, 'bg-gray-300 text-gray-800');
+                        ])->get($estatusMuestra, 'bg-gray-300 text-gray-800 dark:bg-gray-700 dark:text-gray-200');
 
                         $reg = $ultimosPorEstado->get($pedido->id) ?? null;
                     @endphp
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/40">
                         <td class="border-b px-4 py-2">
                             <input type="checkbox"
                                 value="{{ $pedido->id }}"
@@ -145,7 +144,7 @@
 
                         <td class="border-b px-4 py-2">
                             <div class="font-medium">{{ $pedido->producto->nombre ?? 'Sin producto' }}</div>
-                            <div class="text-xs text-gray-500">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ $pedido->producto->categoria->nombre ?? 'Sin categoría' }}</div>
                         </td>
 
                         <td class="border-b px-4 py-2"> {{ $pedido->usuario->name ?? $pedido->cliente->razon_social ?? 'Cliente' }}</td>
@@ -157,22 +156,22 @@
                                         @if($pedido->archivo->es_imagen)
                                             <a href="{{ $pedido->archivo->verimagen }}" target="_blank" rel="noopener" class="shrink-0">
                                                 <img src="{{ $pedido->archivo->verimagen }}" alt="{{ $pedido->archivo->nombre_archivo }}"
-                                                     class="h-12 w-12 rounded object-cover ring-1 ring-gray-200" />
+                                                     class="h-12 w-12 rounded object-cover ring-1 ring-gray-200 dark:ring-gray-700" />
                                             </a>
                                         @endif
                                         <div class="min-w-0">
                                             <a href="{{ $pedido->archivo->verimagen }}" target="_blank" rel="noopener"
-                                               class="text-blue-600 hover:underline block truncate"
+                                               class="block truncate text-blue-600 hover:underline dark:text-blue-400"
                                                title="{{ $pedido->archivo->nombre_archivo }}">
                                                 {{ $pedido->archivo->nombre_archivo }}
                                             </a>
-                                            <div class="text-xs text-gray-500">Versión: {{ $pedido->archivo->version ?? '-' }}</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">Versión: {{ $pedido->archivo->version ?? '-' }}</div>
                                         </div>
                                     </div>
 
                                 </div>
                             @else
-                                <span class="text-gray-500">Sin archivo</span>
+                                <span class="text-gray-500 dark:text-gray-400">Sin archivo</span>
                             @endif
                         </td>
 
@@ -181,9 +180,9 @@
                         <td class="border-b px-4 py-2">
                             @if($reg && $reg->usuario)
                                 <span class="font-medium">{{ $reg->usuario->name }}</span>
-                                <span class="text-xs text-gray-500">#{{ $reg->usuario_id }}</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">#{{ $reg->usuario_id }}</span>
                             @else
-                                <span class="text-gray-500">—</span>
+                                <span class="text-gray-500 dark:text-gray-400">—</span>
                             @endif
                         </td>
 
@@ -245,14 +244,14 @@
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/50"></div>
 
-            <div class="relative bg-white w-full max-w-3xl rounded-2xl shadow-xl">
+            <div class="relative w-full max-w-3xl rounded-2xl bg-white shadow-xl dark:bg-gray-800">
                 {{-- Header --}}
-                <div class="flex items-center justify-between px-5 py-3 border-b">
+                <div class="flex items-center justify-between border-b border-gray-200 px-5 py-3 dark:border-gray-700">
                     <h3 class="text-lg font-semibold">
                         Estados del Pedido #{{ $pedidoEstadosId }}
                     </h3>
                     <button
-                        class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+                        class="rounded bg-gray-200 px-3 py-1 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
                         wire:click="cerrarModalEstados"
                     >
                         x
@@ -262,27 +261,27 @@
                 {{-- Body con scroll --}}
                 <div class="p-5">
                     <div class="overflow-x-auto">
-                        <div class="max-h-80 overflow-y-auto border rounded">
+                        <div class="max-h-80 overflow-y-auto rounded border border-gray-200 dark:border-gray-700">
                             <table class="min-w-full text-sm">
-                                <thead class="bg-gray-100 sticky top-0">
+                                <thead class="sticky top-0 bg-gray-100 dark:bg-gray-900/70">
                                     <tr>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-700">ID</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-700">Estado</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-700">Usuario</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-700">Comentario</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-700">Fecha inicio</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-700">Fecha fin</th>
-                                        <th class="px-3 py-2 text-left font-medium text-gray-700">Registrado</th>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">ID</th>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">Estado</th>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">Usuario</th>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">Comentario</th>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">Fecha inicio</th>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">Fecha fin</th>
+                                        <th class="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-300">Registrado</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($estadosModal as $e)
-                                        <tr class="border-t hover:bg-gray-50">
+                                        <tr class="border-t border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/40">
                                             <td class="px-3 py-2">{{ $e['id'] }}</td>
                                             <td class="px-3 py-2">{{ $e['estado'] }}</td>
                                             <td class="px-3 py-2">
                                                 <span class="font-medium">{{ $e['usuario'] }}</span>
-                                                <span class="text-xs text-gray-500">#{{ $e['usuario_id'] }}</span>
+                                                <span class="text-xs text-gray-500 dark:text-gray-400">#{{ $e['usuario_id'] }}</span>
                                             </td>
                                             <td class="px-3 py-2">
                                                 {{ $e['comentario'] ?? '—' }}
@@ -293,7 +292,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="px-3 py-6 text-center text-gray-500">
+                                            <td colspan="7" class="px-3 py-6 text-center text-gray-500 dark:text-gray-400">
                                                 Sin estados registrados.
                                             </td>
                                         </tr>
@@ -305,9 +304,9 @@
                 </div>
 
                 {{-- Footer --}}
-                <div class="px-5 py-3 border-t flex justify-end">
+                <div class="flex justify-end border-t border-gray-200 px-5 py-3 dark:border-gray-700">
                     <button
-                        class="px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-800"
+                        class="rounded-lg bg-gray-700 px-4 py-2 text-white hover:bg-gray-800 dark:bg-gray-600 dark:hover:bg-gray-500"
                         wire:click="cerrarModalEstados"
                     >
                         Cerrar
@@ -322,17 +321,17 @@
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/50" wire:click="cerrarModalEntregar"></div>
 
-            <div class="relative bg-white w-full max-w-xl rounded-2xl shadow-xl">
-                <div class="flex items-center justify-between px-5 py-3 border-b">
+            <div class="relative w-full max-w-xl rounded-2xl bg-white shadow-xl dark:bg-gray-800">
+                <div class="flex items-center justify-between border-b border-gray-200 px-5 py-3 dark:border-gray-700">
                     <h3 class="text-lg font-semibold">Confirmar entrega del Pedido #{{ $entregaPedidoId }}</h3>
-                    <button class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300" wire:click="cerrarModalEntregar" aria-label="Cerrar">x</button>
+                    <button class="rounded bg-gray-200 px-3 py-1 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600" wire:click="cerrarModalEntregar" aria-label="Cerrar">x</button>
                 </div>
 
                 <form wire:submit.prevent="confirmarEntrega" class="px-5 py-4">
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de entrega</label>
-                            <select class="w-full border rounded px-3 py-2" wire:model.live="entregaSeleccion">
+                            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Tipo de entrega</label>
+                            <select class="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100" wire:model.live="entregaSeleccion">
                               
                                 <option value="DIGITAL">DIGITAL</option>
                                 <option value="FISICA">FISICA</option>
@@ -341,8 +340,8 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Evidencia (1 archivo)</label>
-                            <input type="file" class="w-full border rounded px-3 py-2"
+                            <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Evidencia (1 archivo)</label>
+                            <input type="file" class="w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                                    wire:model="evidencia"
                                    accept="image/*,application/pdf" />
                             @error('evidencia') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -350,19 +349,19 @@
                             @if($evidencia && str_starts_with($evidencia->getMimeType(), 'image/'))
                                 <div class="mt-3">
                                     <img src="{{ $evidencia->temporaryUrl() }}" alt="Vista previa"
-                                        class="h-32 rounded object-cover ring-1 ring-gray-200">
+                                        class="h-32 rounded object-cover ring-1 ring-gray-200 dark:ring-gray-700">
                                 </div>
                             @endif
                         </div>
 
-                        <div class="text-sm text-gray-600">
+                        <div class="text-sm text-gray-600 dark:text-gray-300">
                             Al confirmar, el pedido se marcará como <span class="font-semibold">ENTREGADA</span>
                             y la evidencia se guardará ligada al pedido.
                         </div>
                     </div>
 
-                    <div class="mt-5 flex justify-end gap-2 border-t pt-4">
-                        <button type="button" class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300" wire:click="cerrarModalEntregar">
+                    <div class="mt-5 flex justify-end gap-2 border-t border-gray-200 pt-4 dark:border-gray-700">
+                        <button type="button" class="rounded-lg bg-gray-200 px-4 py-2 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600" wire:click="cerrarModalEntregar">
                             Cancelar
                         </button>
                         <button type="submit" class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50" wire:loading.attr="disabled">

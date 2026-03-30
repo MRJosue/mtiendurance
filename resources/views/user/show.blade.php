@@ -9,7 +9,6 @@
            
     </x-slot>
 
-
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
@@ -89,7 +88,6 @@
         </div>
     </div>
 
-
     <div class="py-2">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800   shadow-sm sm:rounded-lg">
@@ -107,7 +105,6 @@
             </div>
         </div>
     </div>
-
 
     <div class="py-2">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -140,7 +137,7 @@
                 <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div class="bg-white dark:bg-gray-800   shadow-sm sm:rounded-lg">
                         <div class="p-6 text-gray-900 dark:text-gray-100">
-                            <h1 class="text-2xl font-bold mb-4">Permisos y roles del usuario</h1>
+                            <h1 class="text-2xl font-bold mb-4">Cambio de password</h1>
                             {{-- @livewire('usuarios.user-roles-permissions', ['userId' => $user->id]) --}}
                             <livewire:usuarios.ver-actualizar-password-usuario :user="$user" />
                         </div>

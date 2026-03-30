@@ -3,7 +3,7 @@
         showDeactivate: @entangle('showDeactivateModal'),
         showActivate: @entangle('showActivateModal')
     }"
-    class="container mx-auto p-6"
+    class="container mx-auto p-6 text-gray-900 dark:text-gray-100"
 >
     <!-- Botones de acción -->
     <div class="mb-4 flex flex-wrap gap-3">
@@ -29,13 +29,13 @@
     </div>
 
     {{-- Info rápida del usuario --}}
-    <div class="bg-white rounded-lg shadow p-4 text-sm text-gray-700">
+    <div class="rounded-lg bg-white p-4 text-sm text-gray-700 shadow dark:bg-gray-900/80 dark:text-gray-200">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
                 <p class="font-semibold">
                     Usuario #{{ $user->id }} — {{ $user->name }}
                 </p>
-                <p class="text-gray-600">
+                <p class="text-gray-600 dark:text-gray-300">
                     Tipo: <span class="font-medium">{{ $user->tipo_texto ?? $user->tipo }}</span>
                     @if($user->es_propietario)
                         <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-700">
@@ -65,18 +65,18 @@
         x-transition
         class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
     >
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 p-6 relative">
+        <div class="relative mx-4 w-full max-w-2xl rounded-lg bg-white p-6 text-gray-900 shadow-xl dark:bg-gray-900 dark:text-gray-100">
             <h2 class="text-lg sm:text-xl font-bold mb-4 text-red-600">
                 Confirmar inactivación de usuario
             </h2>
 
-            <p class="text-sm text-gray-700 mb-4">
+            <p class="mb-4 text-sm text-gray-700 dark:text-gray-300">
                 Estás a punto de inactivar al usuario
                 <span class="font-semibold">{{ $user->name }}</span>.
             </p>
 
             @if($deactivateStats['es_propietario'])
-                <div class="mb-4 text-sm text-gray-700 space-y-1">
+                <div class="mb-4 space-y-1 text-sm text-gray-700 dark:text-gray-300">
                     <p class="font-semibold">
                         Este usuario es propietario. Se aplicará lo siguiente:
                     </p>
@@ -88,7 +88,7 @@
                     </ul>
                 </div>
             @else
-                <div class="mb-4 text-sm text-gray-700 space-y-1">
+                <div class="mb-4 space-y-1 text-sm text-gray-700 dark:text-gray-300">
                     <p class="font-semibold">
                         Este usuario es subordinado (no propietario). Se aplicará lo siguiente:
                     </p>
@@ -98,14 +98,14 @@
                 </div>
             @endif
 
-            <p class="text-xs text-red-500 mb-4">
+            <p class="mb-4 text-xs text-red-500 dark:text-red-400">
                 Esta acción no elimina registros, pero puede afectar el acceso del usuario.
             </p>
 
             <div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                 <button
                     type="button"
-                    class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                    class="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100 sm:w-auto dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
                     @click="showDeactivate = false"
                 >
                     Cancelar
@@ -128,17 +128,17 @@
         x-transition
         class="fixed inset-0 z-40 flex items-center justify-center bg-black/50"
     >
-        <div class="bg-white rounded-lg shadow-xl max-w-xl w-full mx-4 p-6 relative">
+        <div class="relative mx-4 w-full max-w-xl rounded-lg bg-white p-6 text-gray-900 shadow-xl dark:bg-gray-900 dark:text-gray-100">
             <h2 class="text-lg sm:text-xl font-bold mb-4 text-emerald-700">
                 Confirmar activación de usuario
             </h2>
 
-            <p class="text-sm text-gray-700 mb-4">
+            <p class="mb-4 text-sm text-gray-700 dark:text-gray-300">
                 Vas a activar la cuenta de
                 <span class="font-semibold">{{ $user->name }}</span>.
             </p>
 
-            <div class="mb-4 text-sm text-gray-700 space-y-1">
+            <div class="mb-4 space-y-1 text-sm text-gray-700 dark:text-gray-300">
                 <p class="font-semibold">Se realizará lo siguiente:</p>
                 <ul class="list-disc list-inside space-y-1">
                     <li>Se activará únicamente este usuario.</li>
@@ -148,7 +148,7 @@
             <div class="mt-4 flex flex-col sm:flex-row justify-end gap-2">
                 <button
                     type="button"
-                    class="w-full sm:w-auto px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100"
+                    class="w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100 sm:w-auto dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
                     @click="showActivate = false"
                 >
                     Cancelar
