@@ -44,6 +44,8 @@ return [
 
     'debug' => (bool) env('APP_DEBUG', false),
 
+    'force_friendly_error_pages' => (bool) env('APP_FORCE_FRIENDLY_ERRORS', false),
+
     /*
     |--------------------------------------------------------------------------
     | Application URL

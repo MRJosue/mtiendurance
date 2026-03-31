@@ -15,7 +15,7 @@ class ExpulsarInactivos
         if (Auth::check() && Auth::user()->ind_activo == 0) {
             Auth::logout();
 
-            return redirect()->route('login')
+            return redirect()->away('/login')
                 ->withErrors(['email' => 'Tu cuenta está inactiva.']);
         }
 

@@ -45,7 +45,7 @@ class UserController extends Controller
         $user = auth()->user();
 
         if (!$user) {
-            return redirect()->route('login');
+            return redirect()->away('/login');
         }
 
         // 1 = CLIENTE, 2 = PROVEEDOR, 3 = STAFF, 4 = ADMIN

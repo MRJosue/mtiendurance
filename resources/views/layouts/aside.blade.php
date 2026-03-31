@@ -569,7 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
       sidebarOpen: false,
       sidebarPinned: JSON.parse(localStorage.getItem('sidebarPinned') || 'false'),
       openSections: JSON.parse(localStorage.getItem('openSections') || '{}'),
-      selectedRoute: '{{ request()->route()->getName() }}',
+      selectedRoute: @js(optional(request()->route())->getName() ?? ''),
 
       // Inicialización
       init() {

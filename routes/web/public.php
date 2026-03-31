@@ -50,6 +50,18 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'perfil.configurado'])
     ->name('dashboard');
 
+Route::get('/debug/error-preview', function () {
+    return response()->view('errors.404', [
+        'errorMessage' => 'Esta es una vista de prueba para revisar la pantalla amigable de error sin cerrar la sesion.',
+    ], 404);
+})->middleware(['auth', 'verified', 'perfil.configurado'])
+    ->name('debug.error-preview');
+
+Route::get('/debug/error-simulado', function () {
+    throw new \RuntimeException('Error simulado para probar la pantalla amigable.');
+})->middleware(['auth', 'verified', 'perfil.configurado'])
+    ->name('debug.error-simulado');
+
 Route::get('/MessageSent', function () {
     event(new MessageSent('¡Hola desde el servidor!'));
 
