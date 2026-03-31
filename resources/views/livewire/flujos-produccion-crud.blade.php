@@ -1,14 +1,14 @@
-<div  class="container mx-auto p-6">
+<div  class="container mx-auto p-6 text-gray-900 dark:text-gray-100">
     <!-- Botones de acción -->
     <div class="mb-4 flex flex-wrap space-y-2 sm:space-y-0 sm:space-x-4">
         <button
-            class="w-full sm:w-auto px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+            class="w-full sm:w-auto rounded-lg bg-green-500 px-4 py-2 text-white transition hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-500"
             wire:click="abrirModal"
         >
             Nuevo Flujo
         </button>
         <button
-            class="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full sm:w-auto rounded-lg bg-red-500 px-4 py-2 text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-600 dark:hover:bg-red-500"
             :disabled="selectedFlujos.length === 0"
             wire:click="deleteSelected"
         >
@@ -17,45 +17,47 @@
     </div>
 
     <!-- Tabla -->
-    <div class="overflow-x-auto bg-white rounded-lg shadow">
-        <table class="min-w-full border-collapse border border-gray-200 rounded-lg">
-            <thead class="bg-gray-100">
+    <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+        <table class="min-w-full border-collapse rounded-lg">
+            <thead class="bg-gray-100 dark:bg-gray-800">
                 <tr>
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">
+                    <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">
                         <input
                             type="checkbox"
+                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-blue-400 dark:focus:ring-blue-400"
                             wire:model="selectAll"
                             @change="selectedFlujos = $event.target.checked ? @js($flujos->pluck('id')) : []"
                         />
                     </th>
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">ID</th>
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Nombre</th>
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Descripción</th>
-                    <th class="border-b px-4 py-2 text-left text-sm font-medium text-gray-600">Acciones</th>
+                    <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">ID</th>
+                    <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Nombre</th>
+                    <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Descripción</th>
+                    <th class="border-b border-gray-200 px-4 py-2 text-left text-sm font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($flujos as $flujo)
-                    <tr class="hover:bg-gray-50">
-                        <td class="border-b px-4 py-2 text-gray-700 text-sm">
+                    <tr class="transition hover:bg-gray-50 dark:hover:bg-gray-800/70">
+                        <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">
                             <input
                                 type="checkbox"
+                                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-blue-400 dark:focus:ring-blue-400"
                                 wire:model="selectedFlujos"
                                 value="{{ $flujo->id }}"
                             />
                         </td>
-                        <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $flujo->id }}</td>
-                        <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $flujo->nombre }}</td>
-                        <td class="border-b px-4 py-2 text-gray-700 text-sm">{{ $flujo->descripcion ?? '—' }}</td>
-                        <td class="border-b px-4 py-2 text-gray-700 text-sm">
+                        <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">{{ $flujo->id }}</td>
+                        <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">{{ $flujo->nombre }}</td>
+                        <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">{{ $flujo->descripcion ?? '—' }}</td>
+                        <td class="border-b border-gray-200 px-4 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">
                             <button
-                                class="text-blue-500 hover:underline"
+                                class="text-blue-600 hover:underline dark:text-blue-400"
                                 wire:click="abrirModal({{ $flujo->id }})"
                             >
                                 Editar
                             </button>
                             <button
-                                class="ml-2 text-red-500 hover:underline"
+                                class="ml-2 text-red-600 hover:underline dark:text-red-400"
                                 wire:click="delete({{ $flujo->id }})"
                             >
                                 Eliminar
@@ -75,24 +77,24 @@
         x-data="{ selectedFlujos: @entangle('selectedFlujos'), modalOpen: @entangle('modalOpen') }" 
         x-show="modalOpen" 
         x-transition
-        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
         @keydown.escape.window="modalOpen = false"
     >
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6" @click.away="modalOpen = false">
-            <h2 class="text-xl font-bold mb-4">
+        <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900 dark:ring-1 dark:ring-white/10" @click.away="modalOpen = false">
+            <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-gray-100">
                 {{ $editMode ? 'Editar Flujo' : 'Nuevo Flujo' }}
             </h2>
             <form wire:submit.prevent="guardar">
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Nombre</label>
-                    <input type="text" wire:model.defer="nombre" class="w-full mt-1 border rounded-lg p-2" />
-                    @error('nombre') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Nombre</label>
+                    <input type="text" wire:model.defer="nombre" class="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2 text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:ring-blue-400" />
+                    @error('nombre') <span class="text-sm text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Descripción</label>
-                    <textarea wire:model.defer="descripcion" class="w-full mt-1 border rounded-lg p-2"></textarea>
-                    @error('descripcion') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Descripción</label>
+                    <textarea wire:model.defer="descripcion" class="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2 text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"></textarea>
+                    @error('descripcion') <span class="text-sm text-red-600 dark:text-red-400">{{ $message }}</span> @enderror
                 </div>
 
                 <div
@@ -102,21 +104,21 @@
                             $refs.configTextarea.value = JSON.stringify({ steps }, null, 2);
                             $refs.configTextarea.dispatchEvent(new Event('input'));
                         })"
-                    class="mb-4 border p-4 rounded bg-gray-50 max-h-[400px] overflow-auto"
+                    class="mb-4 max-h-[400px] overflow-auto rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/60"
                 >
-                    <h3 class="font-semibold mb-2">Configuración de Pasos (steps)</h3>
+                    <h3 class="mb-2 font-semibold text-gray-900 dark:text-gray-100">Configuración de Pasos (steps)</h3>
 
                     <template x-for="(step, index) in steps" :key="index">
-                        <div class="border rounded p-3 mb-3 bg-white shadow">
+                        <div class="mb-3 rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-700 dark:bg-gray-900">
 
 
                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-2">
-                                <strong class="text-sm sm:text-base" x-text="'Paso ' + (index + 1) + ': ' + (step.name || '—')"></strong>
+                                <strong class="text-sm text-gray-900 dark:text-gray-100 sm:text-base" x-text="'Paso ' + (index + 1) + ': ' + (step.name || '—')"></strong>
 
                                 <div class="flex flex-wrap gap-2">
                                     <button
                                         type="button"
-                                        class="px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        class="rounded bg-gray-200 px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
                                         @click="moveStepUp(index)"
                                         :disabled="index === 0"
                                         title="Subir"
@@ -126,7 +128,7 @@
 
                                     <button
                                         type="button"
-                                        class="px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        class="rounded bg-gray-200 px-2 py-1 text-xs text-gray-700 transition hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
                                         @click="moveStepDown(index)"
                                         :disabled="index === steps.length - 1"
                                         title="Bajar"
@@ -136,7 +138,7 @@
 
                                     <button
                                         type="button"
-                                        class="px-2 py-1 text-xs text-white bg-red-500 rounded hover:bg-red-600"
+                                        class="rounded bg-red-500 px-2 py-1 text-xs text-white transition hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-500"
                                         @click="removeStep(index)"
                                     >
                                         Eliminar
@@ -147,8 +149,8 @@
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-sm font-medium">Nombre (name)</label>
-                                    <select x-model="step.name" class="w-full border rounded p-1">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Nombre (name)</label>
+                                    <select x-model="step.name" class="w-full rounded border border-gray-300 bg-white p-1 text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400">
                                         <option value="" disabled>-- Selecciona un nombre --</option>
                                         <template x-for="option in opciones" :key="option">
                                             <option :value="option" x-text="option"></option>
@@ -156,20 +158,20 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium">Grupo</label>
-                                    <input type="number" min="1" x-model.number="step.grupo" class="w-full border rounded p-1" />
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Grupo</label>
+                                    <input type="number" min="1" x-model.number="step.grupo" class="w-full rounded border border-gray-300 bg-white p-1 text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400" />
                                 </div>
                                 <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium">Descripción</label>
-                                    <textarea x-model="step.descripcion" class="w-full border rounded p-1"></textarea>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Descripción</label>
+                                    <textarea x-model="step.descripcion" class="w-full rounded border border-gray-300 bg-white p-1 text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400"></textarea>
                                 </div>
                                 <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium">Siguientes pasos (next) — separa por comas</label>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Siguientes pasos (next) — separa por comas</label>
                                     <input 
                                         type="text" 
                                         x-model="step.nextText" 
                                         @input="step.next = step.nextText.split(',').map(s => s.trim()).filter(s => s.length > 0)" 
-                                        class="w-full border rounded p-1" 
+                                        class="w-full rounded border border-gray-300 bg-white p-1 text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:ring-blue-400" 
                                     />
                                 </div>
                             </div>
@@ -179,7 +181,7 @@
                     <button 
                         type="button" 
                         @click="addStep()" 
-                        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        class="rounded bg-blue-500 px-4 py-2 text-white transition hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500"
                     >
                         + Agregar Paso
                     </button>
@@ -189,10 +191,10 @@
                 <textarea x-ref="configTextarea" wire:model.defer="config" class="hidden"></textarea>
 
                 <div class="flex justify-end space-x-2">
-                    <button type="button" @click="modalOpen = false" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+                    <button type="button" @click="modalOpen = false" class="rounded bg-gray-300 px-4 py-2 text-gray-800 transition hover:bg-gray-400 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600">
                         Cancelar
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    <button type="submit" class="rounded bg-blue-500 px-4 py-2 text-white transition hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500">
                         Guardar
                     </button>
                 </div>
@@ -282,4 +284,3 @@
             });
     </script>
 </div>
-

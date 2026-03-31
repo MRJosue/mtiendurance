@@ -1,5 +1,5 @@
-<div class="container mx-auto max-w-7xl p-4 sm:p-6">
-    <div class="mb-5 rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 px-5 py-5 text-white shadow-lg">
+<div class="container mx-auto max-w-7xl p-4 text-gray-900 dark:text-gray-100 sm:p-6">
+    <div class="mb-5 rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 px-5 py-5 text-white shadow-lg dark:border-slate-700">
         <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-blue-200">Preproyectos</p>
@@ -15,11 +15,11 @@
     </div>
 
     @if (session()->has('message'))
-        <div class="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 shadow-sm">
+        <div class="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 shadow-sm dark:border-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">
             {{ session('message') }}
         </div>
     @elseif (session()->has('error'))
-        <div class="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">
+        <div class="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm dark:border-rose-700 dark:bg-rose-900/30 dark:text-rose-200">
             {{ session('error') }}
         </div>
     @endif
@@ -31,7 +31,7 @@
         @include('livewire.preproyectos.partials.create-pre-project.support-files')
         @include('livewire.preproyectos.partials.create-pre-project.addresses-dates')
 
-        <button type="submit" class="inline-flex items-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
+        <button type="submit" class="inline-flex items-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400">
             Crear Preproyecto
         </button>
     </form>
