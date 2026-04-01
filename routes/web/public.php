@@ -2,12 +2,13 @@
 
 use App\Events\MessageSent;
 use App\Events\NewChatMessage;
-use App\Events\TestReverbMessage;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DemoController;
 use App\Models\MensajeChat;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/reverb-test', 'reverb-test')->name('reverb.test');
@@ -17,13 +18,36 @@ Route::post('/reverb-test/send', function (Request $request) {
         'message' => ['required', 'string', 'max:500'],
     ]);
 
-    broadcast(new TestReverbMessage(
-        message: $data['message'],
-        sentAt: now()->toDateTimeString()
-    ));
+    $messages = collect(Cache::get('reverb_test_messages', []));
+    $nextId = (int) ($messages->max('id') ?? 0) + 1;
 
-    return response()->json(['ok' => true]);
+    $message = [
+        'id' => $nextId,
+        'message' => $data['message'],
+        'sentAt' => now()->toDateTimeString(),
+    ];
+
+    $messages->push($message);
+
+    Cache::forever('reverb_test_messages', $messages->take(-50)->values()->all());
+
+    return response()->json([
+        'ok' => true,
+        'message' => $message,
+    ]);
 })->name('reverb.test.send');
+
+Route::get('/reverb-test/messages', function (Request $request) {
+    $after = (int) $request->integer('after', 0);
+    $messages = collect(Cache::get('reverb_test_messages', []))
+        ->filter(fn (array $message) => (int) ($message['id'] ?? 0) > $after)
+        ->values();
+
+    return response()->json([
+        'messages' => $messages,
+        'serverTime' => Carbon::now()->toDateTimeString(),
+    ]);
+})->name('reverb.test.messages');
 
 Route::get('/lang/{locale}', function (string $locale) {
     abort_unless(in_array($locale, ['es', 'en']), 404);

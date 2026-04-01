@@ -17,12 +17,12 @@
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Prueba Laravel Reverb</h1>
                 <span id="status"
                       class="text-xs sm:text-sm px-3 py-1 rounded-full bg-gray-200 text-gray-700 w-fit">
-                    Conectando...
+                    Iniciando polling...
                 </span>
             </div>
 
             <p class="text-sm text-gray-600">
-                Abre esta misma URL en otro navegador (o incógnito). Envía un mensaje aquí y deberías verlo aparecer en ambos.
+                Abre esta misma URL en otro navegador (o incógnito). Esta versión usa polling para que puedas probar mensajería en tu hosting actual.
             </p>
 
             <div class="flex flex-col sm:flex-row gap-2">
@@ -56,8 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const logEl = document.getElementById('log');
     const inputEl = document.getElementById('message');
     const btnEl = document.getElementById('sendBtn');
+    const messagesUrl = "{{ route('reverb.test.messages') }}";
+    const sendUrl = "{{ route('reverb.test.send') }}";
 
     const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    let lastMessageId = 0;
+    let pollTimer = null;
 
     const setStatus = (text, ok) => {
         statusEl.textContent = text;
@@ -67,12 +71,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const addLog = (payload) => {
+        if (document.querySelector(`[data-message-id="${payload.id}"]`)) {
+            return;
+        }
+
         if (logEl.firstElementChild && logEl.firstElementChild.classList.contains('text-gray-500')) {
             logEl.innerHTML = '';
         }
 
         const wrapper = document.createElement('div');
         wrapper.className = 'p-3 rounded-lg border bg-gray-50';
+        wrapper.dataset.messageId = String(payload.id ?? '');
 
         wrapper.innerHTML = `
             <div class="text-sm text-gray-800 break-words">${escapeHtml(payload.message)}</div>
@@ -80,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         logEl.prepend(wrapper);
+        lastMessageId = Math.max(lastMessageId, Number(payload.id ?? 0));
     };
 
     const escapeHtml = (str) => {
@@ -91,30 +101,33 @@ document.addEventListener('DOMContentLoaded', () => {
             .replaceAll("'", '&#039;');
     };
 
-    // ✅ Estado de conexión (Pusher)
-    if (!window.Echo?.connector?.pusher) {
-        statusEl.textContent = 'Echo no está cargado';
-        return;
-    }
+    const pollMessages = async () => {
+        try {
+            const res = await fetch(`${messagesUrl}?after=${encodeURIComponent(lastMessageId)}`, {
+                headers: {
+                    'Accept': 'application/json',
+                },
+                cache: 'no-store',
+            });
 
-    const conn = window.Echo.connector.pusher.connection;
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
 
-    // Estado inicial + debug visual
-    setStatus(conn.state === 'connected' ? 'Conectado' : `Conectando... (${conn.state})`, conn.state === 'connected');
+            const payload = await res.json();
 
-    conn.bind('connected', () => setStatus('Conectado', true));
-    conn.bind('disconnected', () => setStatus('Desconectado', false));
-    conn.bind('error', () => setStatus('Error de conexión', false));
-    conn.bind('state_change', (states) => {
-        // states.current: connecting/connected/unavailable/disconnected...
-        setStatus(states.current === 'connected' ? 'Conectado' : `Conectando... (${states.current})`, states.current === 'connected');
-    });
+            for (const message of payload.messages ?? []) {
+                addLog(message);
+            }
 
-    // ✅ Escuchar canal público
-    window.Echo.channel('reverb-test')
-        .listen('.message.sent', (e) => addLog(e));
+            setStatus('Conectado por polling', true);
+        } catch (err) {
+            setStatus(`Polling con error (${err.message})`, false);
+        } finally {
+            pollTimer = window.setTimeout(pollMessages, 2500);
+        }
+    };
 
-    // ✅ Enviar mensaje
     const send = async () => {
         const message = inputEl.value.trim();
         if (!message) return;
@@ -122,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnEl.disabled = true;
 
         try {
-            const res = await fetch("{{ route('reverb.test.send') }}", {
+            const res = await fetch(sendUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -134,13 +147,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!res.ok) {
                 const err = await res.text();
-                addLog({ message: 'Error enviando: ' + err, sentAt: '' });
+                addLog({ id: `error-${Date.now()}`, message: 'Error enviando: ' + err, sentAt: '' });
             } else {
+                const payload = await res.json();
+                if (payload.message) {
+                    addLog(payload.message);
+                }
                 inputEl.value = '';
                 inputEl.focus();
             }
         } catch (err) {
-            addLog({ message: 'Error enviando: ' + err.message, sentAt: '' });
+            addLog({ id: `error-${Date.now()}`, message: 'Error enviando: ' + err.message, sentAt: '' });
         } finally {
             btnEl.disabled = false;
         }
@@ -149,6 +166,14 @@ document.addEventListener('DOMContentLoaded', () => {
     btnEl.addEventListener('click', send);
     inputEl.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') send();
+    });
+
+    pollMessages();
+
+    window.addEventListener('beforeunload', () => {
+        if (pollTimer) {
+            window.clearTimeout(pollTimer);
+        }
     });
 });
 </script>
