@@ -2,7 +2,7 @@
     $noLeidas = $notificaciones->whereNull('read_at')->count();
 @endphp
 
-<div class="relative" x-data="{ open: false }">
+<div wire:poll.15s="cargarNotificaciones" class="relative" x-data="{ open: false }">
     <button
         @click="open = !open"
         type="button"
@@ -147,4 +147,30 @@
             </div>
         @endif
     </div>
+
+    @script
+    <script>
+        (() => {
+            const userId = @js(auth()->id());
+
+            if (!userId || !window.Echo) {
+                return;
+            }
+
+            window.__mtiNotificationChannels ??= {};
+
+            if (window.__mtiNotificationChannels[userId]) {
+                return;
+            }
+
+            const channelName = `App.Models.User.${userId}`;
+
+            window.__mtiNotificationChannels[userId] = window.Echo
+                .private(channelName)
+                .notification(() => {
+                    Livewire.dispatch('notificacionRecibida');
+                });
+        })();
+    </script>
+    @endscript
 </div>

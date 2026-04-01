@@ -115,6 +115,9 @@
                         {{-- <h1 class="text-2xl font-bold mb-4">{{ $hoja->nombre }} ({{ $hoja->slug }})</h1> --}}
                         <hr class="dashboard-divider"/>
                             <livewire:dashboard.notificaciones.notificaciones-lista />
+
+                            <livewire:notificaciones.enviar-notificacion />
+                            
                     </div>                     
                 </div>
             </div>

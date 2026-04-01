@@ -25,7 +25,7 @@ class NuevaNotificacion extends Notification
     {
         $channels = ['database'];
 
-        // ✅ Broadcast solo si está habilitado
+        // Broadcast en tiempo real cuando la app lo tenga habilitado.
         if (config('notifications.broadcast_enabled', false) === true) {
             $channels[] = 'broadcast';
         }
@@ -45,7 +45,7 @@ class NuevaNotificacion extends Notification
     {
         return new BroadcastMessage([
             'mensaje' => $this->mensaje,
-            'liga' => $this->liga, // Asegurar que se envíe la URL en tiempo real
+            'liga' => $this->liga,
         ]);
     }
 }

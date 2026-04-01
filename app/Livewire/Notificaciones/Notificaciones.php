@@ -10,7 +10,10 @@ class Notificaciones extends Component
 {
     public $notificaciones;
 
-    protected $listeners = ['notificacionEnviada' => 'cargarNotificaciones'];
+    protected $listeners = [
+        'notificacionEnviada' => 'cargarNotificaciones',
+        'notificacionRecibida' => 'cargarNotificaciones',
+    ];
 
     public function mount()
     {
@@ -62,5 +65,4 @@ class Notificaciones extends Component
 }
 
 // return view('livewire.notificaciones.notificaciones');
-
 
