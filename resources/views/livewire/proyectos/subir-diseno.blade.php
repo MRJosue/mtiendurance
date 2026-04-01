@@ -1,7 +1,7 @@
 <div>
 <!-- Botones por estado -->
 <!-- Botones por estado -->
-<div class="flex flex-wrap gap-2 mb-4">
+<div class="mb-4 flex flex-wrap justify-center gap-2">
 
     {{-- Añadir la validacion si el proyecto no tiene archivos iniciales permitir subir arte al usuario  cliente--}}
     @can('proyectodiseñoSubirArte')
@@ -408,7 +408,7 @@
 
 
     @if($modalsolicitarreconfiguracion)
-        <div class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+        <div class="fixed inset-0 z-[120] flex items-center justify-center bg-black/50">
             <div class="dashboard-modal-panel max-w-md">
                 <h2 class="text-lg font-semibold mb-3">Confirmar solicitud de reconfiguración</h2>
                 <p class="text-gray-600 mb-4">
@@ -432,7 +432,7 @@
 
     
     @if($modalreconfigurar)
-        <div class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+        <div class="fixed inset-0 z-[120] flex items-center justify-center bg-black/50">
             <div class="dashboard-modal-panel max-w-md">
                 <h2 class="text-lg font-semibold mb-3">Iniciar reconfiguración</h2>
                 <p class="text-gray-600 mb-4">

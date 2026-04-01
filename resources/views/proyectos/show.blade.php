@@ -15,58 +15,47 @@
                 <div class="project-detail-body h-full min-h-0">
                     <div class="project-show-main-grid">
                         
-                        <!-- Lado izquierdo: Último archivo y Subir Diseño centrados -->
+                        <!-- Lado izquierdo: Archivo principal -->
                         <div class="project-show-sidebar">
-                            <!-- Componente que muestra el último archivo -->
                             <livewire:proyectos.ultimo-archivo :proyecto-id="$proyecto->id" />
-                            <!-- Componente para subir diseño -->
-                            
-                            <livewire:proyectos.subir-diseno :proyecto-id="$proyecto->id" />
-
-
-                            <livewire:proyectos.resume-estado :proyecto-id="$proyecto->id" />
-                                
-
-
                         </div>
+                        
                         <!-- Lado derecho: pestañas Detalles / Chat -->
                         <div x-data="{ tab: 'detalles' }" class="project-show-content text-gray-900 dark:text-gray-100">
-                            <!-- Tabs -->
-                            <div class="project-tab-list project-show-tab-list">
-                                <button 
-                                    @click="tab = 'detalles'" 
-                                    :class="tab === 'detalles' ? 'project-tab-button project-tab-button--active' : 'project-tab-button project-tab-button--inactive'" 
-                                >
-                                    Detalles del Proyecto
-                                </button>
-
-
-
-                                <button 
-                                    @click="tab = 'chat'" 
-                                    :class="tab === 'chat' ? 'project-tab-button project-tab-button--active' : 'project-tab-button project-tab-button--inactive'" 
-                                >
-                                    Chat del Proyecto
-                                </button>
-
-                                @can('proyectodiseñopestañachatProveedor')
+                            <div class="project-show-content-shell">
+                                <!-- Tabs -->
+                                <div class="project-tab-list project-show-tab-list">
                                     <button 
-                                        @click="tab = 'chatProveedor'" 
-                                        :class="tab === 'chatProveedor' ? 'project-tab-button project-tab-button--active' : 'project-tab-button project-tab-button--inactive'" 
+                                        @click="tab = 'detalles'" 
+                                        :class="tab === 'detalles' ? 'project-tab-button project-tab-button--active' : 'project-tab-button project-tab-button--inactive'" 
                                     >
-                                        Chat del Proveedor
+                                        Detalles del Proyecto
                                     </button>
-                                @endcan
 
-
-                                @can('proyectodiseñopestañaTareasDelProyecto')
                                     <button 
-                                        @click="tab = 'tareas'" 
-                                        :class="tab === 'tareas' ? 'project-tab-button project-tab-button--active' : 'project-tab-button project-tab-button--inactive'" 
+                                        @click="tab = 'chat'" 
+                                        :class="tab === 'chat' ? 'project-tab-button project-tab-button--active' : 'project-tab-button project-tab-button--inactive'" 
                                     >
-                                        Tareas del Diseño
+                                        Chat del Proyecto
                                     </button>
-                                @endcan
+
+                                    @can('proyectodiseñopestañachatProveedor')
+                                        <button 
+                                            @click="tab = 'chatProveedor'" 
+                                            :class="tab === 'chatProveedor' ? 'project-tab-button project-tab-button--active' : 'project-tab-button project-tab-button--inactive'" 
+                                        >
+                                            Chat del Proveedor
+                                        </button>
+                                    @endcan
+
+                                    @can('proyectodiseñopestañaTareasDelProyecto')
+                                        <button 
+                                            @click="tab = 'tareas'" 
+                                            :class="tab === 'tareas' ? 'project-tab-button project-tab-button--active' : 'project-tab-button project-tab-button--inactive'" 
+                                        >
+                                            Tareas del Diseño
+                                        </button>
+                                    @endcan
 
                                     <button 
                                         @click="tab = 'transferencia'" 
@@ -74,11 +63,13 @@
                                     >
                                         transferencia
                                     </button>
-                            </div>
-                            <!-- Contenido Detalles -->
-                            <div x-show="tab === 'detalles'" x-cloak
-                            x-data="{ sub: 'info' }"
-                            class="project-show-tab-panel flex flex-col h-full min-h-0 overflow-y-auto">
+                                </div>
+
+                                <div class="project-show-tab-stage">
+                                    <!-- Contenido Detalles -->
+                                    <div x-show="tab === 'detalles'" x-cloak
+                                    x-data="{ sub: 'info' }"
+                                    class="project-show-tab-panel flex flex-col h-full min-h-0 overflow-y-auto">
 
 
                                     
@@ -178,42 +169,46 @@
 
 
                                                 </div>
-                            </div>
-                            <!-- Contenido Chat -->
-                            <div x-show="tab === 'chat'" x-cloak class="project-show-tab-panel flex flex-col flex-1 min-h-0">
-                                <h2 class="project-section-title">Chat del Proyecto</h2>
-                                <div wire:poll.2s class="project-chat-shell">
-                                    <livewire:chat-component :proyecto-id="$proyecto->id" />
+                                    </div>
+
+                                    <!-- Contenido Chat -->
+                                    <div x-show="tab === 'chat'" x-cloak class="project-show-tab-panel flex flex-col flex-1 min-h-0">
+                                        <h2 class="project-section-title">Chat del Proyecto</h2>
+                                        <div wire:poll.2s class="project-chat-shell">
+                                            <livewire:chat-component :proyecto-id="$proyecto->id" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Contenido Chat -->
+                                    <div x-show="tab === 'chatProveedor'" x-cloak class="project-show-tab-panel flex flex-col flex-1 min-h-0">
+                                        <h2 class="project-section-title">Chat del Proyecto</h2>
+                                        <div wire:poll.2s class="project-chat-shell">
+                                            <livewire:chat-proveedor-component :proyecto-id="$proyecto->id" />
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Contenido Tareas -->
+                                    @can('proyectodiseñopestañaTareasDelProyecto')
+                                        <div x-show="tab === 'tareas'" x-cloak class="project-show-tab-panel flex flex-col flex-1 min-h-0 overflow-y-auto">
+                                            <h2 class="project-section-title">Tareas del Diseño</h2>
+                                            <livewire:proyectos.tareas-diseno :proyecto-id="$proyecto->id" />
+                                        </div>
+                                    @endcan
+
+                                    <div x-show="tab === 'transferencia'" x-cloak class="project-show-tab-panel flex flex-col flex-1 min-h-0">
+                                            <h2 class="project-section-title">Transferencias</h2>
+                                            <div wire:poll.2s class="project-chat-shell">
+                                        
+                                         <livewire:proyectos.transferencia-proyecto :proyecto="$proyecto" wire:key="transfer-{{ $proyecto->id }}" />
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="project-show-action-bar">
+                                    <livewire:proyectos.subir-diseno :proyecto-id="$proyecto->id" />
                                 </div>
                             </div>
-
-                            <!-- Contenido Chat -->
-                            <div x-show="tab === 'chatProveedor'" x-cloak class="project-show-tab-panel flex flex-col flex-1 min-h-0">
-                                <h2 class="project-section-title">Chat del Proyecto</h2>
-                                <div wire:poll.2s class="project-chat-shell">
-                                    <livewire:chat-proveedor-component :proyecto-id="$proyecto->id" />
-                                </div>
-                            </div>
-                            
-                            <!-- Contenido Tareas -->
-                            @can('proyectodiseñopestañaTareasDelProyecto')
-                                <div x-show="tab === 'tareas'" x-cloak class="project-show-tab-panel flex flex-col flex-1 min-h-0 overflow-y-auto">
-                                    <h2 class="project-section-title">Tareas del Diseño</h2>
-                                    <livewire:proyectos.tareas-diseno :proyecto-id="$proyecto->id" />
-                                </div>
-                            @endcan
-
-
-                            <div x-show="tab === 'transferencia'" x-cloak class="project-show-tab-panel flex flex-col flex-1 min-h-0">
-                                    <h2 class="project-section-title">Transferencias</h2>
-                                    <div wire:poll.2s class="project-chat-shell">
-                                  
-                                 <livewire:proyectos.transferencia-proyecto :proyecto="$proyecto" wire:key="transfer-{{ $proyecto->id }}" />
-
-                                </div>
-                            </div>
-                            
-
                         </div>
                     </div>
                 </div>
