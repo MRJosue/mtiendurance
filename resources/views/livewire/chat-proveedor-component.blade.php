@@ -1,8 +1,9 @@
-<div class="chat-container flex flex-col h-full w-full min-h-0 rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+<div wire:poll.3s="actualizarMensajes" class="chat-container flex flex-col h-full w-full min-h-0 rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
     <!-- Lista de mensajes -->
     <div id="messages-proveedor" class="flex-grow overflow-y-auto bg-gray-50 p-4 max-h-[30vh] dark:bg-gray-950/60">
         @foreach ($mensajes as $mensaje)
             <div
+                wire:key="chat-proveedor-message-{{ $mensaje['id'] }}"
                 class="chat-message my-2 max-w-[85%] px-4 py-3 shadow-sm
                 {{ $mensaje['usuario_id'] === auth()->id()
                     ? 'ml-auto rounded-2xl rounded-br-md bg-blue-600 text-right text-white'
@@ -52,15 +53,19 @@
                 if (box) box.scrollTop = box.scrollHeight;
             };
 
-            // Si ya tienes broadcasting configurado puedes reutilizarlo:
-            window.Echo && window.Echo.channel('public-chat')
-                .listen('NewChatMessage', () => Livewire.dispatch('actualizarMensajes'));
+            scrollToBottomProveedor();
 
-            Livewire.on('actualizarMensajes', () => {
+            document.addEventListener('livewire:navigated', () => {
                 setTimeout(scrollToBottomProveedor, 100);
             });
 
-            scrollToBottomProveedor();
+            if (window.Livewire?.hook) {
+                Livewire.hook('morph.updated', ({ el }) => {
+                    if (el.id === 'messages-proveedor') {
+                        setTimeout(scrollToBottomProveedor, 50);
+                    }
+                });
+            }
         });
     </script>
     @endpush

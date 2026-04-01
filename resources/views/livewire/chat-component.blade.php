@@ -1,10 +1,10 @@
 
-<div class="chat-container flex flex-col h-full w-full min-h-0 rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+<div wire:poll.3s="actualizarMensajes" class="chat-container flex flex-col h-full w-full min-h-0 rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
    
     <!-- Lista de mensajes -->
     <div id="messages" class="flex-grow overflow-y-auto bg-gray-50 p-4 max-h-[30vh] dark:bg-gray-950/60">
         @foreach ($mensajes as $mensaje)
-            <div class="chat-message my-2 max-w-[85%] px-4 py-3 shadow-sm
+            <div wire:key="chat-message-{{ $mensaje['id'] }}" class="chat-message my-2 max-w-[85%] px-4 py-3 shadow-sm
                 {{ $mensaje['usuario_id'] === auth()->id()
                     ? 'ml-auto rounded-2xl rounded-br-md bg-blue-600 text-right text-white'
                     : 'mr-auto rounded-2xl rounded-bl-md bg-white text-left text-gray-800 dark:bg-gray-800 dark:text-gray-100' }}">
@@ -45,12 +45,19 @@
                 if (box) box.scrollTop = box.scrollHeight;
             };
 
-            window.Echo.channel('public-chat')
-                .listen('NewChatMessage', () => Livewire.dispatch('actualizarMensajes'));
-
-            Livewire.on('actualizarMensajes', () => setTimeout(scrollToBottom, 100));
-
             scrollToBottom();
+
+            document.addEventListener('livewire:navigated', () => {
+                setTimeout(scrollToBottom, 100);
+            });
+
+            if (window.Livewire?.hook) {
+                Livewire.hook('morph.updated', ({ el }) => {
+                    if (el.id === 'messages') {
+                        setTimeout(scrollToBottom, 50);
+                    }
+                });
+            }
         });
     </script>
     @endpush
