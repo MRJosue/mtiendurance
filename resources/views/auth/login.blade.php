@@ -2,6 +2,12 @@
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
+    @if (request('reason') === 'session-expired')
+        <div class="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
+            Tu sesión expiró por inactividad. Inicia sesión de nuevo para continuar.
+        </div>
+    @endif
+
     <form method="POST" action="/login">
         @csrf
 

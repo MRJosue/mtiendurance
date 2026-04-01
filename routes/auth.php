@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -36,6 +37,16 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::post('session/heartbeat', function (Request $request) {
+        $request->session()->put('last_activity_at', now()->toIso8601String());
+
+        return response()->json([
+            'ok' => true,
+            'server_time' => now()->toIso8601String(),
+            'lifetime_minutes' => (int) config('session.lifetime'),
+        ]);
+    })->name('session.heartbeat');
+
     Route::get('verify-email', EmailVerificationPromptController::class)
                 ->name('verification.notice');
 

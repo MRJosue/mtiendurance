@@ -124,6 +124,51 @@
         @livewire('cambiar-rol-actual')
     </div>
 
+    <div
+        id="session-warning-modal"
+        class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/60 px-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="session-warning-title"
+    >
+        <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+            <div class="space-y-3">
+                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600 dark:text-amber-400">
+                    Sesion por expirar
+                </p>
+                <h2 id="session-warning-title" class="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                    Tu sesion esta a punto de vencer
+                </h2>
+                <p class="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                    Para evitar perder el contexto, confirma si deseas seguir trabajando. Si no respondes, te enviaremos a iniciar sesion.
+                </p>
+                <p class="rounded-xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    Tiempo restante estimado:
+                    <span id="session-warning-countdown" class="font-semibold text-amber-600 dark:text-amber-300">--:--</span>
+                </p>
+            </div>
+
+            <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+                <button
+                    id="session-keepalive-button"
+                    type="button"
+                    class="inline-flex flex-1 items-center justify-center rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+                >
+                    Continuar sesion
+                </button>
+                <button
+                    id="session-login-button"
+                    type="button"
+                    class="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:ring-offset-slate-900"
+                >
+                    Ir a login
+                </button>
+            </div>
+
+            <p id="session-warning-feedback" class="mt-3 hidden text-sm text-slate-500 dark:text-slate-400"></p>
+        </div>
+    </div>
+
     @livewireScripts
 
     @stack('scripts')
@@ -132,22 +177,251 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-    const goLogin = () => window.location.href = "{{ route('login') }}";
+    const loginUrl = "{{ route('login') }}";
+    const heartbeatUrl = "{{ route('session.heartbeat') }}";
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+    const sessionLifetimeMs = {{ (int) config('session.lifetime') * 60 * 1000 }};
+    const warningLeadMs = Math.min(5 * 60 * 1000, Math.max(60 * 1000, Math.floor(sessionLifetimeMs / 6)));
+    const heartbeatIntervalMs = Math.min(5 * 60 * 1000, Math.max(2 * 60 * 1000, Math.floor(sessionLifetimeMs / 4)));
+    const storageKey = 'mti:last-session-confirmed-at';
+    const modal = document.getElementById('session-warning-modal');
+    const countdown = document.getElementById('session-warning-countdown');
+    const keepaliveButton = document.getElementById('session-keepalive-button');
+    const loginButton = document.getElementById('session-login-button');
+    const feedback = document.getElementById('session-warning-feedback');
+
+    let heartbeatPromise = null;
+    let redirecting = false;
+    let lastConfirmedAt = Date.now();
+
+    const isSameOrigin = (resource) => {
+        try {
+            const url = typeof resource === 'string'
+                ? new URL(resource, window.location.origin)
+                : new URL(resource?.url ?? '', window.location.origin);
+
+            return url.origin === window.location.origin;
+        } catch (error) {
+            return true;
+        }
+    };
+
+    const setFeedback = (message = '', tone = 'neutral') => {
+        if (!feedback) {
+            return;
+        }
+
+        feedback.textContent = message;
+        feedback.classList.toggle('hidden', !message);
+        feedback.classList.toggle('text-rose-500', tone === 'error');
+        feedback.classList.toggle('text-emerald-600', tone === 'success');
+        feedback.classList.toggle('text-slate-500', tone === 'neutral');
+        feedback.classList.toggle('dark:text-rose-300', tone === 'error');
+        feedback.classList.toggle('dark:text-emerald-300', tone === 'success');
+        feedback.classList.toggle('dark:text-slate-400', tone === 'neutral');
+    };
+
+    const formatRemaining = (ms) => {
+        const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+        const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+        const seconds = String(totalSeconds % 60).padStart(2, '0');
+
+        return `${minutes}:${seconds}`;
+    };
+
+    const showModal = () => {
+        if (!modal || !modal.classList.contains('hidden')) {
+            return;
+        }
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    };
+
+    const hideModal = () => {
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        setFeedback();
+    };
+
+    const syncConfirmedAt = (timestamp = Date.now()) => {
+        lastConfirmedAt = timestamp;
+        window.localStorage.setItem(storageKey, String(timestamp));
+        hideModal();
+    };
+
+    const goLogin = (reason = 'session-expired') => {
+        if (redirecting) {
+            return;
+        }
+
+        redirecting = true;
+        window.location.href = `${loginUrl}?reason=${encodeURIComponent(reason)}`;
+    };
+
+    const markResponseAsHealthy = (resource, status) => {
+        if (!isSameOrigin(resource)) {
+            return;
+        }
+
+        if (status >= 200 && status < 400) {
+            syncConfirmedAt(Date.now());
+        }
+    };
+
+    const heartbeat = async ({ force = false } = {}) => {
+        if (document.hidden && !force) {
+            return false;
+        }
+
+        if (heartbeatPromise) {
+            return heartbeatPromise;
+        }
+
+        keepaliveButton?.setAttribute('disabled', 'disabled');
+        setFeedback('Verificando tu sesion...', 'neutral');
+
+        heartbeatPromise = window.fetch(heartbeatUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({
+                source: force ? 'manual' : 'automatic',
+            }),
+        }).then(async (response) => {
+            if (response.status === 401 || response.status === 419) {
+                goLogin();
+                return false;
+            }
+
+            if (!response.ok) {
+                throw new Error(`Heartbeat failed with status ${response.status}`);
+            }
+
+            const payload = await response.json().catch(() => ({}));
+            const serverTime = payload.server_time ? Date.parse(payload.server_time) : Date.now();
+
+            syncConfirmedAt(Number.isNaN(serverTime) ? Date.now() : serverTime);
+            setFeedback('Sesion extendida correctamente.', 'success');
+
+            return true;
+        }).catch(() => {
+            setFeedback('No pudimos renovar la sesion. Revisa tu conexion o inicia sesion de nuevo si el problema continua.', 'error');
+            return false;
+        }).finally(() => {
+            heartbeatPromise = null;
+            keepaliveButton?.removeAttribute('disabled');
+        });
+
+        return heartbeatPromise;
+    };
+
+    const updateWarningState = () => {
+        const remainingMs = (lastConfirmedAt + sessionLifetimeMs) - Date.now();
+
+        if (countdown) {
+            countdown.textContent = formatRemaining(remainingMs);
+        }
+
+        if (remainingMs <= 0) {
+            if (heartbeatPromise) {
+                return;
+            }
+
+            if (document.visibilityState === 'visible') {
+                heartbeat({ force: true }).then((ok) => {
+                    if (!ok) {
+                        goLogin();
+                    }
+                });
+
+                return;
+            }
+
+            goLogin();
+            return;
+        }
+
+        if (remainingMs <= warningLeadMs) {
+            showModal();
+            return;
+        }
+
+        hideModal();
+    };
 
     const origFetch = window.fetch;
     window.fetch = async (...args) => {
         const res = await origFetch(...args);
-        if (res.status === 401 || res.status === 419) goLogin();
+        if (res.status === 401 || res.status === 419) {
+            goLogin();
+        } else {
+            markResponseAsHealthy(args[0], res.status);
+        }
+
         return res;
     };
 
     const origOpen = XMLHttpRequest.prototype.open;
     XMLHttpRequest.prototype.open = function(...args) {
+        this.__mtiRequestUrl = args[1];
         this.addEventListener('load', function() {
-        if (this.status === 401 || this.status === 419) goLogin();
+        if (this.status === 401 || this.status === 419) {
+            goLogin();
+        } else {
+            markResponseAsHealthy(this.__mtiRequestUrl, this.status);
+        }
         });
         return origOpen.apply(this, args);
     };
+
+    keepaliveButton?.addEventListener('click', () => {
+        heartbeat({ force: true });
+    });
+
+    loginButton?.addEventListener('click', () => {
+        goLogin();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            heartbeat({ force: true });
+        }
+    });
+
+    window.addEventListener('focus', () => {
+        heartbeat({ force: true });
+    });
+
+    window.addEventListener('storage', (event) => {
+        if (event.key !== storageKey || !event.newValue) {
+            return;
+        }
+
+        const timestamp = Number(event.newValue);
+
+        if (!Number.isNaN(timestamp)) {
+            lastConfirmedAt = timestamp;
+            hideModal();
+        }
+    });
+
+    window.setInterval(updateWarningState, 1000);
+    window.setInterval(() => {
+        heartbeat();
+    }, heartbeatIntervalMs);
+
+    syncConfirmedAt(Date.now());
+    updateWarningState();
     });
     </script>
 
